@@ -127,7 +127,6 @@ ul{
   width:50%;
   padding:40px;
   color:#000;
-  position:relative;
 }
 .divider{
   text-align:center;
@@ -181,7 +180,7 @@ ul{
         <img src="google.svg"> Continue with Google
       </button>
 
-      <button class="auth-btn" onclick="openSignup()">
+      <button class="auth-btn" onclick="emailAuthHandler()">
         <img src="email.svg"> Continue with Email
       </button>
 
@@ -198,7 +197,7 @@ ul{
   </div>
 </div>
 
-<!-- SIGN UP -->
+<!-- EMAIL SIGN UP -->
 <div class="email-overlay" id="signupModal">
   <div class="email-glass">
     <h3>Create account</h3>
@@ -206,21 +205,16 @@ ul{
     <input id="signupPassword" type="password" placeholder="Password" oninput="checkPasswordRules()">
 
     <ul>
-      <li id="rule-length">❌ At least 6 characters</li>
-      <li id="rule-number">❌ Contains a number</li>
-      <li id="rule-special">❌ Contains a special character</li>
+      <li id="rule_length">❌ At least 6 characters</li>
+      <li id="rule_number">❌ Contains a number</li>
+      <li id="rule_special">❌ Contains a special character</li>
     </ul>
 
     <button onclick="emailSignup()">Create account</button>
-
-    <div class="switch-link">
-      Already have an account?
-      <span onclick="switchToSigninUI()">Sign in</span>
-    </div>
   </div>
 </div>
 
-<!-- SIGN IN -->
+<!-- EMAIL SIGN IN -->
 <div class="email-overlay" id="signinModal">
   <div class="email-glass">
     <h3>Sign in</h3>
@@ -230,12 +224,11 @@ ul{
   </div>
 </div>
 
-<!-- VERIFYING -->
+<!-- VERIFY -->
 <div class="email-overlay" id="verifyingModal">
   <div class="email-glass">
     <h3>Verifying your email</h3>
     <p>Please check your inbox and click the link.</p>
-    <p style="font-size:12px;opacity:.8">This window will update automatically.</p>
   </div>
 </div>
 
@@ -252,28 +245,27 @@ firebase.initializeApp({
 const auth = firebase.auth();
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
-/* UI HELPERS */
-function openSignup(){
-  signupModal.style.display="flex";
-  signinModal.style.display="none";
-}
-function openSignin(){
-  signinModal.style.display="flex";
-  signupModal.style.display="none";
-}
+let AUTH_MODE = "signup";
 
-/* TEXT SWITCH */
+/* MODE SWITCH */
 function switchToSigninUI(){
-  authTitle.innerText="Welcome back";
-  authSubtitle.innerText="Sign in to continue";
-  authSwitch.innerHTML=`New to ScalVest? <span onclick="switchToSignupUI()">Create account</span>`;
-  openSignin();
+  AUTH_MODE = "signin";
+  authTitle.innerText = "Welcome back";
+  authSubtitle.innerText = "Sign in to continue";
+  authSwitch.innerHTML = `New to ScalVest? <span onclick="switchToSignupUI()">Create account</span>`;
 }
 function switchToSignupUI(){
-  authTitle.innerText="New to ScalVest?";
-  authSubtitle.innerText="Create an account";
-  authSwitch.innerHTML=`Already have an account? <span onclick="switchToSigninUI()">Sign in</span>`;
-  openSignup();
+  AUTH_MODE = "signup";
+  authTitle.innerText = "New to ScalVest?";
+  authSubtitle.innerText = "Create an account";
+  authSwitch.innerHTML = `Already have an account? <span onclick="switchToSigninUI()">Sign in</span>`;
+}
+
+/* EMAIL BUTTON */
+function emailAuthHandler(){
+  AUTH_MODE === "signup"
+    ? signupModal.style.display="flex"
+    : signinModal.style.display="flex";
 }
 
 /* PASSWORD RULES */
@@ -310,27 +302,24 @@ function emailSignin(){
     });
 }
 
-/* SOCIAL LOGIN (FIXED) */
+/* SOCIAL */
 function googleLogin(){
-  const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithPopup(provider)
+  auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
     .then(()=>location.href="mainbusinesshub.html")
     .catch(e=>alert(e.message));
 }
 function facebookLogin(){
-  const provider = new firebase.auth.FacebookAuthProvider();
-  auth.signInWithPopup(provider)
+  auth.signInWithPopup(new firebase.auth.FacebookAuthProvider())
     .then(()=>location.href="mainbusinesshub.html")
     .catch(e=>alert(e.message));
 }
 function appleLogin(){
-  const provider = new firebase.auth.OAuthProvider("apple.com");
-  auth.signInWithPopup(provider)
+  auth.signInWithPopup(new firebase.auth.OAuthProvider("apple.com"))
     .then(()=>location.href="mainbusinesshub.html")
     .catch(e=>alert(e.message));
 }
 
-/* AUTO VERIFY */
+/* AUTO LOGIN AFTER VERIFY */
 auth.onAuthStateChanged(user=>{
   if(user){
     user.reload().then(()=>{
