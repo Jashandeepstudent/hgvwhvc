@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ScalVest – Business</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Inter, sans-serif;
+  background:#000;
+  color:#fff;
+}
+
+/* ================= HERO ================= */
+.hero{
+  position: relative;
+  height: 60vh;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* VIDEO */
+.hero-video{
+  position:absolute;
+  inset:0;
+}
+
+.hero-video video{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+/* OVERLAY */
+.video-overlay{
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,0.55);
+}
+/* Q&A SECTION */
+.qa-section{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+.qa-title{
+  font-size:40px;
+  margin-bottom:50px;
+}
+
+/* STRIPS CONTAINER */
+.qa-list{
+  width:100%;
+  max-width:900px;
+}
+
+/* SINGLE STRIP */
+.qa-item{
+  padding:28px 0;
+  border-bottom:1px solid #1f2933;
+}
+
+.qa-item h3{
+  font-size:20px;
+  font-weight:600;
+  margin-bottom:10px;
+}
+
+.qa-item p{
+  font-size:16px;
+  line-height:1.6;
+  color:#9ca3af;
+}
+
+/* MOBILE */
+@media(max-width:900px){
+  .qa-list{
+    max-width:100%;
+  }
+
+  .qa-title{
+    font-size:32px;
+  }
+}
+
+/* CENTERED CONTENT */
+.hero-content{
+  position:absolute;
+  inset:0;
+  z-index:2;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:0 20px;
+}
+
+.hero-content h1{
+  font-size:64px;
+  font-weight:700;
+  max-width:900px;
+  line-height:1.1;
+  margin-bottom:20px;
+}
+
+.hero-content p{
+  font-size:20px;
+  max-width:720px;
+  color:#d1d5db;
+  margin-bottom:40px;
+}
+
+/* BUTTON ON VIDEO */
+.start-btn{
+  padding:16px 40px;
+  border:2px solid #fff;
+  background:transparent;
+  color:#fff;
+  font-size:16px;
+  font-weight:600;
+  cursor:pointer;
+}
+@media(max-width:900px){
+  .hero-content h1{
+    font-size:38px;
+  }
+
+  .hero-content p{
+    font-size:16px;
+  }
+}
+
+
+/* ================= SECTION ================= */
+.section{
+  padding:100px 80px;
+}
+
+.section h2{
+  font-size:38px;
+  margin-bottom:40px;
+}
+.black-text{
+  color:#000000; /* pure black */
+}
+
+/* ================= HOW IT WORKS ================= */
+/* FLOW CONTAINER */
+.flow{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  width:100%;
+  gap:20px;
+}
+
+/* BIG SQUARE BOX */
+.flow-box{
+  flex:1;                         /* 🔥 full width coverage */
+  height:320px;                   /* bigger */
+  background:#F5F5F5;
+  border-radius:28px;             /* modern rounded */
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:20px;
+  text-align:center;
+  font-size:22px;
+  font-weight:600;
+  transition:.3s ease;
+}
+
+/* ICON */
+.flow-box img{
+  width:72px;
+  height:72px;
+}
+
+/* HOVER EFFECT */
+.flow-box:hover{
+  transform:translateY(-6px);
+  background:#F5F5F5;
+}
+
+/* ARROW */
+.arrow{
+  font-size:56px;
+  color:#fff;                     /* full white */
+  opacity:1;
+  flex-shrink:0;
+}
+
+/* MOBILE */
+@media(max-width:900px){
+  .flow{
+    flex-direction:column;
+  }
+
+  .arrow{
+    transform:rotate(90deg);
+    margin:10px 0;
+  }
+
+  .flow-box{
+    width:100%;
+    height:260px;
+  }
+}
+
+
+/* ================= COMMUNITY ================= */
+.community-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:30px;
+}
+
+.community-box{
+  width:100%;
+  aspect-ratio:1/1;
+  background:#0b0f14;
+  border-radius:22px;
+  overflow:hidden;
+  position:relative;
+}
+
+/* MEDIA PLACEHOLDER */
+.community-box img,
+.community-box video{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+/* LAST BOX TEXT */
+.community-box.text{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:22px;
+  font-weight:700;
+  cursor:pointer;
+}
+.modal-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.7);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:100;
+}
+
+
+
+
+/* CLOSE ICON */
+.modal-close{
+  position:absolute;
+  top:18px;
+  right:18px;
+  font-size:20px;
+  color:#ffffff;
+  cursor:pointer;
+  opacity:.8;
+}
+
+.modal-close:hover{
+  opacity:1;
+}
+
+/* FORM */
+.modal-form h3{
+  margin-bottom:20px;
+}
+
+.modal-form input{
+  width:100%;
+  padding:12px;
+  margin-bottom:12px;
+  background:rgba(0,0,0,0.6);
+  border:1px solid rgba(255,255,255,0.25);
+  color:#ffffff;
+  border-radius:10px;
+}
+
+.modal-form input::placeholder{
+  color:#d1d5db;
+}
+
+.modal-form button{
+  width:100%;
+  padding:14px;
+  margin-top:10px;
+  background:#2563eb;
+  border:none;
+  color:#ffffff;
+  font-weight:600;
+  border-radius:10px;
+  cursor:pointer;
+}
+.loading-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.9);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:200;
+}
+
+.loading-box{
+  width:380px;
+  text-align:center;
+}
+
+.spinner{
+  width:60px;
+  height:60px;
+  border:5px solid rgba(255,255,255,0.2);
+  border-top:5px solid #2563eb;
+  border-radius:50%;
+  animation:spin 1s linear infinite;
+  margin:0 auto 30px;
+}
+
+@keyframes spin{
+  to{transform:rotate(360deg);}
+}
+
+.progress-bar{
+  width:100%;
+  height:8px;
+  background:#1f2933;
+  border-radius:6px;
+  overflow:hidden;
+}
+
+.progress-fill{
+  width:0%;
+  height:100%;
+  background:#2563eb;
+}
+
+/* ================= FAQ ================= */
+.faq{
+  max-width:800px;
+}
+
+.faq-item{
+  border-bottom:1px solid #1f2933;
+  padding:18px 0;
+  cursor:pointer;
+}
+
+.faq-q{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-weight:600;
+}
+
+.faq-a{
+  display:none;
+  margin-top:10px;
+  color:#9ca3af;
+}
+
+/* ================= MODAL ================= */
+.modal-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.75);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:100;
+}
+/* ================= LOADING SCREEN ================= */
+.loading-overlay{
+  position:fixed;
+  inset:0;
+  background:#ffffff;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+}
+
+.loading-box{
+  width:360px;
+  text-align:center;
+}
+
+/* IMAGE */
+.loading-image{
+  width:100%;
+  aspect-ratio:1/1;
+  border-radius:22px;
+  overflow:hidden;
+  box-shadow:0 30px 60px rgba(0,0,0,0.15);
+}
+
+.loading-image img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+/* DOTS */
+.dots{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin:20px 0;
+}
+
+.dot{
+  width:10px;
+  height:10px;
+  background:#d1d5db;
+  border-radius:50%;
+  cursor:pointer;
+}
+
+.dot.active{
+  background:#2563eb;
+}
+
+/* TEXT */
+.loading-text{
+  font-size:16px;
+  color:#111827;
+  margin-bottom:16px;
+}
+
+/* PROGRESS BAR */
+.progress-bar{
+  width:100%;
+  height:6px;
+  background:#e5e7eb;
+  border-radius:10px;
+  overflow:hidden;
+}
+
+.progress-bar div{
+  height:100%;
+  width:0%;
+  background:#2563eb;
+  transition:width .15s linear;
+}
+
+.modal{
+  position:relative;
+  width:520px;               /* 🔥 BIGGER */
+  min-height:520px;          /* 🔥 BIGGER */
+  padding:50px;
+  border-radius:26px;
+
+  background-image:
+    linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)),
+    url("BusinessCheckStep.jpg");
+
+  background-size:cover;
+  background-position:center;
+}
+
+/* CLOSE ICON */
+.modal-close{
+  position:absolute;
+  top:22px;
+  right:22px;
+  font-size:22px;
+  cursor:pointer;
+  opacity:.8;
+}
+
+.modal-close:hover{opacity:1}
+
+/* FORM */
+.modal-form{
+  max-width:420px;
+}
+
+.modal-form h3{
+  font-size:28px;
+  margin-bottom:30px;
+}
+
+.modal-form input{
+  width:100%;
+  padding:14px;
+  margin-bottom:14px;
+  background:rgba(0,0,0,0.65);
+  border:1px solid rgba(255,255,255,0.25);
+  color:#fff;
+  border-radius:12px;
+  font-size:15px;
+}
+
+.modal-form input::placeholder{
+  color:#d1d5db;
+}
+
+.modal-form button{
+  width:100%;
+  padding:16px;
+  margin-top:10px;
+  background:#2563eb;
+  border:none;
+  color:#fff;
+  font-weight:600;
+  border-radius:12px;
+  font-size:16px;
+  cursor:pointer;
+}
+
+/* ================= MOBILE ================= */
+@media(max-width:900px){
+  .hero{flex-direction:column}
+  .hero-left,.hero-video{width:100%}
+  .flow{flex-direction:column}
+  .community-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+<script>
+if (localStorage.getItem("businessProfileCreated") === "true") {
+  window.location.replace("mainbusinesshub.html");
+}
+</script>
+
+<!-- ================= HERO ================= -->
+<section class="hero">
+
+  <div class="hero-video">
+    <video autoplay muted loop playsinline>
+      <source src="ScalVestBusinessVid.mp4" type="video/mp4">
+    </video>
+
+    <div class="video-overlay"></div>
+
+    <!-- CENTERED CONTENT -->
+    <div class="hero-content">
+      <h1>Where real business data becomes clear decisions</h1>
+      <p>
+        ScalVest connects businesses, startups, and investors through
+        verified operational data.
+      </p>
+      <button class="start-btn" onclick="openModal()">Start Business</button>
+
+    </div>
+  </div>
+
+</section>
+
+
+<!-- ================= HOW IT WORKS ================= -->
+<section class="section">
+  <h2>How it works</h2>
+
+  <div class="flow">
+
+    <div class="flow-box">
+      <img src="createbusiness.svg" alt="Create Business">
+      <span class="black-text">Create your Business</span>
+    </div>
+
+    <div class="arrow">→</div>
+
+    <div class="flow-box">
+      <img src="choosebusiness2.svg" alt="Choose Services">
+      <span class="black-text">Choose & Create Services</span>
+    </div>
+
+    <div class="arrow">→</div>
+
+    <div class="flow-box">
+      <img src="flyhighbuisness.svg" alt="Scale Business">
+     <span class="black-text">Scale and Grow!</span>
+    </div>
+
+  </div>
+</section>
+<!-- ================= LOADING OVERLAY ================= -->
+<div id="loadingScreen" class="loading-overlay">
+
+  <div class="loading-box">
+
+    <!-- IMAGE -->
+    <div class="loading-image">
+      <img id="loadingImg" src="load1.jpg">
+    </div>
+
+    <!-- DOTS -->
+    <div class="dots">
+      <span class="dot active" onclick="setSlide(0)"></span>
+      <span class="dot" onclick="setSlide(1)"></span>
+      <span class="dot" onclick="setSlide(2)"></span>
+      <span class="dot" onclick="setSlide(3)"></span>
+      <span class="dot" onclick="setSlide(4)"></span>
+    </div>
+
+    <!-- TEXT -->
+    <p class="loading-text">
+      Please wait while we create your business hub…
+    </p>
+
+    <!-- PROGRESS BAR -->
+    <div class="progress-bar">
+      <div id="progressFill"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ================= COMMUNITY ================= -->
+<section class="section">
+  <h2>Join our ScalVest Community</h2>
+
+  <div class="community-grid">
+    <!-- IMAGE / VIDEO PLACEHOLDERS -->
+    <div class="community-box"><img src="person1.jpg"></div>
+    <div class="community-box"><img src="person2.jpg"></div>
+    <div class="community-box"><img src="person3.jpg"></div>
+    <div class="community-box"><img src="person4.jpg"></div>
+    <div class="community-box"><img src="person5.jpg"></div>
+
+    <!-- CTA BOX -->
+    <div class="community-box text" onclick="openModal()">
+      What is your business?
+    </div>
+  </div>
+</section>
+
+<!-- ================= FAQ ================= -->
+<section class="section qa-section">
+  <h2 class="qa-title">Q&A</h2>
+
+  <div class="qa-list">
+
+    <div class="qa-item">
+      <h3>What can I sell?</h3>
+      <p>
+        Be creative! You can offer any service you wish as long as it's legal and complies with our terms.
+        There are over 200 categories you can browse to get ideas.
+      </p>
+    </div>
+
+    <div class="qa-item">
+      <h3>How much money can I make?</h3>
+      <p>
+        It's totally up to you. You can work as much as you want.
+        Many sellers work full-time while others earn extra income alongside a 9-5 job.
+      </p>
+    </div>
+
+    <div class="qa-item">
+      <h3>How much does it cost?</h3>
+      <p>
+        It's free to join. There is no subscription required or fees to list your services.
+        You keep 80% of every transaction.
+      </p>
+    </div>
+
+    <div class="qa-item">
+      <h3>How much time will I need to invest?</h3>
+      <p>
+        It’s very flexible. You invest more time at the beginning to learn the marketplace,
+        then choose how much you want to work.
+      </p>
+    </div>
+
+    <div class="qa-item">
+      <h3>How do I price my service?</h3>
+      <p>
+        With service packages, you can set pricing from $5 to $995
+        and offer multiple versions of your service at different price points.
+      </p>
+    </div>
+
+    <div class="qa-item">
+      <h3>How do I get paid?</h3>
+      <p>
+        Payments are processed securely and transferred to your account once an order is completed.
+      </p>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-close" onclick="closeModal()">✕</div>
+
+    <div class="modal-form">
+      <h3>Create your business</h3>
+<input id="name" placeholder="Your Name">
+<input id="age" placeholder="Age">
+<input id="businessType" placeholder="Business Type">
+<input id="employees" placeholder="Number of Employees (optional)">
+
+    <button onclick="startLoading()">Continue</button>
+
+    </div>
+  </div>
+</div>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
+  authDomain: "scalevest-163a0.firebaseapp.com",
+  projectId: "scalevest-163a0",
+  storageBucket: "scalevest-163a0.firebasestorage.app",
+  messagingSenderId: "938358950124",
+  appId: "1:938358950124:web:043506aeaacea2a96bfdc9",
+  measurementId: "G-QD3TWBZHR0"
+};
+
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+</script>
+
+
+<script>
+function openModal(){document.getElementById('modal').style.display='flex'}
+function closeModal(){document.getElementById('modal').style.display='none'}
+
+function toggleFAQ(el){
+  const a = el.querySelector('.faq-a');
+  a.style.display = a.style.display === 'block' ? 'none' : 'block';
+}
+</script>
+<script>
+/* ================= MODAL ================= */
+function openModal(){
+  document.getElementById('modal').style.display = 'flex';
+}
+
+function closeModal(){
+  document.getElementById('modal').style.display = 'none';
+}
+
+/* ================= LOADING + FIREBASE ================= */
+const images = [
+  "load1.jpg",
+  "load2.jpg",
+  "load3.jpg",
+  "load4.jpg",
+  "load5.jpg",
+  "load6.jpg"
+];
+
+let currentSlide = 0;
+let progress = 0;
+let progressInterval;
+let autoSlideInterval;
+
+function startLoading(){
+
+  const name = document.getElementById("name").value.trim();
+  const age = document.getElementById("age").value.trim();
+  const businessType = document.getElementById("businessType").value.trim();
+  const employees = document.getElementById("employees").value.trim();
+
+  if(!name || !age || !businessType){
+    alert("Please fill all required fields");
+    return;
+  }
+
+  closeModal();
+
+  document.getElementById('loadingScreen').style.display = 'flex';
+
+  const ref = database.ref("BusinessOwners").push();
+  ref.set({
+    name,
+    age,
+    businessType,
+    employees: employees || "N/A",
+    createdAt: new Date().toISOString()
+  }).then(() => {
+
+    // ✅ FIXES YOUR LOOP FOREVER
+    localStorage.setItem("businessProfileCreated", "true");
+
+    currentSlide = 0;
+    progress = 0;
+    updateSlide();
+    document.getElementById('progressFill').style.width = "0%";
+
+    autoSlideInterval = setInterval(() => {
+      currentSlide = (currentSlide + 1) % images.length;
+      updateSlide();
+    }, 5000);
+
+    progressInterval = setInterval(() => {
+      progress += 2;
+      document.getElementById('progressFill').style.width = progress + "%";
+
+      if(progress >= 100){
+        clearInterval(progressInterval);
+        clearInterval(autoSlideInterval);
+        window.location.href = "mainbusinesshub.html";
+      }
+    }, 100);
+
+  }).catch(err => {
+    alert("Error saving data");
+    console.error(err);
+  });
+}
+
+/* ================= SLIDES ================= */
+function updateSlide(){
+  document.getElementById("loadingImg").src = images[currentSlide];
+  document.querySelectorAll(".dot").forEach((dot, i)=>{
+    dot.classList.toggle("active", i === currentSlide);
+  });
+}
+
+function setSlide(index){
+  currentSlide = index;
+  updateSlide();
+}
+</script>
+
+
+
+</body>
+</html>
