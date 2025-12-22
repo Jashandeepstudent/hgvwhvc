@@ -38,6 +38,20 @@ body{
   width:120px;
   margin-bottom:24px;
 }
+.inventory-box{
+  flex-direction:column;
+  gap:12px;
+}
+
+.inventory-box img{
+  width:48px;
+  height:48px;
+}
+
+.inventory-box span{
+  font-size:15px;
+  font-weight:600;
+}
 
 #createHubCard h2{
   font-size:22px;
@@ -130,20 +144,28 @@ body{
 <!-- DASHBOARD -->
 <div id="dashboard">
   <div class="grid">
-    <div class="box">Box 1</div>
+
+ <!-- BOX 1 : INVENTORY -->
+<div class="box inventory-box" onclick="openInventory()">
+  <img src="box.svg" alt="Inventory">
+  <span>Inventory</span>
+</div>
+
+
     <div class="box">Box 2</div>
     <div class="box">Box 3</div>
     <div class="box">Box 4</div>
     <div class="box">Box 5</div>
     <div class="box">Box 6</div>
+
   </div>
 </div>
+
 
 <!-- FIREBASE SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
 <script>
 /* ===== FIREBASE CONFIG ===== */
 const firebaseConfig = {
@@ -156,7 +178,6 @@ const firebaseConfig = {
   appId: "1:938358950124:web:043506aeaacea2a96bfdc9"
 };
 
-/* ===== INIT ===== */
 firebase.initializeApp(firebaseConfig);
 
 const auth = firebase.auth();
@@ -167,45 +188,82 @@ const createCard = document.getElementById("createHubCard");
 const modal = document.getElementById("nameModal");
 const dashboard = document.getElementById("dashboard");
 
-/* ===== OPEN MODAL ===== */
-createCard.onclick = () => modal.style.display="flex";
-
-/* ===== SAVE BUSINESS NAME ===== */
-function saveBusinessName(){
-  const name = document.getElementById("businessName").value.trim();
-  if(!name) return alert("Enter business name");
-
-  const user = auth.currentUser;
-  if(!user) return alert("Not logged in");
-
-  db.ref("BusinessOwners/" + user.uid).update({
-    businessName: name,
-    createdAt: new Date().toISOString()
-  }).then(() => {
-    modal.style.display="none";
-    createCard.style.display="none";
-    dashboard.style.display="block";
-  });
+/* ===== UI HELPERS ===== */
+function showDashboard() {
+  createCard.style.display = "none";
+  modal.style.display = "none";
+  dashboard.style.display = "block";
 }
 
-/* ===== CHECK ON LOAD ===== */
-auth.onAuthStateChanged(user=>{
-  if(!user){
-    location.href="login.html";
+function showCreateCard() {
+  dashboard.style.display = "none";
+  createCard.style.display = "flex";
+}
+
+/* ===== OPEN MODAL ===== */
+createCard.onclick = () => modal.style.display = "flex";
+
+/* ===== SAVE BUSINESS NAME ===== */
+function saveBusinessName() {
+  const name = businessName.value.trim();
+  if (!name) return alert("Enter business name");
+
+  const user = auth.currentUser;
+  if (!user) return;
+
+  // 🚀 SAVE LOCALLY (INSTANT)
+  localStorage.setItem("businessName", name);
+
+  showDashboard();
+
+  // 🔄 SAVE TO FIREBASE (BACKGROUND)
+  Promise.all([
+    db.ref("BusinessOwners/" + user.uid).update({
+      businessName: name,
+      createdAt: new Date().toISOString()
+    }),
+    db.ref("BusinessNames/" + name).set({
+      ownerUid: user.uid,
+      createdAt: new Date().toISOString()
+    })
+  ]).catch(err => alert(err.message));
+}
+
+/* ===== INSTANT LOAD ===== */
+auth.onAuthStateChanged(user => {
+  if (!user) {
+    location.href = "login.html";
     return;
   }
 
+  // ⚡ INSTANT UI FROM LOCAL STORAGE
+  const cachedName = localStorage.getItem("businessName");
+  if (cachedName) {
+    showDashboard();
+  } else {
+    showCreateCard();
+  }
+
+  // 🔄 SILENT FIREBASE SYNC (NO UI BLOCK)
   db.ref("BusinessOwners/" + user.uid + "/businessName")
     .once("value")
-    .then(snap=>{
-      if(snap.exists()){
-        createCard.style.display="none";
-        dashboard.style.display="block";
+    .then(snap => {
+      if (snap.exists()) {
+        localStorage.setItem("businessName", snap.val());
+        showDashboard();
+      } else {
+        localStorage.removeItem("businessName");
+        showCreateCard();
       }
     });
 });
-
+</script>
+<script>
+function openInventory(){
+  window.location.href = "inventory.html";
+}
 </script>
 
 </body>
 </html>
+
