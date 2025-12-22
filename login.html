@@ -2,209 +2,344 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>ScalVest – Auth</title>
+<title>Sign in – ScalVest</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
 *{box-sizing:border-box;font-family:Inter}
-body{margin:0;background:#0f172a;color:#fff}
+body{margin:0;color:#fff}
 
-.center{
-  min-height:100vh;
+/* VIDEO BG */
+#bgVideo{
+  position:fixed;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  z-index:-2;
+}
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  background:rgba(10,15,25,.45);
+  z-index:-1;
+}
+
+/* AUTH BUTTONS */
+.auth-btn{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  width:100%;
+  padding:13px 16px;
+  margin-bottom:12px;
+  border-radius:10px;
+  border:1px solid #e5e7eb;
+  background:#fff;
+  font-weight:600;
+  cursor:pointer;
+}
+.auth-btn img{width:18px;height:18px}
+
+/* MODALS */
+.modal-overlay,.email-overlay{
+  position:fixed;
+  inset:0;
   display:flex;
   justify-content:center;
   align-items:center;
 }
-
-.card{
-  width:380px;
-  background:#111827;
-  padding:28px;
-  border-radius:18px;
+.email-overlay{
+  background:rgba(0,0,0,.45);
+  backdrop-filter:blur(8px);
+  display:none;
+  z-index:100;
 }
-h3{margin:0 0 6px}
-p{margin:0 0 16px;color:#9ca3af;font-size:14px}
-
-input,button{
+.email-glass{
+  width:360px;
+  padding:28px;
+  border-radius:20px;
+  background:rgba(255,255,255,.15);
+  backdrop-filter:blur(20px);
+}
+.email-glass input{
   width:100%;
   padding:12px;
-  margin-bottom:12px;
+  margin-bottom:10px;
   border-radius:10px;
   border:none;
+  background:rgba(255,255,255,.2);
+  color:#fff;
 }
-input{background:#1f2937;color:#fff}
-button{background:#2563eb;color:#fff;font-weight:600;cursor:pointer}
+.email-glass button{
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:12px;
+  background:#2563eb;
+  color:#fff;
+  font-weight:600;
+  cursor:pointer;
+}
+.switch-link{
+  text-align:center;
+  font-size:13px;
+  margin-top:12px;
+}
+.switch-link span{color:#93c5fd;cursor:pointer}
 
-.alt{text-align:center;font-size:13px}
-.alt span{color:#60a5fa;cursor:pointer}
+ul{
+  margin:6px 0 14px 14px;
+  padding:0;
+  font-size:12px;
+  line-height:1.6;
+}
 
-.overlay{
-  position:fixed;inset:0;
-  background:rgba(0,0,0,.6);
-  display:none;
-  justify-content:center;
-  align-items:center;
+/* MAIN MODAL */
+.modal{
+  width:900px;
+  height:520px;
+  background:#fff;
+  border-radius:16px;
+  display:flex;
+  overflow:hidden;
+}
+.modal-left{
+  width:50%;
+  background:url("scalvestauth.jpg") center/cover no-repeat;
+  position:relative;
+}
+.modal-left::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,.55);
+}
+.overlay-text{
+  position:relative;
+  z-index:2;
+  padding:42px;
+}
+.modal-right{
+  width:50%;
+  padding:40px;
+  color:#000;
+  position:relative;
+}
+.divider{
+  text-align:center;
+  margin:18px 0;
+  position:relative;
+}
+.divider span{
+  background:#fff;
+  padding:0 10px;
+  font-size:12px;
+  color:#6b7280;
+}
+.divider::before{
+  content:"";
+  position:absolute;
+  top:50%;
+  left:0;
+  right:0;
+  height:1px;
+  background:#e5e7eb;
+  z-index:-1;
 }
 </style>
 </head>
 
 <body>
 
-<div class="center">
-  <div class="card">
-    <h3 id="title">Create account</h3>
-    <p id="subtitle">New to ScalVest</p>
+<video id="bgVideo" autoplay muted loop playsinline>
+  <source src="loginpage.mp4" type="video/mp4">
+</video>
 
-    <input id="loginInput" placeholder="Email or Username">
-    <input id="passwordInput" type="password" placeholder="Password">
+<div class="modal-overlay">
+  <div class="modal">
 
-    <button onclick="emailOrUsername()">Continue</button>
+    <div class="modal-left">
+      <div class="overlay-text">
+        <h2>Verified • Secure • Scalable</h2>
+      </div>
+    </div>
 
-    <p class="alt">
-      <span onclick="googleLogin()">Google</span> •
-      <span onclick="facebookLogin()">Facebook</span> •
-      <span onclick="appleLogin()">Apple</span>
-    </p>
+    <div class="modal-right">
+      <h3 id="authTitle">New to ScalVest?</h3>
+      <p id="authSubtitle">Create an account</p>
 
-    <p class="alt">
-      <span onclick="toggleMode()">Switch sign in / sign up</span>
-    </p>
+      <p id="authSwitch">
+        Already have an account?
+        <span onclick="switchToSigninUI()">Sign in</span>
+      </p>
+
+      <button class="auth-btn" onclick="googleLogin()">
+        <img src="google.svg"> Continue with Google
+      </button>
+
+      <button class="auth-btn" onclick="openSignup()">
+        <img src="email.svg"> Continue with Email
+      </button>
+
+      <div class="divider"><span>or</span></div>
+
+      <button class="auth-btn" onclick="appleLogin()">
+        <img src="apple.svg"> Continue with Apple
+      </button>
+
+      <button class="auth-btn" onclick="facebookLogin()">
+        <img src="facebook.svg"> Continue with Facebook
+      </button>
+    </div>
   </div>
 </div>
 
-<!-- PROFILE SETUP -->
-<div class="overlay" id="profileModal">
-  <div class="card">
-    <h3>Complete your profile</h3>
-    <p>One-time setup</p>
+<!-- SIGN UP -->
+<div class="email-overlay" id="signupModal">
+  <div class="email-glass">
+    <h3>Create account</h3>
+    <input id="signupEmail" placeholder="Email">
+    <input id="signupPassword" type="password" placeholder="Password" oninput="checkPasswordRules()">
 
-    <input id="usernameInput" placeholder="Choose username">
-    <input id="setPasswordInput" type="password"
-           placeholder="Set password (social login only)">
+    <ul>
+      <li id="rule-length">❌ At least 6 characters</li>
+      <li id="rule-number">❌ Contains a number</li>
+      <li id="rule-special">❌ Contains a special character</li>
+    </ul>
 
-    <button onclick="saveProfile()">Continue</button>
+    <button onclick="emailSignup()">Create account</button>
+
+    <div class="switch-link">
+      Already have an account?
+      <span onclick="switchToSigninUI()">Sign in</span>
+    </div>
+  </div>
+</div>
+
+<!-- SIGN IN -->
+<div class="email-overlay" id="signinModal">
+  <div class="email-glass">
+    <h3>Sign in</h3>
+    <input id="signinEmail" placeholder="Email">
+    <input id="signinPassword" type="password" placeholder="Password">
+    <button onclick="emailSignin()">Sign in</button>
+  </div>
+</div>
+
+<!-- VERIFYING -->
+<div class="email-overlay" id="verifyingModal">
+  <div class="email-glass">
+    <h3>Verifying your email</h3>
+    <p>Please check your inbox and click the link.</p>
+    <p style="font-size:12px;opacity:.8">This window will update automatically.</p>
   </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
 firebase.initializeApp({
   apiKey:"AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
   authDomain:"scalevest-163a0.firebaseapp.com",
-  databaseURL:"https://scalevest-163a0-default-rtdb.firebaseio.com",
   projectId:"scalevest-163a0"
 });
 
 const auth = firebase.auth();
-const db = firebase.database();
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
-let isSignin = false;
-
-/* TOGGLE */
-function toggleMode(){
-  isSignin = !isSignin;
-  title.innerText = isSignin ? "Welcome back" : "Create account";
-  subtitle.innerText = isSignin ? "Sign in to continue" : "New to ScalVest";
+/* UI HELPERS */
+function openSignup(){
+  signupModal.style.display="flex";
+  signinModal.style.display="none";
+}
+function openSignin(){
+  signinModal.style.display="flex";
+  signupModal.style.display="none";
 }
 
-/* EMAIL OR USERNAME LOGIN */
-async function emailOrUsername(){
-  const id = loginInput.value.trim();
-  const pass = passwordInput.value;
-  if(!id || !pass) return alert("Fill all fields");
-
-  if(id.includes("@")){
-    emailFlow(id, pass);
-  } else {
-    const snap = await db.ref("users")
-      .orderByChild("username")
-      .equalTo(id)
-      .once("value");
-
-    if(!snap.exists()) return alert("Username not found");
-    const email = Object.values(snap.val())[0].email;
-    emailFlow(email, pass);
-  }
+/* TEXT SWITCH */
+function switchToSigninUI(){
+  authTitle.innerText="Welcome back";
+  authSubtitle.innerText="Sign in to continue";
+  authSwitch.innerHTML=`New to ScalVest? <span onclick="switchToSignupUI()">Create account</span>`;
+  openSignin();
+}
+function switchToSignupUI(){
+  authTitle.innerText="New to ScalVest?";
+  authSubtitle.innerText="Create an account";
+  authSwitch.innerHTML=`Already have an account? <span onclick="switchToSigninUI()">Sign in</span>`;
+  openSignup();
 }
 
-function emailFlow(email, pass){
-  const fn = isSignin
-    ? auth.signInWithEmailAndPassword
-    : auth.createUserWithEmailAndPassword;
+/* PASSWORD RULES */
+function checkPasswordRules(){
+  const p = signupPassword.value;
+  rule_length.innerText=(p.length>=6?"✅":"❌")+" At least 6 characters";
+  rule_number.innerText=(/\d/.test(p)?"✅":"❌")+" Contains a number";
+  rule_special.innerText=(/[!@#$%^&*]/.test(p)?"✅":"❌")+" Contains a special character";
+}
+function validPassword(p){
+  return p.length>=6 && /\d/.test(p) && /[!@#$%^&*]/.test(p);
+}
 
-  fn.call(auth, email, pass)
-    .then(res=>{
-      if(!res.user.emailVerified){
-        res.user.sendEmailVerification();
-        alert("Verification email sent");
+/* EMAIL SIGNUP */
+function emailSignup(){
+  if(!validPassword(signupPassword.value)) return alert("Weak password");
+  auth.createUserWithEmailAndPassword(signupEmail.value, signupPassword.value)
+    .then(c=>{
+      c.user.sendEmailVerification();
+      signupModal.style.display="none";
+      verifyingModal.style.display="flex";
+      auth.signOut();
+    });
+}
+
+/* EMAIL SIGNIN */
+function emailSignin(){
+  auth.signInWithEmailAndPassword(signinEmail.value, signinPassword.value)
+    .then(r=>{
+      if(!r.user.emailVerified){
+        verifyingModal.style.display="flex";
         auth.signOut();
       }
-    })
+    });
+}
+
+/* SOCIAL LOGIN (FIXED) */
+function googleLogin(){
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider)
+    .then(()=>location.href="mainbusinesshub.html")
+    .catch(e=>alert(e.message));
+}
+function facebookLogin(){
+  const provider = new firebase.auth.FacebookAuthProvider();
+  auth.signInWithPopup(provider)
+    .then(()=>location.href="mainbusinesshub.html")
+    .catch(e=>alert(e.message));
+}
+function appleLogin(){
+  const provider = new firebase.auth.OAuthProvider("apple.com");
+  auth.signInWithPopup(provider)
+    .then(()=>location.href="mainbusinesshub.html")
     .catch(e=>alert(e.message));
 }
 
-/* SOCIAL */
-function googleLogin(){
-  auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
-}
-function facebookLogin(){
-  auth.signInWithPopup(new firebase.auth.FacebookAuthProvider());
-}
-function appleLogin(){
-  auth.signInWithPopup(new firebase.auth.OAuthProvider("apple.com"));
-}
-
-/* AUTH STATE */
+/* AUTO VERIFY */
 auth.onAuthStateChanged(user=>{
-  if(!user) return;
-
-  const provider = user.providerData[0].providerId;
-  if(provider==="password" && !user.emailVerified) return;
-
-  const ref = db.ref("users/"+user.uid);
-  ref.once("value").then(snap=>{
-    if(!snap.exists() || !snap.val().profileCompleted){
-      openProfilePopup();
-    }else{
-      location.href="mainbusinesshub.html";
-    }
-  });
-});
-
-/* PROFILE */
-function openProfilePopup(){
-  if(auth.currentUser.providerData[0].providerId!=="password"){
-    setPasswordInput.style.display="block";
+  if(user){
+    user.reload().then(()=>{
+      if(user.emailVerified){
+        location.href="mainbusinesshub.html";
+      }
+    });
   }
-  profileModal.style.display="flex";
-}
-
-async function saveProfile(){
-  const user = auth.currentUser;
-  const username = usernameInput.value.trim();
-  const pwd = setPasswordInput.value;
-
-  if(!username) return alert("Username required");
-
-  if(pwd) await user.updatePassword(pwd);
-
-  await db.ref("users/"+user.uid).set({
-    uid:user.uid,
-    email:user.email,
-    username,
-    provider:user.providerData[0].providerId,
-    profileCompleted:true,
-    createdAt:Date.now()
-  });
-
-  location.href="mainbusinesshub.html";
-}
+});
 </script>
 
 </body>
