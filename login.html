@@ -247,7 +247,7 @@ auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
 let AUTH_MODE = "signup";
 
-/* MODE SWITCH */
+/* ================= UI SWITCH ================= */
 function switchToSigninUI(){
   AUTH_MODE = "signin";
   authTitle.innerText = "Welcome back";
@@ -261,14 +261,13 @@ function switchToSignupUI(){
   authSwitch.innerHTML = `Already have an account? <span onclick="switchToSigninUI()">Sign in</span>`;
 }
 
-/* EMAIL BUTTON */
 function emailAuthHandler(){
   AUTH_MODE === "signup"
     ? signupModal.style.display="flex"
     : signinModal.style.display="flex";
 }
 
-/* PASSWORD RULES */
+/* ================= PASSWORD RULES ================= */
 function checkPasswordRules(){
   const p = signupPassword.value;
   rule_length.innerText=(p.length>=6?"✅":"❌")+" At least 6 characters";
@@ -279,54 +278,79 @@ function validPassword(p){
   return p.length>=6 && /\d/.test(p) && /[!@#$%^&*]/.test(p);
 }
 
-/* EMAIL SIGNUP */
+/* ================= EMAIL SIGNUP ================= */
 function emailSignup(){
-  if(!validPassword(signupPassword.value)) return alert("Weak password");
-  auth.createUserWithEmailAndPassword(signupEmail.value, signupPassword.value)
-    .then(c=>{
-      c.user.sendEmailVerification();
-      signupModal.style.display="none";
-      verifyingModal.style.display="flex";
-      auth.signOut();
+  if(!validPassword(signupPassword.value))
+    return alert("Password does not meet requirements");
+
+  auth.createUserWithEmailAndPassword(
+    signupEmail.value,
+    signupPassword.value
+  )
+  .then(async cred=>{
+    await cred.user.sendEmailVerification({
+      url: window.location.origin + "/login.html"
     });
+
+    signupModal.style.display="none";
+    verifyingModal.style.display="flex";
+
+    // Sign out → user verifies via email → comes back
+    await auth.signOut();
+  })
+  .catch(e=>alert(e.message));
 }
 
-/* EMAIL SIGNIN */
+/* ================= EMAIL SIGNIN ================= */
 function emailSignin(){
-  auth.signInWithEmailAndPassword(signinEmail.value, signinPassword.value)
-    .then(r=>{
-      if(!r.user.emailVerified){
-        verifyingModal.style.display="flex";
-        auth.signOut();
-      }
-    });
+  auth.signInWithEmailAndPassword(
+    signinEmail.value,
+    signinPassword.value
+  )
+  .then(async res=>{
+    await res.user.reload();
+
+    if(!res.user.emailVerified){
+      verifyingModal.style.display="flex";
+      await auth.signOut();
+      return;
+    }
+
+    location.href="mainbusinesshub.html";
+  })
+  .catch(e=>alert(e.message));
 }
 
-/* SOCIAL */
+/* ================= SOCIAL LOGIN ================= */
 function googleLogin(){
   auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
     .then(()=>location.href="mainbusinesshub.html")
     .catch(e=>alert(e.message));
 }
+
 function facebookLogin(){
   auth.signInWithPopup(new firebase.auth.FacebookAuthProvider())
     .then(()=>location.href="mainbusinesshub.html")
     .catch(e=>alert(e.message));
 }
+
 function appleLogin(){
   auth.signInWithPopup(new firebase.auth.OAuthProvider("apple.com"))
     .then(()=>location.href="mainbusinesshub.html")
     .catch(e=>alert(e.message));
 }
 
-/* AUTO LOGIN AFTER VERIFY */
-auth.onAuthStateChanged(user=>{
-  if(user){
-    user.reload().then(()=>{
-      if(user.emailVerified){
-        location.href="mainbusinesshub.html";
-      }
-    });
+/* ================= AUTO LOGIN AFTER VERIFY ================= */
+/* 🔥 THIS IS THE MOST IMPORTANT FIX */
+auth.onAuthStateChanged(async user=>{
+  if(!user) return;
+
+  await user.reload(); // 🔥 forces updated verification state
+
+  if(user.emailVerified){
+    location.href="mainbusinesshub.html";
+  }else{
+    verifyingModal.style.display="flex";
   }
 });
 </script>
