@@ -84,12 +84,6 @@ body::before{
   font-weight:600;
   cursor:pointer;
 }
-.switch-link{
-  text-align:center;
-  font-size:13px;
-  margin-top:12px;
-}
-.switch-link span{color:#93c5fd;cursor:pointer}
 
 ul{
   margin:6px 0 14px 14px;
@@ -98,7 +92,6 @@ ul{
   line-height:1.6;
 }
 
-/* MAIN MODAL */
 .modal{
   width:900px;
   height:520px;
@@ -149,6 +142,16 @@ ul{
   background:#e5e7eb;
   z-index:-1;
 }
+.loader{
+  width:42px;
+  height:42px;
+  border:4px solid rgba(255,255,255,.3);
+  border-top:4px solid #60a5fa;
+  border-radius:50%;
+  animation:spin 1s linear infinite;
+  margin:0 auto 14px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 
@@ -160,7 +163,6 @@ ul{
 
 <div class="modal-overlay">
   <div class="modal">
-
     <div class="modal-left">
       <div class="overlay-text">
         <h2>Verified • Secure • Scalable</h2>
@@ -176,59 +178,50 @@ ul{
         <span onclick="switchToSigninUI()">Sign in</span>
       </p>
 
-      <button class="auth-btn" onclick="googleLogin()">
-        <img src="google.svg"> Continue with Google
-      </button>
-
-      <button class="auth-btn" onclick="emailAuthHandler()">
-        <img src="email.svg"> Continue with Email
-      </button>
+      <button class="auth-btn" onclick="googleLogin()">Continue with Google</button>
+      <button class="auth-btn" onclick="emailAuthHandler()">Continue with Email</button>
 
       <div class="divider"><span>or</span></div>
 
-      <button class="auth-btn" onclick="appleLogin()">
-        <img src="apple.svg"> Continue with Apple
-      </button>
-
-      <button class="auth-btn" onclick="facebookLogin()">
-        <img src="facebook.svg"> Continue with Facebook
-      </button>
+      <button class="auth-btn" onclick="appleLogin()">Continue with Apple</button>
+      <button class="auth-btn" onclick="facebookLogin()">Continue with Facebook</button>
     </div>
   </div>
 </div>
 
-<!-- EMAIL SIGN UP -->
+<!-- SIGNUP -->
 <div class="email-overlay" id="signupModal">
   <div class="email-glass">
     <h3>Create account</h3>
     <input id="signupEmail" placeholder="Email">
     <input id="signupPassword" type="password" placeholder="Password" oninput="checkPasswordRules()">
-
     <ul>
       <li id="rule_length">❌ At least 6 characters</li>
       <li id="rule_number">❌ Contains a number</li>
       <li id="rule_special">❌ Contains a special character</li>
     </ul>
-
     <button onclick="emailSignup()">Create account</button>
   </div>
 </div>
 
-<!-- EMAIL SIGN IN -->
+<!-- SIGNIN -->
 <div class="email-overlay" id="signinModal">
   <div class="email-glass">
     <h3>Sign in</h3>
     <input id="signinEmail" placeholder="Email">
-    <input id="signinPassword" type="password" placeholder="Password">
+    <input id="signinPassword" type="password">
     <button onclick="emailSignin()">Sign in</button>
   </div>
 </div>
 
 <!-- VERIFY -->
 <div class="email-overlay" id="verifyingModal">
-  <div class="email-glass">
+  <div class="email-glass" style="text-align:center">
+    <div class="loader"></div>
     <h3>Verifying your email</h3>
-    <p>Please check your inbox and click the link.</p>
+    <p>Check your inbox and click the link</p>
+    <button onclick="resendVerification()">Resend email</button>
+    <p id="resendMsg"></p>
   </div>
 </div>
 
@@ -245,29 +238,16 @@ firebase.initializeApp({
 const auth = firebase.auth();
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
-let AUTH_MODE = "signup";
-
-/* ================= UI SWITCH ================= */
-function switchToSigninUI(){
-  AUTH_MODE = "signin";
-  authTitle.innerText = "Welcome back";
-  authSubtitle.innerText = "Sign in to continue";
-  authSwitch.innerHTML = `New to ScaleVest? <span onclick="switchToSignupUI()">Create account</span>`;
-}
-function switchToSignupUI(){
-  AUTH_MODE = "signup";
-  authTitle.innerText = "New to ScaleVest?";
-  authSubtitle.innerText = "Create an account";
-  authSwitch.innerHTML = `Already have an account? <span onclick="switchToSigninUI()">Sign in</span>`;
+/* 🔥 GITHUB PAGES SAFE REDIRECT */
+function getRedirectURL(){
+  return window.location.origin +
+    window.location.pathname.replace(/\/[^\/]*$/, "/") +
+    "login.html";
 }
 
-function emailAuthHandler(){
-  AUTH_MODE === "signup"
-    ? signupModal.style.display="flex"
-    : signinModal.style.display="flex";
-}
-
-/* ================= PASSWORD RULES ================= */
+/* UI */
+function emailAuthHandler(){ signupModal.style.display="flex"; }
+function switchToSigninUI(){ signinModal.style.display="flex"; signupModal.style.display="none"; }
 function checkPasswordRules(){
   const p = signupPassword.value;
   rule_length.innerText=(p.length>=6?"✅":"❌")+" At least 6 characters";
@@ -277,8 +257,13 @@ function checkPasswordRules(){
 function validPassword(p){
   return p.length>=6 && /\d/.test(p) && /[!@#$%^&*]/.test(p);
 }
+function showVerifying(){
+  signupModal.style.display="none";
+  signinModal.style.display="none";
+  verifyingModal.style.display="flex";
+}
 
-/* ================= EMAIL SIGNUP ================= */
+/* SIGNUP */
 function emailSignup(){
   if(!validPassword(signupPassword.value))
     return alert("Password does not meet requirements");
@@ -289,68 +274,68 @@ function emailSignup(){
   )
   .then(async cred=>{
     await cred.user.sendEmailVerification({
-      url: window.location.origin + "/login.html"
+      url: getRedirectURL()
     });
 
-    signupModal.style.display="none";
-    verifyingModal.style.display="flex";
-
-    // Sign out → user verifies via email → comes back
-    await auth.signOut();
+    // ❌ DO NOT SIGN OUT
+    showVerifying();
   })
-  .catch(e=>alert(e.message));
+  .catch(err=>{
+    if(err.code==="auth/email-already-in-use"){
+      alert("Account already exists. Please sign in.");
+      switchToSigninUI();
+      signupModal.style.display="none";
+    }else{
+      alert(err.message);
+    }
+  });
 }
 
-/* ================= EMAIL SIGNIN ================= */
+
+/* SIGNIN */
 function emailSignin(){
-  auth.signInWithEmailAndPassword(
-    signinEmail.value,
-    signinPassword.value
-  )
+  auth.signInWithEmailAndPassword(signinEmail.value, signinPassword.value)
   .then(async res=>{
     await res.user.reload();
-
     if(!res.user.emailVerified){
-      verifyingModal.style.display="flex";
+      showVerifying();
       await auth.signOut();
       return;
     }
-
     location.href="mainbusinesshub.html";
-  })
-  .catch(e=>alert(e.message));
+  }).catch(e=>alert(e.message));
 }
 
-/* ================= SOCIAL LOGIN ================= */
+/* RESEND */
+async function resendVerification(){
+  const user = auth.currentUser;
+  if(!user) return resendMsg.innerText="Sign in again";
+  await user.sendEmailVerification({ url:getRedirectURL() });
+  resendMsg.innerText="✅ Email sent again";
+}
+
+/* SOCIAL */
 function googleLogin(){
   auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
-    .then(()=>location.href="mainbusinesshub.html")
-    .catch(e=>alert(e.message));
+  .then(()=>location.href="mainbusinesshub.html");
 }
-
 function facebookLogin(){
   auth.signInWithPopup(new firebase.auth.FacebookAuthProvider())
-    .then(()=>location.href="mainbusinesshub.html")
-    .catch(e=>alert(e.message));
+  .then(()=>location.href="mainbusinesshub.html");
 }
-
 function appleLogin(){
   auth.signInWithPopup(new firebase.auth.OAuthProvider("apple.com"))
-    .then(()=>location.href="mainbusinesshub.html")
-    .catch(e=>alert(e.message));
+  .then(()=>location.href="mainbusinesshub.html");
 }
 
-/* ================= AUTO LOGIN AFTER VERIFY ================= */
-/* 🔥 THIS IS THE MOST IMPORTANT FIX */
+/* AUTO LOGIN AFTER VERIFY */
 auth.onAuthStateChanged(async user=>{
   if(!user) return;
-
-  await user.reload(); // 🔥 forces updated verification state
-
+  await user.reload();
   if(user.emailVerified){
     location.href="mainbusinesshub.html";
   }else{
-    verifyingModal.style.display="flex";
+    showVerifying();
   }
 });
 </script>
