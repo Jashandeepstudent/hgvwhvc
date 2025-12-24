@@ -413,10 +413,12 @@ recognition.lang = "hi-IN";
     showToast("Listening...");
   };
 
-  recognition.onerror = () => {
-    listening = false;
-    showToast("Voice error");
-  };
+ recognition.onerror = (e) => {
+  listening = false;
+  console.error("Voice error:", e);
+  showToast("Mic permission denied");
+};
+
 
   recognition.onend = () => {
     listening = false;
@@ -482,14 +484,21 @@ function processVoice(cmd){
   showToast("Command not understood");
 }
 async function handleAIVoice(text){
-  const res = await fetch("/openai", {
+  showToast("Thinking...");
+
+  const res = await fetch("/api/openai", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ text })
   });
 
   const cmd = await res.json();
-  if(!cmd || !cmd.action) return showToast("Didn't understand");
+  console.log("AI CMD:", cmd);
+
+  if(!cmd || !cmd.action){
+    showToast("Didn't understand");
+    return;
+  }
 
   const qty = cmd.quantity || 1;
 
