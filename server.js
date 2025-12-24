@@ -6,11 +6,18 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// ============================
+// Voice Command Parsing Endpoint
+// ============================
 app.post("/api/parse-voice", async (req, res) => {
   const { command } = req.body;
-  if (!command) return res.status(400).json({ error: "No command provided" });
+
+  if (!command || command.trim().length === 0) {
+    return res.status(400).json({ error: "No command provided" });
+  }
 
   try {
+    // Call OpenAI API
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -22,11 +29,11 @@ app.post("/api/parse-voice", async (req, res) => {
         messages: [
           {
             role: "system",
-            content: "You are an assistant that converts any spoken language command (English/Hindi/Hinglish) into structured inventory action."
+            content: "You are an assistant that converts any spoken language command (English/Hindi/Hinglish) into a structured inventory action."
           },
           {
             role: "user",
-            content: `Command: "${command}". Return JSON like {"action":"add|increase|decrease|remove","name":"product name","quantity":number}`
+            content: `Command: "${command}". Return JSON like {"action":"add|increase|decrease|remove","name":"product name","quantity":number}. Only JSON. No extra text.`
           }
         ],
         temperature: 0
@@ -34,17 +41,37 @@ app.post("/api/parse-voice", async (req, res) => {
     });
 
     const data = await response.json();
-    const text = data.choices[0].message.content;
+    const text = data?.choices?.[0]?.message?.content || "";
 
-    let parsed;
-    try { parsed = JSON.parse(text); } catch (e) { parsed = { action: null }; }
+    let parsed = { action: null, name: null, quantity: 1 };
 
-    res.json(parsed);
+    try {
+      // Clean up response and parse
+      const cleaned = text.trim().replace(/\n/g, "");
+      parsed = JSON.parse(cleaned);
+    } catch {
+      // Fallback regex parsing if JSON is slightly malformed
+      const actionMatch = text.match(/"action"\s*:\s*"(\w+)"/);
+      const nameMatch = text.match(/"name"\s*:\s*"([^"]+)"/);
+      const qtyMatch = text.match(/"quantity"\s*:\s*(\d+)/);
+
+      parsed = {
+        action: actionMatch ? actionMatch[1] : null,
+        name: nameMatch ? nameMatch[1] : null,
+        quantity: qtyMatch ? parseInt(qtyMatch[1]) : 1
+      };
+    }
+
+    return res.json(parsed);
+
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "OpenAI API error" });
+    console.error("Error parsing voice command:", err);
+    return res.status(500).json({ error: "OpenAI API error" });
   }
 });
 
+// ============================
+// Start Server
+// ============================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
