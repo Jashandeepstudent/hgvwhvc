@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/scandit-sdk@6.x"></script>
+<script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.19.1/umd/index.min.js"></script>
 
 <style>
 *{box-sizing:border-box;font-family:Inter}
@@ -160,9 +160,10 @@ body{margin:0;background:#f6f7fb;padding:30px}
 <div id="scannerModal" class="modal">
   <div class="modal-box">
     <h3>Scan Barcode</h3>
-<div id="scanner" style="width:100%;height:260px;"></div>
-<div id="scanCount" class="counter">0</div>
-
+    <div id="scanner">
+      <div class="scan-zone"></div>
+      <div class="laser"></div>
+      <div id="scanCount" class="counter">0</div>
     </div>
     <button onclick="closeScanner()">Close</button>
   </div>
@@ -202,18 +203,27 @@ auth.onAuthStateChanged(u=>{
 function openAdd(){addModal.style.display="flex"}
 async function openScanner(){
   unlockAudio();
-
-  const granted = await requestCameraPermission();
-  if (!granted) return;
-
   scannerModal.style.display = "flex";
   await startScanner();
 }
 
+const input = document.getElementById('barcodeInput');
+input.focus();
+
+input.addEventListener('keypress', e => {
+  if (e.key === 'Enter') {
+    handleBarcode(input.value); // your existing scan handler
+    input.value = '';
+  }
+});
 
 function closeScanner(){
-  scannerModal.style.display="none";
+  scannerModal.style.display = "none";
   scannerRunning = false;
+
+  if(codeReader){
+    codeReader.reset();
+  }
 }
 
 
@@ -241,74 +251,37 @@ function greenFlash(){
   setTimeout(()=>f.classList.remove("show"),120);
 }
 
-async function requestCameraPermission() {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "environment" }
-    });
-
-    // Immediately stop preview stream
-    stream.getTracks().forEach(track => track.stop());
-
-    return true;
-  } catch (err) {
-    alert("Camera permission denied. Please allow camera access.");
-    console.error(err);
-    return false;
-  }
-}
 
 /* 🔥 INSANE MODE INIT */
-let scanditScanner = null;
+let codeReader = null;
 
 async function startScanner() {
-  if (scannerRunning) return;
+  if(scannerRunning) return;
   scannerRunning = true;
 
-  const licenseKey = "AkZ2xzFUFoljEUPsHs3vquRA5C5zF7MW4QzRFjwGjE0XajPGOkHmYbxi7bDnW0g5pQ8AEqJMVvPBU9TFyXN5Mqhq0tbJYCckf3SmrkU5l/cDMBN5LT0dRUEhUKjbYRmleW/rIrN7j2IVeUw/J14ApO50HjOyfqee6Ve25wwUDk21fIOJoESVtJ1SSBDsEJix8lkdc35n405zc5lbBldvryNTEhGaYmn+0ldrqzx+jjSLe7FsK0zCPtpOAE/5QDKw/Ex+vwVp3fy6c7E5x3CAjxhGJ6M1Z31TN38dfmJF7HspcDoHXVAkzo1Ylv7reJQozFJ9xuVxg1i3EiYtPVHedWgt4yWkdKOM0VGqv0BQFqmBcHyiaFtNFM5R0pfkTGKkDnvWDEA23dWJVoVeCykar+QoG82LXRnFpU3I0Qdl3+FiV7x3MGoxSY5h6usUWk1NNR1UB/hGEBM0bbamVmXbWERqpEg9fEFYkUwKWO9tccJxfRixa1MHq19vGnj5CdVqr0JLx1pIJeJLdOECPynipnIRYaqHvX4h+jK2+IdH/9LVfUQsMKyW8GsaiH+z3rTJAdc4/IAoNGAtonCWdVR8Uh9GGDKLLF9WOTMxr0Ymg4Hp93fD0E5H7SDS1jMqhRyq5P2dBciHBqoDVoYMkvv/MRPxApGN58AJC2lwjmaK+h4S5z3qoGP2o2C0vQWjjzzeSold0sDUA171zUFlmHiiAMhpbZ1YgDCkT0WrNRemWCeirR08xpykOsOs+EMzf27+hWG/lhP3RZ+u12bvGJ3zW3343DCOSzZuZ5YBt1b1s7pMyOA2hY5A+SFdmZ24H6JdnOIHPv7M946IlvuF4dCKE9RNoJvAUlKM3kdItxS8m7u+vNGfV/AKq3BrJAT+dScKm0G5kiIrID7Vx1t2Byz9bf5mwzbKA+hJPZ4Wxb3DHtFKUakp923zMUNXYmuhl1CBZGIocVhTTPlvTpGdqH+lMKlbHPqI8/FVr8RUkTjQTaYKlL0Z6UPZysEj9N1YYeuoSb6VXHlCskAv9YnxmB+R14gEkTeAAtB8T+dJDv2DZbVFxcrWhfqtiz1NyRSQlvJttFjMvCvvmnCYPTQD2nEh9AEtdPy4C0Lmtt3QnhqCWDvMj1h0jnjCxqDNwXPqdzEZTnvQ2lQFgmIeyjviVNLVFru06MF34YCwmlCcwD/Jsjv8gYfsdGdUqFLoNrU9Rdnxld8=";
+  codeReader = new ZXing.BrowserMultiFormatReader();
 
-  await ScanditSDK.configure(licenseKey, {
-    engineLocation: "https://cdn.jsdelivr.net/npm/scandit-sdk@6.x/build/"
-  });
+  try {
+    const videoInput = document.getElementById('scanner');
 
-  const context = await ScanditSDK.DataCaptureContext.create();
-
-  const camera = ScanditSDK.Camera.default;
-  await context.setFrameSource(camera);
-
-  const settings = new ScanditSDK.BarcodeCaptureSettings();
-  settings.enableSymbologies([
-    ScanditSDK.Symbology.EAN13,
-    ScanditSDK.Symbology.UPCA,
-    ScanditSDK.Symbology.CODE128
-  ]);
-
-  const barcodeCapture = await ScanditSDK.BarcodeCapture.forContext(
-    context,
-    settings
-  );
-
-  barcodeCapture.addListener({
-    didScan: (session) => {
-      const code = session.newlyRecognizedBarcode?.data;
-      if (!code) return;
-
-      handleBarcode(code);
-      greenFlash();
-    }
-  });
-
-  const view = await ScanditSDK.DataCaptureView.forContext(context);
-  view.connectToElement(document.getElementById("scanner"));
-
-  await ScanditSDK.BarcodeCaptureOverlay.withBarcodeCaptureForView(
-    barcodeCapture,
-    view
-  );
-
-  await camera.switchToDesiredState(
-    ScanditSDK.FrameSourceState.On
-  );
+    const stream = await codeReader.decodeFromVideoDevice(
+      null,      // null = default camera
+      videoInput,
+      (result, err) => {
+        if (result) {
+          handleBarcode(result.text);
+          greenFlash();
+        }
+        if (err && !(err instanceof ZXing.NotFoundException)) {
+          console.error(err);
+        }
+      }
+    );
+  } catch (e) {
+    alert("Camera error: " + e.message);
+    console.error(e);
+    scannerRunning = false;
+  }
 }
 
 function unlockAudio(){
