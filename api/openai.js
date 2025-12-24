@@ -6,47 +6,54 @@ const openai = new OpenAI({
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Only POST allowed" });
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
     const { text } = req.body;
 
-    const prompt = `
-You are an inventory voice command parser.
-User speaks Hindi, English, or Hinglish.
-
-Return ONLY JSON.
-
-Actions:
-add, increase, decrease, remove
-
-Defaults:
-quantity = 1
-unit = pcs
-
-Examples:
-"chawal do kilo badhao"
-{"action":"increase","product":"chawal","quantity":2,"unit":"kg"}
-
-"add sugar"
-{"action":"add","product":"sugar","quantity":1,"unit":"pcs"}
-`;
+    if (!text) {
+      return res.status(400).json({ error: "No text provided" });
+    }
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
-      temperature: 0,
       messages: [
-        { role: "system", content: prompt },
-        { role: "user", content: text }
-      ]
+        {
+          role: "system",
+          content: `
+You are an inventory voice assistant.
+Understand English, Hindi, and Hinglish.
+
+Return ONLY valid JSON:
+{
+  "action": "add | increase | decrease | remove",
+  "product": "product name",
+  "quantity": number,
+  "unit": "pcs | kg | litre"
+}
+          `
+        },
+        {
+          role: "user",
+          content: text
+        }
+      ],
+      temperature: 0
     });
 
-    const output = completion.choices[0].message.content.trim();
+    const reply = completion.choices[0].message.content;
 
-    res.json(JSON.parse(output));
-  } catch (e) {
-    console.error(e);
-    res.json({ action: null });
+    // Force JSON safety
+    const json = JSON.parse(reply);
+
+    return res.status(200).json(json);
+
+  } catch (err) {
+    console.error("OPENAI ERROR:", err);
+    return res.status(500).json({
+      error: "AI failed",
+      details: err.message
+    });
   }
 }
