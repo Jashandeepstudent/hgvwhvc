@@ -1,48 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>Ultra Fast Barcode Scanner</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8">
+<title>Scandit Scanner</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://cdn.jsdelivr.net/npm/scandit-sdk@5.x"></script>
 
 <style>
-body {
+html, body {
   margin: 0;
-  font-family: Inter, sans-serif;
+  padding: 0;
+  height: 100%;
   background: black;
   overflow: hidden;
+  font-family: Arial, sans-serif;
 }
 
-/* START BUTTON */
 #startBtn {
   position: fixed;
   inset: 0;
-  z-index: 99999;
-  background: #000;
+  background: black;
   color: #00ff55;
-  font-size: 26px;
-  font-weight: bold;
+  font-size: 24px;
   border: none;
-  cursor: pointer;
+  z-index: 9999;
 }
 
-/* CAMERA VIEW */
 #scanner {
   position: fixed;
   inset: 0;
   display: none;
-  z-index: 1;
-  pointer-events: none;
+  background: black;
 }
 
-/* Enable clicks AFTER start */
-#scanner.active {
-  pointer-events: auto;
-}
-
-/* GREEN BOX */
 .scan-box {
   position: absolute;
   top: 25%;
@@ -50,19 +41,19 @@ body {
   width: 80%;
   height: 35%;
   border: 3px solid #00ff55;
-  border-radius: 12px;
   box-shadow: 0 0 20px #00ff55;
+  border-radius: 12px;
   pointer-events: none;
+  z-index: 10;
 }
 
-/* FLASH */
 .flash {
   position: fixed;
   inset: 0;
-  background: rgba(0,255,0,.25);
+  background: rgba(0,255,0,0.25);
   opacity: 0;
-  transition: .15s;
-  z-index: 9999;
+  transition: .12s;
+  z-index: 999;
 }
 .flash.show { opacity: 1; }
 </style>
@@ -76,7 +67,7 @@ body {
   <div class="scan-box"></div>
 </div>
 
-<div id="flash" class="flash"></div>
+<div class="flash" id="flash"></div>
 
 <script>
 const startBtn = document.getElementById("startBtn");
@@ -90,18 +81,20 @@ function greenFlash() {
 
 startBtn.onclick = async () => {
   try {
-    startBtn.innerText = "REQUESTING CAMERA...";
-    
-    await navigator.mediaDevices.getUserMedia({ video: true });
+    startBtn.innerText = "Starting camera...";
+
+    // 🔥 REQUIRED FOR IOS & CHROME
+    await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "environment" }
+    });
 
     startBtn.style.display = "none";
     scannerDiv.style.display = "block";
-    scannerDiv.classList.add("active");
 
     startScanner();
-
-  } catch (e) {
-    alert("Camera permission denied");
+  } catch (err) {
+    alert("Camera access denied");
+    console.error(err);
   }
 };
 
@@ -119,14 +112,13 @@ function startScanner() {
         "ean8",
         "upca",
         "upce",
-        "code128",
-        "code39"
+        "code128"
       ],
-      codeDuplicateFilter: 800,
+      codeDuplicateFilter: 700,
       maxNumberOfCodesPerFrame: 1
     });
 
-    const scanner = new ScanditSDK.BarcodePicker({
+    const picker = new ScanditSDK.BarcodePicker({
       element: scannerDiv,
       playSoundOnScan: false,
       vibrateOnScan: true,
@@ -134,16 +126,18 @@ function startScanner() {
       visible: true
     });
 
-    scanner.on("scan", result => {
-      const code = result.barcodes[0].data;
+    picker.on("scan", scan => {
+      const code = scan.barcodes[0].data;
       console.log("SCANNED:", code);
       greenFlash();
     });
 
+  }).catch(err => {
+    alert("Scandit init failed");
+    console.error(err);
   });
 }
 </script>
 
 </body>
 </html>
-
