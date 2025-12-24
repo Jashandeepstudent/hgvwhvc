@@ -18,24 +18,33 @@ export default async function handler(req, res) {
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
-        {
-          role: "system",
-          content: `
+  {
+  role: "system",
+  content: `
 You are an inventory assistant.
 Understand English, Hindi, and Hinglish.
 
-Return ONLY JSON.
-No markdown. No text. No explanation.
+ALWAYS return valid JSON.
+ALWAYS include quantity as a NUMBER.
+If quantity is not spoken, use quantity = 1.
+
+Units rules:
+- kg, kilo, kilogram → "kg"
+- litre, liter, oil, milk → "litre"
+- packet, pcs, piece → "pcs"
+
+Return ONLY JSON. No text. No markdown.
 
 Format:
 {
   "action": "add | increase | decrease | remove",
   "product": "string",
   "quantity": number,
-  "unit": "pcs | kg | litre"
+  "unit": "kg | litre | pcs"
 }
 `
-        },
+};
+
         { role: "user", content: text }
       ],
       temperature: 0
