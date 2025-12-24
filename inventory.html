@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Ultra AI Barcode Scanner</title>
+<title>Ultra Barcode Scanner</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 body {
   margin: 0;
   background: #111;
-  color: white;
+  color: #fff;
   font-family: Inter, sans-serif;
   display: flex;
   flex-direction: column;
@@ -22,7 +22,7 @@ body {
   width: 100%;
   max-width: 600px;
   height: 420px;
-  border-radius: 16px;
+  border-radius: 18px;
   overflow: hidden;
   border: 3px solid #00ff55;
 }
@@ -33,7 +33,6 @@ video {
   object-fit: cover;
 }
 
-/* Green scan box */
 .scan-box {
   position: absolute;
   top: 25%;
@@ -44,12 +43,12 @@ video {
   z-index: 5;
 }
 
-/* Laser */
 .laser {
   position: absolute;
   width: 100%;
   height: 3px;
   background: red;
+  box-shadow: 0 0 15px red;
   animation: scan 1s linear infinite;
   z-index: 6;
 }
@@ -86,7 +85,7 @@ button {
 
 <body>
 
-<h2>🔥 AI Barcode Scanner (FAST)</h2>
+<h2>🔥 REAL Barcode Scanner (ZXing)</h2>
 
 <div id="scanner">
   <video id="video" autoplay muted playsinline></video>
@@ -99,72 +98,57 @@ button {
 <button onclick="startScanner()">START</button>
 <button onclick="stopScanner()">STOP</button>
 
-<script>
-let video = document.getElementById("video");
-let scanning = false;
-let lastScan = 0;
-let lastCode = null;
+<script type="module">
+import {
+  BrowserMultiFormatReader
+} from "https://cdn.jsdelivr.net/npm/@zxing/browser@0.0.10/esm/index.min.js";
 
-function log(text) {
+let codeReader;
+let lastScan = 0;
+let lastCode = "";
+
+function log(msg) {
   const div = document.createElement("div");
-  div.textContent = `${new Date().toLocaleTimeString()} → ${text}`;
+  div.textContent = `${new Date().toLocaleTimeString()} → ${msg}`;
   document.getElementById("log").prepend(div);
 }
 
-// 🔥 START CAMERA
 async function startScanner() {
-  if (!('BarcodeDetector' in window)) {
-    alert("BarcodeDetector API not supported on this browser.");
-    return;
-  }
+  codeReader = new BrowserMultiFormatReader();
 
-  const stream = await navigator.mediaDevices.getUserMedia({
-    video: {
-      facingMode: "environment",
-      width: { ideal: 1920 },
-      height: { ideal: 1080 }
-    }
-  });
-
-  video.srcObject = stream;
-  scanning = true;
-
-  const detector = new BarcodeDetector({
-    formats: ["ean_13", "ean_8", "upc_a", "code_128", "code_39"]
-  });
-
-  scanLoop(detector);
-}
-
-async function scanLoop(detector) {
-  if (!scanning) return;
+  const video = document.getElementById("video");
 
   try {
-    const barcodes = await detector.detect(video);
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const camera = devices.find(d => d.kind === "videoinput" && d.label.toLowerCase().includes("back"))
+                  || devices.find(d => d.kind === "videoinput");
 
-    for (const barcode of barcodes) {
-      const now = Date.now();
+    await codeReader.decodeFromVideoDevice(
+      camera?.deviceId,
+      video,
+      (result, err) => {
+        if (result) {
+          const now = Date.now();
 
-      // Ignore duplicates
-      if (barcode.rawValue === lastCode && now - lastScan < 1200) continue;
+          if (result.text === lastCode && now - lastScan < 1200) return;
 
-      lastCode = barcode.rawValue;
-      lastScan = now;
+          lastCode = result.text;
+          lastScan = now;
 
-      log(`✅ SCANNED: ${barcode.rawValue}`);
-    }
-  } catch (e) {}
-
-  requestAnimationFrame(() => scanLoop(detector));
+          log(`✅ SCANNED: ${result.text}`);
+        }
+      }
+    );
+  } catch (err) {
+    alert("Camera error: " + err);
+  }
 }
 
 function stopScanner() {
-  scanning = false;
-  const stream = video.srcObject;
-  if (stream) {
-    stream.getTracks().forEach(track => track.stop());
+  if (codeReader) {
+    codeReader.reset();
+    log("⛔ Scanner stopped");
   }
-  log("⛔ Scanner stopped");
 }
 </script>
 
