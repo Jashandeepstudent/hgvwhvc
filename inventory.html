@@ -2,117 +2,108 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Working Barcode Scanner</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ultra Fast Barcode Scanner</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<script src="https://cdn.jsdelivr.net/npm/scandit-sdk@5.x"></script>
 
 <style>
 body {
   margin: 0;
-  font-family: Arial;
-  background: #111;
-  color: white;
-  text-align: center;
+  font-family: Inter, sans-serif;
+  background: #000;
 }
 
-#video {
-  width: 100%;
-  max-width: 600px;
-  border: 3px solid lime;
+#scanner {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+}
+
+/* Green Scan Box */
+.scan-box {
+  position: absolute;
+  top: 25%;
+  left: 10%;
+  width: 80%;
+  height: 35%;
+  border: 3px solid #00ff55;
   border-radius: 12px;
-  margin-top: 10px;
+  box-shadow: 0 0 20px #00ff55;
+  pointer-events: none;
+  z-index: 10;
 }
 
-button {
-  margin: 10px;
-  padding: 14px 20px;
-  font-size: 16px;
-  border-radius: 10px;
-  border: none;
-  background: lime;
-  color: black;
-  cursor: pointer;
+/* Scan success flash */
+.flash {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,255,0,0.25);
+  opacity: 0;
+  transition: .15s;
+  z-index: 999;
 }
-
-#log {
-  margin: 10px;
-  background: #222;
-  padding: 10px;
-  height: 150px;
-  overflow-y: auto;
-  text-align: left;
+.flash.show {
+  opacity: 1;
 }
 </style>
 </head>
 
 <body>
 
-<h2>📷 Barcode Scanner</h2>
+<div id="scanner">
+  <div class="scan-box"></div>
+</div>
+<div id="flash" class="flash"></div>
 
-<video id="video" playsinline></video>
+<script>
+const flash = document.getElementById("flash");
 
-<br>
-<button onclick="startScanner()">▶ Start Scanner</button>
-<button onclick="stopScanner()">⛔ Stop</button>
-
-<div id="log"></div>
-
-<script type="module">
-import { BrowserMultiFormatReader } 
-from "https://cdn.jsdelivr.net/npm/@zxing/browser@0.0.10/esm/index.min.js";
-
-let codeReader;
-let active = false;
-
-function log(msg) {
-  const div = document.createElement("div");
-  div.textContent = msg;
-  document.getElementById("log").prepend(div);
+function greenFlash() {
+  flash.classList.add("show");
+  setTimeout(() => flash.classList.remove("show"), 120);
 }
 
-async function startScanner() {
-  try {
-    log("⏳ Starting camera...");
-
-    codeReader = new BrowserMultiFormatReader();
-    const video = document.getElementById("video");
-
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    const cameras = devices.filter(d => d.kind === "videoinput");
-
-    if (!cameras.length) {
-      log("❌ No camera found");
-      return;
-    }
-
-    const backCam =
-      cameras.find(c => c.label.toLowerCase().includes("back")) || cameras[0];
-
-    await codeReader.decodeFromVideoDevice(
-      backCam.deviceId,
-      video,
-      (result, err) => {
-        if (result && !active) {
-          active = true;
-          log("✅ SCANNED: " + result.text);
-
-          setTimeout(() => active = false, 1200);
-        }
-      }
-    );
-
-    log("✅ Camera started");
-
-  } catch (e) {
-    log("❌ ERROR: " + e.message);
+ScanditSDK.configure(
+  "AkZ2xzFUFoljEUPsHs3vquRA5C5zF7MW4QzRFjwGjE0XajPGOkHmYbxi7bDnW0g5pQ8AEqJMVvPBU9TFyXN5Mqhq0tbJYCckf3SmrkU5l/cDMBN5LT0dRUEhUKjbYRmleW/rIrN7j2IVeUw/J14ApO50HjOyfqee6Ve25wwUDk21fIOJoESVtJ1SSBDsEJix8lkdc35n405zc5lbBldvryNTEhGaYmn+0ldrqzx+jjSLe7FsK0zCPtpOAE/5QDKw/Ex+vwVp3fy6c7E5x3CAjxhGJ6M1Z31TN38dfmJF7HspcDoHXVAkzo1Ylv7reJQozFJ9xuVxg1i3EiYtPVHedWgt4yWkdKOM0VGqv0BQFqmBcHyiaFtNFM5R0pfkTGKkDnvWDEA23dWJVoVeCykar+QoG82LXRnFpU3I0Qdl3+FiV7x3MGoxSY5h6usUWk1NNR1UB/hGEBM0bbamVmXbWERqpEg9fEFYkUwKWO9tccJxfRixa1MHq19vGnj5CdVqr0JLx1pIJeJLdOECPynipnIRYaqHvX4h+jK2+IdH/9LVfUQsMKyW8GsaiH+z3rTJAdc4/IAoNGAtonCWdVR8Uh9GGDKLLF9WOTMxr0Ymg4Hp93fD0E5H7SDS1jMqhRyq5P2dBciHBqoDVoYMkvv/MRPxApGN58AJC2lwjmaK+h4S5z3qoGP2o2C0vQWjjzzeSold0sDUA171zUFlmHiiAMhpbZ1YgDCkT0WrNRemWCeirR08xpykOsOs+EMzf27+hWG/lhP3RZ+u12bvGJ3zW3343DCOSzZuZ5YBt1b1s7pMyOA2hY5A+SFdmZ24H6JdnOIHPv7M946IlvuF4dCKE9RNoJvAUlKM3kdItxS8m7u+vNGfV/AKq3BrJAT+dScKm0G5kiIrID7Vx1t2Byz9bf5mwzbKA+hJPZ4Wxb3DHtFKUakp923zMUNXYmuhl1CBZGIocVhTTPlvTpGdqH+lMKlbHPqI8/FVr8RUkTjQTaYKlL0Z6UPZysEj9N1YYeuoSb6VXHlCskAv9YnxmB+R14gEkTeAAtB8T+dJDv2DZbVFxcrWhfqtiz1NyRSQlvJttFjMvCvvmnCYPTQD2nEh9AEtdPy4C0Lmtt3QnhqCWDvMj1h0jnjCxqDNwXPqdzEZTnvQ2lQFgmIeyjviVNLVFru06MF34YCwmlCcwD/Jsjv8gYfsdGdUqFLoNrU9Rdnxld8",
+  {
+    engineLocation: "https://cdn.jsdelivr.net/npm/scandit-sdk@5.x/build"
   }
-}
+).then(() => {
 
-function stopScanner() {
-  if (codeReader) {
-    codeReader.reset();
-    log("⛔ Scanner stopped");
-  }
-}
+  const scanSettings = new ScanditSDK.ScanSettings({
+    enabledSymbologies: [
+      "ean13",
+      "ean8",
+      "upca",
+      "upce",
+      "code128",
+      "code39"
+    ],
+    codeDuplicateFilter: 800, // prevents double scans
+    maxNumberOfCodesPerFrame: 1
+  });
+
+  const scanner = new ScanditSDK.BarcodePicker({
+    element: document.getElementById("scanner"),
+    playSoundOnScan: false,
+    vibrateOnScan: true,
+    scanSettings: scanSettings,
+    visible: true
+  });
+
+  scanner.on("scan", result => {
+    const code = result.barcodes[0].data;
+    console.log("SCANNED:", code);
+
+    greenFlash();
+
+    // 🔥 Your inventory logic here
+    // Example:
+    // addProductByBarcode(code);
+  });
+
+});
 </script>
 
 </body>
