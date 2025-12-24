@@ -2,140 +2,412 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Scandit Scanner</title>
+<title>Inventory</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<script src="https://cdn.jsdelivr.net/npm/scandit-sdk@5.x"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/scandit-sdk@6.x"></script>
 
 <style>
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  background: black;
-  overflow: hidden;
-  font-family: Arial, sans-serif;
+*{box-sizing:border-box;font-family:Inter}
+body{margin:0;background:#f6f7fb;padding:30px}
+
+/* HEADER */
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px}
+.top h2{margin:0;font-size:22px}
+.top .actions{display:flex;gap:10px}
+.top button{padding:12px 18px;border:none;border-radius:14px;background:#000;color:#fff;font-weight:600;cursor:pointer}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;margin-bottom:30px}
+.stat{background:#fff;padding:22px;border-radius:20px;box-shadow:0 10px 25px rgba(0,0,0,.06)}
+.stat span{color:#666;font-size:14px}
+.stat h3{margin:8px 0 0;font-size:26px}
+
+/* TABLE */
+.table{background:#fff;border-radius:22px;box-shadow:0 15px 35px rgba(0,0,0,.08);overflow:hidden}
+.head,.row{display:grid;grid-template-columns:2fr 1fr 1fr 2fr;padding:16px 22px;align-items:center}
+.head{background:#f1f3f7;font-weight:600}
+.row:not(:last-child){border-bottom:1px solid #eee}
+
+/* STATUS */
+.status.ok{color:#16a34a}
+.status.low{color:#d97706}
+.status.out{color:#dc2626}
+
+/* BUTTONS */
+.row button{padding:6px 12px;border-radius:10px;border:1px solid #ddd;background:#fff;cursor:pointer}
+.remove{color:#dc2626;border-color:#dc2626}
+.top .actions{
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap; /* allow buttons to wrap if not enough space */
+}
+.top .actions button{
+  padding:12px 18px;
+  border:none;
+  border-radius:14px;
+  background:#000;
+  color:#fff;
+  font-weight:600;
+  cursor:pointer;
+  white-space: nowrap; /* prevent text wrapping inside button */
 }
 
-#startBtn {
-  position: fixed;
-  inset: 0;
-  background: black;
-  color: #00ff55;
-  font-size: 24px;
-  border: none;
-  z-index: 9999;
+/* MODALS */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:1000}
+.modal-box{width:380px;background:#fff;padding:26px;border-radius:22px}
+.modal-box input{width:100%;padding:14px;border-radius:14px;border:1px solid #ddd;margin-bottom:12px}
+.modal-box button{width:100%;padding:14px;border:none;border-radius:14px;background:#000;color:#fff;font-weight:600}
+
+/* SCANNER */
+#scanner{position:relative;width:100%;height:240px;background:#000;border-radius:14px;overflow:hidden}
+.scan-zone{
+  position:absolute;
+  inset:25% 10%;
+  border:2px dashed rgba(0,255,0,.7);
+  border-radius:10px;
+  z-index:10;
+}
+.laser{position:absolute;top:0;left:0;width:100%;height:2px;background:red;box-shadow:0 0 10px red;animation:scan 1.2s linear infinite}
+@keyframes scan{0%{top:0}50%{top:100%}100%{top:0}}
+.flash{
+  position:fixed;
+  inset:0;
+  background:rgba(34,197,94,.25);
+  pointer-events:none;
+  z-index:3000;
+  opacity:0;
+  transition:.15s;
+}
+.flash.show{opacity:1}
+/* POPUP */
+.toast{
+  position:fixed;
+  top:20px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#16a34a;
+  color:#fff;
+  padding:12px 20px;
+  border-radius:14px;
+  font-weight:600;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
+  display:none;
+  z-index:2000;
+  animation:fade 2s ease;
+}
+@keyframes fade{
+  0%{opacity:0;top:10px}
+  20%{opacity:1;top:20px}
+  80%{opacity:1}
+  100%{opacity:0}
 }
 
-#scanner {
-  position: fixed;
-  inset: 0;
-  display: none;
-  background: black;
+/* COUNTER */
+.counter{
+  position:absolute;
+  bottom:8px;
+  right:10px;
+  background:#000;
+  color:#0f0;
+  padding:4px 8px;
+  border-radius:8px;
+  font-size:12px;
+  z-index:20;
 }
-
-.scan-box {
-  position: absolute;
-  top: 25%;
-  left: 10%;
-  width: 80%;
-  height: 35%;
-  border: 3px solid #00ff55;
-  box-shadow: 0 0 20px #00ff55;
-  border-radius: 12px;
-  pointer-events: none;
-  z-index: 10;
-}
-
-.flash {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,255,0,0.25);
-  opacity: 0;
-  transition: .12s;
-  z-index: 999;
-}
-.flash.show { opacity: 1; }
 </style>
 </head>
 
 <body>
 
-<button id="startBtn">▶ TAP TO START SCANNER</button>
+<audio id="beep-ok" preload src="https://assets.mixkit.co/sfx/preview/mixkit-beep-tone-2864.mp3"></audio>
+<audio id="beep-new" preload src="https://assets.mixkit.co/sfx/preview/mixkit-confirmation-tone-2867.mp3"></audio>
 
-<div id="scanner">
-  <div class="scan-box"></div>
+<div id="toast" class="toast"></div>
+
+<div class="top">
+  <h2>Inventory</h2>
+ <div class="actions">
+  <button onclick="openScanner()">Scan Barcode</button>
+  <button onclick="openAdd()">Add Product</button>
 </div>
 
-<div class="flash" id="flash"></div>
+</div>
+
+<div class="stats">
+  <div class="stat"><span>Total Products</span><h3 id="total">0</h3></div>
+  <div class="stat"><span>Low</span><h3 id="low">0</h3></div>
+  <div class="stat"><span>Out</span><h3 id="out">0</h3></div>
+</div>
+
+<div class="table">
+  <div class="head"><div>Product</div><div>Quantity</div><div>Status</div><div>Actions</div></div>
+  <div id="products"></div>
+</div>
+
+<div id="addModal" class="modal">
+  <div class="modal-box">
+    <h3>Add Product</h3>
+    <input id="pname" placeholder="Product name">
+    <input id="pqty" type="number" placeholder="Quantity">
+    <input id="punit" placeholder="Unit">
+    <button onclick="addProduct()">Save</button>
+  </div>
+</div>
+<input id="barcodeInput" style="position:absolute; left:-9999px;">
+
+<div id="scannerModal" class="modal">
+  <div class="modal-box">
+    <h3>Scan Barcode</h3>
+<div id="scanner" style="width:100%;height:260px;"></div>
+<div id="scanCount" class="counter">0</div>
+
+    </div>
+    <button onclick="closeScanner()">Close</button>
+  </div>
+</div>
+<div id="flash" class="flash"></div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
-const startBtn = document.getElementById("startBtn");
-const scannerDiv = document.getElementById("scanner");
-const flash = document.getElementById("flash");
+firebase.initializeApp({
+  apiKey:"AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
+  authDomain:"scalevest-163a0.firebaseapp.com",
+  databaseURL:"https://scalevest-163a0-default-rtdb.firebaseio.com",
+  projectId:"scalevest-163a0"
+});
 
-function greenFlash() {
-  flash.classList.add("show");
-  setTimeout(() => flash.classList.remove("show"), 120);
+const auth=firebase.auth(), db=firebase.database();
+let inventory={}, invRef, scannerRunning=false;
+let scanStamp = 0;
+let scanTotal = 0;
+
+
+function showToast(t){
+  toast.textContent="✔ "+t;
+  toast.style.display="block";
+  setTimeout(()=>toast.style.display="none",1800);
 }
 
-startBtn.onclick = async () => {
-  try {
-    startBtn.innerText = "Starting camera...";
+auth.onAuthStateChanged(u=>{
+  if(!u){location.href="login.html";return;}
+  invRef=db.ref(`Businesses/${u.uid}/inventory`);
+  invRef.on("value",s=>{inventory=s.val()||{};render();});
+});
 
-    // 🔥 REQUIRED FOR IOS & CHROME
-    await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "environment" }
-    });
+function openAdd(){addModal.style.display="flex"}
+function openScanner(){
+  unlockAudio();          
+  scannerModal.style.display="flex";
+  startScanner();
+}
+const input = document.getElementById('barcodeInput');
+input.focus();
 
-    startBtn.style.display = "none";
-    scannerDiv.style.display = "block";
-
-    startScanner();
-  } catch (err) {
-    alert("Camera access denied");
-    console.error(err);
+input.addEventListener('keypress', e => {
+  if (e.key === 'Enter') {
+    handleBarcode(input.value); // your existing scan handler
+    input.value = '';
   }
-};
+});
 
-function startScanner() {
-  ScanditSDK.configure(
-    "AkZ2xzFUFoljEUPsHs3vquRA5C5zF7MW4QzRFjwGjE0XajPGOkHmYbxi7bDnW0g5pQ8AEqJMVvPBU9TFyXN5Mqhq0tbJYCckf3SmrkU5l/cDMBN5LT0dRUEhUKjbYRmleW/rIrN7j2IVeUw/J14ApO50HjOyfqee6Ve25wwUDk21fIOJoESVtJ1SSBDsEJix8lkdc35n405zc5lbBldvryNTEhGaYmn+0ldrqzx+jjSLe7FsK0zCPtpOAE/5QDKw/Ex+vwVp3fy6c7E5x3CAjxhGJ6M1Z31TN38dfmJF7HspcDoHXVAkzo1Ylv7reJQozFJ9xuVxg1i3EiYtPVHedWgt4yWkdKOM0VGqv0BQFqmBcHyiaFtNFM5R0pfkTGKkDnvWDEA23dWJVoVeCykar+QoG82LXRnFpU3I0Qdl3+FiV7x3MGoxSY5h6usUWk1NNR1UB/hGEBM0bbamVmXbWERqpEg9fEFYkUwKWO9tccJxfRixa1MHq19vGnj5CdVqr0JLx1pIJeJLdOECPynipnIRYaqHvX4h+jK2+IdH/9LVfUQsMKyW8GsaiH+z3rTJAdc4/IAoNGAtonCWdVR8Uh9GGDKLLF9WOTMxr0Ymg4Hp93fD0E5H7SDS1jMqhRyq5P2dBciHBqoDVoYMkvv/MRPxApGN58AJC2lwjmaK+h4S5z3qoGP2o2C0vQWjjzzeSold0sDUA171zUFlmHiiAMhpbZ1YgDCkT0WrNRemWCeirR08xpykOsOs+EMzf27+hWG/lhP3RZ+u12bvGJ3zW3343DCOSzZuZ5YBt1b1s7pMyOA2hY5A+SFdmZ24H6JdnOIHPv7M946IlvuF4dCKE9RNoJvAUlKM3kdItxS8m7u+vNGfV/AKq3BrJAT+dScKm0G5kiIrID7Vx1t2Byz9bf5mwzbKA+hJPZ4Wxb3DHtFKUakp923zMUNXYmuhl1CBZGIocVhTTPlvTpGdqH+lMKlbHPqI8/FVr8RUkTjQTaYKlL0Z6UPZysEj9N1YYeuoSb6VXHlCskAv9YnxmB+R14gEkTeAAtB8T+dJDv2DZbVFxcrWhfqtiz1NyRSQlvJttFjMvCvvmnCYPTQD2nEh9AEtdPy4C0Lmtt3QnhqCWDvMj1h0jnjCxqDNwXPqdzEZTnvQ2lQFgmIeyjviVNLVFru06MF34YCwmlCcwD/Jsjv8gYfsdGdUqFLoNrU9Rdnxld8=",
-    {
-      engineLocation: "https://cdn.jsdelivr.net/npm/scandit-sdk@5.x/build"
-    }
-  ).then(() => {
+function closeScanner(){
+  scannerModal.style.display="none";
+  scannerRunning = false;
+}
 
-    const scanSettings = new ScanditSDK.ScanSettings({
-      enabledSymbologies: [
-        "ean13",
-        "ean8",
-        "upca",
-        "upce",
-        "code128"
-      ],
-      codeDuplicateFilter: 700,
-      maxNumberOfCodesPerFrame: 1
-    });
 
-    const picker = new ScanditSDK.BarcodePicker({
-      element: scannerDiv,
-      playSoundOnScan: false,
-      vibrateOnScan: true,
-      scanSettings,
-      visible: true
-    });
+function addProduct(){
+  if(!pname.value || !pqty.value){
+    alert("Product name and quantity are required");
+    return;
+  }
 
-    picker.on("scan", scan => {
-      const code = scan.barcodes[0].data;
-      console.log("SCANNED:", code);
-      greenFlash();
-    });
-
-  }).catch(err => {
-    alert("Scandit init failed");
-    console.error(err);
+  invRef.push({
+    name: pname.value,
+    quantity: +pqty.value,
+    unit: punit.value || "pcs"   // ✅ default if empty
   });
+
+  pname.value = "";
+  pqty.value = "";
+  punit.value = "";
+
+  addModal.style.display = "none";
+}
+function greenFlash(){
+  const f=document.getElementById("flash");
+  f.classList.add("show");
+  setTimeout(()=>f.classList.remove("show"),120);
+}
+
+
+/* 🔥 INSANE MODE INIT */
+let scanditScanner = null;
+
+async function startScanner() {
+  if (scannerRunning) return;
+  scannerRunning = true;
+
+  const licenseKey = "AkZ2xzFUFoljEUPsHs3vquRA5C5zF7MW4QzRFjwGjE0XajPGOkHmYbxi7bDnW0g5pQ8AEqJMVvPBU9TFyXN5Mqhq0tbJYCckf3SmrkU5l/cDMBN5LT0dRUEhUKjbYRmleW/rIrN7j2IVeUw/J14ApO50HjOyfqee6Ve25wwUDk21fIOJoESVtJ1SSBDsEJix8lkdc35n405zc5lbBldvryNTEhGaYmn+0ldrqzx+jjSLe7FsK0zCPtpOAE/5QDKw/Ex+vwVp3fy6c7E5x3CAjxhGJ6M1Z31TN38dfmJF7HspcDoHXVAkzo1Ylv7reJQozFJ9xuVxg1i3EiYtPVHedWgt4yWkdKOM0VGqv0BQFqmBcHyiaFtNFM5R0pfkTGKkDnvWDEA23dWJVoVeCykar+QoG82LXRnFpU3I0Qdl3+FiV7x3MGoxSY5h6usUWk1NNR1UB/hGEBM0bbamVmXbWERqpEg9fEFYkUwKWO9tccJxfRixa1MHq19vGnj5CdVqr0JLx1pIJeJLdOECPynipnIRYaqHvX4h+jK2+IdH/9LVfUQsMKyW8GsaiH+z3rTJAdc4/IAoNGAtonCWdVR8Uh9GGDKLLF9WOTMxr0Ymg4Hp93fD0E5H7SDS1jMqhRyq5P2dBciHBqoDVoYMkvv/MRPxApGN58AJC2lwjmaK+h4S5z3qoGP2o2C0vQWjjzzeSold0sDUA171zUFlmHiiAMhpbZ1YgDCkT0WrNRemWCeirR08xpykOsOs+EMzf27+hWG/lhP3RZ+u12bvGJ3zW3343DCOSzZuZ5YBt1b1s7pMyOA2hY5A+SFdmZ24H6JdnOIHPv7M946IlvuF4dCKE9RNoJvAUlKM3kdItxS8m7u+vNGfV/AKq3BrJAT+dScKm0G5kiIrID7Vx1t2Byz9bf5mwzbKA+hJPZ4Wxb3DHtFKUakp923zMUNXYmuhl1CBZGIocVhTTPlvTpGdqH+lMKlbHPqI8/FVr8RUkTjQTaYKlL0Z6UPZysEj9N1YYeuoSb6VXHlCskAv9YnxmB+R14gEkTeAAtB8T+dJDv2DZbVFxcrWhfqtiz1NyRSQlvJttFjMvCvvmnCYPTQD2nEh9AEtdPy4C0Lmtt3QnhqCWDvMj1h0jnjCxqDNwXPqdzEZTnvQ2lQFgmIeyjviVNLVFru06MF34YCwmlCcwD/Jsjv8gYfsdGdUqFLoNrU9Rdnxld8=";
+
+  await ScanditSDK.configure(licenseKey, {
+    engineLocation: "https://cdn.jsdelivr.net/npm/scandit-sdk@6.x/build/"
+  });
+
+  const context = await ScanditSDK.DataCaptureContext.create();
+
+  const camera = ScanditSDK.Camera.default;
+  await context.setFrameSource(camera);
+
+  const settings = new ScanditSDK.BarcodeCaptureSettings();
+  settings.enableSymbologies([
+    ScanditSDK.Symbology.EAN13,
+    ScanditSDK.Symbology.UPCA,
+    ScanditSDK.Symbology.CODE128
+  ]);
+
+  const barcodeCapture = await ScanditSDK.BarcodeCapture.forContext(
+    context,
+    settings
+  );
+
+  barcodeCapture.addListener({
+    didScan: async (session) => {
+      const code = session.newlyRecognizedBarcode?.data;
+      if (!code) return;
+
+      handleBarcode(code);
+      greenFlash();
+    }
+  });
+
+  const view = await ScanditSDK.DataCaptureView.forContext(context);
+  view.connectToElement(document.getElementById("scanner"));
+
+  const overlay = await ScanditSDK.BarcodeCaptureOverlay.withBarcodeCaptureForView(
+    barcodeCapture,
+    view
+  );
+
+  await camera.switchToDesiredState(ScanditSDK.FrameSourceState.On);
+}
+async function handleBarcode(code){
+  const now = Date.now();
+  if(now - scanStamp < 120) return;   // 5–10 scans/sec
+  scanStamp = now;
+
+  scanTotal++;
+  document.getElementById("scanCount").textContent = scanTotal;
+
+  let name = "Unknown Product";
+  const found = Object.entries(inventory).find(([_,p])=>p.barcode===code);
+
+  if(found){
+    name = found[1].name;
+    invRef.child(found[0]).update({
+      quantity: found[1].quantity + 1
+    });
+    document.getElementById("beep-ok").play().catch(()=>{});
+  }else{
+    document.getElementById("beep-new").play().catch(()=>{});
+    try{
+      const r = await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`);
+      const j = await r.json();
+      if(j.status === 1) name = j.product.product_name || name;
+    }catch(e){}
+    invRef.push({
+      name,
+      quantity: 1,
+      unit: "pcs",
+      barcode: code
+    });
+  }
+
+  greenFlash();     // ✅ ADD THIS LINE HERE
+  showToast(name);
+}
+
+function unlockAudio(){
+  ["beep-ok","beep-new"].forEach(id=>{
+    const a=document.getElementById(id);
+    a.play().then(()=>{
+      a.pause();
+      a.currentTime=0;
+    }).catch(()=>{});
+  });
+}
+let gunBuffer="";
+let gunTimer=null;
+
+document.addEventListener("keydown",e=>{
+  if(scannerModal.style.display!=="flex") return;
+
+  if(e.key==="Enter"){
+    if(gunBuffer.length>=6){
+      handleBarcode(gunBuffer);
+    }
+    gunBuffer="";
+    return;
+  }
+
+  if(/^[0-9]$/.test(e.key)){
+    gunBuffer+=e.key;
+    clearTimeout(gunTimer);
+    gunTimer=setTimeout(()=>gunBuffer="",100);
+  }
+});
+
+function render(){
+  products.innerHTML="";
+  let lowC=0,outC=0;
+  Object.entries(inventory).forEach(([id,p])=>{
+    let s="In Stock",c="ok";
+    if(p.quantity===0){s="Out of Stock";c="out";outC++}
+    else if(p.quantity<10){s="Low in Stock";c="low";lowC++}
+    products.innerHTML+=`
+    <div class="row">
+      <div>${p.name}</div>
+      <div>${p.quantity} ${p.unit}</div>
+      <div class="status ${c}">${s}</div>
+<div>
+  <button onclick="changeQty('${id}', 1)">+</button>
+  <button onclick="changeQty('${id}', -1)">−</button>
+  <button class="remove" onclick="invRef.child('${id}').remove()">Remove</button>
+</div>
+
+
+    </div>`;
+  });
+  total.textContent=Object.keys(inventory).length;
+  low.textContent=lowC;
+  out.textContent=outC;
+}
+function incQty(id, qty){
+  invRef.child(id).update({ quantity: qty + 1 });
+}
+
+function decQty(id, qty){
+  if(qty <= 0) return;
+  invRef.child(id).update({ quantity: qty - 1 });
+}
+function changeQty(id, direction){
+  const p = inventory[id];
+  if(!p) return;
+
+  let val = prompt("Enter quantity:", "1");
+  val = parseInt(val);
+
+  if(isNaN(val) || val <= 0) return;
+
+  let newQty = p.quantity + (direction * val);
+  if(newQty < 0) newQty = 0;
+
+  invRef.child(id).update({ quantity: newQty });
 }
 </script>
 
