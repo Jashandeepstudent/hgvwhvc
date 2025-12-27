@@ -65,6 +65,9 @@ body{margin:0;background:#f6f7fb;padding:30px}
 .bar:nth-child(4) { animation-delay: 0.3s; background: #2563eb; }
 .bar:nth-child(5) { animation-delay: 0.4s; background: #3b82f6; }
 
+/* Visual cue for confirmation mode */
+.confirm-mode .bar { background: #ef4444 !important; animation-duration: 0.4s; }
+
 @keyframes bounce {
   0%, 100% { height: 10px; }
   50% { height: 50px; }
@@ -129,7 +132,7 @@ body{margin:0;background:#f6f7fb;padding:30px}
     <h2 style="margin-top:0">AI Voice Assistant</h2>
     <p style="color:#666; font-size:14px">Just speak the product name and quantity.<br>I will add, increase, or decrease it for you.</p>
     
-    <div class="ai-visualizer">
+    <div id="viz" class="ai-visualizer">
       <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
     </div>
     
@@ -145,7 +148,6 @@ body{margin:0;background:#f6f7fb;padding:30px}
 
 <script>
 // --- CONFIG ---
-const GOOGLE_TTS_API_KEY = "AIzaSyD7ynlghvBtwQxbxbPnKSUhI6wkVZvWfVc"; 
 firebase.initializeApp({
   apiKey:"AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
   authDomain:"scalevest-163a0.firebaseapp.com",
@@ -155,9 +157,10 @@ firebase.initializeApp({
 
 const auth=firebase.auth(), db=firebase.database();
 let inventory={}, invRef, recognition, isAssistantActive = false;
+let pendingAction = null; // Stores actions requiring confirmation
 
 auth.onAuthStateChanged(u=>{
-  if(!u){ location.href="login.html"; return; }
+  if(!u){ /* location.href="login.html"; */ return; }
   invRef=db.ref(`Businesses/${u.uid}/inventory`);
   invRef.on("value",s=>{ inventory=s.val()||{}; render(); });
 });
@@ -171,7 +174,7 @@ function startVoiceAssistant() {
   
   recognition = new webkitSpeechRecognition();
   recognition.lang = "en-US";
-  recognition.continuous = true; // Keeps listening
+  recognition.continuous = true; 
   recognition.interimResults = true;
 
   recognition.onresult = (event) => {
@@ -189,7 +192,9 @@ function startVoiceAssistant() {
   };
 
   recognition.onend = () => {
-    if (isAssistantActive) recognition.start(); // Auto-restart to stay open
+    if (isAssistantActive) {
+        try { recognition.start(); } catch(e) {}
+    }
   };
 
   recognition.start();
@@ -198,45 +203,78 @@ function startVoiceAssistant() {
 
 function stopVoiceAssistant() {
   isAssistantActive = false;
+  pendingAction = null;
+  document.getElementById("viz").classList.remove("confirm-mode");
   if (recognition) recognition.stop();
   document.getElementById("voiceModal").style.display = "none";
 }
 
 async function processSmartAI(cmd) {
   cmd = cmd.toLowerCase();
+
+  // 1. Handle Pending Confirmation
+  if (pendingAction) {
+    if (cmd.includes("yes") || cmd.includes("confirm") || cmd.includes("do it")) {
+        if (pendingAction.type === 'delete') {
+            invRef.child(pendingAction.id).remove();
+            triggerSuccess(`Removed ${pendingAction.name}`);
+            speakWithAI(`Successfully deleted ${pendingAction.name}.`);
+        }
+        pendingAction = null;
+        document.getElementById("viz").classList.remove("confirm-mode");
+        return;
+    } else if (cmd.includes("no") || cmd.includes("cancel")) {
+        speakWithAI("Action cancelled.");
+        pendingAction = null;
+        document.getElementById("viz").classList.remove("confirm-mode");
+        return;
+    }
+  }
   
-  // Extract Units and Numbers
-  const units = ["kg", "kilogram", "gram", " g ", "liter", " ml ", "packets", "pcs"];
+  // 2. Extract Numbers (Support for digits and basic words)
+  const numberMap = { 'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5, 'ten': 10 };
+  let qty = 1;
+  const numMatch = cmd.match(/(\d+(\.\d+)?)/);
+  if (numMatch) {
+      qty = parseFloat(numMatch[0]);
+  } else {
+      Object.keys(numberMap).forEach(word => { if(cmd.includes(word)) qty = numberMap[word]; });
+  }
+
+  // 3. Extract Units
+  const units = ["kg", "kilogram", "gram", " g ", "liter", " ml ", "packets", "pcs", "boxes"];
   let detectedUnit = "pcs";
   units.forEach(u => { if(cmd.includes(u)) detectedUnit = u.trim(); });
 
-  const numMatch = cmd.match(/(\d+(\.\d+)?)/);
-  const qty = numMatch ? parseFloat(numMatch[0]) : 1;
-
-  // Extract Name
+  // 4. Extract Product Name
   let pName = cmd
     .replace(/(\d+(\.\d+)?)/g, '')
     .replace(new RegExp(units.join("|"), "g"), '')
-    .replace(/(add|remove|delete|increase|decrease|minus|plus|update|to|of)/g, '')
+    .replace(/(add|remove|delete|increase|decrease|minus|plus|update|to|of|set|the)/g, '')
     .trim();
 
   if (pName.length < 2) return;
 
   const existingEntry = Object.entries(inventory).find(([_, p]) => p.name.toLowerCase() === pName);
 
+  // 5. Action Logic
   if (cmd.includes("remove") || cmd.includes("delete")) {
     if (existingEntry) {
-      invRef.child(existingEntry[0]).remove();
-      triggerSuccess(`Removed ${pName}`);
-      speakWithAI(`Successfully removed ${pName}`);
+      pendingAction = { type: 'delete', id: existingEntry[0], name: pName };
+      document.getElementById("viz").classList.add("confirm-mode");
+      speakWithAI(`Are you sure you want to delete ${pName}? Say yes to confirm.`);
+    } else {
+      speakWithAI(`I couldn't find ${pName} in your inventory.`);
     }
   } 
-  else if (cmd.includes("decrease") || cmd.includes("minus") || cmd.includes("less")) {
+  else if (cmd.includes("decrease") || cmd.includes("minus") || cmd.includes("less") || cmd.includes("reduce")) {
     if (existingEntry) {
       const newVal = Math.max(0, existingEntry[1].quantity - qty);
       invRef.child(existingEntry[0]).update({ quantity: newVal });
       triggerSuccess(`Decreased ${pName}`);
-      speakWithAI(`Decreased ${pName} to ${newVal}`);
+      speakWithAI(`Decreased ${pName} by ${qty}. New total is ${newVal}.`);
+    } else {
+      speakWithAI(`Product ${pName} not found to decrease.`);
     }
   }
   else {
@@ -245,7 +283,7 @@ async function processSmartAI(cmd) {
       const newVal = existingEntry[1].quantity + qty;
       invRef.child(existingEntry[0]).update({ quantity: newVal });
       triggerSuccess(`Increased ${pName}`);
-      speakWithAI(`${pName} increased by ${qty}. Total is ${newQty}`);
+      speakWithAI(`Added ${qty} to ${pName}. Total is now ${newVal}.`);
     } else {
       invRef.push({ 
         name: pName.charAt(0).toUpperCase() + pName.slice(1), 
@@ -258,14 +296,12 @@ async function processSmartAI(cmd) {
   }
 }
 
-// --- GOOGLE TEXT TO SPEECH (Stable Hybrid) ---
+// --- TEXT TO SPEECH ENGINE ---
 function speakWithAI(text) {
-  // Using the high-quality browser synthesis as a baseline for Safari/Chrome stability
-  // because Google Cloud TTS requires a backend proxy for security.
   if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel(); // Stop current speech
     const utterance = new SpeechSynthesisUtterance(text);
     const voices = window.speechSynthesis.getVoices();
-    // Prefer Google English voice if available in the browser
     const googleVoice = voices.find(v => v.name.includes('Google') && v.lang.includes('en'));
     if (googleVoice) utterance.voice = googleVoice;
     
@@ -307,13 +343,17 @@ function render(){
       <div class="status ${c}">${s}</div>
       <div>
         <button onclick="manualChange('${id}', 1)">+</button>
-        <button class="remove" onclick="invRef.child('${id}').remove()">🗑️</button>
+        <button class="remove" onclick="handleManualDelete('${id}', '${p.name}')">🗑️</button>
       </div>
     </div>`;
   });
   document.getElementById("total").textContent=Object.keys(inventory).length;
   document.getElementById("low").textContent=lowC;
   document.getElementById("out").textContent=outC;
+}
+
+function handleManualDelete(id, name) {
+    if(confirm(`Delete ${name}?`)) invRef.child(id).remove();
 }
 
 function manualChange(id, dir) {
