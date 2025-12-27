@@ -696,66 +696,70 @@ function manualChange(id, dir) {
 // SCANNER PART
 
 let html5QrCode;
+let isScanning = false; // Prevents overlapping scans
 
 async function openScanner() {
-    // Create a modal/overlay for the scanner if it doesn't exist
     let scannerModal = document.getElementById('scannerModal');
     if (!scannerModal) {
         scannerModal = document.createElement('div');
         scannerModal.id = 'scannerModal';
         scannerModal.className = 'modal';
         scannerModal.innerHTML = `
-            <div class="manual-modal-box" style="padding:20px;">
+            <div class="manual-modal-box" style="padding:20px; max-width: 500px;">
+                <h3 style="margin-top:0">Smart Scanner</h3>
                 <div id="reader"></div>
-                <button class="btn-close" onclick="stopScanner()" style="width:100%; margin-top:15px;">Close Scanner</button>
+                <p style="font-size:12px; color:#666; margin: 10px 0;">Align barcode inside the box</p>
+                <button class="btn-close" onclick="stopScanner()" style="width:100%;">Close Scanner</button>
             </div>
         `;
         document.body.appendChild(scannerModal);
     }
     
     scannerModal.style.display = "flex";
-
     html5QrCode = new Html5Qrcode("reader");
     
     const config = { 
-        fps: 20, 
-        qrbox: { width: 250, height: 150 }, // Aspect ratio for barcodes
+        fps: 25, // Higher FPS for smoother "PhonePe" feel
+        qrbox: { width: 280, height: 160 }, // Wide box for barcodes
         aspectRatio: 1.0 
     };
 
-    // This starts the camera with high-power settings
     html5QrCode.start(
         { facingMode: "environment" }, 
         config,
         (decodedText) => {
-            // Logic when barcode is detected
+            // DEBOUNCE: Prevent multiple rapid scans
+            if (isScanning) return;
+            isScanning = true;
+
             document.getElementById("beep-ok").play();
-            triggerSuccess("Scanned: " + decodedText);
             processScannedBarcode(decodedText);
-            stopScanner();
+            
+            // Wait 2 seconds before allowing another scan or closing
+            setTimeout(() => {
+                isScanning = false;
+                stopScanner();
+            }, 500);
         },
-        (errorMessage) => {
-            // parse error, ignore to keep scanning
-        }
+        (errorMessage) => { /* ignore errors */ }
     ).then(() => {
-        // Apply advanced camera controls for that "PhonePe" feel
+        // APPLY POWER SETTINGS
         const track = html5QrCode.getRunningTrack();
-        const capabilities = track.getCapabilities();
-        
-        // Auto-focus and Zoom (if supported by phone)
         track.applyConstraints({
             advanced: [
                 { focusMode: "continuous" },
                 { exposureMode: "continuous" },
-                { whiteBalanceMode: "continuous" }
+                { zoom: 1.5 } // Subtle zoom to help with small barcodes
             ]
-        }).catch(e => console.log("Advanced features not supported"));
+        }).catch(e => console.warn("Advanced camera features limited on this device."));
     });
 }
 
 function stopScanner() {
-    if (html5QrCode) {
+    if (html5QrCode && html5QrCode.isScanning) {
         html5QrCode.stop().then(() => {
+            document.getElementById('scannerModal').style.display = "none";
+        }).catch(() => {
             document.getElementById('scannerModal').style.display = "none";
         });
     } else {
@@ -763,19 +767,52 @@ function stopScanner() {
     }
 }
 
-// Function to handle the result
+/**
+ * UPGRADED LOGIC:
+ * 1. If barcode is NEW -> Add to Firebase with Qty 1
+ * 2. If barcode EXISTS -> Decrease Qty by 1
+ */
 function processScannedBarcode(code) {
-    // Check if item exists in inventory
-    const existingEntry = Object.entries(inventory).find(([_, p]) => p.barcode === code);
-    
+    // 1. Search inventory for this specific barcode
+    const entries = Object.entries(inventory);
+    const existingEntry = entries.find(([_, p]) => p.barcode === code);
+
     if (existingEntry) {
-        manualChange(existingEntry[0], 1);
-        speakWithAI("Updated " + existingEntry[1].name);
+        // PRODUCT EXISTS -> DECREASE BY 1
+        const id = existingEntry[0];
+        const product = existingEntry[1];
+        const newQty = Math.max(0, (product.quantity || 0) - 1);
+
+        invRef.child(id).update({ quantity: newQty })
+            .then(() => {
+                triggerSuccess(`Reduced ${product.name}: ${newQty} left`);
+                speakWithAI(`${product.name} decreased. Balance ${newQty}`);
+            });
+
     } else {
-        // If new, open manual add and fill the name with the code
-        openManualAdd();
-        document.getElementById("m_name").value = "Item " + code;
-        speakWithAI("New barcode detected");
+        // PRODUCT IS NEW -> REGISTER IN FIREBASE
+        const newName = "Item-" + code.slice(-4); // Auto-name with last 4 digits
+        const newProduct = {
+            name: newName,
+            barcode: code,
+            quantity: 1,
+            unit: "pcs",
+            createdAt: firebase.database.ServerValue.TIMESTAMP
+        };
+
+        invRef.push(newProduct)
+            .then(() => {
+                triggerSuccess(`New Product Registered: ${newName}`);
+                speakWithAI("New barcode detected. Added to inventory.");
+                
+                // Optional: Alert user they can edit the name now
+                setTimeout(() => {
+                   if(confirm("New item added. Do you want to rename it?")) {
+                       openManualAdd();
+                       document.getElementById("m_name").value = newName;
+                   }
+                }, 1000);
+            });
     }
 }
 
