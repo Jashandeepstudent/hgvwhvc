@@ -18,7 +18,10 @@ body{margin:0;background:#f6f7fb;padding:30px}
 .top h2{margin:0;font-size:26px;font-weight:700}
 .top .actions{display:flex;gap:10px;flex-wrap:wrap}
 .top button{padding:12px 18px;border:none;border-radius:14px;background:#000;color:#fff;font-weight:600;cursor:pointer}
-
+#scannerModal button:active {
+    transform: scale(0.95);
+    background: #e5e7eb !important;
+}
 /* SEARCH */
 .search-container {width:100%; margin-bottom:20px;}
 #searchInput {
@@ -696,7 +699,7 @@ function manualChange(id, dir) {
 // SCANNER PART
 
 let html5QrCode;
-let isScanning = false; // Prevents overlapping scans
+let isScanning = false; 
 
 async function openScanner() {
     let scannerModal = document.getElementById('scannerModal');
@@ -705,10 +708,22 @@ async function openScanner() {
         scannerModal.id = 'scannerModal';
         scannerModal.className = 'modal';
         scannerModal.innerHTML = `
-            <div class="manual-modal-box" style="padding:20px; max-width: 500px;">
+            <div class="manual-modal-box" style="padding:20px; max-width: 500px; text-align:center;">
                 <h3 style="margin-top:0">Smart Scanner</h3>
-                <div id="reader"></div>
-                <p style="font-size:12px; color:#666; margin: 10px 0;">Align barcode inside the box</p>
+                <div id="reader" style="border-radius:15px; overflow:hidden;"></div>
+                
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin: 15px 0;">
+                    <button onclick="document.getElementById('file-input').click()" 
+                            style="background:#f0f2f5; color:#333; padding:12px; border-radius:12px; border:none; font-weight:700; cursor:pointer;">
+                        🖼️ Image
+                    </button>
+                    <button onclick="promptBarcodeType()" 
+                            style="background:#f0f2f5; color:#333; padding:12px; border-radius:12px; border:none; font-weight:700; cursor:pointer;">
+                        ⌨️ Type
+                    </button>
+                </div>
+
+                <input type="file" id="file-input" accept="image/*" style="display:none" onchange="scanFromImage(event)">
                 <button class="btn-close" onclick="stopScanner()" style="width:100%;">Close Scanner</button>
             </div>
         `;
@@ -719,47 +734,56 @@ async function openScanner() {
     html5QrCode = new Html5Qrcode("reader");
     
     const config = { 
-        fps: 25, // Higher FPS for smoother "PhonePe" feel
-        qrbox: { width: 280, height: 160 }, // Wide box for barcodes
+        fps: 25, 
+        qrbox: { width: 280, height: 160 }, 
         aspectRatio: 1.0 
     };
 
-    html5QrCode.start(
-        { facingMode: "environment" }, 
-        config,
-        (decodedText) => {
-            // DEBOUNCE: Prevent multiple rapid scans
-            if (isScanning) return;
-            isScanning = true;
-
-            document.getElementById("beep-ok").play();
-            processScannedBarcode(decodedText);
-            
-            // Wait 2 seconds before allowing another scan or closing
-            setTimeout(() => {
-                isScanning = false;
-                stopScanner();
-            }, 500);
-        },
-        (errorMessage) => { /* ignore errors */ }
-    ).then(() => {
-        // APPLY POWER SETTINGS
+    html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
+        if (isScanning) return;
+        handleScanSuccess(decodedText);
+    }).then(() => {
         const track = html5QrCode.getRunningTrack();
         track.applyConstraints({
-            advanced: [
-                { focusMode: "continuous" },
-                { exposureMode: "continuous" },
-                { zoom: 1.5 } // Subtle zoom to help with small barcodes
-            ]
-        }).catch(e => console.warn("Advanced camera features limited on this device."));
+            advanced: [{ focusMode: "continuous" }, { exposureMode: "continuous" }, { zoom: 1.5 }]
+        }).catch(e => console.warn("Power settings not fully supported on this hardware."));
     });
+}
+
+// --- SCANNING HANDLERS ---
+
+function handleScanSuccess(decodedText) {
+    isScanning = true;
+    document.getElementById("beep-ok").play();
+    processScannedBarcode(decodedText);
+    
+    // Brief pause to prevent rapid double-processing
+    setTimeout(() => {
+        isScanning = false;
+        stopScanner();
+    }, 800);
+}
+
+function scanFromImage(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const html5QrCodeFile = new Html5Qrcode("reader");
+    html5QrCodeFile.scanFile(file, true)
+        .then(decodedText => handleScanSuccess(decodedText))
+        .catch(err => alert("No barcode found in this image."));
+}
+
+function promptBarcodeType() {
+    const code = prompt("Type or Paste Barcode Number:");
+    if (code && code.trim() !== "") {
+        handleScanSuccess(code.trim());
+    }
 }
 
 function stopScanner() {
     if (html5QrCode && html5QrCode.isScanning) {
         html5QrCode.stop().then(() => {
-            document.getElementById('scannerModal').style.display = "none";
-        }).catch(() => {
             document.getElementById('scannerModal').style.display = "none";
         });
     } else {
@@ -767,31 +791,25 @@ function stopScanner() {
     }
 }
 
-/**
- * UPGRADED LOGIC:
- * 1. If barcode is NEW -> Add to Firebase with Qty 1
- * 2. If barcode EXISTS -> Decrease Qty by 1
- */
+// --- CORE INVENTORY LOGIC ---
+
 function processScannedBarcode(code) {
-    // 1. Search inventory for this specific barcode
     const entries = Object.entries(inventory);
     const existingEntry = entries.find(([_, p]) => p.barcode === code);
 
     if (existingEntry) {
-        // PRODUCT EXISTS -> DECREASE BY 1
+        // SCENARIO 1: SCANNING SAME PRODUCT AGAIN -> DECREASE BY 1
         const id = existingEntry[0];
         const product = existingEntry[1];
         const newQty = Math.max(0, (product.quantity || 0) - 1);
 
-        invRef.child(id).update({ quantity: newQty })
-            .then(() => {
-                triggerSuccess(`Reduced ${product.name}: ${newQty} left`);
-                speakWithAI(`${product.name} decreased. Balance ${newQty}`);
-            });
-
+        invRef.child(id).update({ quantity: newQty }).then(() => {
+            triggerSuccess(`Out: ${product.name} (-1)`);
+            speakWithAI(`${product.name} decreased to ${newQty}.`);
+        });
     } else {
-        // PRODUCT IS NEW -> REGISTER IN FIREBASE
-        const newName = "Item-" + code.slice(-4); // Auto-name with last 4 digits
+        // SCENARIO 2: SCANNING NEW PRODUCT -> ADD TO INVENTORY
+        const newName = "Item-" + code.slice(-4);
         const newProduct = {
             name: newName,
             barcode: code,
@@ -800,22 +818,12 @@ function processScannedBarcode(code) {
             createdAt: firebase.database.ServerValue.TIMESTAMP
         };
 
-        invRef.push(newProduct)
-            .then(() => {
-                triggerSuccess(`New Product Registered: ${newName}`);
-                speakWithAI("New barcode detected. Added to inventory.");
-                
-                // Optional: Alert user they can edit the name now
-                setTimeout(() => {
-                   if(confirm("New item added. Do you want to rename it?")) {
-                       openManualAdd();
-                       document.getElementById("m_name").value = newName;
-                   }
-                }, 1000);
-            });
+        invRef.push(newProduct).then(() => {
+            triggerSuccess(`In: ${newName} (+1)`);
+            speakWithAI("New barcode registered.");
+        });
     }
 }
-
 
 
 </script>
