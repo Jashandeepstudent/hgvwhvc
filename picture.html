@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>AI Inventory Pro - Vision Terminal</title>
+<title>ScaleVest Products Scanner</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
@@ -143,13 +143,14 @@
 </div>
 
 <div class="center-container">
-    <div class="scan-trigger" onclick="initiateAIScan()">
+    <div class="scan-trigger" onclick="document.getElementById('aiCameraInput').click()">
         <svg width="60" height="60" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="white" stroke-width="1" stroke-linecap="round"/>
             <path d="M9 3H15M9 3C5 3 3 5 3 9V15C3 19 5 21 9 21H15C19 21 21 19 21 15V9C21 5 19 3 15 3M9 3V5M15 3V5" stroke="white" stroke-width="1" stroke-linecap="round"/>
         </svg>
         <span>START AI VISION</span>
     </div>
+    <input type="file" id="aiCameraInput" accept="image/*" capture="environment" style="display:none" onchange="handleImageProcessing(this.files[0])">
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -190,41 +191,58 @@ function initiateAIScan() {
 }
 
 async function handleImageProcessing(file) {
-    if (!file || !invRef) return;
+    // 1. Guard Clauses & Reset
+    if (!file) return;
+    if (!invRef) {
+        displayToast("CRITICAL: DATABASE OFFLINE");
+        return;
+    }
     
     // UI: Show Preview & Analysis Overlay
-    document.getElementById('scanPreview').src = URL.createObjectURL(file);
     const overlay = document.getElementById('aiOverlay');
+    const preview = document.getElementById('scanPreview');
+    preview.src = URL.createObjectURL(file);
     overlay.style.display = 'flex';
 
     try {
+        // 2. Timeout Protection (Aborts if API takes > 25 seconds)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 25000);
+
         const b64Full = await toBase64(file);
         const b64Data = b64Full.split(',')[1];
 
-        // API Call
+        // 3. API Call with Abort Signal
         const res = await fetch('https://ai-inventory-pro-sigma.vercel.app/api/scan', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ imageBase64: b64Data })
+            body: JSON.stringify({ imageBase64: b64Data }),
+            signal: controller.signal
         });
+        
+        clearTimeout(timeoutId);
+
+        if (!res.ok) throw new Error(`Server Status: ${res.status}`);
 
         const data = await res.json();
         if (data.error) throw new Error(data.error);
 
-        // Data Extraction
-        const aiText = data.candidates[0].content.parts[0].text;
+        // 4. Data Extraction & Safety Check
+        const aiText = data.candidates[0]?.content?.parts[0]?.text || "";
         const jsonMatch = aiText.match(/\[[\s\S]*\]/);
-        if (!jsonMatch) throw new Error("Neural match failed.");
+        
+        if (!jsonMatch) throw new Error("Vision Analysis was unclear. Try again.");
         
         const items = JSON.parse(jsonMatch[0]);
+        if (items.length === 0) throw new Error("No products detected.");
+
         let summaryParts = [];
 
-        // Save & Construct Summary
+        // 5. Batch Save
         items.forEach(it => {
             const formattedName = it.name.charAt(0).toUpperCase() + it.name.slice(1);
             const qty = Number(it.qty || it.quantity) || 1;
-            
-            summaryParts.push(`(${qty}x) ${formattedName}`);
+            summaryParts.push(`${qty}x ${formattedName}`);
 
             invRef.push({
                 name: formattedName,
@@ -235,15 +253,19 @@ async function handleImageProcessing(file) {
         });
 
         overlay.style.display = 'none';
-        
-        // Polished Feedback: "(2x) Jar, (1x) Box Added"
-        const successMsg = summaryParts.join(", ") + " Added to Inventory";
-        displayToast(successMsg);
+        displayToast(`SUCCESS: ${summaryParts.join(", ")}`);
 
     } catch (err) {
         overlay.style.display = 'none';
-        console.error(err);
-        alert("TERMINAL ERROR: " + err.message);
+        console.error("ANALYSIS FAILED:", err);
+        
+        // Use Toast instead of Alert for professional feel
+        const errorMessage = err.name === 'AbortError' ? "Network Timeout. Try again." : err.message;
+        displayToast(`⚠️ VISION ERROR: ${errorMessage}`);
+    } finally {
+        // 6. CRITICAL: Reset the input so the next click ALWAYS works
+        const input = document.getElementById('aiCameraInput'); // Ensure your input has this ID
+        if (input) input.value = ""; 
     }
 }
 
