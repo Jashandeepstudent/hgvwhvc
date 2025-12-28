@@ -2,9 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>ScaleVest | Business Hub</title>
+<title>ScaleVest | Executive Hub</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
@@ -12,157 +11,83 @@
         --bg: #f8fafc;
         --card-bg: #ffffff;
         --primary: #7c3aed;
-        --primary-glow: rgba(124, 58, 237, 0.1);
+        --accent: #0ea5e9; /* Blue for Sales/Records */
+        --gold: #f59e0b;   /* Gold for AI CFO */
         --text-main: #1e293b;
         --text-sub: #64748b;
         --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.04), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
     }
 
     * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
-    
-    body {
-        margin: 0;
-        background-color: var(--bg);
-        color: var(--text-main);
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        padding: 20px;
-    }
+    body { margin: 0; background-color: var(--bg); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; padding: 20px; }
 
-    /* ===== HEADER ===== */
-    header {
-        max-width: 1100px;
-        margin: 0 auto 30px auto;
-        width: 100%;
-        display: none; /* Shown via JS */
-        justify-content: space-between;
-        align-items: center;
-    }
-
+    header { max-width: 1200px; margin: 0 auto 30px auto; width: 100%; display: none; justify-content: space-between; align-items: center; }
     header h1 { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.5px; margin: 0; }
     header .status { font-size: 12px; color: var(--text-sub); display: flex; align-items: center; gap: 6px; }
     header .status::before { content: ""; width: 8px; height: 8px; background: #10b981; border-radius: 50%; display: block; }
 
-    /* ===== CREATE HUB CARD (Empty State) ===== */
-    #createHubCard {
-        max-width: 400px;
-        width: 100%;
-        margin: auto;
-        background: var(--card-bg);
-        padding: 40px;
-        border-radius: 32px;
-        border: 1px solid #e2e8f0;
-        text-align: center;
-        box-shadow: var(--shadow);
-        transition: transform 0.3s ease;
-        cursor: pointer;
-    }
-    #createHubCard:hover { transform: translateY(-5px); border-color: var(--primary); }
-    #createHubCard img { width: 80px; margin-bottom: 20px; filter: drop-shadow(0 10px 10px rgba(124, 58, 237, 0.2)); }
-    #createHubCard h2 { font-size: 20px; font-weight: 700; margin-bottom: 10px; }
-    #createHubCard p { color: var(--text-sub); font-size: 14px; margin: 0; }
+    #createHubCard { max-width: 400px; width: 100%; margin: auto; background: var(--card-bg); padding: 40px; border-radius: 32px; border: 1px solid #e2e8f0; text-align: center; box-shadow: var(--shadow); cursor: pointer; }
+    #createHubCard img { width: 80px; margin-bottom: 20px; }
 
-    /* ===== DASHBOARD GRID ===== */
-    #dashboard {
-        display: none;
-        width: 100%;
-        max-width: 1100px;
-        margin: 0 auto;
-    }
+    #dashboard { display: none; width: 100%; max-width: 1200px; margin: 0 auto; }
+#createHubCard img.hub-icon {
+    width: 100px;
+    height: auto;
+    margin-bottom: 24px;
+    /* This adds a professional soft purple glow to your SVG icon */
+    filter: drop-shadow(0 10px 15px rgba(124, 58, 237, 0.3));
+    transition: transform 0.4s ease;
+}
 
-    .grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 20px;
-    }
+#createHubCard:hover img.hub-icon {
+    transform: scale(1.1) rotate(-2deg);
+}
+    /* MODERN 5-BOX GRID */
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
 
-    /* ===== PROFESSIONAL BOXES ===== */
     .box {
         background: var(--card-bg);
-        padding: 24px;
-        border-radius: 24px;
+        padding: 28px;
+        border-radius: 28px;
         border: 1px solid #f1f5f9;
         box-shadow: var(--shadow);
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        min-height: 190px;
+        min-height: 200px;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         cursor: pointer;
         position: relative;
-        overflow: hidden;
     }
+    .box:hover { transform: translateY(-8px); border-color: var(--primary); box-shadow: 0 20px 30px rgba(0,0,0,0.08); }
 
-    .box:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 20px 25px -5px rgba(124, 58, 237, 0.1);
-        border-color: var(--primary);
-    }
-
-    .inventory-box {
-        background: linear-gradient(135deg, #ffffff 0%, #f5f3ff 100%);
-    }
-
-    .box .icon-wrapper {
-        width: 48px;
-        height: 48px;
-        background: #f8fafc;
-        border-radius: 14px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 15px;
-        transition: 0.3s;
-    }
-
+    /* ICON STYLING */
+    .icon-wrapper { width: 52px; height: 52px; background: #f8fafc; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; transition: 0.3s; }
     .box:hover .icon-wrapper { background: var(--primary); }
     .box:hover .icon-wrapper svg { stroke: white; }
 
-    .box .title { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
-    .box .desc { font-size: 13px; color: var(--text-sub); line-height: 1.4; }
+    .title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+    .desc { font-size: 13.5px; color: var(--text-sub); line-height: 1.5; }
 
-    .box .action-arrow {
-        position: absolute; right: 24px; bottom: 24px;
-        opacity: 0; transform: translateX(-10px); transition: 0.3s;
-    }
+    /* SPECIAL BOX HIGHLIGHTS */
+    .inventory-box { background: linear-gradient(135deg, #ffffff 0%, #f5f3ff 100%); }
+    .ai-cfo-box { background: linear-gradient(135deg, #ffffff 0%, #fffbeb 100%); border-color: #fef3c7; }
+    .ai-cfo-box:hover { border-color: var(--gold); }
+    .ai-cfo-box .icon-wrapper { background: #fffbeb; }
+    .ai-cfo-box:hover .icon-wrapper { background: var(--gold); }
+
+    .action-arrow { position: absolute; right: 28px; bottom: 28px; opacity: 0; transform: translateX(-10px); transition: 0.3s; }
     .box:hover .action-arrow { opacity: 1; transform: translateX(0); }
 
-    /* ===== MODAL ===== */
-    #nameModal {
-        position: fixed; inset: 0;
-        background: rgba(15, 23, 42, 0.6);
-        backdrop-filter: blur(8px);
-        display: none; justify-content: center; align-items: center;
-        z-index: 1000;
-    }
-    .modal-box {
-        width: 90%; max-width: 400px;
-        background: white; padding: 32px; border-radius: 30px;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-        text-align: center;
-    }
-    .modal-box h3 { margin: 0 0 10px 0; font-size: 22px; }
-    .modal-box input {
-        width: 100%; padding: 16px; border-radius: 16px; border: 1px solid #e2e8f0;
-        margin: 20px 0; font-size: 16px; outline: none; transition: 0.3s;
-    }
-    .modal-box input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-glow); }
-    .modal-box button {
-        width: 100%; padding: 16px; border: none; border-radius: 16px;
-        background: var(--primary); color: white; font-weight: 700; cursor: pointer;
-        transition: 0.2s;
-    }
-    .modal-box button:active { transform: scale(0.98); }
+    /* MODAL */
+    #nameModal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 1000; }
+    .modal-box { width: 90%; max-width: 400px; background: white; padding: 32px; border-radius: 30px; text-align: center; }
+    .modal-box input { width: 100%; padding: 16px; border-radius: 16px; border: 1px solid #e2e8f0; margin: 20px 0; font-size: 16px; }
+    .modal-box button { width: 100%; padding: 16px; border: none; border-radius: 16px; background: var(--primary); color: white; font-weight: 700; cursor: pointer; }
 
-    /* Mobile Adaptments */
-    @media (max-width: 600px) {
-        .grid { grid-template-columns: 1fr; }
-        .box { min-height: 160px; }
-    }
+    @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
 </style>
 </head>
-
 <body>
 
 <header id="headerUI">
@@ -171,63 +96,75 @@
 </header>
 
 <div id="createHubCard">
-    <img src="https://img.icons8.com/fluency/96/shop.png" alt="Shop">
-    <h2>Create your Business Hub</h2>
-    <p>Setup your digital workspace to start managing operations.</p>
+    <img src="shop.svg" alt="Shop" class="hub-icon">
+    <h2>Initialize Business Hub</h2>
+    <p>Launch your professional ecosystem and grow your Business with ScaleVest Brain</p>
 </div>
 
 <div id="nameModal">
     <div class="modal-box">
-        <h3>Business Identity</h3>
-        <p style="color: var(--text-sub); font-size: 14px;">Enter your business name to initialize the database.</p>
-        <input id="businessNameInput" placeholder="e.g. Metro Logistics">
-        <button onclick="saveBusinessName()">Continue</button>
+        <h3>Workspace Name</h3>
+        <input id="businessNameInput" placeholder="e.g. Nexus Corp">
+        <button onclick="saveBusinessName()">Launch Dashboard</button>
     </div>
 </div>
 
 <div id="dashboard">
     <div class="grid">
         
-        <div class="box inventory-box" onclick="openInventory()">
+        <div class="box inventory-box" onclick="location.href='inventory.html'">
             <div>
                 <div class="icon-wrapper">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
                 </div>
                 <div class="title">Inventory Hub</div>
-                <div class="desc">Manage stock levels and scan new items using Vision AI.</div>
+                <div class="desc">AI-powered stock tracking and neural item extraction.</div>
             </div>
             <div class="action-arrow">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </div>
         </div>
 
-        <div class="box">
+        <div class="box" onclick="alert('Opening Sales Flow...')">
             <div>
                 <div class="icon-wrapper">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
                 </div>
-                <div class="title">Team Portal</div>
-                <div class="desc">Manage staff accounts and monitor activity logs.</div>
+                <div class="title">Sales Flow</div>
+                <div class="desc">Track transactions, revenue streams, and customer orders.</div>
             </div>
         </div>
 
-        <div class="box">
+        <div class="box" onclick="alert('Opening Payroll...')">
             <div>
                 <div class="icon-wrapper">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/></svg>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                 </div>
-                <div class="title">Analytics</div>
-                <div class="desc">Review performance metrics and inventory turnover.</div>
+                <div class="title">Employee Payer</div>
+                <div class="desc">Automated payroll, staff hours, and compensation management.</div>
             </div>
         </div>
 
-        <div class="box">
+        <div class="box" onclick="alert('Opening Records...')">
             <div>
                 <div class="icon-wrapper">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                 </div>
-                <div class="title">Settings</div>
-                <div class="desc">Configure API keys, Vision AI sensitivity, and theme.</div>
+                <div class="title">Business Records</div>
+                <div class="desc">Digital vault for licenses, tax documents, and legal filings.</div>
+            </div>
+        </div>
+
+        <div class="box ai-cfo-box" onclick="alert('Consulting AI CFO...')">
+            <div>
+                <div class="icon-wrapper">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+                </div>
+                <div class="title">AI CFO</div>
+                <div class="desc">Financial intelligence. Profit analysis and cashflow forecasting.</div>
+            </div>
+            <div class="action-arrow">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </div>
         </div>
 
@@ -239,103 +176,49 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
-/* ===== FIREBASE CONFIG ===== */
 const firebaseConfig = {
     apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
     authDomain: "scalevest-163a0.firebaseapp.com",
     databaseURL: "https://scalevest-163a0-default-rtdb.firebaseio.com",
-    projectId: "scalevest-163a0",
-    storageBucket: "scalevest-163a0.appspot.com",
-    messagingSenderId: "938358950124",
-    appId: "1:938358950124:web:043506aeaacea2a96bfdc9"
+    projectId: "scalevest-163a0"
 };
 
 firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.database();
+const auth = firebase.auth(), db = firebase.database();
 
-/* ===== ELEMENTS ===== */
-const createCard = document.getElementById("createHubCard");
-const modal = document.getElementById("nameModal");
-const dashboard = document.getElementById("dashboard");
-const headerUI = document.getElementById("headerUI");
-const bizNameDisplay = document.getElementById("displayBizName");
-const bizInput = document.getElementById("businessNameInput");
+const createCard = document.getElementById("createHubCard"), modal = document.getElementById("nameModal"), 
+      dashboard = document.getElementById("dashboard"), headerUI = document.getElementById("headerUI"),
+      bizNameDisplay = document.getElementById("displayBizName"), bizInput = document.getElementById("businessNameInput");
 
-/* ===== UI HELPERS ===== */
 function showDashboard(name) {
-    createCard.style.display = "none";
-    modal.style.display = "none";
-    dashboard.style.display = "block";
-    headerUI.style.display = "flex";
+    createCard.style.display = "none"; modal.style.display = "none";
+    dashboard.style.display = "block"; headerUI.style.display = "flex";
     if(name) bizNameDisplay.textContent = name;
 }
 
-function showCreateCard() {
-    dashboard.style.display = "none";
-    headerUI.style.display = "none";
-    createCard.style.display = "flex";
-}
+function showCreateCard() { dashboard.style.display = "none"; headerUI.style.display = "none"; createCard.style.display = "flex"; }
 
-/* ===== OPEN MODAL ===== */
 createCard.onclick = () => modal.style.display = "flex";
 
-/* ===== SAVE BUSINESS NAME ===== */
 function saveBusinessName() {
     const name = bizInput.value.trim();
-    if (!name) return alert("Please enter a business name");
-
-    const user = auth.currentUser;
-    if (!user) return;
-
+    if (!name) return alert("Enter a name");
     localStorage.setItem("businessName", name);
     showDashboard(name);
-
-    Promise.all([
-        db.ref("BusinessOwners/" + user.uid).update({
-            businessName: name,
-            createdAt: new Date().toISOString()
-        }),
-        db.ref("BusinessNames/" + name).set({
-            ownerUid: user.uid,
-            createdAt: new Date().toISOString()
-        })
-    ]).catch(err => alert(err.message));
+    const u = auth.currentUser;
+    if (u) {
+        db.ref("BusinessOwners/" + u.uid).update({ businessName: name, createdAt: new Date().toISOString() });
+    }
 }
 
-/* ===== AUTH & DATA SYNC ===== */
 auth.onAuthStateChanged(user => {
-    if (!user) {
-        window.location.href = "login.html";
-        return;
-    }
-
-    // ⚡ INSTANT LOAD FROM CACHE
-    const cachedName = localStorage.getItem("businessName");
-    if (cachedName) {
-        showDashboard(cachedName);
-    } else {
-        showCreateCard();
-    }
-
-    // 🔄 SYNC FROM FIREBASE
-    db.ref("BusinessOwners/" + user.uid + "/businessName")
-        .once("value")
-        .then(snap => {
-            if (snap.exists()) {
-                const name = snap.val();
-                localStorage.setItem("businessName", name);
-                showDashboard(name);
-            } else {
-                localStorage.removeItem("businessName");
-                showCreateCard();
-            }
-        });
+    if (!user) { window.location.href = "login.html"; return; }
+    const cached = localStorage.getItem("businessName");
+    if (cached) showDashboard(cached); else showCreateCard();
+    db.ref("BusinessOwners/" + user.uid + "/businessName").once("value").then(snap => {
+        if (snap.exists()) { showDashboard(snap.val()); localStorage.setItem("businessName", snap.val()); }
+    });
 });
-
-function openInventory(){
-    window.location.href = "inventory.html";
-}
 </script>
 
 </body>
