@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -48,7 +47,7 @@
     </div>
 
     <div class="card">
-        <h3>Inventory</h3>
+        <h3>Inventory Management</h3>
         <table>
             <thead>
                 <tr>
@@ -68,30 +67,36 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
 <script>
-    // --- CONFIGURATION ---
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
-  authDomain: "scalevest-163a0.firebaseapp.com",
-  databaseURL: "https://scalevest-163a0-default-rtdb.firebaseio.com",
-  projectId: "scalevest-163a0",
-  storageBucket: "scalevest-163a0.firebasestorage.app",
-  messagingSenderId: "938358950124",
-  appId: "1:938358950124:web:043506aeaacea2a96bfdc9",
-  measurementId: "G-QD3TWBZHR0"
-};
+    const firebaseConfig = {
+        apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
+        authDomain: "scalevest-163a0.firebaseapp.com",
+        databaseURL: "https://scalevest-163a0-default-rtdb.firebaseio.com",
+        projectId: "scalevest-163a0",
+        storageBucket: "scalevest-163a0.firebasestorage.app",
+        messagingSenderId: "938358950124",
+        appId: "1:938358950124:web:043506aeaacea2a96bfdc9",
+        measurementId: "G-QD3TWBZHR0"
+    };
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const auth = firebase.auth();
 
     let uID, currency = "", currentSpend = 0, currentEarned = 0;
+    let isInitialLoad = true;
+
+    // Helper to get numbers out of text like "10/kg"
+    const parsePrice = (t) => {
+        if (!t) return 0;
+        const matched = t.toString().match(/(\d+(\.\d+)?)/);
+        return matched ? parseFloat(matched[0]) : 0;
+    };
 
     auth.onAuthStateChanged(u => {
         if (!u) return;
         uID = u.uid;
 
-        // Load Business Meta
+        // 1. Listen for Business Meta (Currency/Totals)
         db.ref(`BusinessOwners/${uID}`).on('value', s => {
             const data = s.val() || {};
             if (!data.nationalCurrency) {
@@ -105,9 +110,26 @@ const firebaseConfig = {
             }
         });
 
-        // Load Inventory
+        // 2. Listen for Inventory and Handle Initial Sync
         db.ref(`Businesses/${uID}/inventory`).on('value', s => {
-            renderTable(s.val() || {});
+            const invData = s.val() || {};
+            
+            // FIX: If spend is 0 but inventory exists, calculate the startup cost
+            if (isInitialLoad && currentSpend === 0) {
+                let startupCost = 0;
+                Object.values(invData).forEach(item => {
+                    const cost = parsePrice(item.costPrice);
+                    const qty = parseFloat(item.quantity) || 0;
+                    startupCost += (cost * qty);
+                });
+
+                if (startupCost > 0) {
+                    db.ref(`BusinessOwners/${uID}`).update({ totalSpend: startupCost });
+                }
+                isInitialLoad = false;
+            }
+
+            renderTable(invData);
         });
     });
 
@@ -122,8 +144,8 @@ const firebaseConfig = {
     }
 
     function refreshDashboard() {
-        document.getElementById('totalSpendDisplay').innerText = `${currency} ${currentSpend.toFixed(2)}`;
-        document.getElementById('totalEarnedDisplay').innerText = `${currency} ${currentEarned.toFixed(2)}`;
+        document.getElementById('totalSpendDisplay').innerText = `${currency} ${currentSpend.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+        document.getElementById('totalEarnedDisplay').innerText = `${currency} ${currentEarned.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
     }
 
     function renderTable(data) {
@@ -133,12 +155,12 @@ const firebaseConfig = {
             const item = data[key];
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td>${item.name || key}</td>
+                <td><strong>${item.name || key}</strong></td>
                 <td><input type="number" class="qty" value="${item.quantity || 0}" 
                     onfocus="this.oldValue = this.value;" 
                     onchange="updateQty('${key}', this.value, this.oldValue, '${item.costPrice||0}', '${item.sellingPrice||0}')"></td>
-                <td><input type="text" class="price" value="${item.costPrice || ''}" onblur="updateField('${key}', 'costPrice', this.value)"></td>
-                <td><input type="text" class="price" value="${item.sellingPrice || ''}" onblur="updateField('${key}', 'sellingPrice', this.value)"></td>
+                <td><input type="text" class="price" value="${item.costPrice || ''}" placeholder="Cost" onblur="updateField('${key}', 'costPrice', this.value)"></td>
+                <td><input type="text" class="price" value="${item.sellingPrice || ''}" placeholder="Sell" onblur="updateField('${key}', 'sellingPrice', this.value)"></td>
             `;
             tbody.appendChild(tr);
         });
@@ -148,47 +170,30 @@ const firebaseConfig = {
         db.ref(`Businesses/${uID}/inventory/${key}`).update({ [field]: val });
     }
 
-  // ... (Keep Firebase Init Code) ...
+    function updateQty(key, newVal, oldVal, costTxt, sellTxt) {
+        newVal = parseFloat(newVal) || 0;
+        oldVal = parseFloat(oldVal) || 0;
+        const diff = newVal - oldVal;
 
-  function updateQty(key, newVal, oldVal, costTxt, sellTxt) {
-    newVal = parseFloat(newVal) || 0;
-    // If oldVal is undefined (first time), treat it as 0
-    oldVal = parseFloat(oldVal) || 0; 
-    
-    const diff = newVal - oldVal;
+        const cost = parsePrice(costTxt);
+        const sell = parsePrice(sellTxt);
 
-    // Helper to get numbers out of text like "10/kg"
-    const parsePrice = (t) => {
-        if (!t) return 0;
-        const matched = t.toString().match(/(\d+(\.\d+)?)/);
-        return matched ? parseFloat(matched[0]) : 0;
-    };
+        let updates = {};
+        
+        if (diff > 0) {
+            // Added stock (Spend)
+            currentSpend += (diff * cost);
+            updates[`BusinessOwners/${uID}/totalSpend`] = currentSpend;
+        } else if (diff < 0) {
+            // Removed/Sold stock (Earned)
+            currentEarned += (Math.abs(diff) * sell);
+            updates[`BusinessOwners/${uID}/totalEarned`] = currentEarned;
+        }
 
-    const cost = parsePrice(costTxt);
-    const sell = parsePrice(sellTxt);
-
-    let updates = {};
-    
-    if (diff > 0) {
-        // You bought more stock
-        currentSpend += (diff * cost);
-        updates[`BusinessOwners/${uID}/totalSpend`] = currentSpend;
-    } else if (diff < 0) {
-        // You sold stock
-        currentEarned += (Math.abs(diff) * sell);
-        updates[`BusinessOwners/${uID}/totalEarned`] = currentEarned;
+        updates[`Businesses/${uID}/inventory/${key}/quantity`] = newVal;
+        
+        db.ref().update(updates).catch(err => alert("Permission Denied! Check Firebase Rules."));
     }
-
-    updates[`Businesses/${uID}/inventory/${key}/quantity`] = newVal;
-    
-    // This sends both the new quantity AND the new totals to Firebase at once
-    db.ref().update(updates).then(() => {
-        console.log("Finance Updated!");
-    }).catch(err => {
-        console.error("Firebase Error:", err);
-        alert("Check your Firebase Database Rules!");
-    });
-  }
 </script>
 </body>
 </html>
