@@ -622,6 +622,7 @@ function closePriceModal() {
   document.getElementById("priceModal").style.display = "none";
 }
 
+// 1. Update savePrices to trigger a check for existing stock
 function savePrices() {
   const costPrice = parseFloat(document.getElementById("costPriceInput").value);
   const sellPrice = parseFloat(document.getElementById("sellPriceInput").value);
@@ -636,9 +637,34 @@ function savePrices() {
     sellPrice: sellPrice,
     updatedAt: firebase.database.ServerValue.TIMESTAMP
   }).then(() => {
+    // NEW: When prices are saved, check if we should record the current stock as an initial purchase
+    checkAndRecordInitialStock(currentProductId, costPrice);
     showSuccess("Prices Saved!");
     closePriceModal();
   });
+}
+
+// 2. New helper function to handle existing inventory
+function checkAndRecordInitialStock(productId, costPrice) {
+  const product = inventory[productId];
+  if (!product || !product.quantity || product.quantity <= 0) return;
+
+  // Check if we have already recorded a purchase for this product 
+  // to avoid double-counting every time you edit a price.
+  const alreadyRecorded = Object.values(purchases).some(p => p.productId === productId);
+
+  if (!alreadyRecorded) {
+    const cost = costPrice * product.quantity;
+    purchasesRef.push({
+      productId,
+      productName: product.name,
+      quantity: product.quantity,
+      costPrice: costPrice,
+      totalCost: cost,
+      type: "initial_setup", // Labeling it helps with debugging
+      timestamp: firebase.database.ServerValue.TIMESTAMP
+    });
+  }
 }
 
 function showSuccess(msg) {
