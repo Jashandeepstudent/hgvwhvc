@@ -2,90 +2,48 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ScalVest Enterprise Hub</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <title>ScalVest Enterprise – Zero-Bug Engine</title>
     <style>
-        :root {
-            --bg: #000000; --card: #111827; --primary: #2563eb;
-            --success: #10b981; --danger: #ef4444; --text: #ffffff;
-        }
-        body {
-            background: var(--bg); color: var(--text);
-            font-family: 'Inter', sans-serif; margin: 0; padding: 20px;
-        }
-        .container { max-width: 1200px; margin: auto; }
+        :root { --bg: #000; --card: #111; --blue: #2563eb; --green: #10b981; --red: #ef4444; --text: #fff; }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; padding: 20px; }
+        .container { max-width: 1100px; margin: auto; }
         
-        /* DASHBOARD GRID */
-        .dashboard {
-            display: grid; grid-template-columns: repeat(3, 1fr);
-            gap: 25px; margin-bottom: 40px;
-        }
-        .stat-card {
-            background: var(--card); border: 1px solid #1f2937;
-            padding: 30px; border-radius: 24px; text-align: center;
-            transition: all 0.3s ease;
-        }
-        .stat-card:hover { border-color: var(--primary); transform: translateY(-5px); }
-        .stat-card h2 { font-size: 13px; text-transform: uppercase; color: #9ca3af; margin: 0; }
-        .stat-card .amount { font-size: 32px; font-weight: 700; margin-top: 12px; }
-        
-        .spend-val { color: var(--danger); }
-        .earn-val { color: var(--success); }
-        .stock-val { color: #f59e0b; }
+        /* Dashboard Stats */
+        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
+        .stat-box { background: var(--card); padding: 25px; border-radius: 20px; border: 1px solid #222; text-align: center; }
+        .stat-box h2 { font-size: 12px; color: #888; text-transform: uppercase; margin: 0; }
+        .stat-box div { font-size: 28px; font-weight: 700; margin-top: 10px; }
+        .val-spend { color: var(--red); }
+        .val-earn { color: var(--green); }
+        .val-stock { color: #f59e0b; }
 
-        /* TABLE STYLING */
-        .inventory-wrapper {
-            background: var(--card); border-radius: 28px;
-            padding: 35px; border: 1px solid #1f2937;
-        }
+        /* Management Table */
+        .inventory-card { background: var(--card); padding: 30px; border-radius: 24px; border: 1px solid #222; }
         table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 15px; color: #6b7280; font-size: 12px; text-transform: uppercase; }
-        td { padding: 18px 15px; border-bottom: 1px solid #1f2937; }
-
-        input {
-            background: #1f2937; border: 1px solid #374151; color: white;
-            padding: 10px 14px; border-radius: 12px; outline: none; transition: 0.2s;
-        }
-        input:focus { border-color: var(--primary); background: #262f3f; }
-        .qty-input { width: 80px; text-align: center; font-weight: 600; }
-        .price-input { width: 140px; }
-
-        /* NO DATA PLACEHOLDER */
-        .empty-state { text-align: center; padding: 50px; color: #4b5563; }
+        th { text-align: left; color: #555; font-size: 12px; padding: 15px; border-bottom: 1px solid #222; }
+        td { padding: 15px; border-bottom: 1px solid #222; }
+        
+        input { background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 10px; border-radius: 10px; outline: none; width: 120px; }
+        input:focus { border-color: var(--blue); }
+        .qty-input { width: 70px; text-align: center; font-weight: bold; border-color: #444; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="dashboard">
-        <div class="stat-card">
-            <h2>Total Spend</h2>
-            <div id="dispSpend" class="amount spend-val">0.00</div>
-        </div>
-        <div class="stat-card">
-            <h2>Total Earned</h2>
-            <div id="dispEarned" class="amount earn-val">0.00</div>
-        </div>
-        <div class="stat-card">
-            <h2>Current Stock Value</h2>
-            <div id="dispStock" class="amount stock-val">0.00</div>
-        </div>
+    <div class="stats">
+        <div class="stat-box"><h2>Total Spend (Purchases)</h2><div id="dispSpend" class="val-spend">0</div></div>
+        <div class="stat-box"><h2>Total Earned (Sales)</h2><div id="dispEarned" class="val-earn">0</div></div>
+        <div class="stat-box"><h2>Net Stock Value</h2><div id="dispStock" class="val-stock">0</div></div>
     </div>
 
-    <div class="inventory-wrapper">
-        <h3 style="margin-top:0; margin-bottom:25px;">Live Inventory Management</h3>
+    <div class="inventory-card">
+        <h3 style="margin-top:0">Inventory Intelligence</h3>
         <table>
             <thead>
-                <tr>
-                    <th>Product</th>
-                    <th>Current Qty</th>
-                    <th>Cost Price (Buy)</th>
-                    <th>Selling Price (Sell)</th>
-                </tr>
+                <tr><th>Product</th><th>Qty</th><th>Buy Price</th><th>Sell Price</th><th>Action</th></tr>
             </thead>
-            <tbody id="inventoryBody">
-                </tbody>
+            <tbody id="inventoryBody"></tbody>
         </table>
     </div>
 </div>
@@ -95,7 +53,6 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
 <script>
-    // CORE FIREBASE INITIALIZATION
     const firebaseConfig = {
         apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
         authDomain: "scalevest-163a0.firebaseapp.com",
@@ -110,115 +67,102 @@
     const db = firebase.database();
     const auth = firebase.auth();
 
-    let uID, currency = "USD", globalSpend = 0, globalEarned = 0, inventory = {};
+    let uID, currency = "USD";
+    let inventoryData = {};
 
-    // THE AUDITOR: Deep Analysis Utility
-    const cleanNumber = (val) => {
-        if (!val) return 0;
-        // Removes anything that isn't a digit or a decimal point
-        const sanitized = val.toString().replace(/[^0-9.]/g, '');
-        const num = parseFloat(sanitized);
-        return isNaN(num) ? 0 : num;
+    // 1. THE AUDITOR: Strips symbols and returns a pure number
+    const toNum = (v) => {
+        if (!v) return 0;
+        const n = parseFloat(v.toString().replace(/[^0-9.]/g, ''));
+        return isNaN(n) ? 0 : n;
     };
 
     auth.onAuthStateChanged(user => {
         if (!user) return;
         uID = user.uid;
 
-        // 1. WATCHER: Business Meta
-        db.ref(`BusinessOwners/${uID}`).on('value', snap => {
-            const data = snap.val() || {};
-            currency = data.nationalCurrency || "USD";
-            globalSpend = data.totalSpend || 0;
-            globalEarned = data.totalEarned || 0;
-            updateDashboardUI();
-        });
+        // Sync Currency
+        db.ref(`BusinessOwners/${uID}/nationalCurrency`).on('value', s => { currency = s.val() || "USD"; });
 
-        // 2. WATCHER: Inventory Data
+        // MASTER LISTENER: Listens to EVERYTHING
         db.ref(`Businesses/${uID}/inventory`).on('value', snap => {
-            inventory = snap.val() || {};
-            renderInventoryTable();
-            updateDashboardUI(); // Immediate recalculation of Stock Value
+            inventoryData = snap.val() || {};
+            calculateEverything(); // Every change triggers a fresh calculation
+            renderTable();
         });
     });
 
-    function updateDashboardUI() {
-        // Recalculate Stock Value locally for real-time precision
-        let currentStockTotal = 0;
-        Object.values(inventory).forEach(item => {
-            const q = cleanNumber(item.quantity);
-            const c = cleanNumber(item.costPrice);
-            currentStockTotal += (q * c);
+    function calculateEverything() {
+        let totalPurchasedValue = 0;  // Sum of (Qty * Cost) representing total money spent
+        let totalSoldValue = 0;       // We will track sales based on manual decrement triggers
+        let currentStockValue = 0;    // Value of items currently on shelf
+
+        // We fetch the current "Earned" from the DB because sales are historical
+        db.ref(`BusinessOwners/${uID}/totalEarned`).once('value', s => {
+            let earned = s.val() || 0;
+            document.getElementById('dispEarned').innerText = `${currency} ${earned.toLocaleString()}`;
         });
 
-        document.getElementById('dispSpend').innerText = `${currency} ${globalSpend.toLocaleString(undefined, {minimumFractionDigits:2})}`;
-        document.getElementById('dispEarned').innerText = `${currency} ${globalEarned.toLocaleString(undefined, {minimumFractionDigits:2})}`;
-        document.getElementById('dispStock').innerText = `${currency} ${currentStockTotal.toLocaleString(undefined, {minimumFractionDigits:2})}`;
+        // Calculate Spend & Stock
+        Object.values(inventoryData).forEach(item => {
+            const q = toNum(item.quantity);
+            const c = toNum(item.costPrice);
+            totalPurchasedValue += (q * c);
+            currentStockValue += (q * c);
+        });
+
+        // AUTOMATICALLY FIX TOTAL SPEND IN DB
+        db.ref(`BusinessOwners/${uID}`).update({ totalSpend: totalPurchasedValue });
+
+        document.getElementById('dispSpend').innerText = `${currency} ${totalPurchasedValue.toLocaleString()}`;
+        document.getElementById('dispStock').innerText = `${currency} ${currentStockValue.toLocaleString()}`;
     }
 
-    function renderInventoryTable() {
+    function renderTable() {
         const tbody = document.getElementById('inventoryBody');
-        let tableHTML = "";
-        
-        Object.keys(inventory).forEach(prodID => {
-            const item = inventory[prodID];
-            tableHTML += `
-                <tr>
-                    <td><strong style="color:var(--primary)">${item.name || prodID}</strong></td>
-                    <td>
-                        <input type="number" class="qty-input" value="${item.quantity || 0}" 
-                        onchange="handleQuantityChange('${prodID}', this.value, ${item.quantity || 0})">
-                    </td>
-                    <td>
-                        <input type="text" class="price-input" value="${item.costPrice || ''}" 
-                        onchange="syncField('${prodID}', 'costPrice', this.value)">
-                    </td>
-                    <td>
-                        <input type="text" class="price-input" value="${item.sellingPrice || ''}" 
-                        onchange="syncField('${prodID}', 'sellingPrice', this.value)">
-                    </td>
-                </tr>
+        tbody.innerHTML = "";
+        Object.keys(inventoryData).forEach(id => {
+            const item = inventoryData[id];
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><b>${item.name || id}</b></td>
+                <td><input type="number" class="qty-input" value="${item.quantity}" onchange="updateQty('${id}', this.value, ${item.quantity})"></td>
+                <td><input type="text" value="${item.costPrice || ''}" onchange="updateVal('${id}', 'costPrice', this.value)"></td>
+                <td><input type="text" value="${item.sellingPrice || ''}" onchange="updateVal('${id}', 'sellingPrice', this.value)"></td>
+                <td><button onclick="recordSale('${id}')" style="background:var(--green); border:none; color:#fff; padding:5px 10px; border-radius:5px; cursor:pointer;">Sold 1</button></td>
             `;
+            tbody.appendChild(tr);
         });
-        tbody.innerHTML = tableHTML || `<tr><td colspan="4" class="empty-state">No products found in database.</td></tr>`;
     }
 
-    // UPDATE FIELD: Standard sync
-    function syncField(id, field, val) {
+    function updateVal(id, field, val) {
         db.ref(`Businesses/${uID}/inventory/${id}`).update({ [field]: val });
     }
 
-    // QUANTITY LOGIC: The Financial Engine
-    function handleQuantityChange(id, newValue, oldValue) {
-        const nVal = cleanNumber(newValue);
-        const oVal = cleanNumber(oldValue);
-        const diff = nVal - oVal;
-
-        const item = inventory[id];
-        const cost = cleanNumber(item.costPrice);
-        const sell = cleanNumber(item.sellingPrice);
-
-        const updates = {};
+    function updateQty(id, newVal, oldVal) {
+        const n = toNum(newVal);
+        const o = toNum(oldVal);
         
-        if (diff > 0) {
-            // STOCK PURCHASE: Increase Total Spend
-            const purchaseCost = diff * cost;
-            updates[`BusinessOwners/${uID}/totalSpend`] = globalSpend + purchaseCost;
-        } else if (diff < 0) {
-            // STOCK SALE: Increase Total Earned
-            const revenue = Math.abs(diff) * sell;
-            updates[`BusinessOwners/${uID}/totalEarned`] = globalEarned + revenue;
+        // If we decrease quantity, we assume it was a SALE
+        if (n < o) {
+            const diff = o - n;
+            const item = inventoryData[id];
+            const sellPrice = toNum(item.sellingPrice);
+            const revenue = diff * sellPrice;
+
+            db.ref(`BusinessOwners/${uID}/totalEarned`).transaction(current => (current || 0) + revenue);
         }
+        
+        db.ref(`Businesses/${uID}/inventory/${id}`).update({ quantity: n });
+    }
 
-        // Save new quantity
-        updates[`Businesses/${uID}/inventory/${id}/quantity`] = nVal;
-
-        // Perform atomic update to prevent desync
-        db.ref().update(updates).then(() => {
-            console.log("System Synced Successfully.");
-        }).catch(e => alert("Database Error: Check Rules."));
+    function recordSale(id) {
+        const item = inventoryData[id];
+        const currentQty = toNum(item.quantity);
+        if (currentQty > 0) {
+            updateQty(id, currentQty - 1, currentQty);
+        }
     }
 </script>
-
 </body>
 </html>
