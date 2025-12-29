@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Financial Dashboard</title>
+<title>ScaleVest - SalesFlow</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
@@ -383,6 +383,20 @@ h2 {
     </a>
     <h2>💰 Financial Dashboard</h2>
   </div>
+
+  <div class="filter-container" style="position: relative;">
+    <span style="font-size: 13px; font-weight: 600; color: #64748b; margin-right: 8px;">Show Report Of:</span>
+    <select id="timeFilter" onchange="calculateFinancials()" style="padding: 10px 15px; border-radius: 12px; border: 1px solid #e2e8f0; background: white; font-weight: 600; color: #1e293b; cursor: pointer; outline: none;">
+      <option value="all">All Time</option>
+      <option value="today">Today</option>
+      <option value="yesterday">Yesterday</option>
+      <option value="week">This Week</option>
+      <option value="lastWeek">Last Week</option>
+      <option value="month">This Month</option>
+      <option value="lastMonth">Last Month</option>
+      <option value="year">This Year</option>
+    </select>
+  </div>
 </div>
 
 <div class="financial-stats">
@@ -396,7 +410,7 @@ h2 {
       <span class="stat-label">Total Spend</span>
     </div>
     <div class="stat-value" id="totalSpend">₹0</div>
-    <div class="stat-sub">Total investment made</div>
+    <div class="stat-sub">Total lifetime investment</div>
   </div>
 
   <div class="stat-card">
@@ -406,10 +420,10 @@ h2 {
           <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
         </svg>
       </div>
-      <span class="stat-label">Total Earned</span>
+      <span class="stat-label" id="earnedLabel">Total Earned</span>
     </div>
     <div class="stat-value" id="totalEarned">₹0</div>
-    <div class="stat-sub">Revenue from sales</div>
+    <div class="stat-sub" id="earnedSub">Revenue from sales</div>
   </div>
 </div>
 
@@ -422,7 +436,7 @@ h2 {
         <polyline points="7 10 12 15 17 10"/>
         <line x1="12" y1="15" x2="12" y2="3"/>
       </svg>
-      Download CSV
+      Download Report
     </button>
   </div>
 
@@ -572,22 +586,62 @@ auth.onAuthStateChanged(user => {
 // --- 3. Business Logic Functions ---
 
 function calculateFinancials() {
-  let totalSpend = 0;
-  let totalEarned = 0;
+  const filter = document.getElementById("timeFilter").value;
+  const now = new Date();
+  let startTime = 0;
+  let endTime = Infinity;
 
-  Object.values(sales).forEach(sale => {
-    totalEarned += (parseFloat(sale.revenue) || 0);
-  });
+  // Update UI Labels
+  const earnedLabel = document.getElementById("earnedLabel");
+  earnedLabel.textContent = filter === 'all' ? "Total Earned" : `Earned (${filter})`;
 
+  // Time Logic
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const startOfYesterday = startOfToday - 86400000;
+  
+  if (filter === "today") {
+    startTime = startOfToday;
+  } else if (filter === "yesterday") {
+    startTime = startOfYesterday;
+    endTime = startOfToday;
+  } else if (filter === "week") {
+    const day = now.getDay(); 
+    startTime = startOfToday - (day * 86400000);
+  } else if (filter === "lastWeek") {
+    const day = now.getDay();
+    endTime = startOfToday - (day * 86400000);
+    startTime = endTime - (7 * 86400000);
+  } else if (filter === "month") {
+    startTime = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+  } else if (filter === "lastMonth") {
+    startTime = new Date(now.getFullYear(), now.getMonth() - 1, 1).getTime();
+    endTime = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+  } else if (filter === "year") {
+    startTime = new Date(now.getFullYear(), 0, 1).getTime();
+  }
+
+  let totalSpend = 0; // Keeping spend as lifetime per your request
+  let filteredEarned = 0;
+
+  // 1. Calculate Lifetime Spend
   Object.values(purchases).forEach(purchase => {
     totalSpend += (parseFloat(purchase.totalCost) || 0);
   });
 
-  // Display with Currency Code and formatting
-  document.getElementById("totalSpend").textContent = `${userCurrency} ${totalSpend.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-  document.getElementById("totalEarned").textContent = `${userCurrency} ${totalEarned.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-}
+  // 2. Calculate Filtered Earned (Sales)
+  Object.values(sales).forEach(sale => {
+    const saleTime = sale.timestamp;
+    if (filter === "all") {
+      filteredEarned += (parseFloat(sale.revenue) || 0);
+    } else if (saleTime >= startTime && saleTime < endTime) {
+      filteredEarned += (parseFloat(sale.revenue) || 0);
+    }
+  });
 
+  // Update Display
+  document.getElementById("totalSpend").textContent = `${userCurrency} ${totalSpend.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+  document.getElementById("totalEarned").textContent = `${userCurrency} ${filteredEarned.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+}
 function recordSale(productId, productName, quantity) {
   const priceData = prices[productId];
   if (!priceData || !priceData.sellPrice) return;
@@ -649,13 +703,25 @@ function render() {
 
     grid.innerHTML += `
       <div class="product-row">
-        <div class="product-name">${product.name}</div>
-        <div class="product-qty">${product.quantity} ${product.unit || 'pcs'}</div>
-        <div>${hasPrices ? `${userCurrency} ${priceData.costPrice}` : '<span style="color:#94a3b8;">Not set</span>'}</div>
-        <div>${hasPrices ? `${userCurrency} ${priceData.sellPrice}` : '<span style="color:#94a3b8;">Not set</span>'}</div>
+        <div class="product-name" style="font-size: 16px; font-weight: 700;">${product.name}</div>
+        
+        <div class="product-qty">
+            <span class="mobile-label">Stock:</span>${product.quantity} ${product.unit || 'pcs'}
+        </div>
+        
+        <div class="product-cost">
+            <span class="mobile-label">Cost:</span>
+            ${hasPrices ? `${userCurrency} ${priceData.costPrice}` : '<span style="color:#94a3b8;">Not set</span>'}
+        </div>
+        
+        <div class="product-sell">
+            <span class="mobile-label">Sell:</span>
+            ${hasPrices ? `${userCurrency} ${priceData.sellPrice}` : '<span style="color:#94a3b8;">Not set</span>'}
+        </div>
+        
         <div>
           <button class="set-btn" onclick="openPriceModal('${id}', '${product.name}')">
-            ${hasPrices ? 'Edit' : 'Set Prices'}
+            ${hasPrices ? 'Edit Prices' : 'Set Prices'}
           </button>
         </div>
       </div>
