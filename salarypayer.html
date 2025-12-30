@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salary Payer | Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+<body class="bg-gray-50 font-sans">
+
+    <div class="min-h-screen flex flex-col items-center justify-center p-6 text-center">
+        <div class="bg-white p-10 rounded-2xl shadow-xl max-w-md w-full">
+            <h1 class="text-3xl font-bold text-gray-800 mb-4">Salary Payer</h1>
+            <p class="text-gray-600 mb-8">
+                To continue with Salary Payer, you would have to make your Boss Account.
+            </p>
+            
+            <button id="getStartedBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full transition duration-300 transform hover:scale-105 shadow-lg">
+                Get Started
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 1. Logic to get the name from your Firebase entry
+        // Note: You'll need to pass the ID or fetch the latest entry
+        const businessOwnerName = "User"; // Replace with your Firebase logic: ref.val().name
+
+        // 2. Beautiful Popup on Load
+        window.onload = function() {
+            Swal.fire({
+                title: `Hi, ${businessOwnerName}!`,
+                text: "To continue with Salary Payer, you would have to make your Boss Account.",
+                icon: "info",
+                confirmButtonText: "Let's Go",
+                confirmButtonColor: "#2563eb",
+                showClass: {
+                    popup: 'animate__animated animate__fadeInDown'
+                }
+            });
+        };
+
+        // 3. Razorpay Integration (Linking Bank Account via UPI)
+        document.getElementById('getStartedBtn').onclick = function(e) {
+            var options = {
+                "key": "YOUR_RAZORPAY_KEY", // Enter your Key ID from Dashboard
+                "amount": "100", // Amount in paise (100 = ₹1) to verify account
+                "currency": "INR",
+                "name": "Salary Payer",
+                "description": "Link your Business Bank Account",
+                "handler": function (response){
+                    Swal.fire("Success!", "Bank Account Linked via UPI ID: " + response.razorpay_payment_id, "success");
+                    // Here you would save the 'Boss Account' status to Firebase
+                },
+                "prefill": {
+                    "name": businessOwnerName,
+                    "method": "upi"
+                },
+                "theme": {
+                    "color": "#2563eb"
+                }
+            };
+            var rzp1 = new Razorpay(options);
+            rzp1.open();
+            e.preventDefault();
+        };
+    </script>
+</body>
+</html>
