@@ -21,6 +21,7 @@
         }
         .employee-card {
             transition: all 0.3s ease;
+            cursor: pointer;
         }
         .employee-card:hover {
             transform: translateY(-5px);
@@ -37,11 +38,29 @@
             border-radius: 50%;
             margin: 10px auto;
         }
+        .deduction-controls {
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            padding: 12px;
+            margin-top: 12px;
+            border-radius: 8px;
+        }
+        .deduction-input {
+            width: 100%;
+            padding: 6px 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            margin-top: 4px;
+        }
+        .deduction-input:focus {
+            outline: none;
+            border-color: #4F46E5;
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-indigo-50 via-white to-slate-50 min-h-screen">
     
-    <!-- Header -->
     <header class="glass-card shadow-lg sticky top-0 z-50">
         <div class="container mx-auto px-4 py-4">
             <div class="flex justify-between items-center">
@@ -56,42 +75,31 @@
         </div>
     </header>
 
-    <!-- Main Content -->
     <main class="container mx-auto px-4 py-8 mb-24">
-        
-        <!-- Welcome Section -->
         <div id="welcomeSection" class="glass-card rounded-2xl shadow-xl p-6 md:p-8 mb-8">
             <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Hi, <span id="bossName">Boss</span>! 👋</h2>
             <p class="text-gray-600">Manage your team and process payments seamlessly</p>
         </div>
 
-        <!-- Employee Grid -->
-        <div id="employeeGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <!-- Employee cards will be inserted here -->
-        </div>
+        <div id="employeeGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
 
-<div id="emptyState" class="glass-card rounded-2xl shadow-xl p-12 text-center hidden">
-    <div class="flex justify-center mb-6">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-32 h-32 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
-        </svg>
-    </div>
-    
-    <h3 class="text-2xl font-bold text-indigo-900 mb-2">No Employees Registered</h3>
-    <p class="text-gray-500 mb-8 max-w-sm mx-auto">
-No Employees yet add one to get started.
-    </p>
-    
-    <button class="add-first-btn bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-10 rounded-full shadow-lg transition duration-300 transform hover:scale-105 flex items-center mx-auto gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" />
-        </svg>
-        Add First Employee
-    </button>
-</div>
+        <div id="emptyState" class="glass-card rounded-2xl shadow-xl p-12 text-center hidden">
+            <div class="flex justify-center mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-32 h-32 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                </svg>
+            </div>
+            <h3 class="text-2xl font-bold text-indigo-900 mb-2">No Employees Registered</h3>
+            <p class="text-gray-500 mb-8 max-w-sm mx-auto">No Employees yet, add one to get started.</p>
+            <button class="add-first-btn bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-10 rounded-full shadow-lg transition duration-300 transform hover:scale-105 flex items-center mx-auto gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" />
+                </svg>
+                Add First Employee
+            </button>
+        </div>
     </main>
 
-    <!-- Fixed Pay Salary Button -->
     <div class="fixed bottom-0 left-0 right-0 glass-card shadow-2xl p-4 z-50">
         <div class="container mx-auto flex justify-center">
             <button id="paySalaryBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-12 rounded-full shadow-lg transition duration-300 transform hover:scale-105">
@@ -112,25 +120,52 @@ const firebaseConfig = {
   measurementId: "G-QD3TWBZHR0"
 };
 
-        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
         const storage = firebase.storage();
 
-        // State Management
-        let employees = {};
-        let selectedEmployees = new Set();
-        let currentBossId = 'demo-boss-' + Date.now();
-        let bossName = "Boss";
+let employees = {};
+let selectedEmployees = new Set();
+let employeeDeductions = {};
 
-        // Initialize App
-        function initApp() {
+let currentBossId = null; 
+let bossName = "Loading...";
+
+function initApp() {
+    // Look at the BusinessOwners node in Firebase
+    database.ref("BusinessOwners").limitToLast(1).once('value', (snapshot) => {
+        const data = snapshot.val();
+        
+        if (data) {
+            // This gets the REAL UID (the key) from Firebase
+            currentBossId = Object.keys(data)[0]; 
+            const bossData = data[currentBossId];
+            
+            // Get the actual name you saved
+            bossName = bossData.name || "Boss";
+            
+            // Update the UI
+            document.getElementById('bossName').innerText = bossName;
+            
+            // Now that we have the REAL ID, load the data
             loadEmployees();
             setupEventListeners();
             showWelcomePopup();
+        } else {
+            Swal.fire("Error", "No Business Owner found in Database", "error");
         }
+    });
+}
+function loadEmployees() {
+    if (!currentBossId) return;
+    // Points to BusinessOwners/[REAL_UID]/employees
+    const employeesRef = database.ref(`BusinessOwners/${currentBossId}/employees`);
+    employeesRef.on('value', (snapshot) => {
+        employees = snapshot.val() || {};
+        renderEmployees();
+    });
+}
 
-        // Show Welcome Popup
         function showWelcomePopup() {
             Swal.fire({
                 title: `Hi, ${bossName}! 👋`,
@@ -141,21 +176,25 @@ const firebaseConfig = {
             });
         }
 
-        // Load Employees from Firebase
         function loadEmployees() {
             const employeesRef = database.ref(`BusinessOwners/${currentBossId}/employees`);
-            
             employeesRef.on('value', (snapshot) => {
                 employees = snapshot.val() || {};
                 renderEmployees();
             });
         }
 
-        // Render Employees
+        function calculateDailySalary(monthlySalary) {
+            return monthlySalary / 30;
+        }
+
+        function calculateLeaveDeduction(monthlySalary, leaveDays) {
+            return calculateDailySalary(monthlySalary) * leaveDays;
+        }
+
         function renderEmployees() {
             const grid = document.getElementById('employeeGrid');
             const emptyState = document.getElementById('emptyState');
-            
             const employeeList = Object.entries(employees);
             
             if (employeeList.length === 0) {
@@ -163,79 +202,106 @@ const firebaseConfig = {
                 grid.innerHTML = '';
             } else {
                 emptyState.classList.add('hidden');
+                grid.innerHTML = employeeList.map(([id, emp]) => {
+                    const deductions = employeeDeductions[id] || { leaveDays: 0, flatDeduction: 0 };
+                    const leaveDeduction = calculateLeaveDeduction(emp.salary, deductions.leaveDays);
+                    const totalDeduction = leaveDeduction + deductions.flatDeduction;
+                    const isSelected = selectedEmployees.has(id);
+                    
+                    return `
+                    <div class="employee-card glass-card rounded-2xl shadow-lg p-6 ${isSelected ? 'selected-card' : ''}" data-id="${id}">
+                        <div class="flex justify-between mb-2">
+                            <button onclick="event.stopPropagation(); editEmployee('${id}')" class="text-indigo-500 hover:text-indigo-700">✏️ Edit</button>
+                            <button onclick="event.stopPropagation(); deleteEmployee('${id}')" class="text-red-500 hover:text-red-700">🗑️ Remove</button>
+                        </div>
+                        <div class="flex flex-col items-center mb-4">
+                            ${emp.photoURL ? 
+                                `<img src="${emp.photoURL}" alt="${emp.name}" class="w-20 h-20 rounded-full object-cover mb-3">` :
+                                `<div class="w-20 h-20 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-full flex items-center justify-center text-white text-3xl font-bold mb-3">
+                                    ${emp.name.charAt(0).toUpperCase()}
+                                </div>`
+                            }
+                            ${isSelected ? '<div class="text-green-600 font-bold">✓ Selected</div>' : ''}
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-1 text-center">${emp.name}</h3>
+                        <p class="text-indigo-600 font-semibold mb-3 text-center">${emp.role}</p>
+                        <div class="border-t border-gray-200 pt-3">
+                            <p class="text-sm text-gray-600 mb-1">Base Salary</p>
+                            <p class="text-2xl font-bold text-green-600">₹${emp.salary.toLocaleString('en-IN')}</p>
+                            ${totalDeduction > 0 ? `
+                                <p class="text-sm text-red-600 mt-2">
+                                    Deductions: -₹${totalDeduction.toLocaleString('en-IN', {maximumFractionDigits: 2})}
+                                </p>
+                            ` : ''}
+                        </div>
+                        <div class="mt-3 text-xs text-gray-500">
+                            <p>💳 ${emp.paymentDetails}</p>
+                        </div>
+                        ${isSelected ? `
+                        <div class="deduction-controls" onclick="event.stopPropagation()">
+                            <h4 class="text-sm font-bold text-gray-700 mb-2">Adjustments</h4>
+                            <div class="mb-2">
+                                <label class="text-xs text-gray-600">Days of Leave</label>
+                                <input type="number" min="0" max="30" 
+                                    class="deduction-input" 
+                                    value="${deductions.leaveDays}"
+                                    onchange="updateDeduction('${id}', 'leaveDays', parseFloat(this.value) || 0)"
+                                    placeholder="0">
+                                ${deductions.leaveDays > 0 ? `
+                                    <p class="text-xs text-red-500 mt-1">-₹${leaveDeduction.toLocaleString('en-IN', {maximumFractionDigits: 2})}</p>
+                                ` : ''}
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-600">Flat Deduction (₹)</label>
+                                <input type="number" min="0" 
+                                    class="deduction-input" 
+                                    value="${deductions.flatDeduction}"
+                                    onchange="updateDeduction('${id}', 'flatDeduction', parseFloat(this.value) || 0)"
+                                    placeholder="Loans, penalties, etc.">
+                            </div>
+                        </div>
+                        ` : ''}
+                    </div>
+                    `;
+                }).join('');
                 
-grid.innerHTML = employeeList.map(([id, emp]) => `
-    <div class="employee-card glass-card rounded-2xl shadow-lg p-6 ${selectedEmployees.has(id) ? 'selected-card' : ''}" data-id="${id}">
-        <div class="flex justify-between mb-2">
-            <button onclick="editEmployee('${id}')" class="text-indigo-500 hover:text-indigo-700">✏️ Edit</button>
-            <button onclick="deleteEmployee('${id}')" class="text-red-500 hover:text-red-700">🗑️ Remove</button>
-        </div>
-        <div class="flex flex-col items-center mb-4">
-            ${emp.photoURL ? 
-                `<img src="${emp.photoURL}" alt="${emp.name}" class="w-20 h-20 rounded-full object-cover mb-3">` :
-                `<div class="w-20 h-20 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-full flex items-center justify-center text-white text-3xl font-bold mb-3">
-                    ${emp.name.charAt(0).toUpperCase()}
-                </div>`
-            }
-            ${selectedEmployees.has(id) ? '<div class="text-green-600 font-bold">✓ Selected</div>' : ''}
-        </div>
-        <h3 class="text-xl font-bold text-gray-800 mb-1 text-center">${emp.name}</h3>
-        <p class="text-indigo-600 font-semibold mb-3 text-center">${emp.role}</p>
-        <div class="border-t border-gray-200 pt-3">
-            <p class="text-sm text-gray-600 mb-1">Base Salary</p>
-            <p class="text-2xl font-bold text-green-600">₹${emp.salary.toLocaleString('en-IN')}</p>
-        </div>
-        <div class="mt-3 text-xs text-gray-500">
-            <p>💳 ${emp.paymentDetails}</p>
-        </div>
-    </div>
-`).join('');
-                
-                // Add click handlers to cards
-// ... inside renderEmployees function ...
-// Add click handlers to cards
-document.querySelectorAll('.employee-card').forEach(card => {
-    card.addEventListener('click', (e) => {
-        // FIX: Remove the (selectedEmployees.size > 0) check
-        // Also check if the user clicked the Edit or Remove buttons so we don't trigger selection
-        if (e.target.tagName === 'BUTTON' || e.target.parentElement.tagName === 'BUTTON') return;
-        
-        toggleCardSelection(card);
-    });
-});
+                document.querySelectorAll('.employee-card').forEach(card => {
+                    card.addEventListener('click', (e) => {
+                        if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || 
+                            e.target.parentElement.tagName === 'BUTTON') return;
+                        toggleCardSelection(card.dataset.id);
+                    });
+                });
             }
         }
 
-        // Toggle Card Selection
-function toggleCardSelection(card) {
-    const id = card.dataset.id;
-    
-    if (selectedEmployees.has(id)) {
-        selectedEmployees.delete(id);
-        card.classList.remove('selected-card');
-        // Remove the visual checkmark if it exists
-        const status = card.querySelector('.selection-status');
-        if (status) status.remove();
-    } else {
-        selectedEmployees.add(id);
-        card.classList.add('selected-card');
-        // Add a visual "Selected" indicator inside the card
-        const container = card.querySelector('.flex.flex-col.items-center');
-        if (container) {
-            container.insertAdjacentHTML('beforeend', '<div class="selection-status text-green-600 font-bold">✓ Selected</div>');
-        }
-    }
-    // Do NOT call renderEmployees() here, it causes the page to reset scroll
-}
+        window.updateDeduction = function(id, field, value) {
+            if (!employeeDeductions[id]) {
+                employeeDeductions[id] = { leaveDays: 0, flatDeduction: 0 };
+            }
+            employeeDeductions[id][field] = value;
+            renderEmployees();
+        };
 
-        // Setup Event Listeners
+        function toggleCardSelection(id) {
+            if (selectedEmployees.has(id)) {
+                selectedEmployees.delete(id);
+                delete employeeDeductions[id];
+            } else {
+                selectedEmployees.add(id);
+                if (!employeeDeductions[id]) {
+                    employeeDeductions[id] = { leaveDays: 0, flatDeduction: 0 };
+                }
+            }
+            renderEmployees();
+        }
+
         function setupEventListeners() {
             document.getElementById('addEmployeeBtn').addEventListener('click', showAddEmployeeForm);
             document.querySelector('.add-first-btn')?.addEventListener('click', showAddEmployeeForm);
             document.getElementById('paySalaryBtn').addEventListener('click', handlePaySalary);
         }
 
-        // Handle Pay Salary Click
         async function handlePaySalary() {
             const employeeCount = Object.keys(employees).length;
             
@@ -246,6 +312,11 @@ function toggleCardSelection(card) {
                     text: 'Please add employees first!',
                     confirmButtonColor: '#4F46E5'
                 });
+                return;
+            }
+
+            if (selectedEmployees.size > 0) {
+                await askForBonus();
                 return;
             }
 
@@ -262,20 +333,17 @@ function toggleCardSelection(card) {
             });
 
             if (choice) {
-                // Pay All
-                selectedEmployees = new Set(Object.keys(employees));
-                renderEmployees();
-                await askForBonus();
+                await askForGlobalDeductions();
             } else if (choice === false) {
-                // Select Employees
                 selectedEmployees.clear();
+                employeeDeductions = {};
                 renderEmployees();
                 
                 Swal.fire({
                     title: 'Select Employees',
-                    text: 'Click on employee cards to select them for payment',
+                    text: 'Click on employee cards to select them and adjust deductions',
                     icon: 'info',
-                    confirmButtonText: 'Continue',
+                    confirmButtonText: 'Continue to Payment',
                     confirmButtonColor: '#4F46E5'
                 }).then(async (result) => {
                     if (result.isConfirmed && selectedEmployees.size > 0) {
@@ -292,7 +360,41 @@ function toggleCardSelection(card) {
             }
         }
 
-        // Ask for Bonus
+        async function askForGlobalDeductions() {
+            const { value: formValues } = await Swal.fire({
+                title: 'Global Deductions',
+                html: `
+                    <div style="text-align: left;">
+                        <p class="text-sm text-gray-600 mb-4">Apply the same deductions to all employees</p>
+                        <label class="text-sm font-semibold">Days of Leave (for all)</label>
+                        <input id="globalLeave" type="number" min="0" max="30" class="swal2-input" value="0" placeholder="0">
+                        
+                        <label class="text-sm font-semibold">Flat Deduction (₹) (for all)</label>
+                        <input id="globalFlat" type="number" min="0" class="swal2-input" value="0" placeholder="0">
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Continue',
+                confirmButtonColor: '#4F46E5',
+                preConfirm: () => ({
+                    leaveDays: parseFloat(document.getElementById('globalLeave').value) || 0,
+                    flatDeduction: parseFloat(document.getElementById('globalFlat').value) || 0
+                })
+            });
+
+            if (formValues) {
+                selectedEmployees = new Set(Object.keys(employees));
+                Object.keys(employees).forEach(id => {
+                    employeeDeductions[id] = {
+                        leaveDays: formValues.leaveDays,
+                        flatDeduction: formValues.flatDeduction
+                    };
+                });
+                renderEmployees();
+                await askForBonus();
+            }
+        }
+
         async function askForBonus() {
             if (selectedEmployees.size === 0) return;
 
@@ -317,52 +419,54 @@ function toggleCardSelection(card) {
             }
         }
 
-        // Show Add Employee Form
-       async function showAddEmployeeForm() {
-    const { value: formValues } = await Swal.fire({
-        title: 'Add New Employee',
-        html: `
-            <div style="text-align: left;">
-                <input id="empName" class="swal2-input" placeholder="Full Name">
-                <input id="empRole" class="swal2-input" placeholder="Role (e.g. Manager)">
-                <input id="empSalary" class="swal2-input" type="number" placeholder="Salary (₹)">
-                
-                <p style="margin-top:15px; font-weight:bold; color:#4F46E5;">Payment Method:</p>
-                <input id="empUPI" class="swal2-input" placeholder="UPI ID (e.g. name@upi)">
-                <div style="text-align:center; margin:5px; color:#aaa;">- OR -</div>
-                <input id="empAcc" class="swal2-input" placeholder="Bank Account Number">
-                <input id="empIFSC" class="swal2-input" placeholder="IFSC Code">
+        async function showAddEmployeeForm() {
+            const { value: formValues } = await Swal.fire({
+                title: 'Add New Employee',
+                html: `
+                    <div style="text-align: left;">
+                        <input id="empName" class="swal2-input" placeholder="Full Name">
+                        <input id="empRole" class="swal2-input" placeholder="Role (e.g. Manager)">
+                        <input id="empSalary" class="swal2-input" type="number" placeholder="Salary (₹)">
+                        
+                        <p style="margin-top:15px; font-weight:bold; color:#4F46E5;">Payment Method:</p>
+                        <input id="empUPI" class="swal2-input" placeholder="UPI ID (e.g. name@upi)">
+                        <div style="text-align:center; margin:5px; color:#aaa;">- OR -</div>
+                        <input id="empAcc" class="swal2-input" placeholder="Bank Account Number">
+                        <input id="empIFSC" class="swal2-input" placeholder="IFSC Code">
 
-                <label style="display:block; margin-top:10px;">Photo (Optional)</label>
-                <input id="empPhoto" type="file" accept="image/*" class="swal2-file">
-            </div>
-        `,
-        preConfirm: () => {
-            const name = document.getElementById('empName').value;
-            const upi = document.getElementById('empUPI').value;
-            const acc = document.getElementById('empAcc').value;
-            const ifsc = document.getElementById('empIFSC').value;
+                        <label style="display:block; margin-top:10px;">Photo (Optional)</label>
+                        <input id="empPhoto" type="file" accept="image/*" class="swal2-file">
+                    </div>
+                `,
+                preConfirm: () => {
+                    const name = document.getElementById('empName').value;
+                    const upi = document.getElementById('empUPI').value;
+                    const acc = document.getElementById('empAcc').value;
+                    const ifsc = document.getElementById('empIFSC').value;
 
-            if (!name) return Swal.showValidationMessage('Name is required');
-            if (!upi && (!acc || !ifsc)) {
-                return Swal.showValidationMessage('Provide a UPI ID or Account + IFSC');
-            }
+                    if (!name) return Swal.showValidationMessage('Name is required');
+                    if (!upi && (!acc || !ifsc)) {
+                        return Swal.showValidationMessage('Provide a UPI ID or Account + IFSC');
+                    }
 
-            return {
-                name: name,
-                role: document.getElementById('empRole').value,
-                salary: parseFloat(document.getElementById('empSalary').value) || 0,
-                paymentDetails: upi ? upi : `${acc} (IFSC: ${ifsc})`,
-                photo: document.getElementById('empPhoto').files[0]
-            };
+                    return {
+                        name: name,
+                        role: document.getElementById('empRole').value,
+                        salary: parseFloat(document.getElementById('empSalary').value) || 0,
+                        paymentDetails: upi ? upi : `${acc} (IFSC: ${ifsc})`,
+                        photo: document.getElementById('empPhoto').files[0]
+                    };
+                }
+            });
+
+            if (formValues) await addEmployeeToFirebase(formValues);
         }
-    });
 
-    if (formValues) await addEmployeeToFirebase(formValues);
-}
-
-        // Add Employee to Firebase
-        async function addEmployeeToFirebase(employeeData) {
+       async function addEmployeeToFirebase(employeeData) {
+    if (!currentBossId || currentBossId.includes('demo-boss')) {
+        Swal.fire("Error", "Valid Boss ID not found. Please refresh.", "error");
+        return;
+    }
             try {
                 Swal.fire({
                     title: 'Adding Employee...',
@@ -375,23 +479,23 @@ function toggleCardSelection(card) {
 
                 let photoURL = null;
 
-                // Upload photo if provided
                 if (employeeData.photo) {
                     const photoRef = storage.ref(`employees/${currentBossId}/${Date.now()}_${employeeData.photo.name}`);
                     const snapshot = await photoRef.put(employeeData.photo);
                     photoURL = await snapshot.ref.getDownloadURL();
                 }
 
-                // Save to database
                 const employeeRef = database.ref(`BusinessOwners/${currentBossId}/employees`).push();
-                await employeeRef.set({
-                    name: employeeData.name,
-                    role: employeeData.role,
-                    salary: employeeData.salary,
-                    paymentDetails: employeeData.paymentDetails,
-                    photoURL: photoURL,
-                    createdAt: new Date().toISOString()
-                });
+        await employeeRef.set({
+            name: employeeData.name,
+            role: employeeData.role,
+            salary: employeeData.salary,
+            paymentDetails: employeeData.paymentDetails,
+            photoURL: photoURL,
+            createdAt: new Date().toISOString()
+        });
+        
+
 
                 Swal.fire({
                     icon: 'success',
@@ -410,20 +514,31 @@ function toggleCardSelection(card) {
             }
         }
 
-        // Calculate and Show Summary
         function calculateAndShowSummary(bonus) {
             let totalSalary = 0;
+            let totalDeductions = 0;
             const selectedEmps = [];
 
             selectedEmployees.forEach(id => {
                 const emp = employees[id];
-                totalSalary += emp.salary + bonus;
+                const deductions = employeeDeductions[id] || { leaveDays: 0, flatDeduction: 0 };
+                const leaveDeduction = calculateLeaveDeduction(emp.salary, deductions.leaveDays);
+                const totalEmpDeduction = leaveDeduction + deductions.flatDeduction;
+                const netAmount = emp.salary + bonus - totalEmpDeduction;
+                
+                totalSalary += netAmount;
+                totalDeductions += totalEmpDeduction;
+                
                 selectedEmps.push({
                     name: emp.name,
                     role: emp.role,
                     base: emp.salary,
                     bonus: bonus,
-                    total: emp.salary + bonus,
+                    leaveDays: deductions.leaveDays,
+                    leaveDeduction: leaveDeduction,
+                    flatDeduction: deductions.flatDeduction,
+                    totalDeduction: totalEmpDeduction,
+                    total: netAmount,
                     paymentDetails: emp.paymentDetails
                 });
             });
@@ -439,22 +554,37 @@ function toggleCardSelection(card) {
                         ${selectedEmps.map(e => `
                             <div style="background: #f8fafc; padding: 12px; border-radius: 8px; margin-bottom: 10px;">
                                 <p style="font-weight: 600; margin-bottom: 5px;">${e.name}</p>
-                                <p style="font-size: 0.9em; color: #64748b;">Base: ₹${e.base.toLocaleString('en-IN')} + Bonus: ₹${e.bonus.toLocaleString('en-IN')}</p>
-                                <p style="color: #10b981; font-weight: bold;">Total: ₹${e.total.toLocaleString('en-IN')}</p>
+                                <p style="font-size: 0.85em; color: #64748b;">
+                                    Base: ₹${e.base.toLocaleString('en-IN')} 
+                                    ${e.bonus > 0 ? `+ Bonus: ₹${e.bonus.toLocaleString('en-IN')}` : ''}
+                                </p>
+                                ${e.totalDeduction > 0 ? `
+                                    <p style="font-size: 0.85em; color: #ef4444;">
+                                        ${e.leaveDays > 0 ? `Leave (${e.leaveDays}d): -₹${e.leaveDeduction.toLocaleString('en-IN', {maximumFractionDigits: 2})} ` : ''}
+                                        ${e.flatDeduction > 0 ? `Deduction: -₹${e.flatDeduction.toLocaleString('en-IN')}` : ''}
+                                    </p>
+                                ` : ''}
+                                <p style="color: #10b981; font-weight: bold; margin-top: 5px;">Net: ₹${e.total.toLocaleString('en-IN', {maximumFractionDigits: 2})}</p>
                             </div>
                         `).join('')}
                         <div style="border-top: 2px solid #e2e8f0; padding-top: 15px; margin-top: 15px;">
                             <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                                <span>Subtotal:</span>
-                                <span style="font-weight: 600;">₹${totalSalary.toLocaleString('en-IN')}</span>
+                                <span>Subtotal (after deductions):</span>
+                                <span style="font-weight: 600;">₹${totalSalary.toLocaleString('en-IN', {maximumFractionDigits: 2})}</span>
                             </div>
+                            ${totalDeductions > 0 ? `
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #ef4444;">
+                                <span>Total Deductions:</span>
+                                <span style="font-weight: 600;">-₹${totalDeductions.toLocaleString('en-IN', {maximumFractionDigits: 2})}</span>
+                            </div>
+                            ` : ''}
                             <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                                 <span>Platform Fee (₹5 × ${selectedEmployees.size}):</span>
                                 <span style="font-weight: 600;">₹${platformFee}</span>
                             </div>
                             <div style="display: flex; justify-content: space-between; font-size: 1.3em; font-weight: bold; color: #4f46e5; margin-top: 12px;">
                                 <span>Grand Total:</span>
-                                <span>₹${grandTotal.toLocaleString('en-IN')}</span>
+                                <span>₹${grandTotal.toLocaleString('en-IN', {maximumFractionDigits: 2})}</span>
                             </div>
                         </div>
                     </div>
@@ -471,83 +601,25 @@ function toggleCardSelection(card) {
             });
         }
 
-        // Process Payment via Razorpay
         function processPayment(amount, selectedEmps, bonus) {
-    const paymentData = {
-        selectedEmps: selectedEmps,
-        totalAmount: amount,
-        bonus: bonus
-    };
-
-    const options = {
-        key: "rzp_test_1DP5mmOlF5G5ag", // Your Razorpay Key
-        amount: amount * 100, // Amount in paise
-        currency: "INR",
-        name: "ScaleVest",
-        description: `Salary Payment for ${selectedEmps.length} employee(s)`,
-        handler: function (response) {
-            triggerConfetti();
-            showPaymentSuccess(response.razorpay_payment_id, paymentData);
-        },
-        prefill: { name: bossName },
-        theme: { color: "#4F46E5" }
-    };
-
-    const rzp = new Razorpay(options);
-    rzp.open();
-}
-
-        // Process Payment via Razorpay
-        function processPayment(amount) {
             const paymentData = {
-                selectedEmps: [],
+                selectedEmps: selectedEmps,
                 totalAmount: amount,
-                bonus: 0
+                bonus: bonus
             };
 
-            // Store payment details
-            selectedEmployees.forEach(id => {
-                const emp = employees[id];
-                paymentData.selectedEmps.push({
-                    id: id,
-                    name: emp.name,
-                    role: emp.role,
-                    baseSalary: emp.salary,
-                    bonus: 0,
-                    total: emp.salary,
-                    paymentDetails: emp.paymentDetails
-                });
-            });
-
             const options = {
-                key: "rzp_test_1DP5mmOlF5G5ag", // Replace with YOUR Razorpay Key
+                key: "rzp_test_1DP5mmOlF5G5ag",
                 amount: amount * 100,
                 currency: "INR",
                 name: "ScaleVest",
-                description: `Salary Payment for ${selectedEmployees.size} employee(s)`,
+                description: `Salary Payment for ${selectedEmps.length} employee(s)`,
                 handler: function (response) {
-                    // Trigger confetti celebration
                     triggerConfetti();
-                    
-                    // Show payment success with receipts
-                    showPaymentSuccess(response.razorpay_payment_id, paymentData);
+                    showPaymentSuccess(String(response.razorpay_payment_id), paymentData);
                 },
-                prefill: {
-                    name: bossName
-                },
-                theme: {
-                    color: "#4F46E5"
-                },
-                modal: {
-                    ondismiss: function() {
-                        Swal.fire({
-                            icon: 'info',
-                            title: 'Payment Cancelled',
-                            text: 'You can try again anytime.',
-                            confirmButtonColor: '#4F46E5'
-                        });
-                    }
-                }
+                prefill: { name: bossName },
+                theme: { color: "#4F46E5" }
             };
 
             const rzp = new Razorpay(options);
