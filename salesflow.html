@@ -8,7 +8,12 @@
 
 <style>
 * { box-sizing: border-box; font-family: Inter, sans-serif; }
-body { margin: 0; background: #f6f7fb; padding: 20px; }
+body { 
+  margin: 0; 
+  background: #f6f7fb; 
+  padding: 20px; 
+  overflow-x: hidden;
+}
 
 .top {
   display: flex;
@@ -48,65 +53,150 @@ h2 {
   color: #1e293b;
 }
 
-/* Financial Stats Cards */
-.financial-stats {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  margin-bottom: 30px;
-}
-
-.stat-card {
+/* Performance Chart Section */
+.chart-section {
   background: white;
   padding: 30px;
   border-radius: 24px;
   border: 1px solid #f1f5f9;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
-  transition: transform 0.3s ease;
+  margin-bottom: 30px;
 }
 
-.stat-card:hover {
-  transform: translateY(-5px);
-}
-
-.stat-header {
+.chart-header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 15px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
-.stat-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.chart-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
 }
 
-.spend-icon { background: #fef2f2; color: #ef4444; }
-.earned-icon { background: #ecfdf5; color: #10b981; }
+#performanceChart {
+  max-height: 300px;
+}
 
-.stat-label {
-  font-size: 14px;
+/* Metric Grid - 4 Column Clean Layout */
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.metric-card {
+  background: white;
+  padding: 24px;
+  border-radius: 20px;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.metric-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+}
+
+.metric-label {
+  font-size: 12px;
   font-weight: 600;
   color: #64748b;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
+  margin-bottom: 12px;
+  display: block;
 }
 
-.stat-value {
-  font-size: 36px;
+.metric-value {
+  font-size: 32px;
   font-weight: 800;
   color: #1e293b;
-  margin: 10px 0;
+  margin-bottom: 12px;
+  line-height: 1.2;
 }
 
-.stat-sub {
-  font-size: 13px;
+.metric-sub {
+  font-size: 12px;
   color: #94a3b8;
   font-weight: 500;
+  margin-bottom: 12px;
+}
+
+/* Comparison Badge - Pill Style */
+.comparison-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 50px;
+  font-size: 11px;
+  font-weight: 700;
+  margin-top: 8px;
+  letter-spacing: 0.3px;
+}
+
+.comparison-up {
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+}
+
+.comparison-down {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+}
+
+.comparison-neutral {
+  background: rgba(148, 163, 184, 0.1);
+  color: #64748b;
+}
+
+/* Margin Gauge Bar */
+.margin-gauge {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.margin-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.margin-bar {
+  height: 8px;
+  background: #f1f5f9;
+  border-radius: 50px;
+  overflow: hidden;
+  position: relative;
+}
+
+.margin-fill {
+  height: 100%;
+  border-radius: 50px;
+  transition: width 0.5s ease, background 0.3s ease;
+}
+
+.margin-profit {
+  background: linear-gradient(90deg, #10b981, #059669);
+}
+
+.margin-loss {
+  background: linear-gradient(90deg, #ef4444, #dc2626);
 }
 
 /* Products Table */
@@ -192,23 +282,6 @@ h2 {
   color: #64748b;
 }
 
-.price-input {
-  width: 100%;
-  max-width: 120px;
-  padding: 8px 12px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  transition: all 0.2s;
-}
-
-.price-input:focus {
-  outline: none;
-  border-color: #7c3aed;
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
-}
-
 .set-btn {
   padding: 8px 16px;
   background: #7c3aed;
@@ -224,17 +297,6 @@ h2 {
 .set-btn:hover {
   background: #6d28d9;
   transform: scale(1.05);
-}
-
-.set-btn:disabled {
-  background: #cbd5e1;
-  cursor: not-allowed;
-}
-
-.price-set {
-  color: #10b981;
-  font-weight: 600;
-  font-size: 13px;
 }
 
 /* Modal */
@@ -356,15 +418,33 @@ h2 {
   to { bottom: 30px; opacity: 1; }
 }
 
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .metric-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 @media (max-width: 768px) {
-  .financial-stats { grid-template-columns: 1fr; }
+  .metric-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .chart-section {
+    padding: 20px;
+  }
+  
+  .metric-value {
+    font-size: 28px;
+  }
+  
   .grid-header { display: none; }
+  
   .product-row {
     grid-template-columns: 1fr;
     gap: 10px;
     padding: 15px;
   }
-  .stat-value { font-size: 28px; }
 }
 </style>
 </head>
@@ -385,7 +465,7 @@ h2 {
   </div>
 
   <div class="filter-container" style="position: relative;">
-    <span style="font-size: 13px; font-weight: 600; color: #64748b; margin-right: 8px;">Show Report Of:</span>
+    <span style="font-size: 13px; font-weight: 600; color: #64748b; margin-right: 8px;">Period:</span>
     <select id="timeFilter" onchange="calculateFinancials()" style="padding: 10px 15px; border-radius: 12px; border: 1px solid #e2e8f0; background: white; font-weight: 600; color: #1e293b; cursor: pointer; outline: none;">
       <option value="all">All Time</option>
       <option value="today">Today</option>
@@ -399,31 +479,54 @@ h2 {
   </div>
 </div>
 
-<div class="financial-stats">
-  <div class="stat-card">
-    <div class="stat-header">
-      <div class="stat-icon spend-icon">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-        </svg>
-      </div>
-      <span class="stat-label">Total Spend</span>
-    </div>
-    <div class="stat-value" id="totalSpend">₹0</div>
-    <div class="stat-sub">Total lifetime investment</div>
+<!-- Performance Chart -->
+<div class="chart-section">
+  <div class="chart-header">
+    <h3 class="chart-title">📈 Performance Overview</h3>
+  </div>
+  <canvas id="performanceChart"></canvas>
+</div>
+
+<!-- Metric Grid - 4 Columns -->
+<div class="metric-grid">
+  <!-- Revenue Card -->
+  <div class="metric-card">
+    <span class="metric-label">Total Revenue</span>
+    <div class="metric-value" id="totalEarned">$0</div>
+    <div class="metric-sub" id="earnedSub">Sales income</div>
+    <div id="earnedComparison"></div>
   </div>
 
-  <div class="stat-card">
-    <div class="stat-header">
-      <div class="stat-icon earned-icon">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-        </svg>
+  <!-- Profit Card with Margin Gauge -->
+  <div class="metric-card">
+    <span class="metric-label">Gross Profit</span>
+    <div class="metric-value" id="grossProfit">$0</div>
+    <div class="metric-sub">After cost deduction</div>
+    
+    <div class="margin-gauge">
+      <div class="margin-label">
+        <span id="marginLabel">Profit Margin</span>
+        <span id="marginValue">0%</span>
       </div>
-      <span class="stat-label" id="earnedLabel">Total Earned</span>
+      <div class="margin-bar">
+        <div class="margin-fill margin-profit" id="marginFill" style="width: 0%"></div>
+      </div>
     </div>
-    <div class="stat-value" id="totalEarned">₹0</div>
-    <div class="stat-sub" id="earnedSub">Revenue from sales</div>
+  </div>
+
+  <!-- Spend Card -->
+  <div class="metric-card">
+    <span class="metric-label">Total Spend</span>
+    <div class="metric-value" id="totalSpend">$0</div>
+    <div class="metric-sub">Lifetime investment</div>
+  </div>
+
+  <!-- Comparison Card -->
+  <div class="metric-card">
+    <span class="metric-label">Performance</span>
+    <div class="metric-value" id="performanceIndicator">—</div>
+    <div class="metric-sub" id="performanceSub">Period comparison</div>
+    <div id="performanceComparison"></div>
   </div>
 </div>
 
@@ -459,11 +562,13 @@ h2 {
     <div class="price-inputs">
       <div class="input-group">
         <label>Cost Price</label>
-        <input type="number" id="costPriceInput" placeholder="100" step="0.01">
+        <input type="text" id="costPriceInput" placeholder="e.g., 100 or 50/kg" autocomplete="off">
+        <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">Accepts: numbers or text (e.g., 10/kg)</div>
       </div>
       <div class="input-group">
         <label>Selling Price</label>
-        <input type="number" id="sellPriceInput" placeholder="150" step="0.01">
+        <input type="text" id="sellPriceInput" placeholder="e.g., 150 or 75/liter" autocomplete="off">
+        <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">Accepts: numbers or text (e.g., 100/hr)</div>
       </div>
     </div>
 
@@ -495,6 +600,7 @@ h2 {
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 
 <script>
 firebase.initializeApp({
@@ -507,306 +613,486 @@ firebase.initializeApp({
 const auth = firebase.auth();
 const db = firebase.database();
 
-// --- 1. Global State ---
+// Global State
 let inventory = {};
 let prices = {};
 let sales = {};
 let purchases = {};
 let invRef, pricesRef, salesRef, purchasesRef, lastKnownRef;
 let currentProductId = null;
-let userCurrency = "USD"; // Default fallback
+let userCurrency = "USD";
+let performanceChart = null;
 
-// --- 2. Firebase Auth & Data Listeners ---
-auth.onAuthStateChanged(user => {
-  if (!user) return;
+// HYBRID PRICE PARSER
+function extractNumericValue(input) {
+  if (!input) return 0;
+  const str = String(input).trim();
+  const match = str.match(/[\d,.]+/);
+  if (!match) return 0;
+  const numStr = match[0].replace(/,/g, '');
+  return parseFloat(numStr) || 0;
+}
 
-  // Define References
-const currencyRef = db.ref(`BusinessOwners/${user.uid}/National Currency`);
-  invRef = db.ref(`Businesses/${user.uid}/inventory`);
-  pricesRef = db.ref(`Businesses/${user.uid}/prices`);
-  salesRef = db.ref(`Businesses/${user.uid}/sales`);
-  purchasesRef = db.ref(`Businesses/${user.uid}/purchases`);
-  lastKnownRef = db.ref(`Businesses/${user.uid}/last_known_inventory`);
+function createPriceObject(input) {
+  const numeric = extractNumericValue(input);
+  const display = String(input).trim();
+  return { numericValue: numeric, displayString: display };
+}
 
-  // A. Currency Check
-currencyRef.on("value", snapshot => {
-    const data = snapshot.val();
-    
-    // Check if the node exists and contains the currency field
-    if (!data || !data.currency) {
-        document.getElementById("currencyModal").style.display = "flex";
-    } else {
-        userCurrency = data.currency.toUpperCase();
-        document.getElementById("currencyModal").style.display = "none";
-        
-        // Refresh UI with the new currency symbol
-        render(); 
-        calculateFinancials();
-    }
-});
+// COMPARISON ENGINE
+function calculateComparison(currentValue, previousValue) {
+  if (!previousValue || previousValue === 0) {
+    return { change: 0, percentage: 0, direction: 'neutral' };
+  }
+  const change = currentValue - previousValue;
+  const percentage = (change / previousValue) * 100;
+  const direction = change > 0 ? 'up' : change < 0 ? 'down' : 'neutral';
+  return { change, percentage, direction };
+}
 
-  // B. Load Prices
-  pricesRef.on("value", snapshot => {
-    prices = snapshot.val() || {};
-    render();
-  });
+// RENDER COMPARISON BADGE - CLEAN LOGIC
+function renderComparisonBadge(comparison, periodName) {
+  if (!comparison || comparison.direction === 'neutral' || isNaN(comparison.percentage) || comparison.percentage === 0) {
+    return '';
+  }
+  
+  const arrow = comparison.direction === 'up' ? '▲' : '▼';
+  const comparisonClass = `comparison-${comparison.direction}`;
+  
+  return `
+    <div class="comparison-badge ${comparisonClass}">
+      ${arrow} ${Math.abs(comparison.percentage).toFixed(1)}% ${periodName}
+    </div>
+  `;
+}
 
-  // C. Smart Inventory Watcher (Detect Sales/Restock)
-  invRef.on("value", snapshot => {
-    const currentInventory = snapshot.val() || {};
-    
-    lastKnownRef.once('value', lastSnap => {
-      const lastInventory = lastSnap.val() || {};
-
-      Object.entries(currentInventory).forEach(([id, product]) => {
-        const oldQty = lastInventory[id] ? lastInventory[id].quantity : product.quantity;
-        const newQty = product.quantity || 0;
-
-        if (newQty < oldQty) {
-          recordSale(id, product.name, oldQty - newQty);
-        } else if (newQty > oldQty) {
-          recordPurchase(id, product.name, newQty - oldQty);
-        }
-      });
-
-      lastKnownRef.set(currentInventory);
-      inventory = currentInventory;
-      render();
-    });
-  });
-
-  // D. Financial Sync
-  salesRef.on("value", snapshot => {
-    sales = snapshot.val() || {};
-    calculateFinancials();
-  });
-
-  purchasesRef.on("value", snapshot => {
-    purchases = snapshot.val() || {};
-    calculateFinancials();
-  });
-});
-
-// --- 3. Business Logic Functions ---
-
-function calculateFinancials() {
-  const filter = document.getElementById("timeFilter").value;
+function getTimeRanges() {
   const now = new Date();
-  let startTime = 0;
-  let endTime = Infinity;
-
-  // Update UI Labels
-  const earnedLabel = document.getElementById("earnedLabel");
-  earnedLabel.textContent = filter === 'all' ? "Total Earned" : `Earned (${filter})`;
-
-  // Time Logic
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
   const startOfYesterday = startOfToday - 86400000;
   
-  if (filter === "today") {
-    startTime = startOfToday;
-  } else if (filter === "yesterday") {
-    startTime = startOfYesterday;
-    endTime = startOfToday;
-  } else if (filter === "week") {
-    const day = now.getDay(); 
-    startTime = startOfToday - (day * 86400000);
-  } else if (filter === "lastWeek") {
-    const day = now.getDay();
-    endTime = startOfToday - (day * 86400000);
-    startTime = endTime - (7 * 86400000);
-  } else if (filter === "month") {
-    startTime = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
-  } else if (filter === "lastMonth") {
-    startTime = new Date(now.getFullYear(), now.getMonth() - 1, 1).getTime();
-    endTime = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
-  } else if (filter === "year") {
-    startTime = new Date(now.getFullYear(), 0, 1).getTime();
-  }
+  const day = now.getDay();
+  const startOfWeek = startOfToday - (day * 86400000);
+  const startOfLastWeek = startOfWeek - (7 * 86400000);
+  
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+  const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).getTime();
+  
+  const startOfYear = new Date(now.getFullYear(), 0, 1).getTime();
+  const startOfLastYear = new Date(now.getFullYear() - 1, 0, 1).getTime();
+  const endOfLastYear = new Date(now.getFullYear(), 0, 1).getTime();
+  
+  return {
+    today: { start: startOfToday, end: Infinity },
+    yesterday: { start: startOfYesterday, end: startOfToday },
+    thisWeek: { start: startOfWeek, end: Infinity },
+    lastWeek: { start: startOfLastWeek, end: startOfWeek },
+    thisMonth: { start: startOfMonth, end: Infinity },
+    lastMonth: { start: startOfLastMonth, end: startOfMonth },
+    thisYear: { start: startOfYear, end: Infinity },
+    lastYear: { start: startOfLastYear, end: endOfLastYear }
+  };
+}
 
-  let totalSpend = 0; // Keeping spend as lifetime per your request
-  let filteredEarned = 0;
-
-  // 1. Calculate Lifetime Spend
-  Object.values(purchases).forEach(purchase => {
-    totalSpend += (parseFloat(purchase.totalCost) || 0);
-  });
-
-  // 2. Calculate Filtered Earned (Sales)
+function calculateRevenueForPeriod(startTime, endTime) {
+  let revenue = 0;
   Object.values(sales).forEach(sale => {
     const saleTime = sale.timestamp;
-    if (filter === "all") {
-      filteredEarned += (parseFloat(sale.revenue) || 0);
-    } else if (saleTime >= startTime && saleTime < endTime) {
-      filteredEarned += (parseFloat(sale.revenue) || 0);
+    if (saleTime >= startTime && saleTime < endTime) {
+      revenue += (parseFloat(sale.revenue) || 0);
     }
   });
-
-  // Update Display
-  document.getElementById("totalSpend").textContent = `${userCurrency} ${totalSpend.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-  document.getElementById("totalEarned").textContent = `${userCurrency} ${filteredEarned.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+  return revenue;
 }
-function recordSale(productId, productName, quantity) {
-  const priceData = prices[productId];
-  if (!priceData || !priceData.sellPrice) return;
 
-  salesRef.push({
-    productId,
-    productName,
-    quantity,
-    sellPrice: priceData.sellPrice,
-    revenue: priceData.sellPrice * quantity,
-    timestamp: firebase.database.ServerValue.TIMESTAMP
+function calculateCostForPeriod(startTime, endTime) {
+  let cost = 0;
+  Object.values(sales).forEach(sale => {
+    const saleTime = sale.timestamp;
+    if (saleTime >= startTime && saleTime < endTime) {
+      const productId = sale.productId;
+      const priceData = prices[productId];
+      if (priceData && priceData.costPrice) {
+        const costValue = typeof priceData.costPrice === 'object' 
+          ? priceData.costPrice.numericValue 
+          : extractNumericValue(priceData.costPrice);
+        cost += costValue * (sale.quantity || 0);
+      }
+    }
   });
+  return cost;
 }
 
-function recordPurchase(productId, productName, quantity) {
-  const priceData = prices[productId];
-  if (!priceData || !priceData.costPrice) return;
-
-  purchasesRef.push({
-    productId,
-    productName,
-    quantity,
-    costPrice: priceData.costPrice,
-    totalCost: priceData.costPrice * quantity,
-    timestamp: firebase.database.ServerValue.TIMESTAMP
-  });
-}
-
-function checkAndRecordInitialStock(productId, costPrice) {
-  const product = inventory[productId];
-  if (!product || !product.quantity || product.quantity <= 0) return;
-
-  // Check if we already have a purchase record to avoid double-counting
-  const alreadyRecorded = Object.values(purchases).some(p => p.productId === productId);
-
-  if (!alreadyRecorded) {
-    purchasesRef.push({
-      productId,
-      productName: product.name,
-      quantity: product.quantity,
-      costPrice: costPrice,
-      totalCost: costPrice * product.quantity,
-      type: "initial_setup",
-      timestamp: firebase.database.ServerValue.TIMESTAMP
-    });
+// CHART RENDERING
+function renderPerformanceChart(filter) {
+  const ctx = document.getElementById('performanceChart');
+  if (!ctx) return;
+  
+  if (performanceChart) {
+    performanceChart.destroy();
   }
+  
+  const ranges = getTimeRanges();
+  
+  if (filter === 'all') {
+    // Line chart for last 30 days
+    const days = 30;
+    const labels = [];
+    const revenueData = [];
+    const profitData = [];
+    
+    for (let i = days - 1; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const startOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+      const endOfDay = startOfDay + 86400000;
+      
+      labels.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+      
+      const dayRevenue = calculateRevenueForPeriod(startOfDay, endOfDay);
+      const dayCost = calculateCostForPeriod(startOfDay, endOfDay);
+      
+      revenueData.push(dayRevenue);
+      profitData.push(dayRevenue - dayCost);
+    }
+    
+    performanceChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'Revenue',
+            data: revenueData,
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            fill: true,
+            tension: 0.4,
+            borderWidth: 2
+          },
+          {
+            label: 'Profit',
+            data: profitData,
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            fill: true,
+            tension: 0.4,
+            borderWidth: 2
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: {
+            position: 'top',
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: {
+              color: '#f1f5f9'
+            }
+          },
+          x: {
+            grid: {
+              display: false
+            }
+          }
+        }
+      }
+    });
+  } else {
+    // Bar chart comparing current vs previous period
+    let currentPeriod, previousPeriod, periodLabel;
+    
+    switch(filter) {
+      case 'today':
+        currentPeriod = ranges.today;
+        previousPeriod = ranges.yesterday;
+        periodLabel = ['Yesterday', 'Today'];
+        break;
+      case 'week':
+        currentPeriod = ranges.thisWeek;
+        previousPeriod = ranges.lastWeek;
+        periodLabel = ['Last Week', 'This Week'];
+        break;
+      case 'month':
+        currentPeriod = ranges.thisMonth;
+        previousPeriod = ranges.lastMonth;
+        periodLabel = ['Last Month', 'This Month'];
+        break;
+      case 'year':
+        currentPeriod = ranges.thisYear;
+        previousPeriod = ranges.lastYear;
+        periodLabel = ['Last Year', 'This Year'];
+        break;
+      default:
+        currentPeriod = ranges.today;
+        previousPeriod = ranges.yesterday;
+        periodLabel = ['Previous', 'Current'];
+    }
+    
+    const prevRevenue = calculateRevenueForPeriod(previousPeriod.start, previousPeriod.end);
+    const currRevenue = calculateRevenueForPeriod(currentPeriod.start, currentPeriod.end);
+    
+    const prevCost = calculateCostForPeriod(previousPeriod.start, previousPeriod.end);
+    const currCost = calculateCostForPeriod(currentPeriod.start, currentPeriod.end);
+    
+    performanceChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: periodLabel,
+        datasets: [
+          {
+            label: 'Revenue',
+            data: [prevRevenue, currRevenue],
+            backgroundColor: '#3b82f6',
+            borderRadius: 8
+          },
+          {
+            label: 'Profit',
+            data: [prevRevenue - prevCost, currRevenue - currCost],
+            backgroundColor: '#10b981',
+            borderRadius: 8
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: {
+            position: 'top',
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: {
+              color: '#f1f5f9'
+            }
+          },
+x: {
+            grid: {
+              display: false
+            }
+          }
+        } 
+      } 
+    }); 
+  } 
+} 
+// FINANCIAL CALCULATIONS & UI UPDATES
+function calculateFinancials() {
+    const filter = document.getElementById("timeFilter").value;
+    const ranges = getTimeRanges();
+    
+    let startTime = 0;
+    let endTime = Infinity;
+    let comparisonPeriod = null;
+    let periodName = "";
+
+    // Determine time range and comparison period
+    switch(filter) {
+        case "today":
+            startTime = ranges.today.start;
+            comparisonPeriod = ranges.yesterday;
+            periodName = "vs Yesterday";
+            break;
+        case "yesterday":
+            startTime = ranges.yesterday.start;
+            endTime = ranges.yesterday.end;
+            break;
+        case "week":
+            startTime = ranges.thisWeek.start;
+            comparisonPeriod = ranges.lastWeek;
+            periodName = "vs Last Week";
+            break;
+        case "month":
+            startTime = ranges.thisMonth.start;
+            comparisonPeriod = ranges.lastMonth;
+            periodName = "vs Last Month";
+            break;
+        case "year":
+            startTime = ranges.thisYear.start;
+            comparisonPeriod = ranges.lastYear;
+            periodName = "vs Last Year";
+            break;
+    }
+
+    // Calculate Lifetime Spend
+    let totalSpend = 0;
+    Object.values(purchases).forEach(purchase => {
+        totalSpend += (parseFloat(purchase.totalCost) || 0);
+    });
+
+    // Current Period Stats
+    const currentRevenue = calculateRevenueForPeriod(startTime, endTime);
+    const currentCost = calculateCostForPeriod(startTime, endTime);
+    const grossProfit = currentRevenue - currentCost;
+    
+    // Format Numbers
+    const formatter = new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    // Update Metric Cards
+    document.getElementById("totalSpend").textContent = `${userCurrency} ${formatter.format(totalSpend)}`;
+    document.getElementById("totalEarned").textContent = `${userCurrency} ${formatter.format(currentRevenue)}`;
+    
+    const profitEl = document.getElementById("grossProfit");
+    profitEl.textContent = `${userCurrency} ${formatter.format(Math.abs(grossProfit))}`;
+    profitEl.style.color = grossProfit >= 0 ? "#1e293b" : "#ef4444";
+
+    // Margin Gauge Logic
+    const marginLabel = document.getElementById("marginLabel");
+    const marginValue = document.getElementById("marginValue");
+    const marginFill = document.getElementById("marginFill");
+    
+    let marginPercent = 0;
+    if (grossProfit >= 0) {
+        marginPercent = currentRevenue > 0 ? (grossProfit / currentRevenue) * 100 : 0;
+        marginLabel.textContent = "Profit Margin";
+        marginFill.className = "margin-fill margin-profit";
+    } else {
+        marginPercent = currentCost > 0 ? (Math.abs(grossProfit) / currentCost) * 100 : 0;
+        marginLabel.textContent = "Loss Margin";
+        marginFill.className = "margin-fill margin-loss";
+    }
+    
+    marginValue.textContent = `${marginPercent.toFixed(1)}%`;
+    marginFill.style.width = `${Math.min(marginPercent, 100)}%`;
+
+    // Comparison Badge Logic
+    const earnedCompEl = document.getElementById("earnedComparison");
+    const perfCompEl = document.getElementById("performanceComparison");
+    const perfIndicator = document.getElementById("performanceIndicator");
+
+    if (comparisonPeriod && filter !== 'all') {
+        const previousRevenue = calculateRevenueForPeriod(comparisonPeriod.start, comparisonPeriod.end);
+        const comparison = calculateComparison(currentRevenue, previousRevenue);
+        
+        earnedCompEl.innerHTML = renderComparisonBadge(comparison, periodName);
+        
+        // Performance Indicator Card
+        perfIndicator.textContent = comparison.direction === 'up' ? 'Growing' : comparison.direction === 'down' ? 'Declining' : 'Stable';
+        perfIndicator.style.color = comparison.direction === 'up' ? '#10b981' : comparison.direction === 'down' ? '#ef4444' : '#1e293b';
+    } else {
+        earnedCompEl.innerHTML = '';
+        perfIndicator.textContent = "—";
+    }
+
+    // Update Chart
+    renderPerformanceChart(filter);
 }
 
-// --- 4. UI & Modal Interactions ---
+// FIREBASE AUTH & SYNC
+auth.onAuthStateChanged(user => {
+    if (!user) return;
 
+    const currencyRef = db.ref(`BusinessOwners/${user.uid}/National Currency`);
+    invRef = db.ref(`Businesses/${user.uid}/inventory`);
+    pricesRef = db.ref(`Businesses/${user.uid}/prices`);
+    salesRef = db.ref(`Businesses/${user.uid}/sales`);
+    purchasesRef = db.ref(`Businesses/${user.uid}/purchases`);
+
+    currencyRef.on("value", snapshot => {
+        const data = snapshot.val();
+        if (!data || !data.currency) {
+            document.getElementById("currencyModal").style.display = "flex";
+        } else {
+            userCurrency = data.currency.toUpperCase();
+            document.getElementById("currencyModal").style.display = "none";
+            calculateFinancials();
+        }
+    });
+
+    pricesRef.on("value", snapshot => { prices = snapshot.val() || {}; render(); });
+    invRef.on("value", snapshot => { inventory = snapshot.val() || {}; render(); });
+    salesRef.on("value", snapshot => { sales = snapshot.val() || {}; calculateFinancials(); });
+    purchasesRef.on("value", snapshot => { purchases = snapshot.val() || {}; calculateFinancials(); });
+});
+
+// UI RENDERING
 function render() {
-  const grid = document.getElementById("productsGrid");
-  if(!grid) return;
-  grid.innerHTML = "";
+    const grid = document.getElementById("productsGrid");
+    if(!grid) return;
+    grid.innerHTML = "";
 
-  Object.entries(inventory).forEach(([id, product]) => {
-    const priceData = prices[id] || {};
-    const hasPrices = priceData.costPrice && priceData.sellPrice;
+    Object.entries(inventory).forEach(([id, product]) => {
+        const priceData = prices[id] || {};
+        const costDisp = priceData.costPrice ? (typeof priceData.costPrice === 'object' ? priceData.costPrice.displayString : priceData.costPrice) : "Not set";
+        const sellDisp = priceData.sellPrice ? (typeof priceData.sellPrice === 'object' ? priceData.sellPrice.displayString : priceData.sellPrice) : "Not set";
 
-    grid.innerHTML += `
-      <div class="product-row">
-        <div class="product-name" style="font-size: 16px; font-weight: 700;">${product.name}</div>
-        
-        <div class="product-qty">
-            <span class="mobile-label">Stock:</span>${product.quantity} ${product.unit || 'pcs'}
-        </div>
-        
-        <div class="product-cost">
-            <span class="mobile-label">Cost:</span>
-            ${hasPrices ? `${userCurrency} ${priceData.costPrice}` : '<span style="color:#94a3b8;">Not set</span>'}
-        </div>
-        
-        <div class="product-sell">
-            <span class="mobile-label">Sell:</span>
-            ${hasPrices ? `${userCurrency} ${priceData.sellPrice}` : '<span style="color:#94a3b8;">Not set</span>'}
-        </div>
-        
-        <div>
-          <button class="set-btn" onclick="openPriceModal('${id}', '${product.name}')">
-            ${hasPrices ? 'Edit Prices' : 'Set Prices'}
-          </button>
-        </div>
-      </div>
-    `;
-  });
+        grid.innerHTML += `
+            <div class="product-row">
+                <div class="product-name">${product.name}</div>
+                <div class="product-qty">${product.quantity} ${product.unit || 'pcs'}</div>
+                <div class="product-cost">${userCurrency} ${costDisp}</div>
+                <div class="product-sell">${userCurrency} ${sellDisp}</div>
+                <div><button class="set-btn" onclick="openPriceModal('${id}', '${product.name}')">Edit</button></div>
+            </div>
+        `;
+    });
 }
+
+// MODAL CONTROLS
+function openPriceModal(productId, productName) {
+    currentProductId = productId;
+    document.getElementById("modalTitle").textContent = productName;
+    const priceData = prices[productId] || {};
+    document.getElementById("costPriceInput").value = priceData.costPrice ? (typeof priceData.costPrice === 'object' ? priceData.costPrice.displayString : priceData.costPrice) : "";
+    document.getElementById("sellPriceInput").value = priceData.sellPrice ? (typeof priceData.sellPrice === 'object' ? priceData.sellPrice.displayString : priceData.sellPrice) : "";
+    document.getElementById("priceModal").style.display = "flex";
+}
+
+function closePriceModal() { document.getElementById("priceModal").style.display = "none"; }
 
 function savePrices() {
-  const costPrice = parseFloat(document.getElementById("costPriceInput").value);
-  const sellPrice = parseFloat(document.getElementById("sellPriceInput").value);
+    const costInput = document.getElementById("costPriceInput").value.trim();
+    const sellInput = document.getElementById("sellPriceInput").value.trim();
+    if (!costInput || !sellInput) return alert("Enter valid prices");
 
-  if (isNaN(costPrice) || isNaN(sellPrice)) {
-    alert("Please enter valid prices");
-    return;
-  }
-
-  pricesRef.child(currentProductId).set({
-    costPrice: costPrice,
-    sellPrice: sellPrice,
-    updatedAt: firebase.database.ServerValue.TIMESTAMP
-  }).then(() => {
-    checkAndRecordInitialStock(currentProductId, costPrice);
-    showSuccess("Prices Saved!");
-    closePriceModal();
-  });
+    pricesRef.child(currentProductId).set({
+        costPrice: createPriceObject(costInput),
+        sellPrice: createPriceObject(sellInput),
+        updatedAt: firebase.database.ServerValue.TIMESTAMP
+    }).then(() => {
+        showSuccess("Prices Saved!");
+        closePriceModal();
+    });
 }
 
 function saveCurrency() {
     const code = document.getElementById("currencyInput").value.trim().toUpperCase();
-    if (code.length < 2) return alert("Please enter a valid currency code!");
-
-    // Writes directly to the "National Currency" node
+    if (code.length < 2) return alert("Enter valid code");
     db.ref(`BusinessOwners/${auth.currentUser.uid}/National Currency`).set({
         currency: code,
         updatedAt: firebase.database.ServerValue.TIMESTAMP
-    }).then(() => {
-        showSuccess("Currency Updated!");
-    }).catch(error => {
-        console.error("Save failed: ", error);
     });
 }
 
-function openPriceModal(productId, productName) {
-  currentProductId = productId;
-  document.getElementById("modalTitle").textContent = productName;
-  const priceData = prices[productId] || {};
-  document.getElementById("costPriceInput").value = priceData.costPrice || "";
-  document.getElementById("sellPriceInput").value = priceData.sellPrice || "";
-  document.getElementById("priceModal").style.display = "flex";
-}
-
-function closePriceModal() {
-  document.getElementById("priceModal").style.display = "none";
-}
-
 function showSuccess(msg) {
-  const popup = document.getElementById("successPopup");
-  popup.textContent = msg;
-  popup.style.display = "block";
-  setTimeout(() => popup.style.display = "none", 3000);
+    const popup = document.getElementById("successPopup");
+    popup.textContent = msg; popup.style.display = "block";
+    setTimeout(() => popup.style.display = "none", 3000);
 }
-
 function downloadProducts() {
-  let csv = "Product Name,Quantity,Cost Price,Sell Price\n";
-  Object.entries(inventory).forEach(([id, p]) => {
-    const pr = prices[id] || {};
-    csv += `"${p.name}",${p.quantity},${pr.costPrice || 0},${pr.sellPrice || 0}\n`;
-  });
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `finance_report.csv`;
-  a.click();
+    let csv = "Product Name,Quantity,Cost Price,Selling Price\n";
+    Object.entries(inventory).forEach(([id, product]) => {
+        const pData = prices[id] || {};
+        const cost = pData.costPrice ? (pData.costPrice.numericValue || pData.costPrice) : 0;
+        const sell = pData.sellPrice ? (pData.sellPrice.numericValue || pData.sellPrice) : 0;
+        csv += `"${product.name}","${product.quantity}","${cost}","${sell}"\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Product_Pricing_Report.csv';
+    a.click();
 }
-
-window.onclick = (e) => {
-  const modal = document.getElementById("priceModal");
-  if (e.target === modal) closePriceModal();
-};
 </script>
-
 </body>
 </html>
