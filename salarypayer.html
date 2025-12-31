@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Digital Twin Shop - Firebase Live</title>
+    <title>Digital Twin Shop - Enhanced 3D</title>
     <style>
         * {
             margin: 0;
@@ -19,6 +18,8 @@
             --neon-primary: #00f3ff;
             --neon-secondary: #ff00ea;
             --neon-accent: #7fff00;
+            --hot-color: #ff4500;
+            --cold-color: #00d4ff;
         }
 
         body {
@@ -64,11 +65,39 @@
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(0, 243, 255, 0.1);
             backdrop-filter: blur(5px);
-            transition: all 0.3s ease;
+            transition: all 0.5s ease;
+            position: relative;
         }
 
-        .grid-cell.heatmap {
-            transition: background 0.5s ease;
+        .grid-cell.heatmap-hot {
+            background: radial-gradient(circle, var(--hot-color) 0%, rgba(255, 69, 0, 0.3) 100%);
+            border-color: var(--hot-color);
+            box-shadow: 0 0 30px var(--hot-color), inset 0 0 20px rgba(255, 69, 0, 0.5);
+            animation: heatPulseHot 2s infinite;
+        }
+
+        .grid-cell.heatmap-cold {
+            background: radial-gradient(circle, var(--cold-color) 0%, rgba(0, 212, 255, 0.2) 100%);
+            border-color: var(--cold-color);
+            box-shadow: 0 0 20px var(--cold-color), inset 0 0 15px rgba(0, 212, 255, 0.4);
+            animation: heatPulseCold 2s infinite;
+        }
+
+        .grid-cell.hover-target {
+            background: rgba(127, 255, 0, 0.4);
+            border-color: var(--neon-accent);
+            box-shadow: 0 0 30px var(--neon-accent);
+            transform: translateZ(5px);
+        }
+
+        @keyframes heatPulseHot {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes heatPulseCold {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 0.9; }
         }
 
         .grid-cell.path-highlight {
@@ -86,8 +115,15 @@
         .product-node {
             position: absolute;
             transform-style: preserve-3d;
-            cursor: pointer;
+            cursor: grab;
             transition: all 0.3s ease;
+            z-index: 1;
+        }
+
+        .product-node.dragging {
+            cursor: grabbing;
+            z-index: 1000;
+            filter: brightness(1.3);
         }
 
         .product-node.jumping {
@@ -117,49 +153,73 @@
         .product-card {
             width: 100px;
             height: 140px;
-            background: rgba(15, 15, 35, 0.7);
-            backdrop-filter: blur(10px);
+            background: linear-gradient(135deg, rgba(15, 15, 35, 0.9), rgba(30, 30, 60, 0.8));
+            backdrop-filter: blur(15px);
             border: 2px solid var(--neon-primary);
-            border-radius: 12px;
+            border-radius: 16px;
             padding: 12px;
-
-transform: rotateZ(-45deg) rotateX(-60deg);
-    transform-style: preserve-3d; /* Allows for 3D depth */
-    box-shadow: 
-        -5px 5px 0px var(--neon-primary), /* This creates a 'side' to the card */
-        0 20px 40px rgba(0, 0, 0, 0.5);
-    animation: float 3s ease-in-out infinite;
-
-
             transform: rotateZ(-45deg) rotateX(-60deg);
-            box-shadow: 0 10px 40px rgba(0, 243, 255, 0.3);
+            transform-style: preserve-3d;
+            box-shadow: 
+                0 5px 15px rgba(0, 243, 255, 0.4),
+                0 10px 30px rgba(0, 0, 0, 0.6),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+                -8px 8px 0px rgba(0, 243, 255, 0.2),
+                -12px 12px 20px rgba(0, 0, 0, 0.4);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             text-align: center;
             position: relative;
-            overflow: hidden;
+            overflow: visible;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: rotateZ(-45deg) rotateX(-60deg) translateZ(0px); }
+            50% { transform: rotateZ(-45deg) rotateX(-60deg) translateZ(20px); }
         }
 
         .product-card::before {
             content: '';
             position: absolute;
-            inset: -2px;
-            background: linear-gradient(45deg, var(--neon-primary), var(--neon-secondary));
-            border-radius: 12px;
+            inset: -3px;
+            background: linear-gradient(135deg, var(--neon-primary), var(--neon-secondary), var(--neon-accent));
+            border-radius: 16px;
             opacity: 0;
             transition: opacity 0.3s ease;
             z-index: -1;
+            filter: blur(10px);
+        }
+
+        .product-card::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: 10%;
+            width: 80%;
+            height: 40%;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.3), transparent);
+            border-radius: 16px 16px 50% 50%;
+            filter: blur(8px);
+            opacity: 0.6;
         }
 
         .product-node:hover .product-card {
-            transform: rotateZ(-45deg) rotateX(-60deg) translateZ(30px) scale(1.1);
+            transform: rotateZ(-45deg) rotateX(-60deg) translateZ(35px) scale(1.08);
             border-color: var(--neon-secondary);
+            box-shadow: 
+                0 8px 25px rgba(255, 0, 234, 0.6),
+                0 15px 40px rgba(0, 0, 0, 0.7),
+                inset 0 2px 0 rgba(255, 255, 255, 0.3),
+                -10px 10px 0px rgba(255, 0, 234, 0.3),
+                -15px 15px 30px rgba(0, 0, 0, 0.5);
         }
 
         .product-node:hover .product-card::before {
-            opacity: 0.3;
+            opacity: 0.5;
         }
 
         .product-node.is-low-stock .product-card {
@@ -180,104 +240,7 @@ transform: rotateZ(-45deg) rotateX(-60deg);
             animation: popularPulse 2s infinite;
             pointer-events: none;
         }
-.inventory-leaderboard {
-    position: fixed;
-    top: 30px;
-    right: 30px;
-    width: 250px;
-    background: rgba(15, 15, 35, 0.85);
-    backdrop-filter: blur(10px);
-    border: 2px solid #ff4444; /* Red border for urgency */
-    border-radius: 15px;
-    padding: 15px;
-    z-index: 1000;
-    box-shadow: 0 0 20px rgba(255, 68, 68, 0.3);
-}
-/* Add this to your <style> section */
-@media (max-width: 768px) {
-    .controls {
-        top: 10px;
-        right: 10px;
-        left: 10px;
-        width: auto;
-        padding: 10px;
-        font-size: 12px;
-        background: rgba(0, 0, 0, 0.85); /* Darker for better legibility */
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-    }
 
-    .control-group {
-        margin-bottom: 5px;
-    }
-
-    .control-group input[type="range"] {
-        width: 100%; /* Make sliders full width */
-    }
-}
-@media (max-width: 768px) {
-    #leaderboard {
-        max-height: 200px;
-        overflow-y: auto; /* Scroll if list is long */
-        width: 150px;
-        padding: 8px;
-        font-size: 11px;
-    }
-
-    #leaderboard h3 {
-        font-size: 13px;
-    }
-}
-@media (max-width: 600px) {
-    .story-card {
-        width: 90%; /* Scale to fit phone screen */
-        max-width: 350px;
-        padding: 15px;
-        border-radius: 12px;
-    }
-
-    .story-card h2 {
-        font-size: 18px;
-    }
-
-    .story-card p {
-        font-size: 14px;
-        line-height: 1.4;
-    }
-
-    /* Make the action buttons larger for thumb-tapping */
-    .story-card button {
-        width: 100%;
-        padding: 12px;
-        font-size: 16px;
-        margin-top: 10px;
-    }
-}
-.leaderboard-title {
-    color: #ff4444;
-    font-size: 16px;
-    font-weight: bold;
-    margin-bottom: 12px;
-    text-transform: uppercase;
-    display: flex;
-    justify-content: space-between;
-}
-
-.stock-item {
-    display: flex;
-    justify-content: space-between;
-    padding: 8px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    font-size: 13px;
-}
-
-.stock-item:last-child { border: none; }
-
-.stock-count {
-    color: #ff4444;
-    font-weight: bold;
-}
         @keyframes popularPulse {
             0% {
                 transform: translate(-50%, -50%) scale(0.8);
@@ -290,27 +253,74 @@ transform: rotateZ(-45deg) rotateX(-60deg);
         }
 
         .product-icon {
-            font-size: 32px;
+            font-size: 36px;
             margin-bottom: 8px;
+            text-shadow: 0 0 15px currentColor;
+            animation: iconGlow 3s ease-in-out infinite;
         }
 
-.product-name {
-    font-size: 13px;
-    font-weight: 900;
-    color: #ffffff;
-    background: rgba(0, 0, 0, 0.85); /* Solid black background */
-    padding: 5px 10px;
-    border-radius: 6px;
-    border: 1px solid var(--neon-primary);
-    margin-bottom: 5px;
-    width: 100%;
-    text-shadow: 0 0 8px var(--neon-primary);
-}
+        @keyframes iconGlow {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.4); }
+        }
+
+        .product-name {
+            font-size: 13px;
+            font-weight: 900;
+            color: #ffffff;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 5px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--neon-primary);
+            margin-bottom: 5px;
+            width: 100%;
+            text-shadow: 0 0 8px var(--neon-primary);
+        }
 
         .product-price {
             font-size: 14px;
             font-weight: bold;
-            color: #fff;
+            color: var(--neon-accent);
+            text-shadow: 0 0 10px var(--neon-accent);
+        }
+
+        .inventory-leaderboard {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            width: 250px;
+            background: rgba(15, 15, 35, 0.85);
+            backdrop-filter: blur(10px);
+            border: 2px solid #ff4444;
+            border-radius: 15px;
+            padding: 15px;
+            z-index: 1000;
+            box-shadow: 0 0 20px rgba(255, 68, 68, 0.3);
+        }
+
+        .leaderboard-title {
+            color: #ff4444;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .stock-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 13px;
+        }
+
+        .stock-item:last-child { border: none; }
+
+        .stock-count {
+            color: #ff4444;
+            font-weight: bold;
         }
 
         .story-card {
@@ -567,47 +577,7 @@ transform: rotateZ(-45deg) rotateX(-60deg);
         .toggle-switch.active .toggle-slider {
             transform: translateX(24px);
         }
-/* Optimized Mobile View - No longer hiding controls */
-@media (max-width: 768px) {
-    .controls {
-        width: width: 45%; max-width: 180px;
-        min-width: unset;
-        top: 10px;
-        left: 10px;
-        padding: 8px;
-        font-size: 11px;
-        max-height: 70vh; /* Prevents overlapping the bottom of the screen */
-    }
 
-    .controls h3 { font-size: 13px; margin-bottom: 5px; }
-
-    /* Make everything smaller but keep it visible */
-    .control-group { margin-bottom: 8px; }
-    .control-group label { font-size: 10px; margin-bottom: 4px; display: block; }
-    
-    .search-bar { padding: 6px; font-size: 11px; margin-bottom: 5px; }
-    
-    input[type="range"] { height: 4px; }
-    
-    .recipe-mode { flex-direction: column; gap: 5px; }
-    .recipe-mode select { font-size: 10px; padding: 4px; }
-    .recipe-mode button { padding: 5px; font-size: 10px; }
-
-    /* Shrink the Leaderboard so it doesn't hit the controls */
-    .inventory-leaderboard {
-        width: 130px;
-        top: 10px;
-        right: 10px;
-        padding: 8px;
-    }
-    .leaderboard-title { font-size: 11px; }
-    .stock-item { font-size: 10px; }
-
-    /* Shrink the world slightly more to clear the UI */
-    .world {
-        transform: rotateX(var(--world-rotateX)) rotateZ(var(--world-rotateZ)) scale(0.5);
-    }
-}
         .stock-badge {
             position: absolute;
             top: 5px;
@@ -708,11 +678,52 @@ transform: rotateZ(-45deg) rotateX(-60deg);
             0%, 100% { opacity: 1; }
             50% { opacity: 0.3; }
         }
-/* Add this new animation at the bottom of your <style> section */
-@keyframes float {
-    0%, 100% { transform: rotateZ(-45deg) rotateX(-60deg) translateZ(0px); }
-    50% { transform: rotateZ(-45deg) rotateX(-60deg) translateZ(15px); }
-}
+
+        @media (max-width: 768px) {
+            .controls {
+                width: 45%;
+                max-width: 180px;
+                min-width: unset;
+                top: 10px;
+                left: 10px;
+                padding: 8px;
+                font-size: 11px;
+                max-height: 70vh;
+            }
+
+            .controls h3 { font-size: 13px; margin-bottom: 5px; }
+            .control-group { margin-bottom: 8px; }
+            .control-group label { font-size: 10px; margin-bottom: 4px; display: block; }
+            .search-bar { padding: 6px; font-size: 11px; margin-bottom: 5px; }
+            input[type="range"] { height: 4px; }
+            .recipe-mode { flex-direction: column; gap: 5px; }
+            .recipe-mode select { font-size: 10px; padding: 4px; }
+            .recipe-mode button { padding: 5px; font-size: 10px; }
+
+            .inventory-leaderboard {
+                width: 130px;
+                top: 10px;
+                right: 10px;
+                padding: 8px;
+            }
+            .leaderboard-title { font-size: 11px; }
+            .stock-item { font-size: 10px; }
+
+            .world {
+                transform: rotateX(var(--world-rotateX)) rotateZ(var(--world-rotateZ)) scale(0.5);
+            }
+
+            .story-card {
+                width: 90%;
+                max-width: 350px;
+                padding: 15px;
+                border-radius: 12px;
+            }
+
+            .story-card h2 { font-size: 18px; }
+            .story-card p { font-size: 14px; line-height: 1.4; }
+            .story-card button { width: 100%; padding: 12px; font-size: 16px; margin-top: 10px; }
+        }
     </style>
 </head>
 <body>
@@ -720,10 +731,12 @@ transform: rotateZ(-45deg) rotateX(-60deg);
         <div class="loading-spinner"></div>
         <div style="color: var(--neon-primary); font-size: 18px;">Connecting to Firebase...</div>
     </div>
-<div class="inventory-leaderboard" id="outOfStockPanel">
-    <div class="leaderboard-title">🚨 Out of Stock <span id="oosCount">0</span></div>
-    <div id="oosList"></div>
-</div>
+
+    <div class="inventory-leaderboard" id="outOfStockPanel">
+        <div class="leaderboard-title">🚨 Out of Stock <span id="oosCount">0</span></div>
+        <div id="oosList"></div>
+    </div>
+
     <div class="controls">
         <h3>
             <span class="status-indicator" id="statusIndicator"></span>
@@ -787,37 +800,34 @@ transform: rotateZ(-45deg) rotateX(-60deg);
         <div class="toast-message" id="toastMessage"></div>
     </div>
 
-    <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getDatabase, ref, onValue } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
-import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getDatabase, ref, onValue, update } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+        import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
-        // Firebase Configuration
-        // TODO: For production, add your API key and enable Firebase Security Rules
-        // Currently configured for open public access as per your database rules
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
-  authDomain: "scalevest-163a0.firebaseapp.com",
-  databaseURL: "https://scalevest-163a0-default-rtdb.firebaseio.com",
-  projectId: "scalevest-163a0",
-  storageBucket: "scalevest-163a0.firebasestorage.app",
-  messagingSenderId: "938358950124",
-  appId: "1:938358950124:web:043506aeaacea2a96bfdc9",
-  measurementId: "G-QD3TWBZHR0"
-};
+        const firebaseConfig = {
+            apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
+            authDomain: "scalevest-163a0.firebaseapp.com",
+            databaseURL: "https://scalevest-163a0-default-rtdb.firebaseio.com",
+            projectId: "scalevest-163a0",
+            storageBucket: "scalevest-163a0.firebasestorage.app",
+            messagingSenderId: "938358950124",
+            appId: "1:938358950124:web:043506aeaacea2a96bfdc9",
+            measurementId: "G-QD3TWBZHR0"
+        };
 
         const app = initializeApp(firebaseConfig);
         const database = getDatabase(app);
+        const auth = getAuth();
 
-        // Global state
         let productsData = [];
         let heatmapEnabled = false;
         let priceCache = {};
         let currentSearchTerm = '';
+        let currentUserId = null;
+        let draggedProduct = null;
+        let dragOffset = { x: 0, y: 0 };
 
-        // Product icon mapping (fallback if not in Firebase)
         const iconMap = {
             'apple': '🍎', 'bread': '🍞', 'milk': '🥛', 'fish': '🐟', 'salmon': '🐟',
             'coffee': '☕', 'yogurt': '🥣', 'honey': '🍯', 'avocado': '🥑',
@@ -825,7 +835,6 @@ const firebaseConfig = {
             'carrot': '🥕', 'banana': '🍌', 'orange': '🍊', 'grape': '🍇', 'strawberry': '🍓'
         };
 
-        // Initialize floor grid
         function initFloor() {
             const floor = document.getElementById('floor');
             floor.innerHTML = '';
@@ -833,11 +842,12 @@ const firebaseConfig = {
                 const cell = document.createElement('div');
                 cell.className = 'grid-cell';
                 cell.dataset.index = i;
+                cell.dataset.x = i % 10;
+                cell.dataset.y = Math.floor(i / 10);
                 floor.appendChild(cell);
             }
         }
 
-        // Get product icon based on name
         function getProductIcon(name) {
             if (!name) return '📦';
             const lowerName = name.toLowerCase();
@@ -847,56 +857,35 @@ const firebaseConfig = {
             return '📦';
         }
 
-        // Generate coordinates if not provided
         function generateCoordinates(index, total) {
-            const gridSize = 10;
-            const spacing = Math.floor(gridSize / Math.ceil(Math.sqrt(total)));
-            const row = Math.floor(index / spacing) * spacing;
-            const col = (index % spacing) * spacing;
-// This ensures items fill the 10x10 floor before moving to a new 'row'
-return {
-    x: index % 10, 
-    y: Math.floor(index / 10) % 10
-};
+            return {
+                x: index % 10,
+                y: Math.floor(index / 10) % 10
+            };
         }
 
-        // Update heatmap based on sales data
         function updateHeatmap() {
-            if (!heatmapEnabled) {
-                document.querySelectorAll('.grid-cell').forEach(cell => {
-                    cell.classList.remove('heatmap');
-                    cell.style.background = '';
-                });
-                return;
-            }
-
-            const salesMap = new Map();
-            productsData.forEach(product => {
-                const key = `${product.x}-${product.y}`;
-                salesMap.set(key, product.sales || 0);
+            document.querySelectorAll('.grid-cell').forEach(cell => {
+                cell.classList.remove('heatmap-hot', 'heatmap-cold');
             });
 
-            const maxSales = Math.max(...Array.from(salesMap.values()), 1);
+            if (!heatmapEnabled) return;
 
-            document.querySelectorAll('.grid-cell').forEach((cell, index) => {
-                const x = index % 10;
-                const y = Math.floor(index / 10);
-                const key = `${x}-${y}`;
-                const sales = salesMap.get(key) || 0;
+            productsData.forEach(product => {
+                const index = product.y * 10 + product.x;
+                const cell = document.querySelector(`[data-index="${index}"]`);
                 
-                if (sales > 0) {
-                    cell.classList.add('heatmap');
-                    const intensity = sales / maxSales;
-                    const red = Math.floor(255 * intensity);
-                    const alpha = 0.3 + (intensity * 0.4);
-                    cell.style.background = `rgba(${red}, 0, 0, ${alpha})`;
-                } else {
-                    cell.style.background = '';
+                if (cell) {
+                    const salesThreshold = 50;
+                    if (product.sales >= salesThreshold) {
+                        cell.classList.add('heatmap-hot');
+                    } else {
+                        cell.classList.add('heatmap-cold');
+                    }
                 }
             });
         }
 
-        // Show toast notification
         function showToast(title, message) {
             const toast = document.getElementById('toast');
             document.getElementById('toastTitle').textContent = title;
@@ -905,7 +894,135 @@ return {
             setTimeout(() => toast.classList.remove('show'), 3000);
         }
 
-        // Render shop products
+        function updateOutOfStockLeaderboard(products) {
+            const listContainer = document.getElementById('oosList');
+            const countDisplay = document.getElementById('oosCount');
+            
+            const outOfStockItems = products.filter(p => !p.stock || p.stock === 0 || p.stock === "0");
+            countDisplay.textContent = outOfStockItems.length;
+
+            if (outOfStockItems.length === 0) {
+                listContainer.innerHTML = '<div style="color: #7fff00; font-size: 12px;">All items in stock! ✅</div>';
+                return;
+            }
+
+            listContainer.innerHTML = outOfStockItems.map(item => `
+                <div class="stock-item">
+                    <span>${item.name}</span>
+                    <span class="stock-count">OUT</span>
+                </div>
+            `).join('');
+        }
+
+        function updateProductPosition(productId, newX, newY) {
+            if (!currentUserId) return;
+
+            const updates = {};
+            updates[`Businesses/${currentUserId}/inventory/${productId}/x`] = newX;
+            updates[`Businesses/${currentUserId}/inventory/${productId}/y`] = newY;
+
+            update(ref(database), updates)
+                .then(() => {
+                    showToast('✅ Position Saved', `Product moved to (${newX}, ${newY})`);
+                })
+                .catch((error) => {
+                    console.error('Error updating position:', error);
+                    showToast('❌ Update Failed', error.message);
+                });
+        }
+
+        function startDrag(e, product, node) {
+            e.preventDefault();
+            draggedProduct = { ...product, node };
+            node.classList.add('dragging');
+            
+            const card = node.querySelector('.product-card');
+            card.style.animation = 'none';
+            card.style.transform = 'rotateZ(-45deg) rotateX(-60deg) translateZ(80px) scale(1.15)';
+            
+            const moveHandler = (e) => handleDragMove(e);
+            const endHandler = (e) => endDrag(e, moveHandler, endHandler);
+            
+            document.addEventListener('mousemove', moveHandler);
+            document.addEventListener('mouseup', endHandler);
+            document.addEventListener('touchmove', moveHandler);
+            document.addEventListener('touchend', endHandler);
+        }
+
+        function handleDragMove(e) {
+            if (!draggedProduct) return;
+            
+            const clientX = e.clientX || e.touches?.[0]?.clientX;
+            const clientY = e.clientY || e.touches?.[0]?.clientY;
+            
+            document.querySelectorAll('.grid-cell').forEach(cell => {
+                cell.classList.remove('hover-target');
+            });
+            
+            const worldElement = document.getElementById('world');
+            const worldRect = worldElement.getBoundingClientRect();
+            
+            const cells = document.querySelectorAll('.grid-cell');
+            let closestCell = null;
+            let minDistance = Infinity;
+            
+            cells.forEach(cell => {
+                const rect = cell.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                const distance = Math.sqrt(
+                    Math.pow(clientX - centerX, 2) + 
+                    Math.pow(clientY - centerY, 2)
+                );
+                
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestCell = cell;
+                }
+            });
+            
+            if (closestCell && minDistance < 100) {
+                closestCell.classList.add('hover-target');
+            }
+        }
+
+        function endDrag(e, moveHandler, endHandler) {
+            if (!draggedProduct) return;
+            
+            document.removeEventListener('mousemove', moveHandler);
+            document.removeEventListener('mouseup', endHandler);
+            document.removeEventListener('touchmove', moveHandler);
+            document.removeEventListener('touchend', endHandler);
+            
+            const targetCell = document.querySelector('.grid-cell.hover-target');
+            
+            if (targetCell) {
+                const newX = parseInt(targetCell.dataset.x);
+                const newY = parseInt(targetCell.dataset.y);
+                
+                draggedProduct.node.style.left = `${newX * 80}px`;
+                draggedProduct.node.style.top = `${newY * 80}px`;
+                
+                const productIndex = productsData.findIndex(p => p.id === draggedProduct.id);
+                if (productIndex !== -1) {
+                    productsData[productIndex].x = newX;
+                    productsData[productIndex].y = newY;
+                }
+                
+                updateProductPosition(draggedProduct.id, newX, newY);
+                updateHeatmap();
+                
+                targetCell.classList.remove('hover-target');
+            }
+            
+            const card = draggedProduct.node.querySelector('.product-card');
+            card.style.animation = '';
+            card.style.transform = '';
+            
+            draggedProduct.node.classList.remove('dragging');
+            draggedProduct = null;
+        }
+
         function renderShop(products) {
             const container = document.getElementById('products-container');
             const productA = document.getElementById('productA');
@@ -934,6 +1051,9 @@ return {
                 const gridSize = 80;
                 node.style.left = `${product.x * gridSize}px`;
                 node.style.top = `${product.y * gridSize}px`;
+                
+                const floatDelay = (index % 5) * 0.8;
+                node.style.animationDelay = `${floatDelay}s`;
 
                 node.innerHTML = `
                     <div class="product-card">
@@ -944,7 +1064,14 @@ return {
                     </div>
                 `;
 
-                node.addEventListener('click', () => openStoryCard(product));
+                node.addEventListener('mousedown', (e) => startDrag(e, product, node));
+                node.addEventListener('touchstart', (e) => startDrag(e, product, node));
+                node.addEventListener('click', (e) => {
+                    if (!draggedProduct) {
+                        openStoryCard(product);
+                    }
+                });
+                
                 container.appendChild(node);
 
                 const option1 = document.createElement('option');
@@ -958,31 +1085,11 @@ return {
                 productB.appendChild(option2);
             });
 
-filterProducts(currentSearchTerm);
+            filterProducts(currentSearchTerm);
             updateHeatmap();
             updateOutOfStockLeaderboard(products);
         }
-function updateOutOfStockLeaderboard(products) {
-    const listContainer = document.getElementById('oosList');
-    const countDisplay = document.getElementById('oosCount');
-    
-    // Filter for items with 0 stock
-const outOfStockItems = products.filter(p => !p.stock || p.stock === 0 || p.stock === "0");
-    countDisplay.textContent = outOfStockItems.length;
 
-    if (outOfStockItems.length === 0) {
-        listContainer.innerHTML = '<div style="color: #7fff00; font-size: 12px;">All items in stock! ✅</div>';
-        return;
-    }
-
-    listContainer.innerHTML = outOfStockItems.map(item => `
-        <div class="stock-item">
-            <span>${item.name}</span>
-            <span class="stock-count">OUT</span>
-        </div>
-    `).join('');
-}
-        // Filter products based on search
         function filterProducts(searchTerm) {
             currentSearchTerm = searchTerm.toLowerCase();
             const nodes = document.querySelectorAll('.product-node');
@@ -1017,95 +1124,85 @@ const outOfStockItems = products.filter(p => !p.stock || p.stock === 0 || p.stoc
             }
         }
 
-        // Listen to Firebase data
-function listenToFirebase() {
-    const auth = getAuth();
+        function listenToFirebase() {
+            onAuthStateChanged(auth, (user) => {
+                if (!user) {
+                    window.location.href = "login.html";
+                    return;
+                }
 
-    // 1. Monitor the Authentication state
-    onAuthStateChanged(auth, (user) => {
-        if (!user) {
-            // If not logged in, send them to login page
-            window.location.href = "login.html"; 
-            return;
+                currentUserId = user.uid;
+                const businessRef = ref(database, `Businesses/${currentUserId}`);
+                
+                onValue(businessRef, (snapshot) => {
+                    const business = snapshot.val();
+                    
+                    if (!business) {
+                        console.error('No business data available for this user');
+                        showToast('⚠️ No Data', 'Your inventory folder is empty.');
+                        document.getElementById('loading').style.display = 'none';
+                        return;
+                    }
+
+                    const newProducts = [];
+                    let productIndex = 0;
+
+                    if (business.inventory) {
+                        const productKeys = Object.keys(business.inventory);
+                        
+                        productKeys.forEach(productKey => {
+                            const inventory = business.inventory[productKey];
+                            const priceData = business.prices?.[productKey];
+                            
+                            const savedX = inventory.x;
+                            const savedY = inventory.y;
+                            const coords = (savedX !== undefined && savedY !== undefined) 
+                                ? { x: savedX, y: savedY }
+                                : generateCoordinates(productIndex, productKeys.length);
+                            
+                            const product = {
+                                id: productKey,
+                                name: inventory.name || productKey.replace(/[^a-zA-Z]/g, ' ').trim().toUpperCase(),
+                                icon: getProductIcon(inventory.name || productKey),
+                                price: `${parseFloat(priceData?.numericValue || priceData?.sellPrice?.numericValue || 0).toFixed(2)}`,
+                                priceValue: parseFloat(priceData?.numericValue || 0),
+                                x: coords.x,
+                                y: coords.y,
+                                stock: parseInt(inventory?.quantity || inventory || 0),
+                                sales: Math.floor(Math.random() * 100),
+                                origin: business.name || 'My Shop',
+                                sustainability: 85,
+                                story: `Product tracked for user: ${currentUserId}`,
+                                businessId: currentUserId
+                            };
+
+                            if (priceCache[product.id] && priceCache[product.id] !== product.priceValue) {
+                                showToast('💰 Price Updated!', `${product.name} changed to ${product.price}`);
+                            }
+                            priceCache[product.id] = product.priceValue;
+
+                            newProducts.push(product);
+                            productIndex++;
+                        });
+                    }
+
+                    productsData = newProducts;
+                    renderShop(productsData);
+                    
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('statusIndicator').classList.add('connected');
+                    
+                    if (newProducts.length > 0) {
+                        showToast('✅ Connected', `Loaded ${newProducts.length} items from your inventory`);
+                    }
+                }, (error) => {
+                    console.error('Firebase error:', error);
+                    showToast('❌ Connection Error', error.message);
+                    document.getElementById('loading').style.display = 'none';
+                });
+            });
         }
 
-        const userId = user.uid;
-        // 2. Point directly to THIS specific user's business data
-        const businessRef = ref(database, `Businesses/${userId}`);
-        
-        // 3. Listen for live updates on this user's data ONLY
-        onValue(businessRef, (snapshot) => {
-            const business = snapshot.val();
-            
-            if (!business) {
-                console.error('No business data available for this user');
-                showToast('⚠️ No Data', 'Your inventory folder is empty.');
-                document.getElementById('loading').style.display = 'none';
-                return;
-            }
-
-            const newProducts = [];
-            let productIndex = 0;
-
-            // 4. Process the Inventory items
-            if (business.inventory) {
-                const productKeys = Object.keys(business.inventory);
-                
-                productKeys.forEach(productKey => {
-                    const inventory = business.inventory[productKey];
-                    const priceData = business.prices?.[productKey];
-                    
-                    // Generate coordinates based on the count of items
-                    const coords = generateCoordinates(productIndex, productKeys.length);
-                    
-                    const product = {
-                        id: productKey,
-                        // Priority 1: Use 'name' field from database. Priority 2: Clean the ID string.
-                        name: inventory.name || productKey.replace(/[^a-zA-Z]/g, ' ').trim().toUpperCase(),
-                        icon: getProductIcon(inventory.name || productKey),
-                        // Drills down into your specific price structure
-                        price: `$${parseFloat(priceData?.numericValue || priceData?.sellPrice?.numericValue || 0).toFixed(2)}`,
-                        priceValue: parseFloat(priceData?.numericValue || 0),
-                        x: coords.x,
-                        y: coords.y,
-                        stock: parseInt(inventory?.quantity || inventory || 0),
-                        sales: Math.floor(Math.random() * 100), // Placeholder for Heatmap
-                        origin: business.name || 'My Shop',
-                        sustainability: 85,
-                        story: `Product tracked for user: ${userId}`,
-                        businessId: userId
-                    };
-
-                    // Price change notification logic
-                    if (priceCache[product.id] && priceCache[product.id] !== product.priceValue) {
-                        showToast('💰 Price Updated!', `${product.name} changed to ${product.price}`);
-                    }
-                    priceCache[product.id] = product.priceValue;
-
-                    newProducts.push(product);
-                    productIndex++;
-                });
-            }
-
-            // 5. Update the Global state and UI
-            productsData = newProducts;
-            renderShop(productsData);
-            
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('statusIndicator').classList.add('connected');
-            
-            if (newProducts.length > 0) {
-                showToast('✅ Connected', `Loaded ${newProducts.length} items from your inventory`);
-            }
-        }, (error) => {
-            console.error('Firebase error:', error);
-            showToast('❌ Connection Error', error.message);
-            document.getElementById('loading').style.display = 'none';
-        });
-    });
-}
-
-        // Open story card with animation
         window.openStoryCard = function(product) {
             const storyCard = document.getElementById('storyCard');
             const overlay = document.getElementById('overlay');
@@ -1142,23 +1239,17 @@ function listenToFirebase() {
             storyCard.classList.add('active');
         };
 
-        // Close story card
         window.closeStoryCard = function() {
             document.getElementById('storyCard').classList.remove('active');
             document.getElementById('overlay').classList.remove('active');
         };
 
-        // Walk to product - Camera tracking
         window.walkToProduct = function(productId, x, y) {
-            const world = document.getElementById('world');
-            
-            // Calculate optimal angle to face the product
             const centerX = 5;
             const centerY = 5;
             const angleZ = Math.atan2(y - centerY, x - centerX) * (180 / Math.PI);
             const targetZ = (angleZ + 225) % 360;
             
-            // Smoothly rotate to face the product
             document.documentElement.style.setProperty('--world-rotateZ', `${targetZ}deg`);
             document.getElementById('rotateZ').value = targetZ;
             document.getElementById('rotateZ-value').textContent = `${Math.round(targetZ)}°`;
@@ -1176,7 +1267,6 @@ function listenToFirebase() {
             closeStoryCard();
         };
 
-        // Pathfinding algorithm
         function tracePath(productA, productB) {
             const prodA = productsData.find(p => p.id === productA);
             const prodB = productsData.find(p => p.id === productB);
@@ -1201,7 +1291,6 @@ function listenToFirebase() {
             return path;
         }
 
-        // Show recipe route
         window.showRecipeRoute = function() {
             const productA = document.getElementById('productA').value;
             const productB = document.getElementById('productB').value;
@@ -1228,7 +1317,6 @@ function listenToFirebase() {
             showToast('🛤️ Route Created', `Path contains ${path.length} steps`);
         };
 
-        // Toggle heatmap
         window.toggleHeatmap = function() {
             heatmapEnabled = !heatmapEnabled;
             const toggle = document.getElementById('heatmapToggle');
@@ -1238,7 +1326,6 @@ function listenToFirebase() {
                 heatmapEnabled ? 'Showing sales data' : 'Heatmap disabled');
         };
 
-        // Rotation controls
         document.getElementById('rotateX').addEventListener('input', (e) => {
             const value = e.target.value;
             document.documentElement.style.setProperty('--world-rotateX', `${value}deg`);
@@ -1251,17 +1338,14 @@ function listenToFirebase() {
             document.getElementById('rotateZ-value').textContent = `${value}°`;
         });
 
-        // Search functionality
         document.getElementById('searchBar').addEventListener('input', (e) => {
             filterProducts(e.target.value);
         });
 
-        // Close on overlay click
         document.getElementById('overlay').addEventListener('click', () => {
             window.closeStoryCard();
         });
 
-        // Initialize
         initFloor();
         listenToFirebase();
     </script>
