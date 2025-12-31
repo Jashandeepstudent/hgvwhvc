@@ -867,7 +867,7 @@ HTML
         let grabbedProduct = null;
         let currentUserId = null;
         let currentSearchTerm = '';
-        let timeTravelMode = false;
+
         const productDescriptions = {
             'apple': 'Fresh, crisp organic apples sourced from local orchards. High in Vitamin C and fiber, perfect for a healthy snack.',
             'bread': 'Freshly baked artisan bread with a golden crust. Made daily with organic flour and natural ingredients.',
@@ -1290,78 +1290,7 @@ window.openStoryCard = async function(product) {
                 showToast('🔒 Exchange Mode Closed', 'Products locked in place');
             }
         };
-window.toggleTimeTravel = function() {
-        const btn = document.getElementById('timeTravelBtn');
-        
-        if (!timeTravelMode) {
-            // Enter Time Travel Mode
-            showToast('🧪 ScaleVest Analysis', 'Analyzing sales velocity... This is a visual and logical guess. We cannot assure these exact results.');
-            
-            // 3-second delay for "processing" feel
-            btn.disabled = true;
-            btn.textContent = "⌛ Calculating...";
-            
-            setTimeout(() => {
-                timeTravelMode = true;
-                btn.disabled = false;
-                btn.style.background = "var(--neon-red)";
-                btn.textContent = "🔙 Return to Present";
-                document.body.classList.add('time-travel-active');
-                renderTimeTravelView();
-            }, 3000);
-            
-        } else {
-            // Return to Present
-            timeTravelMode = false;
-            btn.style.background = "linear-gradient(135deg, #6200ff, var(--neon-primary))";
-            btn.textContent = "🕒 Time Travel (24h)";
-            document.body.classList.remove('time-travel-active');
-            renderShop(productsData); // Reset to original Firebase data
-            showToast('📅 Present Day', 'Returned to real-time inventory.');
-        }
-    };
 
-    function renderTimeTravelView() {
-        const container = document.getElementById('products-container');
-        container.innerHTML = '';
-        const cells = document.querySelectorAll('.grid-cell');
-
-        productsData.forEach((product) => {
-            // LOGIC: Predicted = Current Stock - Current Sales
-            const predictedStock = Math.max(0, product.stock - product.sales);
-            const isPredictedOut = predictedStock === 0;
-
-            const node = document.createElement('div');
-            node.className = `product-node ${isPredictedOut ? 'predicted-out' : ''}`;
-            
-            // Positioning (keeping same as your original)
-            const gridSize = 80;
-            const offset = 5 * gridSize;
-            node.style.left = `calc(50% + ${(product.x * gridSize) - offset}px)`;
-            node.style.top = `calc(50% + ${(product.y * gridSize) - offset}px)`;
-
-            node.innerHTML = `
-                <div class="product-card">
-                    ${isPredictedOut ? '<span class="predicted-badge">PREDICTED OUT</span>' : ''}
-                    <div class="product-icon">${product.icon}</div>
-                    <div class="product-name">${product.name}</div>
-                    <div class="product-price" style="color: #ccc; font-size: 10px;">Est. Stock: ${predictedStock}</div>
-                </div>
-            `;
-
-            container.appendChild(node);
-
-            // Update Heatmap for Time Travel
-            if (heatmapEnabled) {
-                const cellIndex = (product.y * 10) + product.x;
-                const cell = cells[cellIndex];
-                if (cell && isPredictedOut && product.sales > 0) {
-                    cell.style.background = 'radial-gradient(circle, #ffae00 0%, #ff4400 100%)';
-                    cell.style.boxShadow = '0 0 50px #ff4400';
-                }
-            }
-        });
-    }
 window.toggleHeatmap = function() {
     heatmapEnabled = !heatmapEnabled;
     const toggle = document.getElementById('heatmapToggle');
