@@ -1188,13 +1188,16 @@ window.openStoryCard = async function(product) {
     const storyCard = document.getElementById('storyCard');
     const overlay = document.getElementById('overlay');
     const content = document.getElementById('storyContent');
+    
+    // Use your absolute Vercel URL
+    const VERCEL_API_URL = 'https://ai-inventory-pro-sigma.vercel.app/api/gemini';
 
-    // 1. Show Loading State immediately
+    // 1. Show Loading State
     content.innerHTML = `
         <div style="text-align: center; padding: 40px;">
             <div class="loading-spinner"></div>
             <p style="margin-top: 20px; color: var(--neon-primary); font-family: monospace; letter-spacing: 2px; animation: pulse 1.5s infinite;">
-                AI ENGINE: ANALYZING ${product.name.toUpperCase()}...
+                ${timeTravelMode ? '🔮 PREDICTING FUTURE...' : '🧪 ANALYZING DATA...'}
             </p>
         </div>
     `;
@@ -1203,70 +1206,56 @@ window.openStoryCard = async function(product) {
     storyCard.classList.add('active');
 
     try {
-        // 2. Fetch from your Vercel Backend
-        const response = await fetch(`/api/gemini?productName=${encodeURIComponent(product.name)}`);
+        // 2. Fetch from Vercel using the full URL
+        const response = await fetch(`${VERCEL_API_URL}?productName=${encodeURIComponent(product.name)}&isTimeTravel=${timeTravelMode}`);
         
-        if (!response.ok) throw new Error('AI Server Offline');
+        if (!response.ok) throw new Error('Vercel Backend Offline');
         
         const aiData = await response.json();
 
-        // 3. Render full content with AI Data
+        // 3. Render Content (Including Time Travel Logic)
+        const predictedStock = Math.max(0, product.stock - product.sales);
+
         content.innerHTML = `
             <h2 style="text-shadow: 0 0 15px var(--neon-primary); font-size: 28px;">${product.icon} ${product.name}</h2>
             
-            <div class="story-section">
-                <h3>📖 AI Product Journey</h3>
+            <div class="story-section" style="border-left-color: ${timeTravelMode ? 'var(--neon-red)' : 'var(--neon-secondary)'}">
+                <h3>${timeTravelMode ? '🕒 Future Projection' : '📖 Product Journey'}</h3>
                 <p style="line-height: 1.6; font-style: italic; color: #eee; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
                     "${aiData.description || product.story}"
                 </p>
-                <p style="margin-top: 10px;"><strong>🌍 Verified Origin:</strong> <span style="color: var(--ice-blue);">${aiData.origin || product.origin}</span></p>
-            </div>
-
-            <div class="story-section">
-                <h3>🌱 Sustainability Score</h3>
-                <div class="sustainability-score" style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-                    <span style="font-size: 20px; font-weight: bold; color: var(--neon-primary);">${aiData.score || product.sustainability}/100</span>
-                    <div class="score-bar" style="height: 10px; background: #333; border-radius: 5px; margin-top: 10px; overflow: hidden;">
-                        <div class="score-fill" style="width: ${aiData.score || product.sustainability}%; height: 100%; transition: width 1s ease-out;
-                             background: ${(aiData.score || product.sustainability) > 80 ? 'var(--neon-accent)' : 'var(--neon-secondary)'};
-                             box-shadow: 0 0 10px ${(aiData.score || product.sustainability) > 80 ? 'var(--neon-accent)' : 'var(--neon-secondary)'};">
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <div class="story-section" style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,243,255,0.05); padding: 15px; border-radius: 12px;">
                 <div>
-                    <h3 style="margin: 0; font-size: 14px; opacity: 0.7;">📦 Stock Status</h3>
-                    <p style="font-size: 20px; margin: 5px 0 0 0;">${product.stock} units ${product.stock < 5 ? '⚠️' : '✅'}</p>
+                    <h3 style="margin: 0; font-size: 14px; opacity: 0.7;">${timeTravelMode ? '📉 Predicted Stock' : '📦 Current Stock'}</h3>
+                    <p style="font-size: 20px; margin: 5px 0 0 0;">
+                        ${timeTravelMode ? predictedStock : product.stock} units 
+                        ${(timeTravelMode ? predictedStock : product.stock) < 5 ? '⚠️' : '✅'}
+                    </p>
                 </div>
                 <div style="text-align: right;">
-                    <h3 style="margin: 0; font-size: 14px; opacity: 0.7;">💰 Current Price</h3>
+                    <h3 style="margin: 0; font-size: 14px; opacity: 0.7;">💰 Price</h3>
                     <p style="font-size: 32px; color: var(--neon-accent); font-weight: bold; margin: 5px 0 0 0;">${product.price}</p>
                 </div>
             </div>
         `;
     } catch (error) {
-        console.error("Gemini AI Error:", error);
-        // Fallback to local data if the AI fails
+        console.error("Vercel AI Error:", error);
+        // Fallback to local logic if Vercel is unreachable
         content.innerHTML = `
             <div style="background: rgba(255,0,0,0.1); border: 1px solid var(--neon-red); padding: 10px; border-radius: 8px; margin-bottom: 15px; text-align: center;">
-                <p style="color: var(--neon-red); margin: 0; font-size: 13px;">⚠️ AI ENGINE OFFLINE - SHOWING CACHED DATA</p>
+                <p style="color: var(--neon-red); margin: 0; font-size: 13px;">⚠️ CONNECTION ERROR: SHOWING LOCAL SIMULATION</p>
             </div>
             <h2>${product.icon} ${product.name}</h2>
             <div class="story-section">
-                <h3>📖 Product Journey</h3>
+                <h3>${timeTravelMode ? '🕒 Predicted Inventory' : '📖 Cached Story'}</h3>
                 <p>${product.story}</p>
-                <p style="margin-top: 10px;"><strong>Sourced from:</strong> ${product.origin}</p>
-            </div>
-            <div class="story-section">
-                <h3>💰 Price: <span style="color: var(--neon-accent)">${product.price}</span></h3>
-                <h3>📦 Stock: ${product.stock} units</h3>
+                <p style="margin-top:10px;">Stock: ${timeTravelMode ? Math.max(0, product.stock - product.sales) : product.stock}</p>
             </div>
         `;
     }
-};
-        window.closeStoryCard = function() {
+};        window.closeStoryCard = function() {
             document.getElementById('storyCard').classList.remove('active');
             document.getElementById('overlay').classList.remove('active');
         };
@@ -1350,7 +1339,12 @@ window.toggleTimeTravel = function() {
             `;
 
             container.appendChild(node);
-
+// Add this inside the renderTimeTravelView loop, after node.innerHTML
+node.addEventListener('click', () => {
+    if (!exchangeModeActive) {
+        window.openStoryCard(product);
+    }
+});
             // Update Heatmap for Time Travel
             if (heatmapEnabled) {
                 const cellIndex = (product.y * 10) + product.x;
