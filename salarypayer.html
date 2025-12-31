@@ -1061,10 +1061,11 @@
                             const inventory = business.inventory[productKey];
                             const priceData = business.prices?.[productKey];
                             
-                            const storedX = inventory.x;
+const storedX = inventory.x;
                             const storedY = inventory.y;
+                            // Ensure we use the stored tile index (0-9)
                             const coords = (storedX !== undefined && storedY !== undefined) 
-                                ? { x: storedX, y: storedY }
+                                ? { x: parseInt(storedX), y: parseInt(storedY) }
                                 : generateCoordinates(productIndex, productKeys.length);
                             
                             const product = {
