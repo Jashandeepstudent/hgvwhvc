@@ -102,14 +102,19 @@
             50% { opacity: 0.9; }
         }
 
-        .product-node {
+.product-node {
             position: absolute;
             transform-style: preserve-3d;
             cursor: pointer;
             transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
             z-index: 10;
+            /* Ensure the node is the size of one tile and centered on its coordinate */
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-
         .product-node.grabbed {
             z-index: 100;
             transform: translateZ(100px) scale(1.2);
@@ -938,9 +943,11 @@
                     node.classList.add('popular');
                 }
 
+// This centers the products on the 800px floor by offsetting from the center (50%)
                 const gridSize = 80;
-                node.style.left = `${product.x * gridSize}px`;
-                node.style.top = `${product.y * gridSize}px`;
+                const offset = 5 * gridSize; // Centers the 10x10 grid (800px / 2)
+                node.style.left = `calc(50% + ${(product.x * gridSize) - offset}px)`;
+                node.style.top = `calc(50% + ${(product.y * gridSize) - offset}px)`;
 
                 node.innerHTML = `
                     <div class="product-card">
