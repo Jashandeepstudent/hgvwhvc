@@ -204,7 +204,15 @@
             z-index: -1;
             filter: blur(10px);
         }
-
+.loading-spinner {
+    width: 40px; height: 40px;
+    border: 3px solid rgba(0, 243, 255, 0.1);
+    border-top: 3px solid var(--neon-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .product-node:hover .product-card {
             transform: rotateZ(-45deg) rotateX(-60deg) translateZ(40px) scale(1.15);
             border-color: var(--neon-secondary);
@@ -1129,45 +1137,85 @@ const storedX = inventory.x;
             });
         }
 
-        window.openStoryCard = function(product) {
-            const storyCard = document.getElementById('storyCard');
-            const overlay = document.getElementById('overlay');
-            const content = document.getElementById('storyContent');
+window.openStoryCard = async function(product) {
+    const storyCard = document.getElementById('storyCard');
+    const overlay = document.getElementById('overlay');
+    const content = document.getElementById('storyContent');
 
-            content.innerHTML = `
-                <h2>${product.icon} ${product.name}</h2>
-                <div class="story-section">
-                    <h3>📖 Product Journey</h3>
-                    <p>${product.story}</p>
-                    <p style="margin-top: 10px;"><strong>Sourced from:</strong> ${product.origin}</p>
-                </div>
-                <div class="story-section">
-                    <h3>🌱 Sustainability Score</h3>
-                    <div class="sustainability-score">
-                        <span style="font-size: 20px; font-weight: bold;">${product.sustainability}/100</span>
-                        <div class="score-bar">
-                            <div class="score-fill" style="width: ${product.sustainability}%"></div>
+    // 1. Show Loading State immediately with a futuristic spinner
+    content.innerHTML = `
+        <div style="text-align: center; padding: 40px;">
+            <div class="loading-spinner"></div>
+            <p style="margin-top: 20px; color: var(--neon-primary); font-family: monospace; letter-spacing: 2px;">
+                AI ENGINE: ANALYZING ${product.name.toUpperCase()}...
+            </p>
+        </div>
+    `;
+    
+    overlay.classList.add('active');
+    storyCard.classList.add('active');
+
+    try {
+        // 2. Fetch real-world data from your secure Vercel Gemini API
+        // This ensures your GEMINI_KEY remains hidden on the backend
+        const response = await fetch(`/api/gemini?productName=${encodeURIComponent(product.name)}`);
+        const aiData = await response.json();
+
+        // 3. Render the full combined content with AI insights
+        content.innerHTML = `
+            <h2 style="text-shadow: 0 0 15px var(--neon-primary);">${product.icon} ${product.name}</h2>
+            
+            <div class="story-section">
+                <h3>📖 AI Product Journey</h3>
+                <p style="line-height: 1.6; font-style: italic; color: #eee;">"${aiData.description || product.story}"</p>
+                <p style="margin-top: 10px;"><strong>🌍 Verified Origin:</strong> <span style="color: var(--ice-blue);">${aiData.origin || product.origin}</span></p>
+            </div>
+
+            <div class="story-section">
+                <h3>🌱 Sustainability Score</h3>
+                <div class="sustainability-score">
+                    <span style="font-size: 20px; font-weight: bold;">${aiData.score || product.sustainability}/100</span>
+                    <div class="score-bar">
+                        <div class="score-fill" style="width: ${aiData.score || product.sustainability}%; 
+                             background: ${(aiData.score || product.sustainability) > 80 ? 'var(--neon-accent)' : 'var(--neon-secondary)'}">
                         </div>
                     </div>
-                    <p style="margin-top: 10px; font-size: 13px; color: #aaa;">
-                        ${product.sustainability > 85 ? 'Excellent environmental impact ♻️' : 
-                          product.sustainability > 70 ? 'Good sustainability practices 🌿' : 
-                          'Room for improvement 🌍'}
-                    </p>
                 </div>
-                <div class="story-section">
+                <p style="margin-top: 10px; font-size: 13px; color: #aaa;">
+                    ${(aiData.score || product.sustainability) > 85 ? 'Excellent environmental impact ♻️' : 
+                      (aiData.score || product.sustainability) > 70 ? 'Good sustainability practices 🌿' : 
+                      'Standard industry footprint 🌍'}
+                </p>
+            </div>
+
+            <div class="story-section" style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
                     <h3>📦 Stock Status</h3>
-                    <p style="font-size: 18px;">${product.stock} units available ${product.stock < 5 ? '⚠️ Running low!' : '✅'}</p>
+                    <p style="font-size: 18px;">${product.stock} units available ${product.stock < 5 ? '⚠️' : '✅'}</p>
                 </div>
-                <div class="story-section">
+                <div style="text-align: right;">
                     <h3>💰 Current Price</h3>
                     <p style="font-size: 28px; color: var(--neon-accent); font-weight: bold;">${product.price}</p>
                 </div>
-            `;
-
-            overlay.classList.add('active');
-            storyCard.classList.add('active');
-        };
+            </div>
+        `;
+    } catch (error) {
+        console.error("Gemini AI Error:", error);
+        // Fallback to local data if the AI fails or API key is missing
+        content.innerHTML = `
+            <p style="color: var(--neon-red); text-align: center; margin-bottom: 10px;">⚠️ AI Offline - Showing Cached Data</p>
+            <h2>${product.icon} ${product.name}</h2>
+            <div class="story-section">
+                <h3>📖 Product Journey</h3>
+                <p>${product.story}</p>
+                <p style="margin-top: 10px;"><strong>Sourced from:</strong> ${product.origin}</p>
+            </div>
+            <div class="story-section">
+                <h3>💰 Price: ${product.price}</h3>
+            </div>
+        `;
+    }
+};
 
         window.closeStoryCard = function() {
             document.getElementById('storyCard').classList.remove('active');
@@ -1194,14 +1242,23 @@ const storedX = inventory.x;
             }
         };
 
-        window.toggleHeatmap = function() {
-            heatmapEnabled = !heatmapEnabled;
-            const toggle = document.getElementById('heatmapToggle');
-            toggle.classList.toggle('active');
-            updateHeatmap();
-            showToast(heatmapEnabled ? '🔥 Heatmap ON' : '❄️ Heatmap OFF', 
-                heatmapEnabled ? 'Showing sales performance data' : 'Heatmap disabled');
-        };
+window.toggleHeatmap = function() {
+    heatmapEnabled = !heatmapEnabled;
+    const toggle = document.getElementById('heatmapToggle');
+    toggle.classList.toggle('active');
+    updateHeatmap();
+    
+    if (heatmapEnabled) {
+        showToast('🔥 Heatmap Active', 'Calculating sales performance...');
+        
+        // This is the 3-second explanatory popup
+        setTimeout(() => {
+            showToast('💡 Color Guide', '🟠 ORANGE = High Sales | 🔵 BLUE = Low Sales | ⚫ GRAY = No Data');
+        }, 1000);
+    } else {
+        showToast('❄️ Heatmap Off', 'Returning to standard view');
+    }
+};
 
         document.getElementById('rotateX').addEventListener('input', (e) => {
             const value = e.target.value;
