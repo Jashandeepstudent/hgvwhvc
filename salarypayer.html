@@ -1188,27 +1188,32 @@ onValue(businessRef, (snapshot) => {
     const business = snapshot.val();
     let newProducts = [];
     
-    if (business && business.inventory) {
-        Object.keys(business.inventory).forEach((key, index) => {
-            const inv = business.inventory[key];
+    // Get the inventory and the price list from your data
+    const inventory = business?.inventory || {};
+    const priceList = business?.prices || {};
+
+    if (inventory) {
+        Object.keys(inventory).forEach((key, index) => {
+            const inv = inventory[key];
             
-            // 1. Correctly format the price from your database
-            const formattedPrice = inv.price ? `$${parseFloat(inv.price).toFixed(2)}` : '$0.00';
+            // FIX: Look up the price using the product key in the prices node
+            const priceData = priceList[key];
+            const priceValue = priceData?.sellPrice?.numericValue || 0;
+            const formattedPrice = `$${parseFloat(priceValue).toFixed(2)}`;
             
-            // 2. Build the product object using the 'inv' reference
             newProducts.push({
                 id: key,
                 name: inv.name || key,
                 icon: iconMap[key.toLowerCase()] || '📦',
                 price: formattedPrice, 
                 stock: parseInt(inv.quantity || 0),
-                sales: parseInt(inv.sold || 0), 
+                sales: parseInt(inv.sold || 0),
                 x: parseInt(inv.x !== undefined ? inv.x : index % 10),
                 y: parseInt(inv.y !== undefined ? inv.y : Math.floor(index / 10) % 10),
                 floor: Math.floor(index / 100) 
             });
-                        });
-                    } else {
+        });
+    }else {
                         // Demo data
                         newProducts = [
                             {id: 'p1', name: 'Organic Apple', price: '$2.50', stock: 50, sales: 60, x: 2, y: 2, icon: '🍎', floor: 0},
