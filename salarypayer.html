@@ -1116,68 +1116,84 @@
                 const businessRef = ref(database, `Businesses/${currentUserId}`);
                 
                 onValue(businessRef, (snapshot) => {
-                    const business = snapshot.val();
-                    
-                    if (!business) {
-                        console.error('No business data available');
-                        showToast('⚠️ No Data', 'Your inventory folder is empty.');
-                        document.getElementById('loading').style.display = 'none';
-                        return;
-                    }
+    const business = snapshot.val();
+    
+    if (!business) {
+        console.error('No business data available');
+        showToast('⚠️ No Data', 'Your inventory folder is empty.');
+        document.getElementById('loading').style.display = 'none';
+        return;
+    }
 
-                    const newProducts = [];
-                    let productIndex = 0;
-
-                    if (business.inventory) {
-                        const productKeys = Object.keys(business.inventory);
-                        
-                        productKeys.forEach(productKey => {
-                            const inventory = business.inventory[productKey];
-                            const priceData = business.prices?.[productKey];
-                            
-                            const storedX = inventory.x;
-                            const storedY = inventory.y;
-                            const coords = (storedX !== undefined && storedY !== undefined) 
-                                ? { x: parseInt(storedX), y: parseInt(storedY) }
-                                : generateCoordinates(productIndex, productKeys.length);
-                            
-                            const product = {
-                                id: productKey,
-                                name: inventory.name || productKey.replace(/[^a-zA-Z]/g, ' ').trim().toUpperCase(),
-                                icon: getProductIcon(inventory.name || productKey),
-                                price: `${parseFloat(priceData?.numericValue || priceData?.sellPrice?.numericValue || 0).toFixed(2)}`,
-                                priceValue: parseFloat(priceData?.numericValue || 0),
-                                x: coords.x,
-                                y: coords.y,
-                                stock: parseInt(inventory?.quantity || inventory || 0),
-                                sales: parseInt(inventory.sold || 0),
-                                origin: business.name || 'My Shop',
-                                sustainability: 75 + Math.floor(Math.random() * 20),
-                                story: getProductDescription(inventory.name || productKey),
-                                businessId: currentUserId
-                            };
-
-                            newProducts.push(product);
-                            productIndex++;
-                        });
-                    }
-
-                    productsData = newProducts;
-                    renderShop(productsData);
-                    
-                    document.getElementById('loading').style.display = 'none';
-                    document.getElementById('statusIndicator').classList.add('connected');
-                    
-                    if (newProducts.length > 0) {
-                        showToast('✅ Connected', `Loaded ${newProducts.length} items from your inventory`);
-                    }
-                }, (error) => {
-                    console.error('Firebase error:', error);
-                    showToast('❌ Connection Error', error.message);
-                    document.getElementById('loading').style.display = 'none';
-                });
-            });
+    // --- STEP 1: CALCULATE ACTUAL SALES FROM TRANSACTIONS ---
+    const salesTotals = {};
+    
+    // We look at the root of the business object for transaction nodes
+    // (identified by having a 'productId' and 'quantity')
+    Object.keys(business).forEach(key => {
+        const entry = business[key];
+        if (entry && entry.productId && entry.quantity) {
+            const pId = entry.productId;
+            // Sum up the quantities for each product ID found in transactions
+            salesTotals[pId] = (salesTotals[pId] || 0) + parseInt(entry.quantity);
         }
+    });
+
+    const newProducts = [];
+    let productIndex = 0;
+
+    if (business.inventory) {
+        const productKeys = Object.keys(business.inventory);
+        
+        productKeys.forEach(productKey => {
+            const inventory = business.inventory[productKey];
+            const priceData = business.prices?.[productKey];
+            
+            const storedX = inventory.x;
+            const storedY = inventory.y;
+            const coords = (storedX !== undefined && storedY !== undefined) 
+                ? { x: parseInt(storedX), y: parseInt(storedY) }
+                : generateCoordinates(productIndex, productKeys.length);
+            
+            // --- STEP 2: APPLY THE DYNAMIC SALES DATA ---
+            const actualSales = salesTotals[productKey] || 0;
+
+            const product = {
+                id: productKey,
+                name: inventory.name || productKey.replace(/[^a-zA-Z]/g, ' ').trim().toUpperCase(),
+                icon: getProductIcon(inventory.name || productKey),
+                price: `${parseFloat(priceData?.numericValue || priceData?.sellPrice?.numericValue || 0).toFixed(2)}`,
+                priceValue: parseFloat(priceData?.numericValue || 0),
+                x: coords.x,
+                y: coords.y,
+                stock: parseInt(inventory?.quantity || inventory || 0),
+                // Instead of inventory.sold, we use our calculated total
+                sales: actualSales, 
+                origin: business.name || 'My Shop',
+                sustainability: 75 + Math.floor(Math.random() * 20),
+                story: getProductDescription(inventory.name || productKey),
+                businessId: currentUserId
+            };
+
+            newProducts.push(product);
+            productIndex++;
+        });
+    }
+
+    productsData = newProducts;
+    renderShop(productsData);
+    
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('statusIndicator').classList.add('connected');
+    
+    if (newProducts.length > 0) {
+        showToast('✅ Connected', `Velocity calculated: Loaded ${newProducts.length} items`);
+    }
+}, (error) => {
+    console.error('Firebase error:', error);
+    showToast('❌ Connection Error', error.message);
+    document.getElementById('loading').style.display = 'none';
+});
 
         window.openStoryCard = async function(product) {
             const storyCard = document.getElementById('storyCard');
