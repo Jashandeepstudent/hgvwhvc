@@ -1244,27 +1244,42 @@ async function saveAllPrices() {
     const sellInputs = document.querySelectorAll('.bulk-sell');
     const updates = {};
     const uid = auth.currentUser.uid;
+    const timestamp = Date.now();
 
     costInputs.forEach((input, index) => {
         const productId = input.getAttribute('data-id');
-        const costVal = input.value;
-        const sellVal = sellInputs[index].value;
+        const costVal = input.value.trim();
+        const sellVal = sellInputs[index].value.trim();
 
-        // Only update if the user actually typed a number
         if (costVal !== "" && sellVal !== "") {
-            updates[`Businesses/${uid}/prices/${productId}/costPrice`] = parseFloat(costVal);
-            updates[`Businesses/${uid}/prices/${productId}/sellPrice`] = parseFloat(sellVal);
-            updates[`Businesses/${uid}/prices/${productId}/updatedAt`] = firebase.database.ServerValue.TIMESTAMP;
+            const nCost = parseFloat(costVal);
+            const nSell = parseFloat(sellVal);
+
+            // Match your Firebase object structure exactly
+            updates[`Businesses/${uid}/prices/${productId}`] = {
+                costPrice: {
+                    displayString: costVal,
+                    numericValue: nCost
+                },
+                sellPrice: {
+                    displayString: sellVal,
+                    numericValue: nSell
+                },
+                updatedAt: timestamp
+            };
         }
     });
 
-    // Send everything to Firebase in one single update (Bulk Update)
+    if (Object.keys(updates).length === 0) return alert("No changes to save!");
+
     try {
         await db.ref().update(updates);
-        showSuccess("✅ All Prices Updated!");
+        showSuccess("🚀 All prices synchronized!");
         closeTableUpload();
+        // Optional: reload data to refresh the main dashboard UI
+        if(typeof fetchInventoryAndPrices === "function") fetchInventoryAndPrices(); 
     } catch (error) {
-        alert("Error saving: " + error.message);
+        alert("Update failed: " + error.message);
     }
 }
 // MODAL CONTROLS
