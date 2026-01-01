@@ -128,21 +128,16 @@
 
         .product-node.predicted-out .product-card {
             border: 3px solid var(--neon-red) !important;
-            box-shadow: 
-                0 0 30px var(--neon-red),
-                0 0 60px rgba(255, 0, 64, 0.5),
-                inset 0 0 20px rgba(255, 0, 64, 0.3) !important;
-            animation: criticalPulse 1.5s infinite !important;
+            box-shadow: 0 0 50px var(--neon-red), 0 0 100px rgba(255, 0, 64, 0.5) !important;
+            animation: criticalPulse 1.5s infinite;
         }
 
         @keyframes criticalPulse {
             0%, 100% { 
-                filter: brightness(1);
-                transform: rotateZ(-45deg) rotateX(-60deg) scale(1);
+                box-shadow: 0 0 50px var(--neon-red), 0 0 100px rgba(255, 0, 64, 0.5);
             }
             50% { 
-                filter: brightness(1.3);
-                transform: rotateZ(-45deg) rotateX(-60deg) scale(1.05);
+                box-shadow: 0 0 80px var(--neon-red), 0 0 150px rgba(255, 0, 64, 0.8);
             }
         }
 
@@ -225,9 +220,9 @@
             margin: 0 auto;
         }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        @keyframes spin { 
+            0% { transform: rotate(0deg); } 
+            100% { transform: rotate(360deg); } 
         }
 
         .product-node:hover .product-card {
@@ -330,9 +325,7 @@
             font-size: 13px;
         }
 
-        .stock-item:last-child {
-            border: none;
-        }
+        .stock-item:last-child { border: none; }
 
         .stock-count {
             color: #ff4444;
@@ -389,6 +382,20 @@
             line-height: 1.8;
             color: #ddd;
             font-size: 15px;
+        }
+
+        .velocity-alert {
+            background: rgba(255, 0, 64, 0.2);
+            border: 2px solid var(--neon-red);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            animation: alertPulse 2s infinite;
+        }
+
+        @keyframes alertPulse {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
         }
 
         .sustainability-score {
@@ -923,41 +930,45 @@
 
         function calculatePredictedStock(currentStock, dailySales) {
             const stock = parseInt(currentStock) || 0;
-            const sales = parseInt(dailySales) || 0;
+            const velocity = parseInt(dailySales) || 0;
             
-            // WTH Clause: If sales >= 90% of stock, predict immediate depletion
-            if (sales >= stock * 0.9 && stock > 0) {
+            // WTH Clause: If velocity is >= 90% of stock, predict OUT
+            if (velocity >= (stock * 0.9)) {
                 return 0;
             }
             
-            // Normal burn rate calculation
-            return Math.max(0, stock - sales);
+            // Standard burn rate calculation
+            return Math.max(0, stock - velocity);
         }
 
         function applyTimeTravelPredictions() {
-            const nodes = document.querySelectorAll('.product-node');
-            
-            nodes.forEach(node => {
-                const productId = node.dataset.productId;
-                const product = productsData.find(p => p.id === productId);
-                
-                if (!product) return;
-                
-                const predictedStock = calculatePredictedStock(product.stock, product.sales);
-                
-                // Apply visual class if predicted to be out of stock
-                if (timeTravelMode && predictedStock === 0) {
-                    node.classList.add('predicted-out');
-                } else {
+            if (!timeTravelMode) {
+                document.querySelectorAll('.product-node').forEach(node => {
                     node.classList.remove('predicted-out');
+                });
+                return;
+            }
+
+            productsData.forEach(product => {
+                const predictedStock = calculatePredictedStock(product.stock, product.sales);
+                const node = document.querySelector(`[data-product-id="${product.id}"]`);
+                
+                if (node) {
+                    if (predictedStock === 0) {
+                        node.classList.add('predicted-out');
+                    } else {
+                        node.classList.remove('predicted-out');
+                    }
                 }
+                
+                // Store predicted stock for story card
+                product.predictedStock = predictedStock;
             });
         }
 
         function updateHeatmap() {
             const cells = document.querySelectorAll('.grid-cell');
             
-            // Reset all cells first
             cells.forEach(cell => {
                 cell.classList.remove('heatmap-hot', 'heatmap-cold');
             });
@@ -1173,10 +1184,6 @@
             const overlay = document.getElementById('overlay');
             const content = document.getElementById('storyContent');
 
-            // Calculate predicted stock using burn rate logic
-            const predictedStock = calculatePredictedStock(product.stock, product.sales);
-            const isAtRisk = predictedStock === 0;
-
             content.innerHTML = `
                 <div style="text-align: center; padding: 40px;">
                     <div class="loading-spinner"></div>
@@ -1190,56 +1197,30 @@
             storyCard.classList.add('active');
 
             try {
-                const response = await fetch(`https://ai-inventory-pro-sigma.vercel.app/api/gemini?productName=${encodeURIComponent(product.name)}&currentStock=${product.stock}&dailySales=${product.sales}`);
+                const response = await fetch(`https://ai-inventory-pro-sigma.vercel.app/api/gemini?productName=${encodeURIComponent(product.name)}&stock=${product.stock}&sales=${product.sales}`);
                 
                 if (!response.ok) throw new Error('AI Server Offline');
                 
                 const aiData = await response.json();
+                const predictedStock = calculatePredictedStock(product.stock, product.sales);
 
                 content.innerHTML = `
                     <h2 style="text-shadow: 0 0 15px var(--neon-primary); font-size: 28px;">${product.icon} ${product.name}</h2>
                     
-                    ${isAtRisk ? `
-                    <div style="background: rgba(255,0,64,0.15); border: 2px solid var(--neon-red); padding: 12px; border-radius: 10px; margin-bottom: 20px; animation: criticalPulse 2s infinite;">
-                        <p style="color: var(--neon-red); margin: 0; font-size: 14px; font-weight: bold; text-align: center;">
-                            ⚠️ VELOCITY ALERT: PREDICTED OUT OF STOCK IN 24 HOURS
-                        </p>
-                    </div>
-                    ` : ''}
-                    
                     <div class="story-section">
-                        <h3>🤖 AI Analysis</h3>
+                        <h3>🤖 AI Product Analysis</h3>
                         <p style="line-height: 1.6; font-style: italic; color: #eee; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
                             "${aiData.description || product.story}"
                         </p>
                         <p style="margin-top: 10px;"><strong>🌍 Verified Origin:</strong> <span style="color: var(--ice-blue);">${aiData.origin || product.origin}</span></p>
-                        ${aiData.prediction ? `
-                        <div style="margin-top: 15px; padding: 10px; background: rgba(0,243,255,0.1); border-radius: 8px; border-left: 3px solid var(--neon-primary);">
-                            <strong style="color: var(--neon-primary);">🔮 AI Prediction:</strong>
-                            <p style="margin-top: 5px; color: #ddd;">${aiData.prediction}</p>
-                        </div>
-                        ` : ''}
                     </div>
 
-                    <div class="story-section">
-                        <h3>📊 Stock Burn Analysis</h3>
-                        <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; text-align: center;">
-                                <div>
-                                    <p style="font-size: 11px; opacity: 0.7; margin-bottom: 5px;">CURRENT</p>
-                                    <p style="font-size: 20px; font-weight: bold; color: var(--neon-primary);">${product.stock}</p>
-                                </div>
-                                <div>
-                                    <p style="font-size: 11px; opacity: 0.7; margin-bottom: 5px;">VELOCITY</p>
-                                    <p style="font-size: 20px; font-weight: bold; color: var(--neon-secondary);">${product.sales}/day</p>
-                                </div>
-                                <div>
-                                    <p style="font-size: 11px; opacity: 0.7; margin-bottom: 5px;">PREDICTED</p>
-                                    <p style="font-size: 20px; font-weight: bold; color: ${isAtRisk ? 'var(--neon-red)' : 'var(--neon-accent)'};">${predictedStock}</p>
-                                </div>
-                            </div>
-                        </div>
+                    ${aiData.prediction ? `
+                    <div class="story-section" style="background: rgba(0, 243, 255, 0.1); border-left-color: var(--neon-primary);">
+                        <h3>🔮 AI Prediction</h3>
+                        <p style="color: #fff;">${aiData.prediction}</p>
                     </div>
+                    ` : ''}
 
                     <div class="story-section">
                         <h3>🌱 Sustainability Score</h3>
@@ -1254,67 +1235,66 @@
                         </div>
                     </div>
 
+                    ${predictedStock === 0 ? `
+                    <div class="velocity-alert">
+                        <h3 style="color: var(--neon-red); margin-bottom: 10px;">⚠️ VELOCITY ALERT</h3>
+                        <p style="color: #fff; font-weight: bold;">This item is predicted to sell out within 24 hours based on current burn rate!</p>
+                        <p style="margin-top: 10px; font-size: 14px; color: #ddd;">
+                            <strong>Current Stock:</strong> ${product.stock} units<br>
+                            <strong>Daily Velocity:</strong> ${product.sales} units/day<br>
+                            <strong>Predicted Stock:</strong> <span style="color: var(--neon-red); font-weight: bold;">0 units</span>
+                        </p>
+                    </div>
+                    ` : ''}
+
                     <div class="story-section" style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,243,255,0.05); padding: 15px; border-radius: 12px;">
                         <div>
-                            <h3 style="margin: 0; font-size: 14px; opacity: 0.7;">📦 Stock Status</h3>
+                            <h3 style="margin: 0; font-size: 14px; opacity: 0.7;">📦 Current Stock</h3>
                             <p style="font-size: 20px; margin: 5px 0 0 0;">${product.stock} units ${product.stock < 5 ? '⚠️' : '✅'}</p>
+                            ${timeTravelMode ? `<p style="font-size: 12px; color: var(--neon-accent); margin-top: 5px;">🔮 Predicted: ${predictedStock} units</p>` : ''}
                         </div>
                         <div style="text-align: right;">
-                            <h3 style="margin: 0; font-size: 14px; opacity: 0.7;">💰 Current Price</h3>
+                            <h3 style="margin: 0; font-size: 14px; opacity: 0.7;">💰 Price</h3>
                             <p style="font-size: 32px; color: var(--neon-accent); font-weight: bold; margin: 5px 0 0 0;">${product.price}</p>
+                            <p style="font-size: 12px; color: #888; margin-top: 5px;">🔥 ${product.sales} sold/day</p>
                         </div>
                     </div>
                 `;
             } catch (error) {
                 console.error("Gemini AI Error:", error);
+                const predictedStock = calculatePredictedStock(product.stock, product.sales);
+                const isVelocityAlert = predictedStock === 0;
                 
                 content.innerHTML = `
                     <div style="background: rgba(255,0,0,0.1); border: 1px solid var(--neon-red); padding: 10px; border-radius: 8px; margin-bottom: 15px; text-align: center;">
                         <p style="color: var(--neon-red); margin: 0; font-size: 13px;">⚠️ AI ENGINE OFFLINE - SHOWING CACHED DATA</p>
                     </div>
-                    
                     <h2>${product.icon} ${product.name}</h2>
-                    
-                    ${isAtRisk ? `
-                    <div style="background: rgba(255,0,64,0.15); border: 2px solid var(--neon-red); padding: 12px; border-radius: 10px; margin-bottom: 20px; animation: criticalPulse 2s infinite;">
-                        <p style="color: var(--neon-red); margin: 0; font-size: 14px; font-weight: bold; text-align: center;">
-                            ⚠️ VELOCITY ALERT: PREDICTED OUT OF STOCK IN 24 HOURS
-                        </p>
-                    </div>
-                    ` : ''}
                     
                     <div class="story-section">
                         <h3>📖 Product Journey</h3>
                         <p>${product.story}</p>
                         <p style="margin-top: 10px;"><strong>Sourced from:</strong> ${product.origin}</p>
                     </div>
-                    
-                    <div class="story-section">
-                        <h3>📊 Stock Burn Analysis</h3>
-                        <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; text-align: center;">
-                                <div>
-                                    <p style="font-size: 11px; opacity: 0.7; margin-bottom: 5px;">CURRENT</p>
-                                    <p style="font-size: 20px; font-weight: bold; color: var(--neon-primary);">${product.stock}</p>
-                                </div>
-                                <div>
-                                    <p style="font-size: 11px; opacity: 0.7; margin-bottom: 5px;">VELOCITY</p>
-                                    <p style="font-size: 20px; font-weight: bold; color: var(--neon-secondary);">${product.sales}/day</p>
-                                </div>
-                                <div>
-                                    <p style="font-size: 11px; opacity: 0.7; margin-bottom: 5px;">PREDICTED</p>
-                                    <p style="font-size: 20px; font-weight: bold; color: ${isAtRisk ? 'var(--neon-red)' : 'var(--neon-accent)'};">${predictedStock}</p>
-                                </div>
-                            </div>
-                            <p style="margin-top: 15px; font-size: 12px; color: #aaa; text-align: center;">
-                                Formula: Predicted = max(0, Current - Daily Velocity)
-                            </p>
-                        </div>
+
+                    ${isVelocityAlert ? `
+                    <div class="velocity-alert">
+                        <h3 style="color: var(--neon-red); margin-bottom: 10px;">⚠️ VELOCITY ALERT</h3>
+                        <p style="color: #fff; font-weight: bold;">Critical inventory depletion detected!</p>
+                        <p style="margin-top: 10px; font-size: 14px; color: #ddd;">
+                            <strong>Current Stock:</strong> ${product.stock} units<br>
+                            <strong>Daily Velocity:</strong> ${product.sales} units/day<br>
+                            <strong>Predicted Stock (24h):</strong> <span style="color: var(--neon-red); font-weight: bold;">${predictedStock} units</span>
+                        </p>
                     </div>
-                    
+                    ` : ''}
+
                     <div class="story-section">
-                        <h3>💰 Price: <span style="color: var(--neon-accent)">${product.price}</span></h3>
-                        <h3>📦 Stock: ${product.stock} units</h3>
+                        <h3>📊 Inventory Stats</h3>
+                        <p><strong>💰 Price:</strong> <span style="color: var(--neon-accent)">${product.price}</span></p>
+                        <p><strong>📦 Current Stock:</strong> ${product.stock} units</p>
+                        <p><strong>🔥 Sales Velocity:</strong> ${product.sales} units/day</p>
+                        ${timeTravelMode ? `<p><strong>🔮 Predicted Stock:</strong> <span style="color: ${predictedStock === 0 ? 'var(--neon-red)' : 'var(--neon-accent)'};">${predictedStock} units</span></p>` : ''}
                     </div>
                 `;
             }
@@ -1352,12 +1332,23 @@
             updateHeatmap();
             
             if (heatmapEnabled) {
-                showToast('🔥 Heatmap Active', 'Calculating sales performance...');
+                showToast('🔥 Heatmap Active', 'Visualizing sales performance...');
                 setTimeout(() => {
-                    showToast('💡 Color Guide', '🔴 RED = High Sales (50+) | 🔵 BLUE = Low Sales (1-50)');
+                    showToast('💡 Color Guide', '🔴 RED = High Sales (50+) | 🔵 BLUE = Active Sales (1-49) | ⚫ GRAY = No Sales');
                 }, 1500);
             } else {
                 showToast('❄️ Heatmap Off', 'Returning to standard view');
+            }
+        };
+
+        window.toggleTimeTravel = function() {
+            timeTravelMode = !timeTravelMode;
+            applyTimeTravelPredictions();
+            
+            if (timeTravelMode) {
+                showToast('🔮 Time Travel Active', 'Showing 24h burn rate predictions');
+            } else {
+                showToast('⏰ Real-Time View', 'Showing current inventory');
             }
         };
 
@@ -1380,9 +1371,6 @@
         document.getElementById('overlay').addEventListener('click', () => {
             window.closeStoryCard();
         });
-
-        // Enable time travel mode by default for burn rate predictions
-        timeTravelMode = true;
 
         initFloor();
         listenToFirebase();
