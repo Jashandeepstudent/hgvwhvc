@@ -9,9 +9,10 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        :root {
+:root {
             --world-rotateX: 60deg;
             --world-rotateZ: 45deg;
             --neon-primary: #00f3ff;
@@ -21,14 +22,17 @@
             --ice-blue: #00d4ff;
             --neon-orange: #ffaa00;
             --neon-yellow: #ffff00;
+            /* DYNAMIC SCALING VARIABLES */
+            --grid-size: 9vw; /* Grid scales with phone width */
+            --card-scale: 0.7;
         }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
             background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
             color: #fff;
             overflow: hidden;
-            height: 100vh;
+            height: 100dvh; /* Use dynamic viewport height */
         }
 
         /* Doraemon Time Warp Animation */
@@ -325,18 +329,16 @@
         }
 
         /* UI Controls */
-        .inventory-leaderboard {
+.inventory-leaderboard {
             position: fixed;
-            top: 30px;
-            right: 30px;
-            width: 250px;
-            background: rgba(15, 15, 35, 0.9);
-            backdrop-filter: blur(15px);
-            border: 3px solid #ff4444;
-            border-radius: 15px;
-            padding: 15px;
-            z-index: 1000;
-            box-shadow: 0 0 30px rgba(255, 68, 68, 0.4);
+            top: 10px; right: 10px;
+            width: 140px;
+            padding: 8px;
+            font-size: 10px;
+            background: rgba(15, 15, 35, 0.8);
+            border: 1px solid var(--neon-red);
+            border-radius: 10px;
+            z-index: 900;
         }
 
         .leaderboard-title {
@@ -402,19 +404,20 @@
         }
         .close-btn:hover { background: var(--neon-secondary); color: #000; transform: rotate(90deg); }
 
-        .controls {
+.controls {
             position: fixed;
-            top: 30px;
-            left: 30px;
-            background: rgba(15, 15, 35, 0.9);
-            backdrop-filter: blur(15px);
-            border: 3px solid var(--neon-primary);
-            border-radius: 15px;
-            padding: 20px;
-            z-index: 100;
-            min-width: 320px;
-            max-height: 90vh;
+            bottom: 0; left: 0; right: 0; /* Bottom Sheet for Mobile */
+            background: rgba(15, 15, 35, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 2px solid var(--neon-primary);
+            padding: 15px;
+            z-index: 1000;
+            max-height: 40vh;
             overflow-y: auto;
+            border-radius: 20px 20px 0 0;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
         }
         .controls h3 { color: var(--neon-primary); margin-bottom: 15px; font-size: 18px; }
         .control-group { margin-bottom: 15px; }
@@ -718,21 +721,22 @@
             moveProductToPosition(grabbedProduct, x, y, floor);
         }
 
-        function moveProductToPosition(product, newX, newY, newFloor) {
-            const updates = {};
-            updates[`Businesses/${currentUserId}/inventory/${product.id}/x`] = newX;
-            updates[`Businesses/${currentUserId}/inventory/${product.id}/y`] = newY;
-            // Note: DB schema might not support 'floor' yet, so we assume single floor move for compatibility
-            // unless we update DB. For this demo, we assume floor 0 or handle logic locally.
-            
-            update(ref(database), updates).then(() => {
-                showToast('✅ Position Updated', `${product.name} moved to (${newX}, ${newY})`);
-                grabbedProduct = null;
-                document.querySelectorAll('.product-node').forEach(n => n.classList.remove('grabbed'));
-            }).catch(error => {
-                showToast('❌ Update Failed', error.message);
-            });
-        }
+// --- REPLACE moveProductToPosition ---
+function moveProductToPosition(product, newX, newY, newFloor) {
+    const updates = {};
+    updates[`Businesses/${currentUserId}/inventory/${product.id}/x`] = newX;
+    updates[`Businesses/${currentUserId}/inventory/${product.id}/y`] = newY;
+    
+    update(ref(database), updates).then(() => {
+        showToast('✅ Position Updated', `${product.name} moved.`);
+        // CRITICAL: Reset all interaction states
+        grabbedProduct = null;
+        exchangeModeActive = false; 
+        document.getElementById('exchangeBtn').classList.remove('active');
+        document.querySelectorAll('.grid-cell').forEach(c => c.classList.remove('exchange-mode'));
+        document.querySelectorAll('.product-node').forEach(n => n.classList.remove('grabbed'));
+    });
+}
 
         // --- CORE FEATURES ---
 
@@ -825,10 +829,15 @@
                     product.floor = Math.floor(index / 100);
                 }
 
-                const node = document.createElement('div');
-                node.className = 'product-node';
-                node.dataset.productId = product.id;
-                node.dataset.productName = product.name.toLowerCase();
+// --- REPLACE RENDER LOGIC INSIDE renderShop loop ---
+const node = document.createElement('div');
+node.className = 'product-node';
+
+// FIX: Direct mapping ensures glow and card share the same origin
+node.style.left = `calc(${product.x} * var(--grid-size))`;
+node.style.top = `calc(${product.y} * var(--grid-size))`;
+node.style.width = 'var(--grid-size)';
+node.style.height = 'var(--grid-size)';
                 
                 // Normal Mode Colors (4)
                 updateNodeVisuals(node, product);
