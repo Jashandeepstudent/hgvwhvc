@@ -629,7 +629,8 @@ h2 {
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 <script>
 firebase.initializeApp({
   apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
@@ -1213,20 +1214,79 @@ function showSuccess(msg) {
     popup.textContent = msg; popup.style.display = "block";
     setTimeout(() => popup.style.display = "none", 3000);
 }
-function downloadProducts() {
-    let csv = "Product Name,Quantity,Cost Price,Selling Price\n";
+// Variable to keep track of report numbers in the current session
+let reportCounter = 1;
+
+async function downloadProducts() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    // 1. DYNAMICALLY GET BUSINESS NAME
+    // We try to get the name from your Firebase data, otherwise use a default
+    let businessName = "My Business"; 
+    try {
+        const nameSnapshot = await db.ref(`BusinessOwners/${auth.currentUser.uid}/businessName`).once('value');
+        if (nameSnapshot.exists()) {
+            businessName = nameSnapshot.val().toUpperCase();
+        }
+    } catch (e) {
+        console.log("Could not fetch business name, using default.");
+    }
+
+    // 2. SET HEADER (BUSINESS NAME)
+    doc.setFontSize(22);
+    doc.setTextColor(30, 41, 59);
+    doc.text(businessName, 14, 20);
+
+    // 3. SET SUBTITLE & DATE
+    doc.setFontSize(12);
+    doc.setTextColor(100, 116, 139);
+    const dateStr = new Date().toLocaleDateString();
+    doc.text(`Product & Process Report #${reportCounter} | Date: ${dateStr}`, 14, 28);
+    
+    // Line separator
+    doc.setLineWidth(0.5);
+    doc.line(14, 32, 196, 32);
+
+    // 4. PREPARE DATA FOR TABLE
+    const tableRows = [];
     Object.entries(inventory).forEach(([id, product]) => {
         const pData = prices[id] || {};
         const cost = pData.costPrice ? (pData.costPrice.numericValue || pData.costPrice) : 0;
         const sell = pData.sellPrice ? (pData.sellPrice.numericValue || pData.sellPrice) : 0;
-        csv += `"${product.name}","${product.quantity}","${cost}","${sell}"\n`;
+
+        tableRows.push([
+            product.name,
+            product.quantity,
+            `$${parseFloat(cost).toFixed(2)}`,
+            `$${parseFloat(sell).toFixed(2)}`
+        ]);
     });
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'Product_Pricing_Report.csv';
-    a.click();
+
+    // 5. GENERATE TABLE
+    doc.autoTable({
+        startY: 40,
+        head: [['Product Name', 'Quantity', 'Cost Price', 'Sales Price']],
+        body: tableRows,
+        theme: 'striped',
+        headStyles: { fillColor: [0, 243, 255], textColor: [0, 0, 0] },
+        styles: { fontSize: 10, cellPadding: 5 },
+        columnStyles: {
+            0: { cellWidth: 80 },
+            1: { halign: 'center' },
+            2: { halign: 'right' },
+            3: { halign: 'right' }
+        }
+    });
+
+    // 6. DYNAMIC FILENAME (e.g., AppleStore_ProductReport_1.pdf)
+    const sanitizedName = businessName.replace(/\s+/g, '_'); // Replace spaces with underscores
+    const fileName = `${sanitizedName}_ProductReport_${reportCounter}.pdf`;
+    
+    doc.save(fileName);
+
+    // 7. INCREMENT COUNTER FOR NEXT DOWNLOAD
+    reportCounter++;
 }
 </script>
 </body>
