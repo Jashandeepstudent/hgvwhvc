@@ -1195,9 +1195,10 @@ content.innerHTML = `
                                 id: key,
                                 name: inv.name || key,
                                 icon: iconMap[key.toLowerCase()] || '📦',
-                                price: '$' + (Math.random() * 10).toFixed(2), // Mock price if missing
+                                price: `${parseFloat(priceData?.numericValue || priceData?.sellPrice?.numericValue || 0).toFixed(2)}`,
                                 stock: parseInt(inv.quantity || 0),
-                                sales: parseInt(inv.sold || 0),
+                                sales: parseInt(inventory.sold || 0),
+
                                 x: parseInt(inv.x !== undefined ? inv.x : index % 10),
                                 y: parseInt(inv.y !== undefined ? inv.y : Math.floor(index / 10) % 10),
                                 // Auto-assign floor if missing
