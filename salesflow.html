@@ -542,7 +542,9 @@ h2 {
       Download Report
     </button>
   </div>
-
+ <button class="upload-shop-btn" onclick="openTableUpload()">
+    📊 Table Bulk Upload
+</button>
   <div class="grid-header">
     <div>Product Name</div>
     <div>Quantity</div>
@@ -559,19 +561,22 @@ h2 {
     <h3 id="modalTitle">Set Prices</h3>
     <p id="modalSubtitle">Define cost and selling price</p>
     
-    <div class="price-inputs">
-      <div class="input-group">
-        <label>Cost Price</label>
-        <input type="text" id="costPriceInput" placeholder="e.g., 100 or 50/kg" autocomplete="off">
-        <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">Accepts: numbers or text (e.g., 10/kg)</div>
-      </div>
-      <div class="input-group">
-        <label>Selling Price</label>
-        <input type="text" id="sellPriceInput" placeholder="e.g., 150 or 75/liter" autocomplete="off">
-        <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">Accepts: numbers or text (e.g., 100/hr)</div>
-      </div>
+<div class="price-inputs">
+  <div class="input-group">
+    <label>Cost Price</label>
+    <input type="number" id="costPriceInput" placeholder="Enter number (e.g., 200)" step="0.01">
+    <div style="font-size: 11px; color: #ef4444; margin-top: 4px; font-weight: bold;">
+        ⚠️ Numbers only. Do not add "per pack" or "kg".
     </div>
-
+  </div>
+  <div class="input-group">
+    <label>Selling Price</label>
+    <input type="number" id="sellPriceInput" placeholder="Enter number (e.g., 400)" step="0.01">
+    <div style="font-size: 11px; color: #ef4444; margin-top: 4px; font-weight: bold;">
+        ⚠️ Numbers only. System calculates per unit automatically.
+    </div>
+  </div>
+</div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closePriceModal()">Cancel</button>
       <button class="btn-save" onclick="savePrices()">Save Prices</button>
@@ -596,7 +601,30 @@ h2 {
     </div>
   </div>
 </div>
+<div id="tableUploadModal" class="story-card" style="width: 90vw; max-width: 1000px;">
+    <button class="close-btn" onclick="closeTableUpload()">×</button>
+    <h2>Bulk Price Manager</h2>
+    <p style="color: #94a3b8; margin-bottom: 20px;">Fill in the prices below. Only numbers are accepted.</p>
+    
+    <div style="overflow-x: auto; background: rgba(0,0,0,0.2); border-radius: 12px;">
+        <table style="width: 100%; border-collapse: collapse; color: white; text-align: left;">
+            <thead>
+                <tr style="border-bottom: 2px solid var(--neon-primary);">
+                    <th style="padding: 15px;">Product Name</th>
+                    <th style="padding: 15px;">Stock</th>
+                    <th style="padding: 15px;">Cost Price ($)</th>
+                    <th style="padding: 15px;">Selling Price ($)</th>
+                </tr>
+            </thead>
+            <tbody id="bulkTableBody">
+                </tbody>
+        </table>
+    </div>
 
+    <button class="exchange-btn" onclick="saveAllPrices()" style="margin-top: 20px;">
+        💾 Save All Changes
+    </button>
+</div>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -665,7 +693,88 @@ function renderComparisonBadge(comparison, periodName) {
     </div>
   `;
 }
+function openTableUpload() {
+    const modal = document.getElementById('tableUploadModal');
+    const tbody = document.getElementById('bulkTableBody');
+    const overlay = document.querySelector('.overlay');
+    
+    tbody.innerHTML = ''; // Clear existing
+    
+    // productsData comes from your existing Firebase fetch logic
+    productsData.forEach(product => {
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = "1px solid rgba(255,255,255,0.05)";
+        
+        // Use existing prices if they exist, otherwise empty
+        const currentCost = product.costPrice || '';
+        const currentSell = product.sellPrice || '';
 
+        tr.innerHTML = `
+            <td style="padding: 15px;">${product.name} ${product.icon || ''}</td>
+            <td style="padding: 15px;">${product.stock}</td>
+            <td style="padding: 15px;">
+                <input type="number" class="bulk-cost" data-id="${product.id}" 
+                       value="${currentCost}" placeholder="0.00" 
+                       style="background:rgba(255,255,255,0.1); border:1px solid var(--neon-primary); color:white; padding:5px; border-radius:4px; width:100px;">
+            </td>
+            <td style="padding: 15px;">
+                <input type="number" class="bulk-sell" data-id="${product.id}" 
+                       value="${currentSell}" placeholder="0.00" 
+                       style="background:rgba(255,255,255,0.1); border:1px solid var(--neon-accent); color:white; padding:5px; border-radius:4px; width:100px;">
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    modal.classList.add('active');
+    overlay.classList.add('active');
+}
+
+function saveAllPrices() {
+    const updates = {};
+    const costInputs = document.querySelectorAll('.bulk-cost');
+    const sellInputs = document.querySelectorAll('.bulk-sell');
+    let hasError = false;
+
+    costInputs.forEach((input, index) => {
+        const productId = input.getAttribute('data-id');
+        const costVal = input.value.trim();
+        const sellVal = sellInputs[index].value.trim();
+
+        // VALIDATION: Skip empty ones, but ensure others are numbers
+        if (costVal !== "" && sellVal !== "") {
+            if (isNaN(costVal) || isNaN(sellVal)) {
+                hasError = true;
+            } else {
+                updates[`Businesses/${currentUserId}/prices/${productId}/costPrice`] = parseFloat(costVal);
+                updates[`Businesses/${currentUserId}/prices/${productId}/sellPrice`] = parseFloat(sellVal);
+                updates[`Businesses/${currentUserId}/prices/${productId}/updatedAt`] = Date.now();
+            }
+        }
+    });
+
+    if (hasError) {
+        alert("❌ Some entries are not valid numbers. Please fix them.");
+        return;
+    }
+
+    // FIREBASE BULK UPDATE
+    if (Object.keys(updates).length > 0) {
+        update(ref(database), updates).then(() => {
+            showToast("✅ Success", "All prices updated in real-time.");
+            closeTableUpload();
+        }).catch(err => {
+            alert("Error saving: " + err.message);
+        });
+    } else {
+        alert("No changes to save.");
+    }
+}
+
+function closeTableUpload() {
+    document.getElementById('tableUploadModal').classList.remove('active');
+    document.querySelector('.overlay').classList.remove('active');
+}
 function getTimeRanges() {
   const now = new Date();
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
@@ -1063,18 +1172,33 @@ function closePriceModal() { document.getElementById("priceModal").style.display
 function savePrices() {
     const costInput = document.getElementById("costPriceInput").value.trim();
     const sellInput = document.getElementById("sellPriceInput").value.trim();
-    if (!costInput || !sellInput) return alert("Enter valid prices");
 
+    // 1. REGEX CHECK: Only allow numbers and one decimal point. 
+    // This rejects "100/kg", "200 per pack", or "cheap".
+    const numberRegex = /^\d+(\.\d{1,2})?$/;
+
+    if (!numberRegex.test(costInput) || !numberRegex.test(sellInput)) {
+        alert("❌ INVALID INPUT\n\nPlease enter ONLY numbers (e.g., 200 or 450.50).\n\nDo not add text like 'per pack', 'kg', or '/bottle'.");
+        return; // Stops the function here so Firebase never sees the bad data
+    }
+
+    // 2. Logic Protection: Ensure selling price isn't 0
+    if (parseFloat(sellInput) <= 0) {
+        alert("Selling price must be greater than 0");
+        return;
+    }
+
+    // 3. Save to Firebase (Only runs if the check above passes)
     pricesRef.child(currentProductId).set({
-        costPrice: createPriceObject(costInput),
-        sellPrice: createPriceObject(sellInput),
+        // We use parseFloat to ensure it's saved as a clean number in the DB
+        costPrice: parseFloat(costInput),
+        sellPrice: parseFloat(sellInput),
         updatedAt: firebase.database.ServerValue.TIMESTAMP
     }).then(() => {
         showSuccess("Prices Saved!");
         closePriceModal();
     });
 }
-
 function saveCurrency() {
     const code = document.getElementById("currencyInput").value.trim().toUpperCase();
     if (code.length < 2) return alert("Enter valid code");
