@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Premium Digital Twin Shop</title>
+    <title>Premium Digital Twin Shop with Time Travel</title>
     <style>
         * {
             margin: 0;
@@ -102,19 +102,19 @@
             50% { opacity: 0.9; }
         }
 
-.product-node {
+        .product-node {
             position: absolute;
             transform-style: preserve-3d;
             cursor: pointer;
             transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
             z-index: 10;
-            /* Ensure the node is the size of one tile and centered on its coordinate */
             width: 80px;
             height: 80px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
+
         .product-node.grabbed {
             z-index: 100;
             transform: translateZ(100px) scale(1.2);
@@ -138,52 +138,42 @@
         }
 
         .product-card {
-    width: 120px;
-    height: 160px;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
-    backdrop-filter: blur(15px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 20px;
-    padding: 15px;
-    
-    /* This makes it stand upright and look thick */
-    transform: rotateZ(-45deg) rotateX(-60deg);
-    transform-style: preserve-3d;
-    
-    /* Layered shadows create the 'Physical Thickness' */
-    box-shadow: 
-        0px 0px 0px 1px rgba(0, 243, 255, 0.5), /* Sharp neon edge */
-        -2px 2px 0px #00a3ad,                   /* 3D Side Depth 1 */
-        -4px 4px 0px #007a82,                   /* 3D Side Depth 2 */
-        -6px 6px 0px #005257,                   /* 3D Side Depth 3 */
-        -15px 15px 30px rgba(0, 0, 0, 0.7);     /* Floor Shadow */
+            width: 120px;
+            height: 160px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 15px;
+            transform: rotateZ(-45deg) rotateX(-60deg);
+            transform-style: preserve-3d;
+            box-shadow: 
+                0px 0px 0px 1px rgba(0, 243, 255, 0.5),
+                -2px 2px 0px #00a3ad,
+                -4px 4px 0px #007a82,
+                -6px 6px 0px #005257,
+                -15px 15px 30px rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 0.4s ease;
+            animation: float 4s ease-in-out infinite;
+        }
 
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    transition: all 0.4s ease;
-    animation: float 4s ease-in-out infinite;
-}
+        .product-card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: rotate(45deg);
+            pointer-events: none;
+        }
 
-/* Adding a 'Glossy Shine' overlay */
-.product-card::after {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: linear-gradient(
-        45deg, 
-        transparent, 
-        rgba(255, 255, 255, 0.1), 
-        transparent
-    );
-    transform: rotate(45deg);
-    pointer-events: none;
-}
         @keyframes float {
             0%, 100% { 
                 transform: rotateZ(-45deg) rotateX(-60deg) translateZ(0px); 
@@ -204,15 +194,22 @@
             z-index: -1;
             filter: blur(10px);
         }
-.loading-spinner {
-    width: 40px; height: 40px;
-    border: 3px solid rgba(0, 243, 255, 0.1);
-    border-top: 3px solid var(--neon-primary);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin: 0 auto;
-}
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .loading-spinner {
+            width: 40px; 
+            height: 40px;
+            border: 3px solid rgba(0, 243, 255, 0.1);
+            border-top: 3px solid var(--neon-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin { 
+            0% { transform: rotate(0deg); } 
+            100% { transform: rotate(360deg); } 
+        }
+
         .product-node:hover .product-card {
             transform: rotateZ(-45deg) rotateX(-60deg) translateZ(40px) scale(1.15);
             border-color: var(--neon-secondary);
@@ -225,6 +222,29 @@
         .product-node.is-low-stock .product-card {
             opacity: 0.6;
             border-color: #ff4444;
+        }
+
+        .product-node.predicted-out .product-card {
+            border: 3px solid var(--neon-red) !important;
+            box-shadow: 
+                0px 0px 0px 1px var(--neon-red),
+                -2px 2px 0px #ff0040,
+                -4px 4px 0px #cc0033,
+                -6px 6px 0px #990026,
+                -15px 15px 30px rgba(255, 0, 64, 0.7),
+                0 0 50px var(--neon-red) !important;
+            animation: criticalPulse 1.5s infinite !important;
+        }
+
+        @keyframes criticalPulse {
+            0%, 100% { 
+                opacity: 1;
+                transform: rotateZ(-45deg) rotateX(-60deg) translateZ(0px); 
+            }
+            50% { 
+                opacity: 0.7;
+                transform: rotateZ(-45deg) rotateX(-60deg) translateZ(25px); 
+            }
         }
 
         .product-node.popular::after {
@@ -269,6 +289,7 @@
             border: 2px solid var(--neon-primary);
             margin-bottom: 8px;
             width: 100%;
+            text-align: center;
             text-shadow: 0 0 10px var(--neon-primary);
             transform: translateZ(15px);
         }
@@ -370,75 +391,6 @@
             line-height: 1.8;
             color: #ddd;
             font-size: 15px;
-        }
-
-        .sustainability-score {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-top: 15px;
-        }
-
-        .score-bar {
-            flex: 1;
-            height: 12px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            overflow: hidden;
-        }
-To upgrade your Digital Twin Shop with the "Time Travel" predictive engine, I have updated the HTML structure, CSS for future-state visuals, and the JavaScript logic to handle the projection calculations.
-
-Updated Script Highlights:
-Predictive Logic: It calculates a 24-hour "burn rate" based on your current sales data.
-
-Disclaimer UI: Includes the requested ScaleVest analysis disclaimer before transitioning.
-
-Visual Cues: Uses a high-intensity pulse and red borders for items predicted to sell out.
-
-HTML
-
-<div class="control-group">
-    <button class="exchange-btn" id="timeTravelBtn" onclick="toggleTimeTravel()" style="background: linear-gradient(135deg, #6200ff, var(--neon-primary)); color: white;">
-        🕒 Time Travel (24h)
-    </button>
-</div>
-
-<style>
-    /* New Time Travel Visuals */
-    .product-node.predicted-out .product-card {
-        border: 2px solid var(--neon-red) !important;
-        box-shadow: 0 0 20px var(--neon-red);
-        animation: criticalPulse 1.5s infinite;
-    }
-
-    .predicted-badge {
-        position: absolute;
-        top: 8px;
-        left: 8px;
-        background: var(--neon-red);
-        color: #fff;
-        padding: 3px 6px;
-        border-radius: 4px;
-        font-size: 9px;
-        font-weight: 900;
-        z-index: 20;
-        transform: translateZ(30px);
-    }
-
-    @keyframes criticalPulse {
-        0%, 100% { transform: rotateZ(-45deg) rotateX(-60deg) scale(1); }
-        50% { transform: rotateZ(-45deg) rotateX(-60deg) scale(1.05); filter: brightness(1.2); }
-    }
-
-    .time-travel-active body {
-        background: radial-gradient(ellipse at bottom, #2b1b35 0%, #0f090a 100%);
-    }
-        .score-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--neon-accent), var(--neon-primary));
-            border-radius: 10px;
-            transition: width 0.8s ease;
-            box-shadow: 0 0 20px var(--neon-accent);
         }
 
         .btn {
@@ -641,6 +593,26 @@ HTML
             transform: translateZ(25px);
         }
 
+        .predicted-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: var(--neon-red);
+            color: #fff;
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-size: 9px;
+            font-weight: bold;
+            transform: translateZ(25px);
+            animation: badgePulse 1s infinite;
+            box-shadow: 0 0 15px var(--neon-red);
+        }
+
+        @keyframes badgePulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
         .overlay {
             position: fixed;
             inset: 0;
@@ -688,6 +660,89 @@ HTML
             font-size: 14px;
         }
 
+        .analysis-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 600px;
+            max-height: 80vh;
+            background: linear-gradient(135deg, rgba(15, 15, 35, 0.98), rgba(30, 30, 60, 0.95));
+            backdrop-filter: blur(30px);
+            border: 3px solid var(--neon-primary);
+            border-radius: 25px;
+            padding: 40px;
+            z-index: 2001;
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.9);
+            overflow-y: auto;
+        }
+
+        .analysis-modal.active {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+
+        .analysis-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .analysis-header h2 {
+            color: var(--neon-primary);
+            font-size: 28px;
+            text-shadow: 0 0 20px var(--neon-primary);
+            margin-bottom: 15px;
+        }
+
+        .analysis-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(0, 243, 255, 0.1);
+            border-top-color: var(--neon-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        .analysis-content {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 25px;
+            border-radius: 15px;
+            border-left: 4px solid var(--neon-accent);
+            margin-bottom: 20px;
+        }
+
+        .analysis-content h3 {
+            color: var(--neon-accent);
+            font-size: 18px;
+            margin-bottom: 15px;
+            text-shadow: 0 0 10px var(--neon-accent);
+        }
+
+        .analysis-content p {
+            line-height: 1.8;
+            color: #ddd;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .disclaimer {
+            background: rgba(255, 0, 64, 0.1);
+            border: 2px solid var(--neon-red);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .disclaimer p {
+            color: var(--neon-red);
+            font-size: 13px;
+            line-height: 1.6;
+            margin: 0;
+        }
+
         .loading {
             position: fixed;
             top: 50%;
@@ -705,10 +760,6 @@ HTML
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin: 0 auto 20px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
         }
 
         .status-indicator {
@@ -761,14 +812,14 @@ HTML
                 transform: rotateX(var(--world-rotateX)) rotateZ(var(--world-rotateZ)) scale(0.5);
             }
 
-            .story-card {
+            .story-card, .analysis-modal {
                 width: 90%;
                 max-width: 350px;
                 padding: 15px;
             }
 
-            .story-card h2 { font-size: 18px; }
-            .story-card p { font-size: 14px; }
+            .story-card h2, .analysis-modal h2 { font-size: 18px; }
+            .story-card p, .analysis-modal p { font-size: 14px; }
         }
     </style>
 </head>
@@ -813,13 +864,13 @@ HTML
                 <span style="color: #ccc; font-size: 12px;">Show sales heatmap</span>
             </div>
         </div>
-<div class="control-group">
-    <button class="exchange-btn" id="timeTravelBtn" onclick="toggleTimeTravel()" style="background: linear-gradient(135deg, #6200ff, var(--neon-primary)); color: white;">
-        🕒 Time Travel (24h)
-    </button>
-</div>
+
         <button class="exchange-btn" id="exchangeBtn" onclick="toggleExchangeMode()">
             🔄 Exchange Places
+        </button>
+
+        <button class="exchange-btn" id="timeTravelBtn" onclick="toggleTimeTravel()" style="margin-top: 10px; background: linear-gradient(135deg, #9d00ff, #00d4ff);">
+            🕒 Time Travel
         </button>
     </div>
 
@@ -831,6 +882,24 @@ HTML
     </div>
 
     <div class="overlay" id="overlay"></div>
+    
+    <div class="analysis-modal" id="analysisModal">
+        <div class="analysis-header">
+            <h2>🧪 ScaleVest Analysis</h2>
+            <div class="analysis-spinner"></div>
+        </div>
+        <div class="analysis-content">
+            <h3>📊 Analyzing Sales Velocity...</h3>
+            <p>• Processing current inventory levels</p>
+            <p>• Calculating sales velocity per product</p>
+            <p>• Projecting 24-hour stock depletion</p>
+            <p>• Generating predictive heatmap</p>
+        </div>
+        <div class="disclaimer">
+            <p><strong>⚠️ Disclaimer:</strong> This is a visual and logical guess by ScaleVest. We cannot assure these exact results will happen. Predictions are based on current sales trends and may not account for external factors, market changes, or sudden demand shifts.</p>
+        </div>
+    </div>
+
     <div class="story-card" id="storyCard">
         <button class="close-btn" onclick="closeStoryCard()">×</button>
         <div id="storyContent"></div>
@@ -862,8 +931,10 @@ HTML
         const auth = getAuth();
 
         let productsData = [];
+        let originalProductsData = [];
         let heatmapEnabled = false;
         let exchangeModeActive = false;
+        let timeTravelMode = false;
         let grabbedProduct = null;
         let currentUserId = null;
         let currentSearchTerm = '';
@@ -917,7 +988,6 @@ HTML
             const x = parseInt(e.target.dataset.x);
             const y = parseInt(e.target.dataset.y);
 
-            // Check if cell is occupied
             const occupied = productsData.some(p => p.x === x && p.y === y && p.id !== grabbedProduct.id);
             if (occupied) {
                 showToast('⚠️ Space Occupied', 'This tile already has a product');
@@ -967,32 +1037,29 @@ HTML
         }
 
         function updateHeatmap() {
-    // FIX 1: Change '.tile' to '.grid-cell' to match your initFloor function
-    const cells = document.querySelectorAll('.grid-cell');
-    
-    // Reset all cells first
-    cells.forEach(cell => {
-        cell.classList.remove('heatmap-hot', 'heatmap-cold');
-        cell.style.background = 'rgba(255, 255, 255, 0.03)'; // Back to default
-    });
+            const cells = document.querySelectorAll('.grid-cell');
+            
+            cells.forEach(cell => {
+                cell.classList.remove('heatmap-hot', 'heatmap-cold');
+                cell.style.background = 'rgba(255, 255, 255, 0.03)';
+            });
 
-    if (!heatmapEnabled) return;
+            if (!heatmapEnabled) return;
 
-    productsData.forEach(product => {
-        // Calculate the 1D index from X and Y
-        const cellIndex = (product.y * 10) + product.x;
-        const cell = cells[cellIndex];
+            productsData.forEach(product => {
+                const cellIndex = (product.y * 10) + product.x;
+                const cell = cells[cellIndex];
 
-        if (cell) {
-            // FIX 2: Apply the CSS classes defined in your <style> block
-            if (product.sales > 50) {
-                cell.classList.add('heatmap-hot');
-            } else if (product.sales > 0) {
-                cell.classList.add('heatmap-cold');
-            }
+                if (cell) {
+                    if (product.sales > 50) {
+                        cell.classList.add('heatmap-hot');
+                    } else if (product.sales > 0) {
+                        cell.classList.add('heatmap-cold');
+                    }
+                }
+            });
         }
-    });
-}
+
         function showToast(title, message) {
             const toast = document.getElementById('toast');
             document.getElementById('toastTitle').textContent = title;
@@ -1013,26 +1080,41 @@ HTML
                 node.dataset.x = product.x;
                 node.dataset.y = product.y;
                 
-                if (product.stock < 5) {
+                if (product.stock < 5 && product.stock > 0) {
                     node.classList.add('is-low-stock');
+                }
+
+                if (product.predictedStock !== undefined && product.predictedStock <= 0) {
+                    node.classList.add('predicted-out');
                 }
                 
                 if (product.sales > 50) {
                     node.classList.add('popular');
                 }
 
-// This centers the products on the 800px floor by offsetting from the center (50%)
                 const gridSize = 80;
-                const offset = 5 * gridSize; // Centers the 10x10 grid (800px / 2)
+                const offset = 5 * gridSize;
                 node.style.left = `calc(50% + ${(product.x * gridSize) - offset}px)`;
                 node.style.top = `calc(50% + ${(product.y * gridSize) - offset}px)`;
 
+                let badgeHTML = '';
+                if (product.predictedStock !== undefined && product.predictedStock <= 0) {
+                    badgeHTML = '<span class="predicted-badge">PREDICTED OUT</span>';
+                } else if (product.stock < 5) {
+                    badgeHTML = '<span class="stock-badge">LOW</span>';
+                }
+
+                const displayStock = product.predictedStock !== undefined ? product.predictedStock : product.stock;
+
                 node.innerHTML = `
                     <div class="product-card">
-                        ${product.stock < 5 ? '<span class="stock-badge">LOW</span>' : ''}
+                        ${badgeHTML}
                         <div class="product-icon">${product.icon}</div>
                         <div class="product-name">${product.name}</div>
                         <div class="product-price">${product.price}</div>
+                        <div style="font-size: 11px; color: #999; margin-top: 5px; transform: translateZ(5px);">
+                            Stock: ${displayStock}
+                        </div>
                     </div>
                 `;
 
@@ -1069,7 +1151,12 @@ HTML
             const listContainer = document.getElementById('oosList');
             const countDisplay = document.getElementById('oosCount');
             
-            const outOfStockItems = products.filter(p => !p.stock || p.stock === 0 || p.stock === "0");
+            const outOfStockItems = products.filter(p => {
+                if (timeTravelMode) {
+                    return p.predictedStock !== undefined && p.predictedStock <= 0;
+                }
+                return !p.stock || p.stock === 0 || p.stock === "0";
+            });
             countDisplay.textContent = outOfStockItems.length;
 
             if (outOfStockItems.length === 0) {
@@ -1080,7 +1167,7 @@ HTML
             listContainer.innerHTML = outOfStockItems.map(item => `
                 <div class="stock-item">
                     <span>${item.name}</span>
-                    <span class="stock-count">OUT</span>
+                    <span class="stock-count">${timeTravelMode ? 'PREDICTED' : 'OUT'}</span>
                 </div>
             `).join('');
         }
@@ -1139,9 +1226,8 @@ HTML
                             const inventory = business.inventory[productKey];
                             const priceData = business.prices?.[productKey];
                             
-const storedX = inventory.x;
+                            const storedX = inventory.x;
                             const storedY = inventory.y;
-                            // Ensure we use the stored tile index (0-9)
                             const coords = (storedX !== undefined && storedY !== undefined) 
                                 ? { x: parseInt(storedX), y: parseInt(storedY) }
                                 : generateCoordinates(productIndex, productKeys.length);
@@ -1155,7 +1241,7 @@ const storedX = inventory.x;
                                 x: coords.x,
                                 y: coords.y,
                                 stock: parseInt(inventory?.quantity || inventory || 0),
-                               sales: parseInt(inventory.sold || 0),
+                                sales: parseInt(inventory.sold || 0),
                                 origin: business.name || 'My Shop',
                                 sustainability: 75 + Math.floor(Math.random() * 20),
                                 story: getProductDescription(inventory.name || productKey),
@@ -1167,13 +1253,19 @@ const storedX = inventory.x;
                         });
                     }
 
+                    originalProductsData = JSON.parse(JSON.stringify(newProducts));
                     productsData = newProducts;
-                    renderShop(productsData);
+                    
+                    if (timeTravelMode) {
+                        applyTimeTravelPredictions();
+                    } else {
+                        renderShop(productsData);
+                    }
                     
                     document.getElementById('loading').style.display = 'none';
                     document.getElementById('statusIndicator').classList.add('connected');
                     
-                    if (newProducts.length > 0) {
+                    if (newProducts.length > 0 && !timeTravelMode) {
                         showToast('✅ Connected', `Loaded ${newProducts.length} items from your inventory`);
                     }
                 }, (error) => {
@@ -1184,88 +1276,160 @@ const storedX = inventory.x;
             });
         }
 
-window.openStoryCard = async function(product) {
-    const storyCard = document.getElementById('storyCard');
-    const overlay = document.getElementById('overlay');
-    const content = document.getElementById('storyContent');
+        window.toggleTimeTravel = async function() {
+            if (timeTravelMode) {
+                timeTravelMode = false;
+                const btn = document.getElementById('timeTravelBtn');
+                btn.textContent = '🕒 Time Travel';
+                btn.style.background = 'linear-gradient(135deg, #9d00ff, #00d4ff)';
+                
+                productsData = JSON.parse(JSON.stringify(originalProductsData));
+                renderShop(productsData);
+                showToast('⏮️ Returned to Present', 'Showing current inventory levels');
+            } else {
+                const modal = document.getElementById('analysisModal');
+                const overlay = document.getElementById('overlay');
+                
+                overlay.classList.add('active');
+                modal.classList.add('active');
+                
+                await new Promise(resolve => setTimeout(resolve, 3000));
+                
+                modal.classList.remove('active');
+                overlay.classList.remove('active');
+                
+                timeTravelMode = true;
+                const btn = document.getElementById('timeTravelBtn');
+                btn.textContent = '🔙 Return to Present';
+                btn.style.background = 'linear-gradient(135deg, var(--neon-red), var(--neon-secondary))';
+                
+                applyTimeTravelPredictions();
+                showToast('🔮 Time Travel Active', 'Showing 24-hour projections');
+            }
+        };
 
-    // 1. Show Loading State immediately
-    content.innerHTML = `
-        <div style="text-align: center; padding: 40px;">
-            <div class="loading-spinner"></div>
-            <p style="margin-top: 20px; color: var(--neon-primary); font-family: monospace; letter-spacing: 2px; animation: pulse 1.5s infinite;">
-                AI ENGINE: ANALYZING ${product.name.toUpperCase()}...
-            </p>
-        </div>
-    `;
-    
-    overlay.classList.add('active');
-    storyCard.classList.add('active');
-
-    try {
-        // 2. Fetch from your Vercel Backend
-        const response = await fetch(`/api/gemini?productName=${encodeURIComponent(product.name)}`);
-        
-        if (!response.ok) throw new Error('AI Server Offline');
-        
-        const aiData = await response.json();
-
-        // 3. Render full content with AI Data
-        content.innerHTML = `
-            <h2 style="text-shadow: 0 0 15px var(--neon-primary); font-size: 28px;">${product.icon} ${product.name}</h2>
+        function applyTimeTravelPredictions() {
+            productsData = JSON.parse(JSON.stringify(originalProductsData));
             
-            <div class="story-section">
-                <h3>📖 AI Product Journey</h3>
-                <p style="line-height: 1.6; font-style: italic; color: #eee; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
-                    "${aiData.description || product.story}"
-                </p>
-                <p style="margin-top: 10px;"><strong>🌍 Verified Origin:</strong> <span style="color: var(--ice-blue);">${aiData.origin || product.origin}</span></p>
-            </div>
+            productsData.forEach(product => {
+                const salesVelocity = product.sales;
+                const predictedStock = product.stock - salesVelocity;
+                product.predictedStock = Math.max(0, predictedStock);
+                
+                if (product.predictedStock === 0 && salesVelocity > 0) {
+                    product.sales = product.sales * 1.5;
+                }
+            });
+            
+            renderShop(productsData);
+        }
 
-            <div class="story-section">
-                <h3>🌱 Sustainability Score</h3>
-                <div class="sustainability-score" style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-                    <span style="font-size: 20px; font-weight: bold; color: var(--neon-primary);">${aiData.score || product.sustainability}/100</span>
-                    <div class="score-bar" style="height: 10px; background: #333; border-radius: 5px; margin-top: 10px; overflow: hidden;">
-                        <div class="score-fill" style="width: ${aiData.score || product.sustainability}%; height: 100%; transition: width 1s ease-out;
-                             background: ${(aiData.score || product.sustainability) > 80 ? 'var(--neon-accent)' : 'var(--neon-secondary)'};
-                             box-shadow: 0 0 10px ${(aiData.score || product.sustainability) > 80 ? 'var(--neon-accent)' : 'var(--neon-secondary)'};">
+        window.openStoryCard = async function(product) {
+            const storyCard = document.getElementById('storyCard');
+            const overlay = document.getElementById('overlay');
+            const content = document.getElementById('storyContent');
+
+            content.innerHTML = `
+                <div style="text-align: center; padding: 40px;">
+                    <div class="loading-spinner"></div>
+                    <p style="margin-top: 20px; color: var(--neon-primary); font-family: monospace; letter-spacing: 2px; animation: pulse 1.5s infinite;">
+                        AI ENGINE: ANALYZING ${product.name.toUpperCase()}...
+                    </p>
+                </div>
+            `;
+            
+            overlay.classList.add('active');
+            storyCard.classList.add('active');
+
+            try {
+                const response = await fetch(`/api/gemini?productName=${encodeURIComponent(product.name)}`);
+                
+                if (!response.ok) throw new Error('AI Server Offline');
+                
+                const aiData = await response.json();
+
+                const displayStock = product.predictedStock !== undefined ? product.predictedStock : product.stock;
+                const stockStatus = displayStock < 5 ? '⚠️' : '✅';
+                const stockClass = product.predictedStock !== undefined && product.predictedStock <= 0 ? 'var(--neon-red)' : 'var(--neon-accent)';
+
+                content.innerHTML = `
+                    <h2 style="text-shadow: 0 0 15px var(--neon-primary); font-size: 28px;">${product.icon} ${product.name}</h2>
+                    
+                    ${timeTravelMode ? `
+                    <div style="background: rgba(157, 0, 255, 0.2); border: 2px solid #9d00ff; padding: 12px; border-radius: 10px; margin-bottom: 20px;">
+                        <p style="color: #9d00ff; font-weight: bold; margin: 0; font-size: 14px;">⏰ TIME TRAVEL MODE: 24-HOUR PROJECTION</p>
+                    </div>
+                    ` : ''}
+                    
+                    <div class="story-section">
+                        <h3>📖 AI Product Journey</h3>
+                        <p style="line-height: 1.6; font-style: italic; color: #eee; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
+                            "${aiData.description || product.story}"
+                        </p>
+                        <p style="margin-top: 10px;"><strong>🌍 Verified Origin:</strong> <span style="color: var(--ice-blue);">${aiData.origin || product.origin}</span></p>
+                    </div>
+
+                    <div class="story-section" style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,243,255,0.05); padding: 15px; border-radius: 12px;">
+                        <div>
+                            <h3 style="margin: 0; font-size: 14px; opacity: 0.7;">📦 ${timeTravelMode ? 'Predicted' : 'Current'} Stock</h3>
+                            <p style="font-size: 20px; margin: 5px 0 0 0; color: ${stockClass};">${displayStock} units ${stockStatus}</p>
+                            ${timeTravelMode && product.predictedStock !== undefined ? `
+                            <p style="font-size: 12px; margin: 5px 0 0 0; color: #999;">
+                                Current: ${product.stock} | Sales Velocity: ${product.sales}/day
+                            </p>
+                            ` : ''}
+                        </div>
+                        <div style="text-align: right;">
+                            <h3 style="margin: 0; font-size: 14px; opacity: 0.7;">💰 Current Price</h3>
+                            <p style="font-size: 32px; color: var(--neon-accent); font-weight: bold; margin: 5px 0 0 0;">${product.price}</p>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <div class="story-section" style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,243,255,0.05); padding: 15px; border-radius: 12px;">
-                <div>
-                    <h3 style="margin: 0; font-size: 14px; opacity: 0.7;">📦 Stock Status</h3>
-                    <p style="font-size: 20px; margin: 5px 0 0 0;">${product.stock} units ${product.stock < 5 ? '⚠️' : '✅'}</p>
-                </div>
-                <div style="text-align: right;">
-                    <h3 style="margin: 0; font-size: 14px; opacity: 0.7;">💰 Current Price</h3>
-                    <p style="font-size: 32px; color: var(--neon-accent); font-weight: bold; margin: 5px 0 0 0;">${product.price}</p>
-                </div>
-            </div>
-        `;
-    } catch (error) {
-        console.error("Gemini AI Error:", error);
-        // Fallback to local data if the AI fails
-        content.innerHTML = `
-            <div style="background: rgba(255,0,0,0.1); border: 1px solid var(--neon-red); padding: 10px; border-radius: 8px; margin-bottom: 15px; text-align: center;">
-                <p style="color: var(--neon-red); margin: 0; font-size: 13px;">⚠️ AI ENGINE OFFLINE - SHOWING CACHED DATA</p>
-            </div>
-            <h2>${product.icon} ${product.name}</h2>
-            <div class="story-section">
-                <h3>📖 Product Journey</h3>
-                <p>${product.story}</p>
-                <p style="margin-top: 10px;"><strong>Sourced from:</strong> ${product.origin}</p>
-            </div>
-            <div class="story-section">
-                <h3>💰 Price: <span style="color: var(--neon-accent)">${product.price}</span></h3>
-                <h3>📦 Stock: ${product.stock} units</h3>
-            </div>
-        `;
-    }
-};
+                    ${timeTravelMode && product.predictedStock !== undefined && product.predictedStock <= 0 ? `
+                    <div style="background: rgba(255, 0, 64, 0.2); border: 2px solid var(--neon-red); padding: 15px; border-radius: 10px; margin-top: 15px;">
+                        <p style="color: var(--neon-red); font-weight: bold; margin: 0; font-size: 14px;">
+                            ⚠️ PREDICTION: This item will run out of stock within 24 hours based on current sales velocity!
+                        </p>
+                        <p style="color: #ff6b8a; margin: 8px 0 0 0; font-size: 12px;">
+                            Recommendation: Restock immediately or adjust pricing to slow demand.
+                        </p>
+                    </div>
+                    ` : ''}
+                `;
+            } catch (error) {
+                console.error("AI Error:", error);
+                const displayStock = product.predictedStock !== undefined ? product.predictedStock : product.stock;
+                
+                content.innerHTML = `
+                    <div style="background: rgba(255,0,0,0.1); border: 1px solid var(--neon-red); padding: 10px; border-radius: 8px; margin-bottom: 15px; text-align: center;">
+                        <p style="color: var(--neon-red); margin: 0; font-size: 13px;">⚠️ AI ENGINE OFFLINE - SHOWING CACHED DATA</p>
+                    </div>
+                    <h2>${product.icon} ${product.name}</h2>
+                    
+                    ${timeTravelMode ? `
+                    <div style="background: rgba(157, 0, 255, 0.2); border: 2px solid #9d00ff; padding: 12px; border-radius: 10px; margin-bottom: 20px;">
+                        <p style="color: #9d00ff; font-weight: bold; margin: 0; font-size: 14px;">⏰ TIME TRAVEL MODE: 24-HOUR PROJECTION</p>
+                    </div>
+                    ` : ''}
+                    
+                    <div class="story-section">
+                        <h3>📖 Product Journey</h3>
+                        <p>${product.story}</p>
+                        <p style="margin-top: 10px;"><strong>Sourced from:</strong> ${product.origin}</p>
+                    </div>
+                    <div class="story-section">
+                        <h3>💰 Price: <span style="color: var(--neon-accent)">${product.price}</span></h3>
+                        <h3>📦 ${timeTravelMode ? 'Predicted' : 'Current'} Stock: ${displayStock} units</h3>
+                        ${timeTravelMode && product.predictedStock !== undefined ? `
+                        <p style="font-size: 12px; color: #999;">
+                            Current: ${product.stock} | Sales: ${product.sales}/day | Predicted: ${product.predictedStock}
+                        </p>
+                        ` : ''}
+                    </div>
+                `;
+            }
+        };
+
         window.closeStoryCard = function() {
             document.getElementById('storyCard').classList.remove('active');
             document.getElementById('overlay').classList.remove('active');
@@ -1291,23 +1455,22 @@ window.openStoryCard = async function(product) {
             }
         };
 
-window.toggleHeatmap = function() {
-    heatmapEnabled = !heatmapEnabled;
-    const toggle = document.getElementById('heatmapToggle');
-    toggle.classList.toggle('active');
-    updateHeatmap();
-    
-    if (heatmapEnabled) {
-        showToast('🔥 Heatmap Active', 'Calculating sales performance...');
-        
-        // This is the 3-second explanatory popup
-        setTimeout(() => {
-            showToast('💡 Color Guide', '🟠 ORANGE = High Sales | 🔵 BLUE = Low Sales | ⚫ GRAY = No Data');
-        }, 1000);
-    } else {
-        showToast('❄️ Heatmap Off', 'Returning to standard view');
-    }
-};
+        window.toggleHeatmap = function() {
+            heatmapEnabled = !heatmapEnabled;
+            const toggle = document.getElementById('heatmapToggle');
+            toggle.classList.toggle('active');
+            updateHeatmap();
+            
+            if (heatmapEnabled) {
+                showToast('🔥 Heatmap Active', 'Calculating sales performance...');
+                
+                setTimeout(() => {
+                    showToast('💡 Color Guide', '🟠 ORANGE = High Sales | 🔵 BLUE = Low Sales | ⚫ GRAY = No Data');
+                }, 1000);
+            } else {
+                showToast('❄️ Heatmap Off', 'Returning to standard view');
+            }
+        };
 
         document.getElementById('rotateX').addEventListener('input', (e) => {
             const value = e.target.value;
