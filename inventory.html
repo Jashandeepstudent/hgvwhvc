@@ -625,15 +625,30 @@ input:focus, select:focus, textarea:focus {
 <div id="voiceModal" class="modal">
   <div class="modal-box">
     <h2 style="margin-top:0">AI Voice Assistant</h2>
-    <p style="color:#666; font-size:14px">Just speak the product name and quantity.<br>I will add, increase, or decrease it for you.</p>
+    <p style="color:#666; font-size:14px">
+      Just speak the product name and quantity.<br>
+      I will add, increase, or decrease it for you.
+    </p>
     
     <div id="viz" class="ai-visualizer">
-      <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+      <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+      <div class="bar"></div><div class="bar"></div>
     </div>
     
-    <div id="speechOutput" style="font-style:italic; color:#2563eb; margin-bottom:20px; min-height:24px">Waiting for you to speak...</div>
-    
-    <button onclick="stopVoiceAssistant()" style="background:#ef4444">Close Assistant</button>
+    <div id="speechOutput"
+      style="font-style:italic; color:#2563eb; margin-bottom:20px; min-height:24px">
+      Waiting for you to speak...
+    </div>
+
+    <!-- ✅ START WHISPER (CRITICAL) -->
+    <button onclick="startVoiceAssistant()" style="background:#22c55e">
+      🎤 Start Listening
+    </button>
+
+    <!-- ⏹ STOP WHISPER -->
+    <button onclick="stopVoiceAssistant()" style="background:#ef4444; margin-left:10px">
+      ⏹ Stop & Process
+    </button>
   </div>
 </div>
 
@@ -823,47 +838,66 @@ function saveBulkProducts() {
     btn.disabled = false;
 }
 // --- AI VOICE LOGIC ---
-function startVoiceAssistant() {
-  if (!('webkitSpeechRecognition' in window)) return alert("Voice not supported");
-  
-  isAssistantActive = true;
+let mediaRecorder;
+let audioChunks = [];
+let micStream;
+
+async function startVoiceAssistant() {
+  // ✅ MUST be called directly by button click
+  try {
+    micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  } catch (err) {
+    alert("Microphone permission denied");
+    return;
+  }
+
+  audioChunks = [];
+  mediaRecorder = new MediaRecorder(micStream, { mimeType: "audio/webm" });
+
+  mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+
+  mediaRecorder.start();
+
   document.getElementById("voiceModal").style.display = "flex";
-  
-  recognition = new webkitSpeechRecognition();
-  recognition.lang = "en-US";
-  recognition.continuous = true; 
-  recognition.interimResults = true;
-
-  recognition.onresult = (event) => {
-    let interimTranscript = '';
-    for (let i = event.resultIndex; i < event.results.length; ++i) {
-      if (event.results[i].isFinal) {
-        const finalTranscript = event.results[i][0].transcript;
-        document.getElementById("speechOutput").textContent = `"${finalTranscript}"`;
-        processSmartAI(finalTranscript);
-      } else {
-        interimTranscript += event.results[i][0].transcript;
-        document.getElementById("speechOutput").textContent = interimTranscript;
-      }
-    }
-  };
-
-  recognition.onend = () => {
-    if (isAssistantActive) {
-        try { recognition.start(); } catch(e) {}
-    }
-  };
-
-  recognition.start();
+  document.getElementById("speechOutput").textContent = "Listening...";
   speakWithAI("I am listening.");
 }
 
+
 function stopVoiceAssistant() {
-  isAssistantActive = false;
-  pendingAction = null;
-  document.getElementById("viz").classList.remove("confirm-mode");
-  if (recognition) recognition.stop();
+  if (!mediaRecorder) return;
+
+  mediaRecorder.stop();
+  micStream.getTracks().forEach(track => track.stop());
   document.getElementById("voiceModal").style.display = "none";
+
+  mediaRecorder.onstop = async () => {
+    const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+    sendAudioToWhisper(audioBlob);
+  };
+}
+async function sendAudioToWhisper(audioBlob) {
+  const formData = new FormData();
+  formData.append("file", audioBlob);
+
+  try {
+    const res = await fetch("https://ai-inventory-pro-sigma.vercel.app/api/whisper", {
+      method: "POST",
+      body: formData
+    });
+
+    const data = await res.json();
+    if (!data.text) throw new Error("No transcription");
+
+    document.getElementById("speechOutput").textContent = `"${data.text}"`;
+
+    // 🔥 USE YOUR EXISTING AI LOGIC
+    processSmartAI(data.text);
+
+  } catch (err) {
+    console.error(err);
+    speakWithAI("Sorry, I could not understand.");
+  }
 }
 
 async function processSmartAI(transcript) {
