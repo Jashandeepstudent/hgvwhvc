@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>ScaleVest – Business</title>
+<title>ScalVest – Business</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -535,33 +535,17 @@ body{
 
 <body>
 <script>
-(function () {
-  const isLoggedIn = localStorage.getItem("userLoggedIn") === "true";
-  const businessCreated = localStorage.getItem("businessProfileCreated") === "true";
-
-  // ❌ Not logged in → go to login
-  if (!isLoggedIn) {
-    window.location.replace("login.html");
-    return;
-  }
-
-  // ✅ Logged in + business already created → go to hub
-  if (businessCreated) {
-    window.location.replace("mainbusinesshub.html");
-    return;
-  }
-
-  // ✅ Logged in but no business yet → stay on this page
-})();
+if (localStorage.getItem("businessProfileCreated") === "true") {
+  window.location.replace("mainbusinesshub.html");
+}
 </script>
-
 
 <!-- ================= HERO ================= -->
 <section class="hero">
 
   <div class="hero-video">
     <video autoplay muted loop playsinline>
-      <source src="ScaleVestBusinessVid.mp4" type="video/mp4">
+      <source src="ScalVestBusinessVid.mp4" type="video/mp4">
     </video>
 
     <div class="video-overlay"></div>
@@ -570,7 +554,7 @@ body{
     <div class="hero-content">
       <h1>Where real business data becomes clear decisions</h1>
       <p>
-        ScaleVest connects businesses, startups, and investors through
+        ScalVest connects businesses, startups, and investors through
         verified operational data.
       </p>
       <button class="start-btn" onclick="openModal()">Start Business</button>
@@ -642,7 +626,7 @@ body{
 
 <!-- ================= COMMUNITY ================= -->
 <section class="section">
-  <h2>Join our ScaleVest Community</h2>
+  <h2>Join our ScalVest Community</h2>
 
   <div class="community-grid">
     <!-- IMAGE / VIDEO PLACEHOLDERS -->
