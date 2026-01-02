@@ -420,30 +420,28 @@ async function emailSignin(){
   isAuthFlowActive = true;
 
   try {
-    // FIX 1: Use signIn... instead of createUser...
+    // CORRECTED: Use signIn, NOT createUser
     const cred = await auth.signInWithEmailAndPassword(email, password);
     
-    // FIX 2: Check if verified before redirecting
+    // Check if they need verification
     if(!cred.user.emailVerified) {
       await cred.user.sendEmailVerification({
         url: getRedirectURL(),
-        handleCodeInApp: false // Set to false for standard browser redirect
+        handleCodeInApp: false // Set to false for standard web flow
       });
-      showVerifying(); // Show the "Check your inbox" screen
+      showVerifying();
     } else {
       window.location.href = "mainbusinesshub.html";
     }
-    
   } catch(err) {
     isAuthFlowActive = false;
-    
-    // Standard error handling
-    if(err.code === "auth/user-not-found"){
-      showError('signinError', 'No account found with this email');
-    } else if(err.code === "auth/wrong-password"){
-      showError('signinError', 'Incorrect password');
+    // Map Firebase errors to user-friendly messages
+    if(err.code === "auth/user-not-found") {
+        showError('signinError', 'Account not found. Please sign up first.');
+    } else if(err.code === "auth/wrong-password") {
+        showError('signinError', 'Incorrect password.');
     } else {
-      showError('signinError', err.message);
+        showError('signinError', err.message);
     }
   }
 }/* FORGOT PASSWORD */
