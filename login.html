@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Sign in – ScaleVest</title>
+<title>Sign in — ScaleVest</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -41,8 +41,12 @@ body::before{
   background:#fff;
   font-weight:600;
   cursor:pointer;
+  color:#000;
+  font-size:14px;
 }
 .auth-btn img{width:18px;height:18px}
+.auth-btn:hover{background:#f9fafb}
+.auth-btn:disabled{opacity:0.5;cursor:not-allowed}
 
 /* MODALS */
 .modal-overlay,.email-overlay{
@@ -65,6 +69,7 @@ body::before{
   background:rgba(255,255,255,.15);
   backdrop-filter:blur(20px);
 }
+.email-glass h3{margin-top:0;color:#fff}
 .email-glass input{
   width:100%;
   padding:12px;
@@ -73,7 +78,9 @@ body::before{
   border:none;
   background:rgba(255,255,255,.2);
   color:#fff;
+  font-size:14px;
 }
+.email-glass input::placeholder{color:rgba(255,255,255,.6)}
 .email-glass button{
   width:100%;
   padding:12px;
@@ -83,14 +90,10 @@ body::before{
   color:#fff;
   font-weight:600;
   cursor:pointer;
+  font-size:14px;
 }
-
-ul{
-  margin:6px 0 14px 14px;
-  padding:0;
-  font-size:12px;
-  line-height:1.6;
-}
+.email-glass button:hover{background:#1d4ed8}
+.email-glass button:disabled{opacity:0.5;cursor:not-allowed}
 
 .modal{
   width:900px;
@@ -102,25 +105,29 @@ ul{
 }
 .modal-left{
   width:50%;
-  background:url("scalevestauth.jpg") center/cover no-repeat;
+  background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   position:relative;
 }
 .modal-left::after{
   content:"";
   position:absolute;
   inset:0;
-  background:rgba(0,0,0,.55);
+  background:rgba(0,0,0,.25);
 }
 .overlay-text{
   position:relative;
   z-index:2;
   padding:42px;
+  color:#fff;
 }
 .modal-right{
   width:50%;
   padding:40px;
   color:#000;
 }
+.modal-right h3{margin-top:0;font-size:24px}
+.modal-right p{font-size:14px;color:#6b7280}
+
 .divider{
   text-align:center;
   margin:18px 0;
@@ -142,6 +149,7 @@ ul{
   background:#e5e7eb;
   z-index:-1;
 }
+
 .loader{
   width:42px;
   height:42px;
@@ -152,6 +160,60 @@ ul{
   margin:0 auto 14px;
 }
 @keyframes spin{to{transform:rotate(360deg)}}
+
+.error-msg{
+  background:rgba(239,68,68,.1);
+  border:1px solid rgba(239,68,68,.3);
+  color:#ef4444;
+  padding:10px;
+  border-radius:8px;
+  font-size:13px;
+  margin-bottom:12px;
+  display:none;
+}
+
+.success-msg{
+  background:rgba(34,197,94,.1);
+  border:1px solid rgba(34,197,94,.3);
+  color:#22c55e;
+  padding:10px;
+  border-radius:8px;
+  font-size:13px;
+  margin-bottom:12px;
+  display:none;
+}
+
+.otp-inputs{
+  display:flex;
+  gap:8px;
+  justify-content:center;
+  margin:20px 0;
+}
+
+.otp-inputs input{
+  width:45px;
+  height:50px;
+  text-align:center;
+  font-size:24px;
+  font-weight:bold;
+  border-radius:8px;
+  background:rgba(255,255,255,.25);
+  color:#fff;
+  border:2px solid transparent;
+  padding:0;
+}
+
+.otp-inputs input:focus{
+  border-color:#60a5fa;
+  outline:none;
+}
+
+.timer{
+  text-align:center;
+  font-size:12px;
+  color:#93c5fd;
+  margin-top:10px;
+}
 </style>
 </head>
 
@@ -166,84 +228,92 @@ ul{
     <div class="modal-left">
       <div class="overlay-text">
         <h2>Verified • Secure • Scalable</h2>
+        <p>Join thousands of businesses scaling with confidence</p>
       </div>
     </div>
 
     <div class="modal-right">
-      <h3 id="authTitle">New to ScaleVest?</h3>
-      <p id="authSubtitle">Create an account</p>
+      <h3>Welcome to ScaleVest</h3>
+      <p>Sign in or create your account</p>
 
-      <p id="authSwitch">
-        Already have an account?
-        <span onclick="switchToSigninUI()">Sign in</span>
-      </p>
-
-      <button class="auth-btn" onclick="googleLogin()">Continue with Google</button>
-      <button class="auth-btn" onclick="emailAuthHandler()">Continue with Email</button>
+      <button class="auth-btn" onclick="showEmailAuth()">
+        <span>✉️</span> Continue with Email
+      </button>
 
       <div class="divider"><span>or</span></div>
 
-      <button class="auth-btn" onclick="appleLogin()">Continue with Apple</button>
-      <button class="auth-btn" onclick="facebookLogin()">Continue with Facebook</button>
+      <button class="auth-btn" onclick="googleLogin()">
+        <span>🔵</span> Continue with Google
+      </button>
+      <button class="auth-btn" onclick="appleLogin()">
+        <span>🍎</span> Continue with Apple
+      </button>
+      <button class="auth-btn" onclick="facebookLogin()">
+        <span>📘</span> Continue with Facebook
+      </button>
     </div>
   </div>
 </div>
 
-<!-- SIGNUP -->
-<div class="email-overlay" id="signupModal">
+<!-- EMAIL INPUT -->
+<div class="email-overlay" id="emailModal">
   <div class="email-glass">
-    <h3>Create account</h3>
-    <input id="signupEmail" placeholder="Email">
-    <input id="signupPassword" type="password" placeholder="Password" oninput="checkPasswordRules()">
-    <ul>
-      <li id="rule_length">❌ At least 6 characters</li>
-      <li id="rule_number">❌ Contains a number</li>
-      <li id="rule_special">❌ Contains a special character</li>
-    </ul>
-    <button onclick="emailSignup()">Create account</button>
-  </div>
-</div>
-
-<!-- SIGNIN -->
-<div class="email-overlay" id="signinModal">
-  <div class="email-glass">
-    <h3>Sign in</h3>
-
-    <input id="signinEmail" placeholder="Email">
-    <input id="signinPassword" type="password">
-
-    <button onclick="emailSignin()">Sign in</button>
-
-    <p style="text-align:right;font-size:12px;margin-top:8px;">
-      <span style="cursor:pointer;color:#93c5fd" onclick="forgotPassword()">
-        Forgot password?
-      </span>
+    <h3>Enter your email</h3>
+    <div class="error-msg" id="emailError"></div>
+    <div class="success-msg" id="emailSuccess"></div>
+    <input id="emailInput" type="email" placeholder="your@email.com" autocomplete="email">
+    <button id="sendOtpBtn" onclick="sendOTP()">Send verification code</button>
+    <p style="text-align:center;font-size:12px;margin-top:12px;color:#fff;">
+      <span style="cursor:pointer" onclick="closeModals()">← Back</span>
     </p>
-
-    <div class="divider"><span>or</span></div>
-
-    <button class="auth-btn" onclick="googleLogin()">Continue with Google</button>
-    <button class="auth-btn" onclick="appleLogin()">Continue with Apple</button>
-    <button class="auth-btn" onclick="facebookLogin()">Continue with Facebook</button>
   </div>
 </div>
 
+<!-- OTP VERIFICATION -->
+<div class="email-overlay" id="otpModal">
+  <div class="email-glass">
+    <h3>Enter verification code</h3>
+    <p style="font-size:12px;color:#fff;text-align:center;">
+      We sent a 6-digit code to<br><strong id="otpEmail"></strong>
+    </p>
+    <div class="error-msg" id="otpError"></div>
+    
+    <div class="otp-inputs">
+      <input type="text" maxlength="1" id="otp1" oninput="moveToNext(this, 'otp2')" onkeydown="handleBackspace(event, this, null)">
+      <input type="text" maxlength="1" id="otp2" oninput="moveToNext(this, 'otp3')" onkeydown="handleBackspace(event, this, 'otp1')">
+      <input type="text" maxlength="1" id="otp3" oninput="moveToNext(this, 'otp4')" onkeydown="handleBackspace(event, this, 'otp2')">
+      <input type="text" maxlength="1" id="otp4" oninput="moveToNext(this, 'otp5')" onkeydown="handleBackspace(event, this, 'otp3')">
+      <input type="text" maxlength="1" id="otp5" oninput="moveToNext(this, 'otp6')" onkeydown="handleBackspace(event, this, 'otp4')">
+      <input type="text" maxlength="1" id="otp6" oninput="verifyOTP()" onkeydown="handleBackspace(event, this, 'otp5')">
+    </div>
 
-<!-- VERIFY -->
+    <div class="timer" id="timer"></div>
+
+    <button id="resendBtn" onclick="resendOTP()" style="background:#6b7280;margin-top:12px" disabled>
+      Resend code
+    </button>
+
+    <p style="text-align:center;font-size:12px;margin-top:12px;color:#fff;">
+      <span style="cursor:pointer" onclick="backToEmail()">← Change email</span>
+    </p>
+  </div>
+</div>
+
+<!-- VERIFYING -->
 <div class="email-overlay" id="verifyingModal">
   <div class="email-glass" style="text-align:center">
     <div class="loader"></div>
-    <h3>Verifying your email</h3>
-    <p>Check your inbox and click the link</p>
-    <button onclick="resendVerification()">Resend email</button>
-    <p id="resendMsg"></p>
+    <h3>Verifying...</h3>
+    <p>Please wait while we verify your code</p>
   </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-functions-compat.js"></script>
 
 <script>
+// Initialize Firebase
 firebase.initializeApp({
   apiKey:"AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
   authDomain:"scalevest-163a0.firebaseapp.com",
@@ -251,123 +321,261 @@ firebase.initializeApp({
 });
 
 const auth = firebase.auth();
+const functions = firebase.functions();
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
-/* 🔥 GITHUB PAGES SAFE REDIRECT */
-function getRedirectURL(){
-  return window.location.origin +
-    window.location.pathname.replace(/\/[^\/]*$/, "/") +
-    "login.html";
+let currentEmail = '';
+let timerInterval = null;
+
+/* UI HELPERS */
+function closeModals(){
+  emailModal.style.display="none";
+  otpModal.style.display="none";
+  verifyingModal.style.display="none";
+  clearTimer();
 }
 
-/* UI */
-function emailAuthHandler(){ signupModal.style.display="flex"; }
-function switchToSigninUI(){
-  signupModal.style.display="none";
-  signinModal.style.display="flex";
-}
-function checkPasswordRules(){
-  const p = signupPassword.value;
-  rule_length.innerText=(p.length>=6?"✅":"❌")+" At least 6 characters";
-  rule_number.innerText=(/\d/.test(p)?"✅":"❌")+" Contains a number";
-  rule_special.innerText=(/[!@#$%^&*]/.test(p)?"✅":"❌")+" Contains a special character";
-}
-function validPassword(p){
-  return p.length>=6 && /\d/.test(p) && /[!@#$%^&*]/.test(p);
-}
-function showVerifying(){
-  signupModal.style.display="none";
-  signinModal.style.display="none";
-  verifyingModal.style.display="flex";
+function showEmailAuth(){
+  emailModal.style.display="flex";
+  emailError.style.display="none";
+  emailSuccess.style.display="none";
+  emailInput.value = '';
 }
 
-/* SIGNUP */
-function emailSignup(){
-  if(!validPassword(signupPassword.value))
-    return alert("Password does not meet requirements");
+function backToEmail(){
+  otpModal.style.display="none";
+  emailModal.style.display="flex";
+  clearOTPInputs();
+  clearTimer();
+}
 
-  auth.createUserWithEmailAndPassword(
-    signupEmail.value,
-    signupPassword.value
-  )
-  .then(async cred=>{
-    await cred.user.sendEmailVerification({
-      url: getRedirectURL()
-    });
+function clearOTPInputs(){
+  for(let i=1; i<=6; i++){
+    document.getElementById('otp'+i).value = '';
+  }
+  document.getElementById('otp1').focus();
+}
 
-    // ❌ DO NOT SIGN OUT
-    showVerifying();
-  })
-  .catch(err=>{
-    if(err.code==="auth/email-already-in-use"){
-      alert("Account already exists. Please sign in.");
-      switchToSigninUI();
-      signupModal.style.display="none";
-    }else{
-      alert(err.message);
+function showError(elementId, message){
+  const el = document.getElementById(elementId);
+  el.innerText = message;
+  el.style.display = "block";
+}
+
+function showSuccess(elementId, message){
+  const el = document.getElementById(elementId);
+  el.innerText = message;
+  el.style.display = "block";
+}
+
+/* OTP INPUT NAVIGATION */
+function moveToNext(current, nextId){
+  if(current.value.length === 1 && nextId){
+    document.getElementById(nextId).focus();
+  }
+}
+
+function handleBackspace(event, current, prevId){
+  if(event.key === 'Backspace' && current.value === '' && prevId){
+    document.getElementById(prevId).focus();
+  }
+}
+
+/* COUNTDOWN TIMER */
+function startTimer(seconds){
+  clearTimer();
+  
+  let remaining = seconds;
+  const resendBtn = document.getElementById('resendBtn');
+  const timerEl = document.getElementById('timer');
+  
+  resendBtn.disabled = true;
+  
+  timerInterval = setInterval(() => {
+    remaining--;
+    
+    const mins = Math.floor(remaining / 60);
+    const secs = remaining % 60;
+    timerEl.innerText = `Code expires in ${mins}:${secs.toString().padStart(2, '0')}`;
+    
+    if(remaining <= 0){
+      clearTimer();
+      timerEl.innerText = 'Code expired';
+      resendBtn.disabled = false;
+      resendBtn.innerText = 'Resend code';
     }
-  });
+  }, 1000);
 }
 
-function forgotPassword(){
-  const email = signinEmail.value;
-  if(!email) return alert("Enter your email first");
+function clearTimer(){
+  if(timerInterval){
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+}
 
-  auth.sendPasswordResetEmail(email)
-    .then(()=>{
-      alert("Password reset email sent");
-    })
-    .catch(err=>{
-      alert(err.message);
+/* SEND OTP */
+async function sendOTP(){
+  const email = emailInput.value.trim();
+  
+  if(!email){
+    showError('emailError', 'Please enter your email');
+    return;
+  }
+  
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    showError('emailError', 'Please enter a valid email address');
+    return;
+  }
+  
+  const btn = document.getElementById('sendOtpBtn');
+  btn.disabled = true;
+  btn.innerText = 'Sending...';
+  emailError.style.display = 'none';
+  emailSuccess.style.display = 'none';
+  
+  try {
+    const generateOTP = functions.httpsCallable('generateOTP');
+    const result = await generateOTP({ email: email });
+    
+    currentEmail = email;
+    
+    showSuccess('emailSuccess', '✅ Code sent! Check your email.');
+    
+    setTimeout(() => {
+      emailModal.style.display = 'none';
+      otpModal.style.display = 'flex';
+      otpEmail.innerText = email;
+      clearOTPInputs();
+      startTimer(300); // 5 minutes
+    }, 1500);
+    
+  } catch(error) {
+    console.error('Error sending OTP:', error);
+    showError('emailError', error.message || 'Failed to send code. Please try again.');
+    btn.disabled = false;
+    btn.innerText = 'Send verification code';
+  }
+}
+
+/* RESEND OTP */
+async function resendOTP(){
+  const btn = document.getElementById('resendBtn');
+  btn.disabled = true;
+  btn.innerText = 'Sending...';
+  otpError.style.display = 'none';
+  
+  try {
+    const generateOTP = functions.httpsCallable('generateOTP');
+    await generateOTP({ email: currentEmail });
+    
+    clearOTPInputs();
+    startTimer(300);
+    
+    showError('otpError', '✅ New code sent!');
+    setTimeout(() => {
+      otpError.style.display = 'none';
+    }, 3000);
+    
+  } catch(error) {
+    console.error('Error resending OTP:', error);
+    showError('otpError', 'Failed to resend code. Please try again.');
+    btn.disabled = false;
+    btn.innerText = 'Resend code';
+  }
+}
+
+/* VERIFY OTP */
+async function verifyOTP(){
+  let otp = '';
+  for(let i=1; i<=6; i++){
+    const val = document.getElementById('otp'+i).value;
+    if(!val) return; // Wait for all digits
+    otp += val;
+  }
+  
+  otpError.style.display = 'none';
+  otpModal.style.display = 'none';
+  verifyingModal.style.display = 'flex';
+  
+  try {
+    const verifyOTPFunc = functions.httpsCallable('verifyOTP');
+    const result = await verifyOTPFunc({ 
+      email: currentEmail, 
+      otp: otp 
     });
+    
+    // Sign in with custom token
+    await auth.signInWithCustomToken(result.data.customToken);
+    
+    // Redirect to main hub
+    window.location.href = "mainbusinesshub.html";
+    
+  } catch(error) {
+    console.error('Error verifying OTP:', error);
+    verifyingModal.style.display = 'none';
+    otpModal.style.display = 'flex';
+    
+    showError('otpError', error.message || 'Invalid code. Please try again.');
+    clearOTPInputs();
+  }
 }
 
-/* SIGNIN */
-function emailSignin(){
-  auth.signInWithEmailAndPassword(signinEmail.value, signinPassword.value)
-  .then(async res=>{
-    await res.user.reload();
-    if(!res.user.emailVerified){
-      showVerifying();
-      await auth.signOut();
-      return;
-    }
-    location.href="mainbusinesshub.html";
-  }).catch(e=>alert(e.message));
+/* GOOGLE LOGIN */
+async function googleLogin(){
+  try {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    await auth.signInWithPopup(provider);
+    window.location.href = "mainbusinesshub.html";
+  } catch(err) {
+    console.error('Google sign-in error:', err);
+    alert("Google sign-in failed: " + err.message);
+  }
 }
 
-/* RESEND */
-async function resendVerification(){
-  const user = auth.currentUser;
-  if(!user) return resendMsg.innerText="Sign in again";
-  await user.sendEmailVerification({ url:getRedirectURL() });
-  resendMsg.innerText="✅ Email sent again";
+/* FACEBOOK LOGIN */
+async function facebookLogin(){
+  try {
+    const provider = new firebase.auth.FacebookAuthProvider();
+    provider.addScope('email');
+    await auth.signInWithPopup(provider);
+    window.location.href = "mainbusinesshub.html";
+  } catch(err) {
+    console.error('Facebook sign-in error:', err);
+    if(err.code === "auth/popup-closed-by-user") return;
+    alert("Facebook sign-in failed: " + err.message);
+  }
 }
 
-/* SOCIAL */
-function googleLogin(){
-  auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
-  .then(()=>location.href="mainbusinesshub.html");
-}
-function facebookLogin(){
-  auth.signInWithPopup(new firebase.auth.FacebookAuthProvider())
-  .then(()=>location.href="mainbusinesshub.html");
-}
-function appleLogin(){
-  auth.signInWithPopup(new firebase.auth.OAuthProvider("apple.com"))
-  .then(()=>location.href="mainbusinesshub.html");
+/* APPLE LOGIN */
+async function appleLogin(){
+  try {
+    const provider = new firebase.auth.OAuthProvider('apple.com');
+    provider.addScope('email');
+    provider.addScope('name');
+    await auth.signInWithPopup(provider);
+    window.location.href = "mainbusinesshub.html";
+  } catch(err) {
+    console.error('Apple sign-in error:', err);
+    if(err.code === "auth/popup-closed-by-user") return;
+    alert("Apple sign-in failed: " + err.message);
+  }
 }
 
-/* AUTO LOGIN AFTER VERIFY */
-auth.onAuthStateChanged(async user=>{
-  if(!user) return;
-  await user.reload();
-  if(user.emailVerified){
-    location.href="mainbusinesshub.html";
-  }else{
-    showVerifying();
+/* AUTH STATE LISTENER */
+auth.onAuthStateChanged(user => {
+  if(user && user.emailVerified){
+    window.location.href = "mainbusinesshub.html";
   }
 });
+
+// Auto-focus first OTP input when modal opens
+const observer = new MutationObserver(() => {
+  if(otpModal.style.display === 'flex'){
+    document.getElementById('otp1').focus();
+  }
+});
+observer.observe(otpModal, { attributes: true, attributeFilter: ['style'] });
 </script>
 
 </body>
