@@ -192,6 +192,7 @@
         @keyframes spin { to { transform: rotate(360deg); } }
 
     </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
 </head>
 <body>
 
@@ -508,24 +509,34 @@
             const baseRef = `BusinessOwners/${currentUserId}/BusinessItems`;
 
             // Legal Listener
-            db.ref(`${baseRef}/legaldocuments`).on('value', snapshot => {
-                const list = document.getElementById('legal-list');
-                list.innerHTML = '';
-                snapshot.forEach(child => {
-                    const doc = child.val();
-                    const div = document.createElement('div');
-                    div.className = 'doc-card glass';
-                    let thumb = doc.url && doc.url.startsWith('data:image') ? doc.url : 'https://via.placeholder.com/150/000000/FFFFFF/?text=DOC';
-                    div.innerHTML = `
-                        <img src="${thumb}" class="doc-thumb" onclick="previewDoc('${doc.url}')">
-                        <div style="font-weight:bold">${doc.name}</div>
-                        <div style="font-size:0.8rem; color:#aaa">${doc.category}</div>
-                    `;
-                    list.appendChild(div);
-                });
-                if(snapshot.exists()) document.getElementById('meta-legal').innerText = "Last update: Today";
-            });
+           db.ref(`${baseRef}/legaldocuments`).on('value', snapshot => {
+    const list = document.getElementById('legal-list');
+    list.innerHTML = '';
+    
+    snapshot.forEach(child => {
+        const doc = child.val();
+        const div = document.createElement('div');
+        div.className = 'doc-card glass';
 
+        // 1. Use doc.preview (the generated thumbnail/image)
+        // 2. Fallback to doc.url if preview is missing
+        // 3. Final fallback to a generic icon if neither exists
+        let thumb = doc.preview || doc.url || 'https://cdn-icons-png.flaticon.com/512/337/337948.png';
+
+        div.innerHTML = `
+            <img src="${thumb}" class="doc-thumb" style="cursor: pointer;" onclick="window.open('${doc.url}', '_blank')">
+            <div style="font-weight:bold; margin-top: 8px;">${doc.name}</div>
+            <div style="font-size:0.8rem; color:#aaa">${doc.category}</div>
+        `;
+        list.appendChild(div);
+    });
+
+    if(snapshot.exists()) {
+        document.getElementById('meta-legal').innerText = "Last update: Today";
+    } else {
+        document.getElementById('meta-legal').innerText = "No documents yet";
+    }
+});
             // Transactions Listener
             db.ref(`${baseRef}/transactions`).on('value', snapshot => {
                 const list = document.getElementById('trans-list');
@@ -616,24 +627,74 @@
 
         // --- 6. SAVE FUNCTIONS ---
 
-        async function saveLegal() {
-            const cat = document.getElementById('legal-cat').value;
-            const name = document.getElementById('legal-name').value;
-            const fileInput = document.getElementById('legal-file');
+// Setup PDF.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+async function saveLegal() {
+    const cat = document.getElementById('legal-cat').value;
+    const name = document.getElementById('legal-name').value;
+    const fileInput = document.getElementById('legal-file');
+    
+    if(!name || fileInput.files.length === 0) return alert("File and Name required");
+
+    const file = fileInput.files[0];
+    const fileId = Date.now();
+    const storagePath = `BusinessOwners/${currentUserId}/LegalDocs/${fileId}_${file.name}`;
+    const thumbPath = `BusinessOwners/${currentUserId}/LegalDocs/thumbs/${fileId}_thumb.jpg`;
+    
+    try {
+        // 1. Upload Main File
+        const fileRef = firebase.storage().ref(storagePath);
+        await fileRef.put(file);
+        const mainUrl = await fileRef.getDownloadURL();
+
+        let thumbUrl = "";
+
+        // 2. Generate and Upload Thumbnail
+        if (file.type === "application/pdf") {
+            // Render PDF to Canvas
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+            const page = await pdf.getPage(1);
+            const viewport = page.getViewport({ scale: 0.5 });
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            await page.render({ canvasContext: context, viewport: viewport }).promise;
             
-            if(!name) return alert("Name required");
-
-            let url = "";
-            if(fileInput.files.length > 0) {
-                url = await fileToBase64(fileInput.files[0]);
-            }
-
-            db.ref(`BusinessOwners/${currentUserId}/BusinessItems/legaldocuments`).push({
-                category: cat, name: name, url: url, timestamp: Date.now()
-            });
-            updateMeta('legal');
-            closeModals();
+            // Convert Canvas to Blob and upload
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
+            const thumbRef = firebase.storage().ref(thumbPath);
+            await thumbRef.put(blob);
+            thumbUrl = await thumbRef.getDownloadURL();
+        } 
+        else if (file.type.startsWith("image/")) {
+            thumbUrl = mainUrl; // Use original image as thumb
+        } 
+        else {
+            // Generic icon for other docs (Word, etc)
+            thumbUrl = "https://cdn-icons-png.flaticon.com/512/337/337948.png";
         }
+
+        // 3. Save to Database
+        await db.ref(`BusinessOwners/${currentUserId}/BusinessItems/legaldocuments`).push({
+            name: name,
+            category: cat,
+            url: mainUrl,       // Link to actual file
+            preview: thumbUrl,  // Visual thumbnail
+            timestamp: fileId
+        });
+
+        updateMeta('legal');
+        closeModals();
+        alert("File & Thumbnail saved successfully!");
+        
+    } catch (e) {
+        console.error(e);
+        alert("Error uploading: " + e.message);
+    }
+}
 
         function saveNote() {
             const title = document.getElementById('note-title').value;
