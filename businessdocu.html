@@ -2898,9 +2898,27 @@ localStorage.removeItem('megaAlertDismissed');
             db.ref(`BusinessOwners/${currentUserId}/BusinessItems/pendingorders/${orderKey}`).remove();
         }
 
-        function deleteMember(memberKey) {
-            db.ref(`BusinessOwners/${currentUserId}/BusinessItems/teamandstaff/${memberKey}`).remove();
+async function deleteMember(memberKey) {
+    try {
+        // 1. Get the member data to find the photo URL
+        const snapshot = await db.ref(`BusinessOwners/${currentUserId}/BusinessItems/teamandstaff/${memberKey}`).once('value');
+        const data = snapshot.val();
+
+        // 2. If a photo exists, delete it from Storage
+        if (data && data.photoURL) {
+            const storageRef = firebase.storage().refFromURL(data.photoURL);
+            await storageRef.delete();
         }
+
+        // 3. Remove the database record
+        await db.ref(`BusinessOwners/${currentUserId}/BusinessItems/teamandstaff/${memberKey}`).remove();
+        
+    } catch (error) {
+        console.error("Delete failed:", error);
+        // Fallback: Delete DB record even if storage delete fails
+        db.ref(`BusinessOwners/${currentUserId}/BusinessItems/teamandstaff/${memberKey}`).remove();
+    }
+}
 
         function deleteJob(jobId) {
             db.ref(`BusinessOwners/${currentUserId}/BusinessItems/teamandstaff/${activeMemberId}/jobs/${jobId}`).remove();
