@@ -2258,166 +2258,106 @@ if (!window.hasCheckedInitialDeadlines) {
 // ============================================
 
 async function checkDeadlines(isSimulated = false) {
-
-if (!isSimulated) {
-    const lastDismissed = localStorage.getItem('lastDeadlineDismissed');
-    const todayStr = new Date().toISOString().split('T')[0];
-    if (lastDismissed === todayStr) {
-        console.log('Alert already dismissed today. Skipping.');
-        return; 
-    }
-}
     console.log('🔍 Checking deadlines...', isSimulated ? `(Time Travel: +${timeTravelDaysOffset} days)` : '(Real Time)');
     
-    // Calculate dates based on time travel mode
+    // Setup Dates
     const baseDate = new Date();
     if (isSimulated && timeTravelDaysOffset > 0) {
         baseDate.setDate(baseDate.getDate() + timeTravelDaysOffset);
     }
-    
-    const today = new Date(baseDate);
+    const todayStr = baseDate.toISOString().split('T')[0];
     const tomorrow = new Date(baseDate);
     tomorrow.setDate(tomorrow.getDate() + 1);
     const tomorrowStr = tomorrow.toISOString().split('T')[0];
-    const todayStr = today.toISOString().split('T')[0];
-    
-    console.log('Reference Date:', todayStr, 'Tomorrow:', tomorrowStr);
     
     const baseRef = `BusinessOwners/${currentUserId}/BusinessItems`;
-    let urgentAlerts = []; // Tomorrow's deadlines
-    let criticalAlerts = []; // Today's deadlines
+    let urgentAlerts = []; 
+    let criticalAlerts = [];
+    
+    // Reset the tracker for items currently being displayed
+    window.currentActiveAlertIds = [];
+    
+    // Load list of items previously dismissed
+    const dismissedIds = JSON.parse(localStorage.getItem('dismissedDeadlineItems') || '[]');
+
+    // Helper to process items and filter out already-dismissed ones
+    const processItem = (uid, data, isUrgent, isCritical) => {
+        // In Time Travel, we always show. In Simple Mode, we skip if already dismissed.
+        if (!isSimulated && dismissedIds.includes(uid)) return;
+
+        if (isUrgent || isCritical) {
+            window.currentActiveAlertIds.push(uid);
+            if (isCritical) criticalAlerts.push(data);
+            else urgentAlerts.push(data);
+        }
+    };
 
     try {
-        // Check Transactions
+        // 1. Check Transactions
         const transSnapshot = await get(ref(database, `${baseRef}/transactions`));
         if (transSnapshot.exists()) {
-            console.log('Found transactions');
             transSnapshot.forEach(child => {
                 const t = child.val();
-                if (t.date === tomorrowStr) {
-                    urgentAlerts.push({
-                        type: 'transaction',
-                        icon: 'fa-dollar-sign',
-                        title: `Payment: ${t.name}`,
-                        desc: `$${t.amount} - ${t.type === 'owe' ? 'You owe them' : 'They owe you'}`
-                    });
-                }
-                if (t.date === todayStr) {
-                    criticalAlerts.push({
-                        type: 'transaction',
-                        icon: 'fa-dollar-sign',
-                        title: `URGENT: Payment ${t.name}`,
-                        desc: `$${t.amount} - DUE TODAY!`
-                    });
-                }
+                const uid = `trans_${child.key}_${t.date}`; // Unique ID combining key and date
+                const data = { type: 'transaction', icon: 'fa-dollar-sign', title: `Payment: ${t.name}`, desc: `$${t.amount}` };
+                processItem(uid, data, t.date === tomorrowStr, t.date === todayStr);
             });
         }
 
-        // Check Orders
+        // 2. Check Orders
         const ordersSnapshot = await get(ref(database, `${baseRef}/pendingorders`));
         if (ordersSnapshot.exists()) {
-            console.log('Found orders');
             ordersSnapshot.forEach(child => {
                 const o = child.val();
-                if (o.deadline === tomorrowStr) {
-                    urgentAlerts.push({
-                        type: 'order',
-                        icon: 'fa-box-open',
-                        title: `Order: ${o.category}`,
-                        desc: o.desc
-                    });
-                }
-                if (o.deadline === todayStr) {
-                    criticalAlerts.push({
-                        type: 'order',
-                        icon: 'fa-box-open',
-                        title: `URGENT ORDER: ${o.category}`,
-                        desc: o.desc + ' - DUE TODAY!'
-                    });
-                }
+                const uid = `order_${child.key}_${o.deadline}`;
+                const data = { type: 'order', icon: 'fa-box-open', title: `Order: ${o.category}`, desc: o.desc };
+                processItem(uid, data, o.deadline === tomorrowStr, o.deadline === todayStr);
             });
         }
 
-        // Check Notes
+        // 3. Check Notes
         const notesSnapshot = await get(ref(database, `${baseRef}/notes`));
         if (notesSnapshot.exists()) {
-            console.log('Found notes');
             notesSnapshot.forEach(child => {
                 const n = child.val();
-                if (n.date === tomorrowStr) {
-                    urgentAlerts.push({
-                        type: 'note',
-                        icon: 'fa-sticky-note',
-                        title: `Note: ${n.title}`,
-                        desc: n.content.substring(0, 60) + '...'
-                    });
-                }
-                if (n.date === todayStr) {
-                    criticalAlerts.push({
-                        type: 'note',
-                        icon: 'fa-sticky-note',
-                        title: `URGENT NOTE: ${n.title}`,
-                        desc: n.content.substring(0, 60) + '...'
-                    });
-                }
+                const uid = `note_${child.key}_${n.date}`;
+                const data = { type: 'note', icon: 'fa-sticky-note', title: `Note: ${n.title}`, desc: n.content.substring(0, 60) };
+                processItem(uid, data, n.date === tomorrowStr, n.date === todayStr);
             });
         }
 
-        // Check Jobs
+        // 4. Check Jobs/Tasks
         const teamSnapshot = await get(ref(database, `${baseRef}/teamandstaff`));
         if (teamSnapshot.exists()) {
-            console.log('Found team members');
-            teamSnapshot.forEach(memberSnapshot => {
-                const member = memberSnapshot.val();
+            teamSnapshot.forEach(memberSnap => {
+                const member = memberSnap.val();
                 if (member.jobs) {
-                    Object.values(member.jobs).forEach(job => {
+                    Object.entries(member.jobs).forEach(([jobId, job]) => {
                         if (!job.completed) {
-                            if (job.deadline === tomorrowStr) {
-                                urgentAlerts.push({
-                                    type: 'task',
-                                    icon: 'fa-tasks',
-                                    title: `Task for ${member.name}`,
-                                    desc: job.desc
-                                });
-                            }
-                            if (job.deadline === todayStr) {
-                                criticalAlerts.push({
-                                    type: 'task',
-                                    icon: 'fa-tasks',
-                                    title: `URGENT: ${member.name}'s Task`,
-                                    desc: job.desc + ' - DUE TODAY!'
-                                });
-                            }
+                            const uid = `job_${jobId}_${job.deadline}`;
+                            const data = { type: 'task', icon: 'fa-tasks', title: `Task for ${member.name}`, desc: job.desc };
+                            processItem(uid, data, job.deadline === tomorrowStr, job.deadline === todayStr);
                         }
                     });
                 }
             });
         }
-        
-        // Show alerts based on mode
+
         const allAlerts = [...criticalAlerts, ...urgentAlerts];
-        console.log('Total alerts found:', allAlerts.length);
         
         if (allAlerts.length > 0) {
             if (isSimulated) {
-                // Time Travel Mode: Show small bottom toast
                 showTimeTravelAlert(allAlerts, criticalAlerts.length > 0);
             } else {
-                // Normal Mode: Show full-screen mega alert
                 showMegaAlert(allAlerts, criticalAlerts.length > 0);
             }
-        } else {
-            if (isSimulated) {
-                showToast('✅ Clear Horizon', 'No deadlines in the next 24 hours');
-            } else {
-                console.log('✅ No deadlines approaching');
-            }
+        } else if (isSimulated) {
+            showToast('✅ Clear Horizon', 'No deadlines found', 2000);
         }
     } catch (error) {
         console.error('❌ Error checking deadlines:', error);
     }
-}
-// Show small bottom alert for Time Travel mode
+}// Show small bottom alert for Time Travel mode
 // Show enhanced bottom alert for Time Travel mode
 function showTimeTravelAlert(alerts, isCritical) {
     const daysLeft = isCritical ? 0 : 1;
@@ -2565,7 +2505,14 @@ window.dismissMegaAlert = function() {
     const overlay = document.getElementById('mega-alert-overlay');
     overlay.style.display = 'none';
 
-    localStorage.setItem('lastDeadlineDismissed', new Date().toISOString().split('T')[0]);
+    // Get current dismissed list from memory or start empty
+    const dismissedIds = JSON.parse(localStorage.getItem('dismissedDeadlineItems') || '[]');
+    
+    // Add all current alerts to the "seen" list
+    if (window.currentActiveAlertIds) {
+        const updatedList = [...new Set([...dismissedIds, ...window.currentActiveAlertIds])];
+        localStorage.setItem('dismissedDeadlineItems', JSON.stringify(updatedList));
+    }
 };
 
         // Snooze alert
