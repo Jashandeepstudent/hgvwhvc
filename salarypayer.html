@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> Digital Command Centre </title>
+    <title> DigitalQ Command Centre </title>
     <style>
         * {
             margin: 0;
@@ -497,7 +497,7 @@ body {
             box-shadow: 0 30px 80px rgba(0, 0, 0, 0.9);
             overflow-y: auto;
         }
-/* 🔥 MOBILE FIX FOR STORY CARD */
+/* ðŸ”¥ MOBILE FIX FOR STORY CARD */
 @media (max-width: 768px) {
     .story-card {
         /* Adjust width to fit screen with small side margins */
@@ -565,7 +565,7 @@ body {
     overflow-y: auto;
 }
 
-/* 🔥 MOBILE FIX - COMPACT TOP-LEFT VERSION */
+/* ðŸ”¥ MOBILE FIX - COMPACT TOP-LEFT VERSION */
 @media (max-width: 768px) {
     .controls {
         /* Position Fix: Top Left */
@@ -742,8 +742,16 @@ body {
 
     <div class="time-warp-overlay"></div>
 
-    <div class="time-travel-active-overlay" id="timeTravelActiveIndicator">
-<!-- ========== DEADLINE ALERT HUD ========== -->
+<div class="time-travel-active-overlay" id="timeTravelActiveIndicator">
+    <span style="font-size: 20px;">⏳</span>
+    <div style="text-align: center;">
+        <div style="font-weight: bold; letter-spacing: 1px;">FUTURE STATE (+24H)</div>
+        <div style="font-size: 10px; opacity: 0.8;">PREDICTED INVENTORY & SALES</div>
+    </div>
+    <button class="exit-time-travel" onclick="exitTimeTravel()">EXIT</button>
+</div>
+
+<!-- ========== DEADLINE ALERT HUD (SEPARATE) ========== -->
 <div class="deadline-hud" id="deadlineHud">
     <div class="deadline-icon">⚠️</div>
     <div class="deadline-info">
@@ -751,24 +759,17 @@ body {
         <div class="deadline-description" id="deadlineDesc">No urgent items</div>
     </div>
 </div>
-        <span style="font-size: 20px;">⏳</span>
-        <div style="text-align: center;">
-            <div style="font-weight: bold; letter-spacing: 1px;">FUTURE STATE (+24H)</div>
-            <div style="font-size: 10px; opacity: 0.8;">PREDICTED INVENTORY & SALES</div>
-        </div>
-        <button class="exit-time-travel" onclick="exitTimeTravel()">EXIT</button>
-    </div>
 
     <div class="inventory-leaderboard" id="outOfStockPanel">
-        <div class="leaderboard-title">🚨 Out of Stock <span id="oosCount">0</span></div>
+        <div class="leaderboard-title">ðŸš¨ Out of Stock <span id="oosCount">0</span></div>
         <div id="oosList"></div>
     </div>
 
     <div class="controls">
-        <h3><span class="status-indicator" id="statusIndicator"></span>🎮 Controls</h3>
+        <h3><span class="status-indicator" id="statusIndicator"></span>ðŸŽ® Controls</h3>
         
         <div class="control-group">
-            <label>🔍 Search Products</label>
+            <label>ðŸ” Search Products</label>
             <input type="text" class="search-bar" id="searchBar" placeholder="Search products..." onkeyup="filterProducts(this.value)">
         </div>
 <div id="qtyPopup" class="quantity-popup">
@@ -778,17 +779,17 @@ body {
     <button onclick="closeQtyPopup()" style="background:none; border:none; color:#888; margin-top:10px; cursor:pointer;">Cancel</button>
 </div>
         <div class="control-group">
-            <label>Rotate View (X-Axis): <span id="rotateX-value">60°</span></label>
+            <label>Rotate View (X-Axis): <span id="rotateX-value">60Â°</span></label>
             <input type="range" id="rotateX" min="0" max="90" value="60" oninput="updateRotation()">
         </div>
 
         <div class="control-group">
-            <label>Rotate View (Z-Axis): <span id="rotateZ-value">360°</span></label>
+            <label>Rotate View (Z-Axis): <span id="rotateZ-value">360Â°</span></label>
             <input type="range" id="rotateZ" min="0" max="360" value="360" oninput="updateRotation()">
         </div>
 
         <div class="control-group">
-            <label>🔥 Heatmap Overlay</label>
+            <label>ðŸ”¥ Heatmap Overlay</label>
             <div class="toggle-group">
                 <div class="toggle-switch" id="heatmapToggle" onclick="toggleHeatmap()">
                     <div class="toggle-slider"></div>
@@ -798,11 +799,11 @@ body {
         </div>
 
         <button class="exchange-btn" id="exchangeBtn" onclick="toggleExchangeMode()">
-            🔄 Exchange Places
+            ðŸ”„ Exchange Places
         </button>
 
         <button class="time-travel-btn" onclick="openTimeTravel()">
-            <span style="font-size: 18px;">⏳</span> Time Travel
+            <span style="font-size: 18px;">â³</span> Time Travel
         </button>
     </div>
 
@@ -819,7 +820,7 @@ body {
     
     <!-- Story/Detail Card -->
     <div class="story-card" id="storyCard">
-        <button class="close-btn" onclick="closeStoryCard()">×</button>
+        <button class="close-btn" onclick="closeStoryCard()">Ã—</button>
         <div id="storyContent"></div>
 <div id="inCardQtyPopup" style="display:none; position:absolute; inset:0; background:rgba(15,15,35,0.98); z-index:10; flex-direction:column; align-items:center; justify-content:center; border-radius:25px; padding:20px;">
         <h3 id="qtyTitle" style="color:var(--neon-primary); margin-bottom:15px; font-size:18px; text-shadow: 0 0 10px var(--neon-primary);">AMOUNT</h3>
@@ -834,7 +835,7 @@ body {
 
     <!-- Time Travel Modal -->
     <div class="story-card" id="timeTravelModal" style="display: none; z-index: 2500;">
-        <button class="close-btn" onclick="closeTimeTravel()">×</button>
+        <button class="close-btn" onclick="closeTimeTravel()">Ã—</button>
         <div id="timeTravelContent"></div>
     </div>
 
@@ -877,10 +878,10 @@ let simulatedTime = new Date();
 let activeAlerts = [];
 let deadlineCheckInterval = null;
         const iconMap = {
-            'apple': '🍎', 'bread': '🍞', 'milk': '🥛', 'fish': '🐟', 'salmon': '🐟',
-            'coffee': '☕', 'yogurt': '🥣', 'honey': '🍯', 'avocado': '🥑',
-            'pasta': '🍝', 'oil': '🫒', 'cheese': '🧀', 'egg': '🥚', 'tomato': '🍅',
-            'carrot': '🥕', 'banana': '🍌', 'orange': '🍊', 'grape': '🍇', 'strawberry': '🍓'
+            'apple': 'ðŸŽ', 'bread': 'ðŸž', 'milk': 'ðŸ¥›', 'fish': 'ðŸŸ', 'salmon': 'ðŸŸ',
+            'coffee': 'â˜•', 'yogurt': 'ðŸ¥£', 'honey': 'ðŸ¯', 'avocado': 'ðŸ¥‘',
+            'pasta': 'ðŸ', 'oil': 'ðŸ«’', 'cheese': 'ðŸ§€', 'egg': 'ðŸ¥š', 'tomato': 'ðŸ…',
+            'carrot': 'ðŸ¥•', 'banana': 'ðŸŒ', 'orange': 'ðŸŠ', 'grape': 'ðŸ‡', 'strawberry': 'ðŸ“'
         };
 
         // Initialize multiple floors dynamically
@@ -923,7 +924,7 @@ let deadlineCheckInterval = null;
             // For now, allow move if no product at x,y on this floor
             const occupied = productsData.some(p => p.x === x && p.y === y && (p.floor || 0) === floor && p.id !== grabbedProduct.id);
             if (occupied) {
-                showToast('⚠️ Space Occupied', 'This tile already has a product');
+                showToast('âš ï¸ Space Occupied', 'This tile already has a product');
                 return;
             }
 
@@ -936,7 +937,7 @@ function moveProductToPosition(product, newX, newY, newFloor) {
     const isOccupied = productsData.some(p => p.x === newX && p.y === newY && (p.floor || 0) === newFloor && p.id !== product.id);
     
     if (isOccupied) {
-        showToast('⚠️ Tile Occupied', 'Two products cannot be on the same tile.');
+        showToast('âš ï¸ Tile Occupied', 'Two products cannot be on the same tile.');
         return; 
     }
 
@@ -946,7 +947,7 @@ function moveProductToPosition(product, newX, newY, newFloor) {
     updates[`Businesses/${currentUserId}/inventory/${product.id}/floor`] = newFloor;
     
     update(ref(database), updates).then(() => {
-        showToast('✅ Position Updated', `${product.name} moved to ${newX}, ${newY}.`);
+        showToast('âœ… Position Updated', `${product.name} moved to ${newX}, ${newY}.`);
         // We do NOT set exchangeModeActive = false here so you can keep placing
         grabbedProduct = null; 
         document.querySelectorAll('.product-node').forEach(n => n.classList.remove('grabbed'));
@@ -1020,7 +1021,7 @@ function moveProductToPosition(product, newX, newY, newFloor) {
                 }
             });
 
-            showToast(heatmapEnabled ? '🔥 Heatmap On' : '❄️ Heatmap Off', 'Visualizing sales & stock performance');
+            showToast(heatmapEnabled ? 'ðŸ”¥ Heatmap On' : 'â„ï¸ Heatmap Off', 'Visualizing sales & stock performance');
         };
 
         function renderShop(products) {
@@ -1130,7 +1131,7 @@ async function scanDeadlines() {
                         name: transaction.name || 'Transaction',
                         date: transaction.date,
                         type: 'Transaction',
-                        icon: '💰',
+                        icon: 'ðŸ’°',
                         details: transaction.details || ''
                     });
                 }
@@ -1146,7 +1147,7 @@ async function scanDeadlines() {
                         name: order.name || 'Order',
                         date: order.deadline,
                         type: 'Order',
-                        icon: '📦',
+                        icon: 'ðŸ“¦',
                         details: order.description || ''
                     });
                 }
@@ -1162,7 +1163,7 @@ async function scanDeadlines() {
                         name: task.name || 'Task',
                         date: task.deadline,
                         type: 'Task',
-                        icon: '✅',
+                        icon: 'âœ…',
                         details: task.description || ''
                     });
                 }
@@ -1178,7 +1179,7 @@ async function scanDeadlines() {
                         name: note.title || 'Note',
                         date: note.lastdate,
                         type: 'Note',
-                        icon: '📝',
+                        icon: 'ðŸ“',
                         details: note.content || ''
                     });
                 }
@@ -1238,20 +1239,20 @@ function updateAlertUI() {
     hud.classList.add(topAlert.urgency);
     
     if (topAlert.urgency === 'critical') {
-        title.textContent = '🚨 DEADLINE REACHED';
+        title.textContent = 'ðŸš¨ DEADLINE REACHED';
         desc.textContent = `${topAlert.icon} ${topAlert.name}`;
         document.documentElement.style.setProperty('--neon-primary', '#ff0040');
     } else {
-        title.textContent = '⚠️ 1 DAY LEFT';
+        title.textContent = 'âš ï¸ 1 DAY LEFT';
         desc.textContent = `${topAlert.icon} ${topAlert.name}`;
         document.documentElement.style.setProperty('--neon-primary', '#ffaa00');
     }
     
     // Show toast notification
     if (topAlert.urgency === 'critical') {
-        showToast('🚨 CRITICAL DEADLINE', `${topAlert.name} deadline has been reached!`);
+        showToast('ðŸš¨ CRITICAL DEADLINE', `${topAlert.name} deadline has been reached!`);
     } else {
-        showToast('⚠️ DEADLINE WARNING', `${topAlert.name} has 1 day left`);
+        showToast('âš ï¸ DEADLINE WARNING', `${topAlert.name} has 1 day left`);
     }
 }
 
@@ -1270,7 +1271,7 @@ async function advanceTimeAndScan() {
     scanDeadlines();
     
     // Update UI to show simulated date
-    showToast('⏰ Time Advanced', `Simulated Date: ${simulatedTime.toLocaleDateString()}`);
+    showToast('â° Time Advanced', `Simulated Date: ${simulatedTime.toLocaleDateString()}`);
 }
 
 // ==================== END DEADLINE SYSTEM ====================
@@ -1358,7 +1359,7 @@ async function advanceTimeAndScan() {
         }
 
         renderShop(futureProductsData);
-        showToast('🚀 Peak Logic Synchronized', 'AI + Deadline tracking active');
+        showToast('ðŸš€ Peak Logic Synchronized', 'AI + Deadline tracking active');
     }, 2000);
 };
 
@@ -1367,13 +1368,13 @@ async function advanceTimeAndScan() {
             document.body.classList.remove('time-travel-active-world');
             document.getElementById('timeTravelActiveIndicator').classList.remove('active');
             renderShop(productsData);
-            showToast('🏠 Back to Present', 'Restored real-time inventory state');
+            showToast('ðŸ  Back to Present', 'Restored real-time inventory state');
         };
 
         function renderTimeTravelResults(container, data, aiResult) {
             let html = `
                 <h2 style="color: #fff; text-shadow: 0 0 10px #7000ff; text-align: center; margin-bottom: 20px;">
-                    🔮 FUTURE INVENTORY STATE
+                    ðŸ”® FUTURE INVENTORY STATE
                 </h2>
                 <div style="display: grid; gap: 15px; max-height: 60vh; overflow-y: auto;">
             `;
@@ -1398,7 +1399,7 @@ async function advanceTimeAndScan() {
                             <span style="color: ${statusColor}; font-weight: bold; font-size: 12px; border: 1px solid ${statusColor}; padding: 2px 6px; border-radius: 4px;">${statusText}</span>
                         </div>
                         <div style="margin-top: 8px; font-family: monospace; color: var(--neon-primary);">
-                            📉 Depletion: ${daysLeft === 0 && item.stock === 0 ? "EMPTY" : `in ${daysLeft} Days`}
+                            ðŸ“‰ Depletion: ${daysLeft === 0 && item.stock === 0 ? "EMPTY" : `in ${daysLeft} Days`}
                         </div>
                     </div>
                 `;
@@ -1414,8 +1415,8 @@ async function advanceTimeAndScan() {
             const rotZ = document.getElementById('rotateZ').value;
             document.documentElement.style.setProperty('--world-rotateX', rotX + 'deg');
             document.documentElement.style.setProperty('--world-rotateZ', rotZ + 'deg');
-            document.getElementById('rotateX-value').textContent = rotX + '°';
-            document.getElementById('rotateZ-value').textContent = rotZ + '°';
+            document.getElementById('rotateX-value').textContent = rotX + 'Â°';
+            document.getElementById('rotateZ-value').textContent = rotZ + 'Â°';
         };
 
         window.filterProducts = function(val) {
@@ -1438,7 +1439,7 @@ async function advanceTimeAndScan() {
             if (exchangeModeActive) {
                 btn.classList.add('active');
                 cells.forEach(cell => cell.classList.add('exchange-mode'));
-                showToast('🔄 Exchange Mode', 'Click a product to grab, then a tile to move');
+                showToast('ðŸ”„ Exchange Mode', 'Click a product to grab, then a tile to move');
             } else {
                 btn.classList.remove('active');
                 cells.forEach(cell => cell.classList.remove('exchange-mode'));
@@ -1446,7 +1447,7 @@ async function advanceTimeAndScan() {
                     grabbedProduct = null;
                     document.querySelectorAll('.product-node').forEach(n => n.classList.remove('grabbed'));
                 }
-                showToast('✅ Mode Deactivated', 'Standard view restored');
+                showToast('âœ… Mode Deactivated', 'Standard view restored');
             }
         };
 
@@ -1454,12 +1455,12 @@ async function advanceTimeAndScan() {
             if (grabbedProduct?.id === product.id) {
                 grabbedProduct = null;
                 node.classList.remove('grabbed');
-                showToast('📦 Released', 'Product released');
+                showToast('ðŸ“¦ Released', 'Product released');
             } else {
                 grabbedProduct = product;
                 document.querySelectorAll('.product-node').forEach(n => n.classList.remove('grabbed'));
                 node.classList.add('grabbed');
-                showToast('✋ Grabbed', `Click an empty tile to move ${product.name}`);
+                showToast('âœ‹ Grabbed', `Click an empty tile to move ${product.name}`);
             }
         };
 
@@ -1488,7 +1489,7 @@ async function advanceTimeAndScan() {
             const oosItems = products.filter(p => p.stock === 0);
             count.textContent = oosItems.length;
             if (oosItems.length === 0) {
-                list.innerHTML = '<div style="color: #7fff00; font-size: 12px;">All items in stock! ✅</div>';
+                list.innerHTML = '<div style="color: #7fff00; font-size: 12px;">All items in stock! âœ…</div>';
             } else {
                 list.innerHTML = oosItems.map(item => `
                     <div class="stock-item"><span>${item.name}</span><span class="stock-count">OUT</span></div>
@@ -1527,14 +1528,14 @@ async function advanceTimeAndScan() {
         </div>
     </div>
             <div class="story-section" style="border-left-color: var(--neon-accent); background: rgba(127, 255, 0, 0.05);">
-                <h3>💰 Price Value</h3>
+                <h3>ðŸ’° Price Value</h3>
                 <p style="font-size: 24px; color: var(--neon-accent); font-weight: bold; text-shadow: 0 0 10px var(--neon-accent);">
                     ${product.price}
                 </p>
             </div>
 
             <div class="story-section">
-                <h3>📦 Inventory Management</h3>
+                <h3>ðŸ“¦ Inventory Management</h3>
                 <div style="display: flex; flex-direction: column; align-items: center; gap: 15px; margin-top: 15px;">
                     <div style="display: flex; align-items: center; justify-content: center; gap: 15px;">
                         <button onclick="openInCardQty('${product.id}', 'decrease')" 
@@ -1553,14 +1554,14 @@ async function advanceTimeAndScan() {
             </div>
 
             <div class="story-section">
-                <h3>🌍 Sourcing Origin</h3>
+                <h3>ðŸŒ Sourcing Origin</h3>
                 <p style="color: var(--ice-blue); font-weight: bold; letter-spacing: 1px;">
-                    📍 ${aiData.origin || 'Global Distribution'}
+                    ðŸ“ ${aiData.origin || 'Global Distribution'}
                 </p>
             </div>
 
 <div class="story-section" style="padding: 10px; margin: 0;">
-    <h3 style="font-size: 12px; color: #888; margin-bottom: 4px; text-transform: uppercase;">📖 Product Journey</h3>
+    <h3 style="font-size: 12px; color: #888; margin-bottom: 4px; text-transform: uppercase;">ðŸ“– Product Journey</h3>
     <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
         <p style="font-style: italic; color: #eee; font-size: 13px; line-height: 1.4; margin: 0;">
             "${aiData.description || 'Data synced.'}"
@@ -1570,7 +1571,7 @@ async function advanceTimeAndScan() {
 </div>
 
             <div class="story-section">
-                <h3>📦 Inventory Level Status</h3>
+                <h3>ðŸ“¦ Inventory Level Status</h3>
                 <p style="font-size: 20px; display: flex; align-items: center; gap: 10px; justify-content: center;">
                     <span id="stock-status-text">${product.stock} Units Available</span>
                     <span id="stock-status-badge" style="font-size: 14px; padding: 2px 8px; border-radius: 4px; background: ${product.stock < 5 ? 'var(--neon-red)' : 'var(--neon-accent)'}; color: #000; font-weight: bold;">
@@ -1690,7 +1691,7 @@ const formattedPrice = `$${parseFloat(priceValue).toFixed(2)}`;
             newProducts.push({
                 id: key,
                 name: inv.name || key,
-                icon: iconMap[key.toLowerCase()] || '📦',
+                icon: iconMap[key.toLowerCase()] || 'ðŸ“¦',
                 price: formattedPrice, 
                 stock: parseInt(inv.quantity || 0),
                 sales: parseInt(inv.sold || 0),
@@ -1702,10 +1703,10 @@ const formattedPrice = `$${parseFloat(priceValue).toFixed(2)}`;
     }else {
                         // Demo data
                         newProducts = [
-                            {id: 'p1', name: 'Organic Apple', price: '$2.50', stock: 50, sales: 60, x: 2, y: 2, icon: '🍎', floor: 0},
-                            {id: 'p2', name: 'Fresh Bread', price: '$4.00', stock: 10, sales: 20, x: 3, y: 3, icon: '🍞', floor: 0},
-                            {id: 'p3', name: 'Milk', price: '$3.50', stock: 3, sales: 5, x: 4, y: 2, icon: '🥛', floor: 0}, // Low
-                            {id: 'p4', name: 'Coffee', price: '$12.00', stock: 0, sales: 80, x: 5, y: 5, icon: '☕', floor: 0}, // OOS
+                            {id: 'p1', name: 'Organic Apple', price: '$2.50', stock: 50, sales: 60, x: 2, y: 2, icon: 'ðŸŽ', floor: 0},
+                            {id: 'p2', name: 'Fresh Bread', price: '$4.00', stock: 10, sales: 20, x: 3, y: 3, icon: 'ðŸž', floor: 0},
+                            {id: 'p3', name: 'Milk', price: '$3.50', stock: 3, sales: 5, x: 4, y: 2, icon: 'ðŸ¥›', floor: 0}, // Low
+                            {id: 'p4', name: 'Coffee', price: '$12.00', stock: 0, sales: 80, x: 5, y: 5, icon: 'â˜•', floor: 0}, // OOS
                         ];
                     }
                     
