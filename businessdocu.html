@@ -2084,7 +2084,19 @@ function showMegaAlert(alerts, isCritical) {
     const title = document.getElementById('mega-alert-title');
     const container = document.getElementById('deadline-list-container');
     const countdown = document.getElementById('alert-countdown');
-    
+
+    // Check if the user already dismissed this alert during this session
+    const isDismissed = localStorage.getItem('megaAlertDismissed');
+
+    // ONLY show if NOT dismissed and there are alerts
+    if (alerts.length > 0 && isDismissed !== 'true') {
+        overlay.style.display = 'flex';
+        if(alertSound) alertSound.play();
+    } else {
+        overlay.style.display = 'none';
+        return; // Stop execution if we aren't showing the alert
+    }
+
     // Update title based on urgency
     if (isCritical) {
         title.innerHTML = '🔥 URGENT DEADLINES TODAY! 🔥';
@@ -2095,7 +2107,7 @@ function showMegaAlert(alerts, isCritical) {
         title.style.color = 'var(--warning)';
         countdown.textContent = '24';
     }
-    
+
     // Build deadline list
     container.innerHTML = '';
     alerts.forEach((alert, index) => {
@@ -2111,7 +2123,7 @@ function showMegaAlert(alerts, isCritical) {
         `;
         container.appendChild(item);
     });
-    
+}    
     // Show overlay
     overlay.style.display = 'flex';
     
@@ -2182,12 +2194,13 @@ function playBeepSound() {
 // Dismiss mega alert
 function dismissMegaAlert() {
     const overlay = document.getElementById('mega-alert-overlay');
-    overlay.style.animation = 'alertFadeOut 0.5s ease';
+    overlay.style.display = 'none';
     
-    setTimeout(() => {
-        overlay.style.display = 'none';
-        overlay.style.animation = 'alertFadeIn 0.5s ease';
-    }, 500);
+    // Save to browser memory so it doesn't show again on reload
+    localStorage.setItem('megaAlertDismissed', 'true');
+    
+    const alertSound = document.getElementById('alert-sound');
+    if(alertSound) alertSound.pause();
 }
 
 // Snooze alert for 1 hour
@@ -2551,7 +2564,7 @@ db.ref(`${baseRef}/transactions`).on('value', snapshot => {
             db.ref(`BusinessOwners/${currentUserId}/BusinessItems/notes`).push({
                 title, content, date, timestamp: Date.now()
             });
-            
+            localStorage.removeItem('megaAlertDismissed');
             updateMeta('notes');
             closeModals();
             
@@ -2635,6 +2648,7 @@ await db.ref(`BusinessOwners/${currentUserId}/BusinessItems/transactions`).push(
     currency: userCurrency, // NEW: Store currency
     timestamp: fileId
 });
+localStorage.removeItem('megaAlertDismissed');
             updateMeta('trans');
             setTimeout(() => {
                 hideScanAnimation();
@@ -2658,7 +2672,7 @@ await db.ref(`BusinessOwners/${currentUserId}/BusinessItems/transactions`).push(
             db.ref(`BusinessOwners/${currentUserId}/BusinessItems/pendingorders`).push({
                 category: cat, desc, deadline, timestamp: Date.now()
             });
-            
+            localStorage.removeItem('megaAlertDismissed');
             updateMeta('pendingorders');
             closeModals();
             
@@ -2747,7 +2761,7 @@ await db.ref(`BusinessOwners/${currentUserId}/BusinessItems/transactions`).push(
                 completed: false,
                 timestamp: Date.now()
             });
-
+localStorage.removeItem('megaAlertDismissed');
             const dateStr = new Date().toISOString().split('T')[0];
             db.ref(`BusinessOwners/${currentUserId}/BusinessItems/meta/teamlastdate`).set(dateStr);
 
