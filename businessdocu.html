@@ -2784,46 +2784,70 @@ function previewImage(event) {
 
         // --- TEAM MEMBER & JOB LOGIC ---
 
-        function openMemberView(id, name) {
-            activeMemberId = id;
-            document.getElementById('member-name-header').innerText = name;
-            
-            db.ref(`BusinessOwners/${currentUserId}/BusinessItems/teamandstaff/${id}/jobs`).on('value', snapshot => {
-                const list = document.getElementById('member-jobs-list');
-                list.innerHTML = '';
-                
-                if(!snapshot.exists()) {
-                    list.innerHTML = '<div style="color: var(--text-muted); font-style:italic; text-align: center; padding: 20px;">No jobs assigned yet.</div>';
-                    return;
-                }
-                
-                snapshot.forEach(child => {
-                    const job = child.val();
-                    const jobId = child.key;
-                    const isCompleted = job.completed === true;
-                    
-                    const div = document.createElement('div');
-                    div.className = `job-item ${isCompleted ? 'job-completed' : ''}`;
-                    div.innerHTML = `
-                        <div class="check-box ${isCompleted ? 'checked' : ''}" onclick="toggleJob('${jobId}', ${!isCompleted})">
-                            ${isCompleted ? '<i class="fas fa-check" style="font-size:12px; color:white;"></i>' : ''}
-                        </div>
-                        <div style="flex:1;">
-                            <div style="font-weight: 500;">${job.desc}</div>
-                            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">
-                                <i class="fas fa-calendar"></i> Deadline: ${job.deadline}
-                            </div>
-                        </div>
-                        <button class="btn btn-danger" style="padding: 6px 12px; font-size: 0.75rem;" onclick="event.stopPropagation(); confirmDelete(() => deleteJob('${jobId}'))">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    `;
-                    list.appendChild(div);
-                });
-            });
+        function openMemberView(id, m) { // 'm' is the full member data object
+    activeMemberId = id;
+    
+    // Extract name and photo correctly
+    const memberName = m.name || "Unknown";
+    const memberPhoto = m.photoURL;
 
-            navTo('member-detail-view');
+    // Set Name in header and detail fields
+    document.getElementById('member-name-header').innerText = memberName;
+    document.getElementById('detail-member-name').innerText = memberName;
+    document.getElementById('detail-member-role').innerText = m.role || "Staff";
+
+    // LOAD PHOTO IN CIRCLE
+    const photoImg = document.getElementById('detail-member-photo');
+    const photoIcon = document.getElementById('detail-member-icon');
+
+    if (memberPhoto) {
+        photoImg.src = memberPhoto;
+        photoImg.style.display = 'block';
+        photoIcon.style.display = 'none';
+    } else {
+        photoImg.style.display = 'none';
+        photoIcon.style.display = 'flex';
+    }
+
+    // Load Jobs Logic (Your existing code)
+    db.ref(`BusinessOwners/${currentUserId}/BusinessItems/teamandstaff/${id}/jobs`).on('value', snapshot => {
+        const list = document.getElementById('member-jobs-list');
+        list.innerHTML = '';
+        
+        if(!snapshot.exists()) {
+            list.innerHTML = '<div style="color: var(--text-muted); font-style:italic; text-align: center; padding: 20px;">No jobs assigned yet.</div>';
+            return;
         }
+        
+        snapshot.forEach(child => {
+            const job = child.val();
+            const jobId = child.key;
+            const isCompleted = job.completed === true;
+            
+            const div = document.createElement('div');
+            div.className = `job-item ${isCompleted ? 'job-completed' : ''}`;
+            div.innerHTML = `
+                <div class="check-box ${isCompleted ? 'checked' : ''}" onclick="toggleJob('${jobId}', ${!isCompleted})">
+                    ${isCompleted ? '<i class="fas fa-check" style="font-size:12px; color:white;"></i>' : ''}
+                </div>
+                <div style="flex:1;">
+                    <div style="font-weight: 500;">${job.desc}</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">
+                        <i class="fas fa-calendar"></i> Deadline: ${job.deadline}
+                    </div>
+                </div>
+                <button class="btn btn-danger" style="padding: 6px 12px; font-size: 0.75rem;" onclick="event.stopPropagation(); confirmDelete(() => deleteJob('${jobId}'))">
+                    <i class="fas fa-trash"></i>
+                </button>
+            `;
+            list.appendChild(div);
+        });
+    });
+
+    // Final step: Navigate to view
+    navTo('member-detail-view');
+}
+
 
         function openJobModal() {
             openModal('job-modal');
