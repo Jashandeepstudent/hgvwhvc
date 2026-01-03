@@ -1058,10 +1058,10 @@
     </div>
 
     <!-- Preview Modal -->
-<div id="preview-modal" class="modal-overlay" onclick="this.style.display='none'">
-    <div class="modal glass" style="max-width: 800px; height: 80vh;" onclick="event.stopPropagation()">
-        <i class="fas fa-times close-modal" onclick="document.getElementById('preview-modal').style.display='none'"></i>
-        <div id="preview-container" style="width:100%; height:100%; overflow:hidden; border-radius:10px;">
+<div id="preview-modal" class="modal-overlay" onclick="closeModals()">
+    <div class="modal glass" style="max-width: 90%; height: 85vh; padding: 20px;" onclick="event.stopPropagation()">
+        <i class="fas fa-times close-modal" onclick="closeModals()"></i>
+        <div id="preview-content-area" style="width:100%; height:100%; display:flex; justify-content:center; align-items:center; overflow:hidden;">
             </div>
     </div>
 </div>
@@ -1214,42 +1214,43 @@
             });
 
             // Transactions Listener
-            db.ref(`${baseRef}/transactions`).on('value', snapshot => {
-                const list = document.getElementById('trans-list');
-                list.innerHTML = '';
-                
-                snapshot.forEach(child => {
-                    const t = child.val();
-                    const transKey = child.key;
-                    const colorClass = t.type === 'owe' ? 'badge-red' : 'badge-green';
-                    const label = t.type === 'owe' ? 'I Owe' : 'Owed to Me';
-                    
-                    const div = document.createElement('div');
-                    div.className = 'list-item glass';
-                    div.innerHTML = `
-                        <div class="list-item-content">
-                            <div style="display:flex; justify-content:space-between; margin-bottom:8px; align-items: center;">
-                                <span style="font-weight:600; font-size:1.15rem;">${t.name}</span>
-                                <span class="badge ${colorClass}">${label}</span>
-                            </div>
-                            <div style="color: var(--text-secondary); font-size:0.95rem; margin-bottom: 4px;">${t.details}</div>
-                            <div style="margin-top:10px; font-weight:600; font-size: 1.1rem; color: var(--text-primary);">
-                                ${t.amount} 
-                                <span style="font-weight:400; color: var(--text-muted); font-size:0.85rem; margin-left:12px;">
-                                    <i class="fas fa-calendar-alt"></i> ${t.date}
-                                </span>
-                            </div>
-                            ${t.photo ? `<button class="btn btn-secondary" style="margin-top:12px; padding:8px 14px; font-size:0.8rem;" onclick="previewDoc('${item.url}')"><i class="fas fa-receipt"></i> View Receipt</button>` : ''}
-                        </div>
-                        <div class="item-actions">
-                            <button class="btn btn-danger" onclick="confirmDelete(() => deleteTransaction('${transKey}'))">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    `;
-                    list.appendChild(div);
-                });
-            });
+// --- Inside initListeners() for Transactions ---
+db.ref(`${baseRef}/transactions`).on('value', snapshot => {
+    const list = document.getElementById('trans-list');
+    list.innerHTML = '';
+    
+    snapshot.forEach(child => {
+        const t = child.val();
+        const transKey = child.key;
+        const colorClass = t.type === 'owe' ? 'badge-red' : 'badge-green';
+        const label = t.type === 'owe' ? 'I Owe' : 'Owed to Me';
+        
+        const div = document.createElement('div');
+        div.className = 'list-item glass';
+        div.innerHTML = `
+            <div class="list-item-content">
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px; align-items: center;">
+                    <span style="font-weight:600; font-size:1.15rem;">${t.name}</span>
+                    <span class="badge ${colorClass}">${label}</span>
+                </div>
+                <div style="color: var(--text-secondary); font-size:0.95rem; margin-bottom: 4px;">${t.details}</div>
+                <div style="margin-top:10px; font-weight:600; font-size: 1.1rem; color: var(--text-primary);">
+                    $${t.amount} 
+                    <span style="font-weight:400; color: var(--text-muted); font-size:0.85rem; margin-left:12px;">
+                        <i class="fas fa-calendar-alt"></i> ${t.date}
+                    </span>
+                </div>
+                ${t.url ? `<button class="btn btn-secondary" style="margin-top:12px; padding:8px 14px; font-size:0.8rem;" onclick="previewDoc('${t.url}')"><i class="fas fa-receipt"></i> View Receipt</button>` : ''}
+            </div>
+            <div class="item-actions">
+                <button class="btn btn-danger" onclick="confirmDelete(() => deleteTransaction('${transKey}'))">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `;
+        list.appendChild(div);
+    });
+});
 
             // Notes Listener
             db.ref(`${baseRef}/notes`).on('value', snapshot => {
@@ -1685,15 +1686,16 @@ async function saveTransaction() {
 
 function previewDoc(url) {
     if(!url) return;
-    const container = document.getElementById('preview-container');
+    const contentArea = document.getElementById('preview-content-area');
     
-    // Check if it's a PDF or Image
-    if (url.includes(".pdf") || url.includes("alt=media")) {
-        // Use iframe for PDF/Docs
-        container.innerHTML = `<iframe src="${url}" style="width:100%; height:100%; border:none;"></iframe>`;
+    // Clear previous content
+    contentArea.innerHTML = '';
+
+    // Check if it's likely a PDF (Firebase URLs often contain the file extension or metadata)
+    if (url.toLowerCase().includes('.pdf') || url.includes('application%2Fpdf')) {
+        contentArea.innerHTML = `<iframe src="${url}" style="width:100%; height:100%; border:none; border-radius:8px;"></iframe>`;
     } else {
-        // Use img for photos
-        container.innerHTML = `<img src="${url}" style="width:100%; height:100%; object-fit:contain;">`;
+        contentArea.innerHTML = `<img src="${url}" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:8px;">`;
     }
     
     document.getElementById('preview-modal').style.display = 'flex';
