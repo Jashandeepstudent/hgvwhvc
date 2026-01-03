@@ -103,7 +103,15 @@
             box-shadow: var(--shadow-lg);
             border-color: var(--primary);
         }
+.shake-alert {
+    animation: gentleShake 0.4s ease !important;
+}
 
+@keyframes gentleShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
         h1 { 
             font-weight: 700; 
             font-size: 1.75rem; 
@@ -1957,12 +1965,16 @@ function fetchUserCurrency() {
 
 // Check for approaching and overdue deadlines
 function checkDeadlines() {
-    const today = new Date();
-    const tomorrow = new Date(today);
+   const today = new Date().toISOString().split('T')[0];
+    const acknowledged = localStorage.getItem('megaAlertAcknowledged');
+ const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
     const tomorrowStr = tomorrow.toISOString().split('T')[0];
     const todayStr = today.toISOString().split('T')[0];
-    
+     if (acknowledged === today) {
+        console.log('Alert already acknowledged today');
+        return; // Don't show alert again
+    }
     const baseRef = `BusinessOwners/${currentUserId}/BusinessItems`;
     let urgentAlerts = []; // Tomorrow's deadlines
     let criticalAlerts = []; // Today's deadlines
@@ -2079,63 +2091,16 @@ function checkDeadlines() {
 }
 
 // Display MEGA full-screen alert
-function showMegaAlert(alerts, isCritical) {
-    const overlay = document.getElementById('mega-alert-overlay');
-    const title = document.getElementById('mega-alert-title');
-    const container = document.getElementById('deadline-list-container');
-    const countdown = document.getElementById('alert-countdown');
-    
-    // Update title based on urgency
-    if (isCritical) {
-        title.innerHTML = '🔥 URGENT DEADLINES TODAY! 🔥';
-        title.style.color = 'var(--danger)';
-        countdown.textContent = '0';
-    } else {
-        title.innerHTML = '⚠️ DEADLINE APPROACHING ⚠️';
-        title.style.color = 'var(--warning)';
-        countdown.textContent = '24';
-    }
-    
-    // Build deadline list
-    container.innerHTML = '';
-    alerts.forEach((alert, index) => {
-        const item = document.createElement('div');
-        item.className = 'deadline-item';
-        item.style.animationDelay = `${index * 0.1}s`;
-        item.innerHTML = `
-            <div class="deadline-item-header">
-                <i class="fas ${alert.icon} deadline-item-icon"></i>
-                <div class="deadline-item-title">${alert.title}</div>
-            </div>
-            <div class="deadline-item-desc">${alert.desc}</div>
-        `;
-        container.appendChild(item);
-    });
-    
-    // Show overlay
-    overlay.style.display = 'flex';
-    
-    // Play alert sound
-    const sound = document.getElementById('alert-sound');
-    sound.play().catch(e => console.log('Audio play failed:', e));
-    
-    // Prevent closing by clicking outside (force user to acknowledge)
-    overlay.onclick = (e) => {
-        if (e.target === overlay) {
-            // Shake animation when trying to click outside
-            document.querySelector('.mega-alert-container').style.animation = 'shake 0.5s ease';
-            setTimeout(() => {
-                document.querySelector('.mega-alert-container').style.animation = 'containerPulse 2s ease-in-out infinite';
-            }, 500);
-        }
-    };
-}
+// ============================================
+// MEGA ALERT SYSTEM - OPTIMIZED & COMBINED
+// ============================================
+
 // Play alert sound using Web Audio API (more reliable)
 function playAlertSound() {
     try {
         // Try HTML5 Audio first
         const sound = document.getElementById('alert-sound');
-        if (sound) {
+        if (sound && audioPermissionGranted) {
             sound.src = 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'; // Emergency alert
             sound.volume = 0.7;
             sound.play().catch(() => {
@@ -2179,28 +2144,119 @@ function playBeepSound() {
         console.log('Beep sound failed:', e);
     }
 }
+
+// Display MEGA full-screen alert (OPTIMIZED)
+function showMegaAlert(alerts, isCritical) {
+    const overlay = document.getElementById('mega-alert-overlay');
+    const title = document.getElementById('mega-alert-title');
+    const container = document.getElementById('deadline-list-container');
+    const countdown = document.getElementById('alert-countdown');
+    
+    // Update title based on urgency
+    if (isCritical) {
+        title.innerHTML = '🔥 URGENT DEADLINES TODAY! 🔥';
+        title.style.color = 'var(--danger)';
+        countdown.textContent = '0';
+    } else {
+        title.innerHTML = '⚠️ DEADLINE APPROACHING ⚠️';
+        title.style.color = 'var(--warning)';
+        countdown.textContent = '24';
+    }
+    
+    // Build deadline list (LIMIT ANIMATIONS FOR PERFORMANCE)
+    container.innerHTML = '';
+    alerts.forEach((alert, index) => {
+        const item = document.createElement('div');
+        item.className = 'deadline-item';
+        
+        // Only animate first 5 items to reduce lag
+        if (index < 5) {
+            item.style.animationDelay = `${index * 0.1}s`;
+        } else {
+            item.style.animation = 'none'; // No animation for items beyond 5
+        }
+        
+        item.innerHTML = `
+            <div class="deadline-item-header">
+                <i class="fas ${alert.icon} deadline-item-icon"></i>
+                <div class="deadline-item-title">${alert.title}</div>
+            </div>
+            <div class="deadline-item-desc">${alert.desc}</div>
+        `;
+        container.appendChild(item);
+    });
+    
+    // Show overlay
+    overlay.style.display = 'flex';
+    
+    // Play alert sound using the optimized function
+    playAlertSound();
+    
+    // Prevent closing by clicking outside (force user to acknowledge)
+    overlay.onclick = (e) => {
+        if (e.target === overlay) {
+            // Gentle shake instead of heavy animation
+            const alertContainer = document.querySelector('.mega-alert-container');
+            alertContainer.classList.add('shake-alert');
+            setTimeout(() => {
+                alertContainer.classList.remove('shake-alert');
+            }, 400);
+        }
+    };
+}
 // Dismiss mega alert
 function dismissMegaAlert() {
     const overlay = document.getElementById('mega-alert-overlay');
-    overlay.style.animation = 'alertFadeOut 0.5s ease';
     
+    // 1. Save acknowledgment FIRST
+    const today = new Date().toISOString().split('T')[0];
+    localStorage.setItem('megaAlertAcknowledged', today);
+    console.log('Alert acknowledged for:', today);
+    
+    // 2. Fade out smoothly
+    overlay.style.opacity = '0';
+    overlay.style.transition = 'opacity 0.3s ease';
+    
+    // 3. After fade, hide and clean up
     setTimeout(() => {
         overlay.style.display = 'none';
-        overlay.style.animation = 'alertFadeIn 0.5s ease';
-    }, 500);
+        overlay.style.opacity = '1'; // Reset for next time
+        
+        // Stop all animations by removing animated elements
+        const container = document.querySelector('.mega-alert-container');
+        if (container) {
+            container.style.animation = 'none';
+        }
+        
+        // Clear deadline list to stop item animations
+        document.getElementById('deadline-list-container').innerHTML = '';
+        
+        // Reset onclick
+        overlay.onclick = null;
+    }, 300);
 }
 
 // Snooze alert for 1 hour
 function snoozeAlert() {
-    dismissMegaAlert();
+    const overlay = document.getElementById('mega-alert-overlay');
+    
+    // Don't save acknowledgment (so it shows again later)
+    // Just hide the alert
+    overlay.style.opacity = '0';
+    overlay.style.transition = 'opacity 0.3s ease';
+    
+    setTimeout(() => {
+        overlay.style.display = 'none';
+        overlay.style.opacity = '1';
+        overlay.onclick = null;
+    }, 300);
     
     // Set timeout to show again in 1 hour
     setTimeout(() => {
         checkDeadlines();
-    }, 3600000); // 1 hour in milliseconds
+    }, 3600000); // 1 hour
     
-    // Show confirmation
-    alert('⏰ Alert snoozed! You will be reminded in 1 hour.');
+    console.log('⏰ Alert snoozed for 1 hour');
 }
 
 // Add shake animation to CSS
