@@ -707,7 +707,8 @@
     </style>
 </head>
 <body>
-
+let currentUserId = null;
+let userCurrency = "$"; // Default to $ until loaded
     <!-- Loading Screen -->
     <div id="loading">
         <div class="spinner"></div>
@@ -1093,23 +1094,24 @@
         let deleteCallback = null; // Holds the delete function for confirmation modal
 
         // --- AUTHENTICATION & REDIRECT ---
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                console.log("User verified:", user.uid);
-                currentUserId = user.uid;
-                document.getElementById('loading').style.display = 'none';
-                initListeners();
-            } else {
-                console.log("No user found. Redirecting to login...");
-                window.location.href = "login.html"; 
+auth.onAuthStateChanged((user) => {
+    if (user) {
+        currentUserId = user.uid;
+        
+                db.ref(`BusinessOwners/${currentUserId}/National Currency/Currency`).once('value', snapshot => {
+            if(snapshot.exists()) {
+                userCurrency = snapshot.val(); // e.g., "₹" or "INR"
             }
+            // Start listeners after currency is loaded
+            initListeners();
+            document.getElementById('loading').style.display = 'none';
         });
+    } else {
+        window.location.href = "login.html"; 
+    }
+});
 
-        function logout() {
-            auth.signOut().then(() => {
-                window.location.href = "login.html";
-            });
-        }
+ 
 
         // --- NAVIGATION ---
         function navTo(viewId) {
@@ -1235,7 +1237,7 @@ db.ref(`${baseRef}/transactions`).on('value', snapshot => {
                 </div>
                 <div style="color: var(--text-secondary); font-size:0.95rem; margin-bottom: 4px;">${t.details}</div>
                 <div style="margin-top:10px; font-weight:600; font-size: 1.1rem; color: var(--text-primary);">
-                    $${t.amount} 
+            ${userCurrency}${t.amount}
                     <span style="font-weight:400; color: var(--text-muted); font-size:0.85rem; margin-left:12px;">
                         <i class="fas fa-calendar-alt"></i> ${t.date}
                     </span>
