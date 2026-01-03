@@ -10,195 +10,706 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
-
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
 
     <style>
         :root {
-            --bg-color: #050505;
-            --glass-bg: rgba(255, 255, 255, 0.05);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --glass-blur: 15px;
-            --primary-blue: #2563eb;
-            --text-main: #ffffff;
-            --text-muted: #a1a1aa;
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #111827;
+            --bg-card: #1a1f35;
+            --glass-bg: rgba(26, 31, 53, 0.6);
+            --glass-border: rgba(99, 102, 241, 0.2);
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --secondary: #818cf8;
+            --text-primary: #f9fafb;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
             --danger: #ef4444;
+            --danger-hover: #dc2626;
             --success: #10b981;
+            --warning: #f59e0b;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.2);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.3);
+            --border-radius: 12px;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; outline: none; }
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            outline: none; 
+        }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            color: var(--text-primary);
             min-height: 100vh;
             overflow-x: hidden;
-            background-image: 
-                radial-gradient(circle at 10% 20%, rgba(37, 99, 235, 0.1) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(37, 99, 235, 0.05) 0%, transparent 40%);
+            position: relative;
         }
 
-        /* Utility: Glassmorphism */
+        /* Subtle animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 15% 20%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 85% 80%, rgba(99, 102, 241, 0.08) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container { 
+            max-width: 1400px; 
+            margin: 0 auto; 
+            padding: 24px; 
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Glass Effect */
         .glass {
             background: var(--glass-bg);
-            backdrop-filter: blur(var(--glass-blur));
-            -webkit-backdrop-filter: blur(var(--glass-blur));
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
         }
 
-        /* Layout */
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        
+        /* Header */
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 40px;
-            padding: 20px;
+            margin-bottom: 48px;
+            padding: 24px 32px;
+            transition: all 0.3s ease;
         }
 
-        h1 { font-weight: 700; font-size: 1.5rem; letter-spacing: -0.5px; }
-        h2 { font-weight: 600; font-size: 1.25rem; margin-bottom: 20px; }
-        .subtitle { color: var(--text-muted); font-size: 0.875rem; font-weight: 400; }
+        header:hover {
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary);
+        }
+
+        h1 { 
+            font-weight: 700; 
+            font-size: 1.75rem; 
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        h2 { 
+            font-weight: 600; 
+            font-size: 1.5rem; 
+            margin-bottom: 24px;
+            color: var(--text-primary);
+        }
+
+        .subtitle { 
+            color: var(--text-secondary); 
+            font-size: 0.875rem; 
+            font-weight: 500;
+            margin-top: 4px;
+        }
 
         /* Dashboard Grid */
         .dashboard-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
         }
 
         .card {
-            padding: 25px;
-            transition: transform 0.2s, background 0.2s;
+            padding: 28px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            height: 180px;
+            min-height: 200px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .card:hover::before {
+            opacity: 1;
         }
 
         .card:hover {
-            transform: translateY(-5px);
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-lg), 0 0 0 1px var(--primary);
+            border-color: var(--primary);
         }
 
         .card-icon {
-            font-size: 2rem;
-            color: var(--primary-blue);
-            margin-bottom: 15px;
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+            transition: transform 0.3s ease;
         }
 
-        .card-title { font-size: 1.1rem; font-weight: 600; }
-        .card-meta { font-size: 0.8rem; color: var(--text-muted); margin-top: 5px; }
+        .card:hover .card-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .card-title { 
+            font-size: 1.25rem; 
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .card-meta { 
+            font-size: 0.875rem; 
+            color: var(--text-muted);
+        }
 
         /* Sections */
-        .section-view { display: none; padding-top: 20px; animation: fadeIn 0.4s ease; }
+        .section-view { 
+            display: none; 
+            padding-top: 24px; 
+            animation: fadeSlideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
         
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        @keyframes fadeSlideIn {
+            from { 
+                opacity: 0; 
+                transform: translateY(20px);
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0);
+            }
         }
 
-        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .top-bar { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 32px;
+            padding: 20px 28px;
+        }
         
         /* Buttons */
         .btn {
-            padding: 10px 20px;
-            border-radius: 8px;
+            padding: 12px 24px;
+            border-radius: 10px;
             border: none;
-            font-weight: 500;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
             font-size: 0.9rem;
             display: inline-flex;
             align-items: center;
             gap: 8px;
+            font-family: 'Inter', sans-serif;
+            position: relative;
+            overflow: hidden;
         }
 
-        .btn-primary { background: var(--primary-blue); color: white; }
-        .btn-primary:hover { background: #1d4ed8; box-shadow: 0 0 15px rgba(37, 99, 235, 0.4); }
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn-primary { 
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-primary:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(99, 102, 241, 0.4);
+        }
         
-        .btn-secondary { background: rgba(255,255,255,0.1); color: white; }
-        .btn-secondary:hover { background: rgba(255,255,255,0.2); }
+        .btn-secondary { 
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn-secondary:hover { 
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--primary);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+            padding: 8px 16px;
+            font-size: 0.8rem;
+        }
+
+        .btn-danger:hover {
+            background: var(--danger-hover);
+            transform: translateY(-2px);
+        }
 
         /* Forms & Inputs */
         input, select, textarea {
             width: 100%;
-            background: rgba(0,0,0,0.3);
+            background: var(--bg-card);
             border: 1px solid var(--glass-border);
-            padding: 12px;
-            border-radius: 8px;
-            color: white;
+            padding: 14px 16px;
+            border-radius: 10px;
+            color: var(--text-primary);
             font-family: 'Inter', sans-serif;
-            margin-bottom: 15px;
+            margin-bottom: 16px;
+            transition: all 0.2s ease;
+            font-size: 0.95rem;
         }
         
         input:focus, select:focus, textarea:focus {
-            border-color: var(--primary-blue);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        input::placeholder, textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            font-weight: 500;
         }
 
         /* Lists & Items */
-        .item-list { display: grid; gap: 15px; }
+        .item-list { 
+            display: grid; 
+            gap: 16px;
+        }
         
         .list-item {
-            padding: 20px;
+            padding: 24px;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            transition: all 0.3s ease;
+            position: relative;
         }
 
-        .list-item-content { flex: 1; }
-        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
-        .badge-red { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
-        .badge-green { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+        .list-item:hover {
+            transform: translateX(4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary);
+        }
 
-        /* Thumbnails for docs */
-        .doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; }
-        .doc-card { text-align: center; padding: 15px; position: relative; }
-        .doc-thumb { width: 100%; height: 100px; object-fit: cover; border-radius: 8px; margin-bottom: 10px; background: #222; }
+        .list-item-content { 
+            flex: 1;
+            margin-right: 16px;
+        }
+
+        .badge { 
+            padding: 6px 12px; 
+            border-radius: 6px; 
+            font-size: 0.75rem; 
+            font-weight: 700; 
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-red { 
+            background: rgba(239, 68, 68, 0.15); 
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .badge-green { 
+            background: rgba(16, 185, 129, 0.15); 
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        /* Document Grid */
+        .doc-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); 
+            gap: 20px;
+        }
+
+        .doc-card { 
+            text-align: center; 
+            padding: 20px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .doc-card:hover {
+            transform: translateY(-6px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary);
+        }
+
+        .doc-thumb { 
+            width: 100%; 
+            height: 140px; 
+            object-fit: cover; 
+            border-radius: 10px; 
+            margin-bottom: 12px; 
+            background: var(--bg-secondary);
+            transition: transform 0.3s ease;
+        }
+
+        .doc-card:hover .doc-thumb {
+            transform: scale(1.05);
+        }
+
+        .delete-doc-btn {
+            position: absolute;
+            top: 28px;
+            right: 28px;
+            background: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .doc-card:hover .delete-doc-btn {
+            opacity: 1;
+        }
+
+        .delete-doc-btn:hover {
+            background: var(--danger-hover);
+            transform: scale(1.1);
+        }
 
         /* Modals */
         .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
-            display: none; justify-content: center; align-items: center; z-index: 100;
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85); 
+            backdrop-filter: blur(8px);
+            display: none; 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 100;
+            animation: fadeIn 0.3s ease;
         }
-        .modal { width: 90%; max-width: 500px; padding: 30px; position: relative; }
-        .close-modal { position: absolute; top: 15px; right: 15px; cursor: pointer; color: var(--text-muted); }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal { 
+            width: 90%; 
+            max-width: 520px; 
+            padding: 36px;
+            position: relative;
+            animation: modalSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .close-modal { 
+            position: absolute; 
+            top: 20px; 
+            right: 20px; 
+            cursor: pointer; 
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .close-modal:hover {
+            color: var(--danger);
+            transform: rotate(90deg);
+        }
+
+        /* Confirmation Modal */
+        .confirm-modal .modal {
+            max-width: 420px;
+            text-align: center;
+        }
+
+        .confirm-modal-icon {
+            font-size: 4rem;
+            color: var(--warning);
+            margin-bottom: 20px;
+        }
+
+        .confirm-modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .confirm-modal-actions button {
+            flex: 1;
+        }
 
         /* Team Specific */
         .job-item { 
-            background: rgba(255,255,255,0.02); 
-            padding: 10px; border-radius: 6px; margin-top: 5px; 
-            display: flex; align-items: center; gap: 10px;
+            background: var(--bg-card);
+            padding: 16px; 
+            border-radius: 8px; 
+            margin-bottom: 12px;
+            display: flex; 
+            align-items: center; 
+            gap: 12px;
+            transition: all 0.2s ease;
+            border: 1px solid var(--glass-border);
         }
-        .job-completed { opacity: 0.5; text-decoration: line-through; }
+
+        .job-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--primary);
+        }
+
+        .job-completed { 
+            opacity: 0.5; 
+            text-decoration: line-through;
+        }
+
         .check-box { 
-            width: 18px; height: 18px; border: 1px solid #555; border-radius: 4px; 
-            display: flex; align-items: center; justify-content: center; cursor: pointer; 
+            min-width: 22px;
+            height: 22px; 
+            border: 2px solid var(--text-muted);
+            border-radius: 6px;
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            cursor: pointer;
+            transition: all 0.2s ease;
         }
-        .check-box.checked { background: var(--success); border-color: var(--success); }
 
-        /* Loading */
-        #loading { position: fixed; inset: 0; background: #050505; z-index: 999; display: flex; justify-content: center; align-items: center; flex-direction: column; }
-        .spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1); border-top-color: var(--primary-blue); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px;}
-        @keyframes spin { to { transform: rotate(360deg); } }
+        .check-box:hover {
+            border-color: var(--success);
+        }
 
+        .check-box.checked { 
+            background: var(--success);
+            border-color: var(--success);
+        }
+
+        /* Loading Screen */
+        #loading { 
+            position: fixed; 
+            inset: 0; 
+            background: var(--bg-primary);
+            z-index: 999; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            flex-direction: column;
+        }
+
+        .spinner { 
+            width: 50px; 
+            height: 50px; 
+            border: 4px solid rgba(99, 102, 241, 0.2);
+            border-top-color: var(--primary);
+            border-radius: 50%; 
+            animation: spin 1s linear infinite; 
+            margin-bottom: 24px;
+        }
+
+        @keyframes spin { 
+            to { transform: rotate(360deg); } 
+        }
+
+        /* CapCut Style Scanning Animation */
+        #scan-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .scan-container {
+            position: relative;
+            width: 300px;
+            height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .document-silhouette {
+            width: 200px;
+            height: 280px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(99, 102, 241, 0.05) 100%);
+            border: 2px solid rgba(99, 102, 241, 0.3);
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .scan-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                rgba(99, 102, 241, 0.5) 20%,
+                var(--primary) 50%,
+                rgba(99, 102, 241, 0.5) 80%,
+                transparent 100%
+            );
+            box-shadow: 0 0 20px var(--primary), 0 0 40px var(--primary);
+            animation: scan 2.5s ease-in-out infinite;
+        }
+
+        @keyframes scan {
+            0% { 
+                top: 0; 
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% { 
+                top: 100%; 
+                opacity: 0;
+            }
+        }
+
+        .scan-text {
+            margin-top: 40px;
+            color: var(--primary);
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        .scan-progress {
+            margin-top: 20px;
+            width: 200px;
+            height: 4px;
+            background: rgba(99, 102, 241, 0.2);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .scan-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
+            width: 0%;
+            animation: progress 2.5s ease-in-out infinite;
+            box-shadow: 0 0 10px var(--primary);
+        }
+
+        @keyframes progress {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+
+        /* Action Buttons Container */
+        .item-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container { padding: 16px; }
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .top-bar { flex-direction: column; gap: 16px; align-items: stretch; }
+            .modal { width: 95%; padding: 24px; }
+        }
     </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
 </head>
 <body>
 
+    <!-- Loading Screen -->
     <div id="loading">
         <div class="spinner"></div>
-        <div style="color: #666; font-size: 0.9rem;">Verifying Access...</div>
+        <div style="color: var(--text-secondary); font-size: 0.9rem;">Verifying Access...</div>
+    </div>
+
+    <!-- CapCut Style Scanning Animation -->
+    <div id="scan-overlay">
+        <div class="scan-container">
+            <div class="document-silhouette">
+                <div class="scan-line"></div>
+            </div>
+        </div>
+        <div class="scan-text">Processing Document...</div>
+        <div class="scan-progress">
+            <div class="scan-progress-bar"></div>
+        </div>
     </div>
 
     <div class="container">
@@ -207,8 +718,9 @@
                 <h1>Business Vault</h1>
                 <div class="subtitle" id="user-status">Owner</div>
             </div>
-            </header>
+        </header>
 
+        <!-- Dashboard -->
         <div id="dashboard-view">
             <div class="dashboard-grid">
                 
@@ -255,180 +767,288 @@
             </div>
         </div>
 
+        <!-- Legal Documents -->
         <div id="legal-view" class="section-view">
-            <div class="top-bar glass" style="padding: 15px 25px;">
+            <div class="top-bar glass">
                 <h2>Legal Documents</h2>
                 <div style="display:flex; gap:10px;">
-                    <button class="btn btn-secondary" onclick="navTo('dashboard-view')">Back</button>
-                    <button class="btn btn-primary" onclick="openModal('legal-modal')">+ Add New</button>
+                    <button class="btn btn-secondary" onclick="navTo('dashboard-view')">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <button class="btn btn-primary" onclick="openModal('legal-modal')">
+                        <i class="fas fa-plus"></i> Add New
+                    </button>
                 </div>
             </div>
-            <div class="doc-grid" id="legal-list">
-                </div>
+            <div class="doc-grid" id="legal-list"></div>
         </div>
 
+        <!-- Transactions -->
         <div id="transactions-view" class="section-view">
-            <div class="top-bar glass" style="padding: 15px 25px;">
+            <div class="top-bar glass">
                 <h2>Business Transactions</h2>
                 <div style="display:flex; gap:10px;">
-                    <button class="btn btn-secondary" onclick="navTo('dashboard-view')">Back</button>
-                    <button class="btn btn-primary" onclick="openModal('trans-modal')">+ Add Transaction</button>
+                    <button class="btn btn-secondary" onclick="navTo('dashboard-view')">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <button class="btn btn-primary" onclick="openModal('trans-modal')">
+                        <i class="fas fa-plus"></i> Add Transaction
+                    </button>
                 </div>
             </div>
-            <div class="item-list" id="trans-list">
-                </div>
+            <div class="item-list" id="trans-list"></div>
         </div>
 
+        <!-- Orders -->
         <div id="orders-view" class="section-view">
-            <div class="top-bar glass" style="padding: 15px 25px;">
+            <div class="top-bar glass">
                 <h2>Pending Orders</h2>
                 <div style="display:flex; gap:10px;">
-                    <button class="btn btn-secondary" onclick="navTo('dashboard-view')">Back</button>
-                    <button class="btn btn-primary" onclick="openModal('order-modal')">+ Add Order</button>
+                    <button class="btn btn-secondary" onclick="navTo('dashboard-view')">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <button class="btn btn-primary" onclick="openModal('order-modal')">
+                        <i class="fas fa-plus"></i> Add Order
+                    </button>
                 </div>
             </div>
-            <div class="item-list" id="orders-list">
-                </div>
+            <div class="item-list" id="orders-list"></div>
         </div>
 
+        <!-- Notes -->
         <div id="notes-view" class="section-view">
-            <div class="top-bar glass" style="padding: 15px 25px;">
+            <div class="top-bar glass">
                 <h2>Notes</h2>
                 <div style="display:flex; gap:10px;">
-                    <button class="btn btn-secondary" onclick="navTo('dashboard-view')">Back</button>
-                    <button class="btn btn-primary" onclick="openModal('note-modal')">+ New Note</button>
+                    <button class="btn btn-secondary" onclick="navTo('dashboard-view')">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <button class="btn btn-primary" onclick="openModal('note-modal')">
+                        <i class="fas fa-plus"></i> New Note
+                    </button>
                 </div>
             </div>
-            <div class="dashboard-grid" id="notes-list">
-                </div>
+            <div class="dashboard-grid" id="notes-list"></div>
         </div>
 
+        <!-- Team -->
         <div id="team-view" class="section-view">
-            <div class="top-bar glass" style="padding: 15px 25px;">
+            <div class="top-bar glass">
                 <h2>Team & Staffing</h2>
                 <div style="display:flex; gap:10px;">
-                    <button class="btn btn-secondary" onclick="navTo('dashboard-view')">Back</button>
-                    <button class="btn btn-primary" onclick="openModal('team-modal')">+ Add Member</button>
+                    <button class="btn btn-secondary" onclick="navTo('dashboard-view')">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <button class="btn btn-primary" onclick="openModal('team-modal')">
+                        <i class="fas fa-plus"></i> Add Member
+                    </button>
                 </div>
             </div>
-            <div class="dashboard-grid" id="team-list">
-                </div>
+            <div class="dashboard-grid" id="team-list"></div>
         </div>
 
+        <!-- Member Detail -->
         <div id="member-detail-view" class="section-view">
-            <div class="top-bar glass" style="padding: 15px 25px;">
+            <div class="top-bar glass">
                 <h2 id="member-name-header">Member Details</h2>
                 <div style="display:flex; gap:10px;">
-                    <button class="btn btn-secondary" onclick="navTo('team-view')">Back</button>
-                    <button class="btn btn-primary" onclick="openJobModal()">Assign Job</button>
+                    <button class="btn btn-secondary" onclick="navTo('team-view')">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <button class="btn btn-primary" onclick="openJobModal()">
+                        <i class="fas fa-tasks"></i> Assign Job
+                    </button>
                 </div>
             </div>
-            <div class="glass" style="padding: 20px; margin-bottom: 20px;">
-                <h3 style="margin-bottom:15px; color: var(--text-muted);">Assigned Jobs</h3>
-                <div class="item-list" id="member-jobs-list">
-                    </div>
+            <div class="glass" style="padding: 28px; margin-bottom: 20px;">
+                <h3 style="margin-bottom:20px; color: var(--text-secondary); font-weight: 600;">Assigned Jobs</h3>
+                <div class="item-list" id="member-jobs-list"></div>
             </div>
         </div>
 
     </div>
 
+    <!-- Modals -->
+    
+    <!-- Legal Document Modal -->
     <div id="legal-modal" class="modal-overlay">
         <div class="modal glass">
             <i class="fas fa-times close-modal" onclick="closeModals()"></i>
-            <h2>Add Document</h2>
-            <select id="legal-cat"><option value="Image">Image</option><option value="PDF">PDF</option><option value="Doc">Document</option></select>
-            <input type="text" id="legal-name" placeholder="Document Name">
-            <input type="file" id="legal-file">
-            <button class="btn btn-primary" style="width:100%" onclick="saveLegal()">Save Document</button>
+            <h2 style="margin-bottom: 24px;">Add Document</h2>
+            
+            <label>Document Type</label>
+            <select id="legal-cat" onchange="updateFileAccept()">
+                <option value="Image">Image</option>
+                <option value="PDF">PDF</option>
+                <option value="Doc">Document</option>
+            </select>
+            
+            <label>Document Name</label>
+            <input type="text" id="legal-name" placeholder="Enter document name">
+            
+            <label>Choose File</label>
+            <input type="file" id="legal-file" accept="image/jpeg,image/png,image/webp">
+            
+            <button class="btn btn-primary" style="width:100%; margin-top: 8px;" onclick="saveLegal()">
+                <i class="fas fa-save"></i> Save Document
+            </button>
         </div>
     </div>
 
+    <!-- Note Modal -->
     <div id="note-modal" class="modal-overlay">
         <div class="modal glass">
             <i class="fas fa-times close-modal" onclick="closeModals()"></i>
-            <h2>New Note</h2>
-            <input type="text" id="note-title" placeholder="Title">
-            <textarea id="note-content" rows="4" placeholder="Content..."></textarea>
+            <h2 style="margin-bottom: 24px;">New Note</h2>
+            
+            <label>Title</label>
+            <input type="text" id="note-title" placeholder="Enter note title">
+            
+            <label>Content</label>
+            <textarea id="note-content" rows="5" placeholder="Write your note here..."></textarea>
+            
+            <label>Date (Optional)</label>
             <input type="date" id="note-date">
-            <button class="btn btn-primary" style="width:100%" onclick="saveNote()">Save Note</button>
+            
+            <button class="btn btn-primary" style="width:100%; margin-top: 8px;" onclick="saveNote()">
+                <i class="fas fa-save"></i> Save Note
+            </button>
         </div>
     </div>
 
+    <!-- Transaction Modal -->
     <div id="trans-modal" class="modal-overlay">
         <div class="modal glass">
             <i class="fas fa-times close-modal" onclick="closeModals()"></i>
-            <h2>New Transaction</h2>
+            <h2 style="margin-bottom: 24px;">New Transaction</h2>
+            
+            <label>Transaction Type</label>
             <select id="trans-type">
                 <option value="owe">I Owe Them (Red)</option>
                 <option value="owed">They Owe Me (Green)</option>
             </select>
-            <input type="text" id="trans-name" placeholder="Entity Name">
-            <input type="number" id="trans-amount" placeholder="Amount">
-            <input type="text" id="trans-details" placeholder="Details">
+            
+            <label>Entity Name</label>
+            <input type="text" id="trans-name" placeholder="Company or person name">
+            
+            <label>Amount</label>
+            <input type="number" id="trans-amount" placeholder="0.00" step="0.01">
+            
+            <label>Details</label>
+            <input type="text" id="trans-details" placeholder="Description or reference">
+            
+            <label>Date</label>
             <input type="date" id="trans-date">
-            <div style="margin-bottom:10px; font-size:0.8rem; color:#aaa;">Upload Receipt (Optional):</div>
-            <input type="file" id="trans-file">
-            <button class="btn btn-primary" style="width:100%" onclick="saveTransaction()">Save Transaction</button>
+            
+            <label>Upload Receipt (Optional)</label>
+            <input type="file" id="trans-file" accept="image/*,application/pdf">
+            
+            <button class="btn btn-primary" style="width:100%; margin-top: 8px;" onclick="saveTransaction()">
+                <i class="fas fa-save"></i> Save Transaction
+            </button>
         </div>
     </div>
 
+    <!-- Order Modal -->
     <div id="order-modal" class="modal-overlay">
         <div class="modal glass">
             <i class="fas fa-times close-modal" onclick="closeModals()"></i>
-            <h2>New Order</h2>
+            <h2 style="margin-bottom: 24px;">New Order</h2>
+            
+            <label>Category</label>
             <select id="order-cat">
                 <option value="Photo">Photo</option>
                 <option value="PDF">PDF</option>
-                <option value="Doc">Doc</option>
+                <option value="Doc">Document</option>
                 <option value="Text">Text</option>
             </select>
-            <input type="text" id="order-desc" placeholder="Order Description/Link">
-            <div style="margin-bottom:5px; font-size:0.8rem;">Deadline:</div>
+            
+            <label>Order Description / Link</label>
+            <input type="text" id="order-desc" placeholder="What needs to be done or URL">
+            
+            <label>Deadline</label>
             <input type="date" id="order-deadline">
-            <button class="btn btn-primary" style="width:100%" onclick="saveOrder()">Add Order</button>
+            
+            <button class="btn btn-primary" style="width:100%; margin-top: 8px;" onclick="saveOrder()">
+                <i class="fas fa-save"></i> Add Order
+            </button>
         </div>
     </div>
 
+    <!-- Team Member Modal -->
     <div id="team-modal" class="modal-overlay">
         <div class="modal glass">
             <i class="fas fa-times close-modal" onclick="closeModals()"></i>
-            <h2>Add Team Member</h2>
-            <input type="text" id="team-name" placeholder="Full Name">
-            <input type="text" id="team-role" placeholder="Role">
-            <input type="email" id="team-email" placeholder="Email">
+            <h2 style="margin-bottom: 24px;">Add Team Member</h2>
+            
+            <label>Full Name</label>
+            <input type="text" id="team-name" placeholder="Enter full name">
+            
+            <label>Role</label>
+            <input type="text" id="team-role" placeholder="Position or job title">
+            
+            <label>Email</label>
+            <input type="email" id="team-email" placeholder="email@example.com">
+            
+            <label>Status</label>
             <select id="team-status">
                 <option value="Active">Active</option>
                 <option value="Contractor">Contractor</option>
+                <option value="Part-Time">Part-Time</option>
             </select>
-            <button class="btn btn-primary" style="width:100%" onclick="saveMember()">Add Member</button>
+            
+            <button class="btn btn-primary" style="width:100%; margin-top: 8px;" onclick="saveMember()">
+                <i class="fas fa-user-plus"></i> Add Member
+            </button>
         </div>
     </div>
 
-<div id="job-modal" class="modal-overlay">
-    <div class="modal glass">
-        <i class="fas fa-times close-modal" onclick="closeModals()"></i>
-        <h2>Assign Job</h2>
-        
-        <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 5px;">Task Details</label>
-        <input type="text" id="job-desc" placeholder="What needs to be done?">
-        
-        <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 5px;">Deadline / Last Date</label>
-        <input type="date" id="job-deadline">
-        
-        <button class="btn btn-primary" style="width:100%; margin-top: 10px;" onclick="saveJob()">Assign Task</button>
+    <!-- Job Assignment Modal -->
+    <div id="job-modal" class="modal-overlay">
+        <div class="modal glass">
+            <i class="fas fa-times close-modal" onclick="closeModals()"></i>
+            <h2 style="margin-bottom: 24px;">Assign Job</h2>
+            
+            <label>Task Details</label>
+            <input type="text" id="job-desc" placeholder="What needs to be done?">
+            
+            <label>Deadline / Last Date</label>
+            <input type="date" id="job-deadline">
+            
+            <button class="btn btn-primary" style="width:100%; margin-top: 8px;" onclick="saveJob()">
+                <i class="fas fa-tasks"></i> Assign Task
+            </button>
+        </div>
     </div>
-</div>
 
+    <!-- Confirmation Modal -->
+    <div id="confirm-modal" class="modal-overlay confirm-modal">
+        <div class="modal glass">
+            <i class="fas fa-exclamation-triangle confirm-modal-icon"></i>
+            <h2 style="margin-bottom: 16px;">Are you sure?</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 8px;">This action cannot be undone.</p>
+            
+            <div class="confirm-modal-actions">
+                <button class="btn btn-secondary" onclick="closeModals()">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button class="btn btn-danger" id="confirm-delete-btn" style="padding: 12px 24px; font-size: 0.9rem;">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Preview Modal -->
     <div id="preview-modal" class="modal-overlay" onclick="closeModals()">
-        <img id="preview-img" style="max-width:90%; max-height:90vh; border-radius:8px; box-shadow:0 0 50px rgba(0,0,0,0.5);">
+        <img id="preview-img" style="max-width:90%; max-height:90vh; border-radius:12px; box-shadow:0 0 60px rgba(0,0,0,0.7);">
     </div>
 
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
     <script>
-        // --- 1. CONFIGURATION ---
+        // Setup PDF.js worker
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+        // --- FIREBASE CONFIGURATION ---
         const firebaseConfig = {
             apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
             authDomain: "scalevest-163a0.firebaseapp.com",
@@ -444,29 +1064,21 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.database();
-const storage = firebase.storage();
+        const storage = firebase.storage();
+        
         let currentUserId = null;
         let activeMemberId = null;
+        let deleteCallback = null; // Holds the delete function for confirmation modal
 
-        // --- 2. AUTHENTICATION & REDIRECT LOGIC ---
-        
+        // --- AUTHENTICATION & REDIRECT ---
         auth.onAuthStateChanged((user) => {
             if (user) {
-                // SUCCESS: User is logged in.
                 console.log("User verified:", user.uid);
                 currentUserId = user.uid;
-
-                
-                // Hide loading screen and show content
                 document.getElementById('loading').style.display = 'none';
-                
-                // Initialize Database Listeners
                 initListeners();
             } else {
-                // FAILURE: No user logged in.
-                console.log("No user found. Redirecting to login.html...");
-                
-                // Redirect logic
+                console.log("No user found. Redirecting to login...");
                 window.location.href = "login.html"; 
             }
         });
@@ -477,7 +1089,7 @@ const storage = firebase.storage();
             });
         }
 
-        // --- 3. NAVIGATION ---
+        // --- NAVIGATION ---
         function navTo(viewId) {
             document.querySelectorAll('.section-view, #dashboard-view').forEach(el => el.style.display = 'none');
             document.getElementById(viewId).style.display = 'block';
@@ -491,7 +1103,24 @@ const storage = firebase.storage();
             document.querySelectorAll('.modal-overlay').forEach(el => el.style.display = 'none');
         }
 
-        // --- 4. DATA HANDLING HELPER ---
+        // --- FILE VALIDATION: Dynamic Accept Attribute ---
+        function updateFileAccept() {
+            const category = document.getElementById('legal-cat').value;
+            const fileInput = document.getElementById('legal-file');
+            
+            if (category === 'PDF') {
+                fileInput.accept = 'application/pdf';
+            } else if (category === 'Doc') {
+                fileInput.accept = '.doc,.docx,.txt';
+            } else if (category === 'Image') {
+                fileInput.accept = 'image/jpeg,image/png,image/webp';
+            }
+        }
+
+        // Initialize file accept on page load
+        updateFileAccept();
+
+        // --- HELPER FUNCTIONS ---
         function fileToBase64(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -506,46 +1135,70 @@ const storage = firebase.storage();
             db.ref(`BusinessOwners/${currentUserId}/BusinessItems/meta/${type}lastdate`).set(dateStr);
         }
 
-        // --- 5. SECTION LOGIC ---
+        function showScanAnimation() {
+            document.getElementById('scan-overlay').style.display = 'flex';
+        }
 
+        function hideScanAnimation() {
+            document.getElementById('scan-overlay').style.display = 'none';
+        }
+
+        // --- DELETE CONFIRMATION ---
+        function confirmDelete(callback) {
+            deleteCallback = callback;
+            openModal('confirm-modal');
+            
+            // Attach the delete action to the confirm button
+            document.getElementById('confirm-delete-btn').onclick = () => {
+                if (deleteCallback) deleteCallback();
+                closeModals();
+                deleteCallback = null;
+            };
+        }
+
+        // --- DATABASE LISTENERS ---
         function initListeners() {
             const baseRef = `BusinessOwners/${currentUserId}/BusinessItems`;
 
-            // Legal Listener
-           db.ref(`${baseRef}/legaldocuments`).on('value', snapshot => {
-    const list = document.getElementById('legal-list');
-    list.innerHTML = '';
-    
-    snapshot.forEach(child => {
-        const doc = child.val();
-        const div = document.createElement('div');
-        div.className = 'doc-card glass';
+            // Legal Documents Listener
+            db.ref(`${baseRef}/legaldocuments`).on('value', snapshot => {
+                const list = document.getElementById('legal-list');
+                list.innerHTML = '';
+                
+                snapshot.forEach(child => {
+                    const doc = child.val();
+                    const docKey = child.key;
+                    const div = document.createElement('div');
+                    div.className = 'doc-card glass';
 
-        // 1. Use doc.preview (the generated thumbnail/image)
-        // 2. Fallback to doc.url if preview is missing
-        // 3. Final fallback to a generic icon if neither exists
-        let thumb = doc.preview || doc.url || 'https://cdn-icons-png.flaticon.com/512/337/337948.png';
+                    let thumb = doc.preview || doc.url || 'https://cdn-icons-png.flaticon.com/512/337/337948.png';
 
-        div.innerHTML = `
-            <img src="${thumb}" class="doc-thumb" style="cursor: pointer;" onclick="window.open('${doc.url}', '_blank')">
-            <div style="font-weight:bold; margin-top: 8px;">${doc.name}</div>
-            <div style="font-size:0.8rem; color:#aaa">${doc.category}</div>
-        `;
-        list.appendChild(div);
-    });
+                    div.innerHTML = `
+                        <button class="delete-doc-btn" onclick="event.stopPropagation(); confirmDelete(() => deleteLegal('${docKey}'))">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        <img src="${thumb}" class="doc-thumb" style="cursor: pointer;" onclick="window.open('${doc.url}', '_blank')">
+                        <div style="font-weight:600; margin-top: 8px; color: var(--text-primary);">${doc.name}</div>
+                        <div style="font-size:0.85rem; color: var(--text-muted); margin-top: 4px;">${doc.category}</div>
+                    `;
+                    list.appendChild(div);
+                });
 
-    if(snapshot.exists()) {
-        document.getElementById('meta-legal').innerText = "Last update: Today";
-    } else {
-        document.getElementById('meta-legal').innerText = "No documents yet";
-    }
-});
+                if(snapshot.exists()) {
+                    document.getElementById('meta-legal').innerText = "Last update: Today";
+                } else {
+                    document.getElementById('meta-legal').innerText = "No documents yet";
+                }
+            });
+
             // Transactions Listener
             db.ref(`${baseRef}/transactions`).on('value', snapshot => {
                 const list = document.getElementById('trans-list');
                 list.innerHTML = '';
+                
                 snapshot.forEach(child => {
                     const t = child.val();
+                    const transKey = child.key;
                     const colorClass = t.type === 'owe' ? 'badge-red' : 'badge-green';
                     const label = t.type === 'owe' ? 'I Owe' : 'Owed to Me';
                     
@@ -553,13 +1206,23 @@ const storage = firebase.storage();
                     div.className = 'list-item glass';
                     div.innerHTML = `
                         <div class="list-item-content">
-                            <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                                <span style="font-weight:600; font-size:1.1rem;">${t.name}</span>
+                            <div style="display:flex; justify-content:space-between; margin-bottom:8px; align-items: center;">
+                                <span style="font-weight:600; font-size:1.15rem;">${t.name}</span>
                                 <span class="badge ${colorClass}">${label}</span>
                             </div>
-                            <div style="color:#aaa; font-size:0.9rem;">${t.details}</div>
-                            <div style="margin-top:8px; font-weight:bold;">$${t.amount} <span style="font-weight:400; color:#666; font-size:0.8rem; margin-left:10px;">${t.date}</span></div>
-                            ${t.photo ? `<button class="btn btn-secondary" style="margin-top:10px; padding:5px 10px; font-size:0.7rem;" onclick="previewDoc('${t.photo}')">View Receipt</button>` : ''}
+                            <div style="color: var(--text-secondary); font-size:0.95rem; margin-bottom: 4px;">${t.details}</div>
+                            <div style="margin-top:10px; font-weight:600; font-size: 1.1rem; color: var(--text-primary);">
+                                ${t.amount} 
+                                <span style="font-weight:400; color: var(--text-muted); font-size:0.85rem; margin-left:12px;">
+                                    <i class="fas fa-calendar-alt"></i> ${t.date}
+                                </span>
+                            </div>
+                            ${t.photo ? `<button class="btn btn-secondary" style="margin-top:12px; padding:8px 14px; font-size:0.8rem;" onclick="previewDoc('${t.photo}')"><i class="fas fa-receipt"></i> View Receipt</button>` : ''}
+                        </div>
+                        <div class="item-actions">
+                            <button class="btn btn-danger" onclick="confirmDelete(() => deleteTransaction('${transKey}'))">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </div>
                     `;
                     list.appendChild(div);
@@ -570,15 +1233,23 @@ const storage = firebase.storage();
             db.ref(`${baseRef}/notes`).on('value', snapshot => {
                 const list = document.getElementById('notes-list');
                 list.innerHTML = '';
+                
                 snapshot.forEach(child => {
                     const n = child.val();
+                    const noteKey = child.key;
                     const div = document.createElement('div');
                     div.className = 'card glass';
                     div.style.height = 'auto';
+                    div.style.cursor = 'default';
                     div.innerHTML = `
-                        <div class="card-title">${n.title}</div>
-                        <div style="color:#ccc; font-size:0.9rem; margin:10px 0; white-space: pre-wrap;">${n.content}</div>
-                        <div class="card-meta">${n.date || ''}</div>
+                        <div>
+                            <div class="card-title">${n.title}</div>
+                            <div style="color: var(--text-secondary); font-size:0.95rem; margin:12px 0; white-space: pre-wrap; line-height: 1.6;">${n.content}</div>
+                            <div class="card-meta"><i class="fas fa-calendar"></i> ${n.date || 'No date'}</div>
+                        </div>
+                        <button class="btn btn-danger" style="margin-top: 16px; width: 100%;" onclick="confirmDelete(() => deleteNote('${noteKey}'))">
+                            <i class="fas fa-trash"></i> Delete Note
+                        </button>
                     `;
                     list.appendChild(div);
                 });
@@ -588,17 +1259,26 @@ const storage = firebase.storage();
             db.ref(`${baseRef}/pendingorders`).on('value', snapshot => {
                 const list = document.getElementById('orders-list');
                 list.innerHTML = '';
+                
                 snapshot.forEach(child => {
                     const o = child.val();
+                    const orderKey = child.key;
                     const div = document.createElement('div');
                     div.className = 'list-item glass';
                     div.innerHTML = `
                         <div class="list-item-content">
-                            <div style="display:flex; justify-content:space-between;">
-                                <span style="font-weight:600;">${o.category}</span>
-                                <span style="color:var(--danger); font-size:0.8rem;">Due: ${o.deadline}</span>
+                            <div style="display:flex; justify-content:space-between; align-items: center; margin-bottom: 8px;">
+                                <span style="font-weight:600; font-size: 1.1rem;">${o.category}</span>
+                                <span style="color:var(--danger); font-size:0.85rem; font-weight: 600;">
+                                    <i class="fas fa-clock"></i> Due: ${o.deadline}
+                                </span>
                             </div>
-                            <div style="margin-top:5px; color:#ddd;">${o.desc}</div>
+                            <div style="margin-top:8px; color: var(--text-secondary); font-size: 0.95rem;">${o.desc}</div>
+                        </div>
+                        <div class="item-actions">
+                            <button class="btn btn-danger" onclick="confirmDelete(() => deleteOrder('${orderKey}'))">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </div>
                     `;
                     list.appendChild(div);
@@ -609,95 +1289,122 @@ const storage = firebase.storage();
             db.ref(`${baseRef}/teamandstaff`).on('value', snapshot => {
                 const list = document.getElementById('team-list');
                 list.innerHTML = '';
+                
                 snapshot.forEach(child => {
                     const m = child.val();
                     const key = child.key;
                     const div = document.createElement('div');
                     div.className = 'card glass';
+                    div.style.cursor = 'pointer';
                     div.onclick = () => openMemberView(key, m.name);
                     div.innerHTML = `
-                        <i class="fas fa-user-circle card-icon"></i>
                         <div>
-                            <div class="card-title">${m.name}</div>
-                            <div style="font-size:0.9rem; color:var(--primary-blue);">${m.role}</div>
-                            <div class="card-meta">${m.status}</div>
+                            <i class="fas fa-user-circle card-icon"></i>
+                            <div>
+                                <div class="card-title">${m.name}</div>
+                                <div style="font-size:0.95rem; color:var(--primary); margin: 6px 0;">${m.role}</div>
+                                <div class="card-meta">${m.status}</div>
+                            </div>
                         </div>
+                        <button class="btn btn-danger" style="margin-top: 16px; width: 100%;" onclick="event.stopPropagation(); confirmDelete(() => deleteMember('${key}'))">
+                            <i class="fas fa-trash"></i> Remove
+                        </button>
                     `;
                     list.appendChild(div);
                 });
             });
         }
 
-        // --- 6. SAVE FUNCTIONS ---
+        // --- SAVE FUNCTIONS ---
 
-// Setup PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
-
-async function saveLegal() {
-    const cat = document.getElementById('legal-cat').value;
-    const name = document.getElementById('legal-name').value;
-    const fileInput = document.getElementById('legal-file');
-    
-    if(!name || fileInput.files.length === 0) return alert("File and Name required");
-
-    const file = fileInput.files[0];
-    const fileId = Date.now();
-    const storagePath = `BusinessOwners/${currentUserId}/LegalDocs/${fileId}_${file.name}`;
-    const thumbPath = `BusinessOwners/${currentUserId}/LegalDocs/thumbs/${fileId}_thumb.jpg`;
-    
-    try {
-        // 1. Upload Main File
-        const fileRef = firebase.storage().ref(storagePath);
-        await fileRef.put(file);
-        const mainUrl = await fileRef.getDownloadURL();
-
-        let thumbUrl = "";
-
-        // 2. Generate and Upload Thumbnail
-        if (file.type === "application/pdf") {
-            // Render PDF to Canvas
-            const arrayBuffer = await file.arrayBuffer();
-            const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
-            const page = await pdf.getPage(1);
-            const viewport = page.getViewport({ scale: 0.5 });
-            const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
-            await page.render({ canvasContext: context, viewport: viewport }).promise;
+        async function saveLegal() {
+            const cat = document.getElementById('legal-cat').value;
+            const name = document.getElementById('legal-name').value;
+            const fileInput = document.getElementById('legal-file');
             
-            // Convert Canvas to Blob and upload
-            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
-            const thumbRef = firebase.storage().ref(thumbPath);
-            await thumbRef.put(blob);
-            thumbUrl = await thumbRef.getDownloadURL();
-        } 
-        else if (file.type.startsWith("image/")) {
-            thumbUrl = mainUrl; // Use original image as thumb
-        } 
-        else {
-            // Generic icon for other docs (Word, etc)
-            thumbUrl = "https://cdn-icons-png.flaticon.com/512/337/337948.png";
+            if(!name || fileInput.files.length === 0) return alert("File and Name required");
+
+            const file = fileInput.files[0];
+            
+            // File type validation based on category
+            const fileType = file.type;
+            const fileName = file.name.toLowerCase();
+            
+            if (cat === 'PDF' && fileType !== 'application/pdf') {
+                return alert("Please select a PDF file");
+            } else if (cat === 'Doc' && !fileName.match(/\.(doc|docx|txt)$/)) {
+                return alert("Please select a .doc, .docx, or .txt file");
+            } else if (cat === 'Image' && !fileType.startsWith('image/')) {
+                return alert("Please select an image file (JPEG, PNG, or WebP)");
+            }
+
+            showScanAnimation(); // Show CapCut style animation
+
+            const fileId = Date.now();
+            const storagePath = `BusinessOwners/${currentUserId}/LegalDocs/${fileId}_${file.name}`;
+            const thumbPath = `BusinessOwners/${currentUserId}/LegalDocs/thumbs/${fileId}_thumb.jpg`;
+            
+            try {
+                // Upload Main File
+                const fileRef = storage.ref(storagePath);
+                await fileRef.put(file);
+                const mainUrl = await fileRef.getDownloadURL();
+
+                let thumbUrl = "";
+
+                // Generate and Upload Thumbnail
+                if (file.type === "application/pdf") {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+                    const page = await pdf.getPage(1);
+                    const viewport = page.getViewport({ scale: 0.5 });
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+                    await page.render({ canvasContext: context, viewport: viewport }).promise;
+                    
+                    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
+                    const thumbRef = storage.ref(thumbPath);
+                    await thumbRef.put(blob);
+                    thumbUrl = await thumbRef.getDownloadURL();
+                } 
+                else if (file.type.startsWith("image/")) {
+                    thumbUrl = mainUrl;
+                } 
+                else {
+                    thumbUrl = "https://cdn-icons-png.flaticon.com/512/337/337948.png";
+                }
+
+                // Save to Database
+                await db.ref(`BusinessOwners/${currentUserId}/BusinessItems/legaldocuments`).push({
+                    name: name,
+                    category: cat,
+                    url: mainUrl,
+                    preview: thumbUrl,
+                    timestamp: fileId
+                });
+
+                updateMeta('legal');
+                
+                // Hide animation and close modal
+                setTimeout(() => {
+                    hideScanAnimation();
+                    closeModals();
+                    
+                    // Clear form
+                    document.getElementById('legal-name').value = '';
+                    document.getElementById('legal-file').value = '';
+                    
+                    alert("Document saved successfully!");
+                }, 2500); // Match animation duration
+                
+            } catch (e) {
+                hideScanAnimation();
+                console.error(e);
+                alert("Error uploading: " + e.message);
+            }
         }
-
-        // 3. Save to Database
-        await db.ref(`BusinessOwners/${currentUserId}/BusinessItems/legaldocuments`).push({
-            name: name,
-            category: cat,
-            url: mainUrl,       // Link to actual file
-            preview: thumbUrl,  // Visual thumbnail
-            timestamp: fileId
-        });
-
-        updateMeta('legal');
-        closeModals();
-        alert("File & Thumbnail saved successfully!");
-        
-    } catch (e) {
-        console.error(e);
-        alert("Error uploading: " + e.message);
-    }
-}
 
         function saveNote() {
             const title = document.getElementById('note-title').value;
@@ -709,8 +1416,14 @@ async function saveLegal() {
             db.ref(`BusinessOwners/${currentUserId}/BusinessItems/notes`).push({
                 title, content, date, timestamp: Date.now()
             });
+            
             updateMeta('notes');
             closeModals();
+            
+            // Clear form
+            document.getElementById('note-title').value = '';
+            document.getElementById('note-content').value = '';
+            document.getElementById('note-date').value = '';
         }
 
         async function saveTransaction() {
@@ -731,8 +1444,16 @@ async function saveLegal() {
             db.ref(`BusinessOwners/${currentUserId}/BusinessItems/transactions`).push({
                 type, name, amount, details, date, photo, timestamp: Date.now()
             });
+            
             updateMeta('transaction');
             closeModals();
+            
+            // Clear form
+            document.getElementById('trans-name').value = '';
+            document.getElementById('trans-amount').value = '';
+            document.getElementById('trans-details').value = '';
+            document.getElementById('trans-date').value = '';
+            document.getElementById('trans-file').value = '';
         }
 
         function saveOrder() {
@@ -745,8 +1466,13 @@ async function saveLegal() {
             db.ref(`BusinessOwners/${currentUserId}/BusinessItems/pendingorders`).push({
                 category: cat, desc, deadline, timestamp: Date.now()
             });
+            
             updateMeta('pendingorders');
             closeModals();
+            
+            // Clear form
+            document.getElementById('order-desc').value = '';
+            document.getElementById('order-deadline').value = '';
         }
 
         function saveMember() {
@@ -760,22 +1486,28 @@ async function saveLegal() {
             db.ref(`BusinessOwners/${currentUserId}/BusinessItems/teamandstaff`).push({
                 name, role, email, status, timestamp: Date.now()
             });
+            
             updateMeta('team');
             closeModals();
+            
+            // Clear form
+            document.getElementById('team-name').value = '';
+            document.getElementById('team-role').value = '';
+            document.getElementById('team-email').value = '';
         }
 
-        // --- 7. TEAM MEMBER & JOB LOGIC ---
+        // --- TEAM MEMBER & JOB LOGIC ---
 
         function openMemberView(id, name) {
             activeMemberId = id;
             document.getElementById('member-name-header').innerText = name;
             
-            // Listen for jobs for this specific member
             db.ref(`BusinessOwners/${currentUserId}/BusinessItems/teamandstaff/${id}/jobs`).on('value', snapshot => {
                 const list = document.getElementById('member-jobs-list');
                 list.innerHTML = '';
+                
                 if(!snapshot.exists()) {
-                    list.innerHTML = '<div style="color:#777; font-style:italic;">No jobs assigned yet.</div>';
+                    list.innerHTML = '<div style="color: var(--text-muted); font-style:italic; text-align: center; padding: 20px;">No jobs assigned yet.</div>';
                     return;
                 }
                 
@@ -788,9 +1520,17 @@ async function saveLegal() {
                     div.className = `job-item ${isCompleted ? 'job-completed' : ''}`;
                     div.innerHTML = `
                         <div class="check-box ${isCompleted ? 'checked' : ''}" onclick="toggleJob('${jobId}', ${!isCompleted})">
-                            ${isCompleted ? '<i class="fas fa-check" style="font-size:10px; color:black;"></i>' : ''}
+                            ${isCompleted ? '<i class="fas fa-check" style="font-size:12px; color:white;"></i>' : ''}
                         </div>
-                        <div style="flex:1;">${job.desc}</div>
+                        <div style="flex:1;">
+                            <div style="font-weight: 500;">${job.desc}</div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">
+                                <i class="fas fa-calendar"></i> Deadline: ${job.deadline}
+                            </div>
+                        </div>
+                        <button class="btn btn-danger" style="padding: 6px 12px; font-size: 0.75rem;" onclick="event.stopPropagation(); confirmDelete(() => deleteJob('${jobId}'))">
+                            <i class="fas fa-trash"></i>
+                        </button>
                     `;
                     list.appendChild(div);
                 });
@@ -804,34 +1544,59 @@ async function saveLegal() {
         }
 
         function saveJob() {
-    const desc = document.getElementById('job-desc').value;
-    const deadline = document.getElementById('job-deadline').value;
+            const desc = document.getElementById('job-desc').value;
+            const deadline = document.getElementById('job-deadline').value;
 
-    if (!desc || !deadline) return alert("Description and Deadline are required");
+            if (!desc || !deadline) return alert("Description and Deadline are required");
 
-    // Push new job to the specific team member
-    db.ref(`BusinessOwners/${currentUserId}/BusinessItems/teamandstaff/${activeMemberId}/jobs`).push({
-        desc: desc,
-        deadline: deadline,
-        completed: false,
-        timestamp: Date.now()
-    });
+            db.ref(`BusinessOwners/${currentUserId}/BusinessItems/teamandstaff/${activeMemberId}/jobs`).push({
+                desc: desc,
+                deadline: deadline,
+                completed: false,
+                timestamp: Date.now()
+            });
 
-    // Update the last activity date for the team section
-    const dateStr = new Date().toISOString().split('T')[0];
-    db.ref(`BusinessOwners/${currentUserId}/BusinessItems/meta/teamlastdate`).set(dateStr);
+            const dateStr = new Date().toISOString().split('T')[0];
+            db.ref(`BusinessOwners/${currentUserId}/BusinessItems/meta/teamlastdate`).set(dateStr);
 
-    // UI Cleanup
-    closeModals();
-    document.getElementById('job-desc').value = '';
-    document.getElementById('job-deadline').value = '';
-}
+            closeModals();
+            document.getElementById('job-desc').value = '';
+            document.getElementById('job-deadline').value = '';
+        }
 
         function toggleJob(jobId, status) {
             db.ref(`BusinessOwners/${currentUserId}/BusinessItems/teamandstaff/${activeMemberId}/jobs/${jobId}`).update({
                 completed: status
             });
         }
+
+        // --- DELETE FUNCTIONS ---
+
+        function deleteLegal(docKey) {
+            db.ref(`BusinessOwners/${currentUserId}/BusinessItems/legaldocuments/${docKey}`).remove();
+        }
+
+        function deleteTransaction(transKey) {
+            db.ref(`BusinessOwners/${currentUserId}/BusinessItems/transactions/${transKey}`).remove();
+        }
+
+        function deleteNote(noteKey) {
+            db.ref(`BusinessOwners/${currentUserId}/BusinessItems/notes/${noteKey}`).remove();
+        }
+
+        function deleteOrder(orderKey) {
+            db.ref(`BusinessOwners/${currentUserId}/BusinessItems/pendingorders/${orderKey}`).remove();
+        }
+
+        function deleteMember(memberKey) {
+            db.ref(`BusinessOwners/${currentUserId}/BusinessItems/teamandstaff/${memberKey}`).remove();
+        }
+
+        function deleteJob(jobId) {
+            db.ref(`BusinessOwners/${currentUserId}/BusinessItems/teamandstaff/${activeMemberId}/jobs/${jobId}`).remove();
+        }
+
+        // --- PREVIEW FUNCTION ---
 
         function previewDoc(url) {
             if(!url) return;
