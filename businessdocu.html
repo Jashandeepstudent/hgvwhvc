@@ -1648,37 +1648,23 @@
         </div>
 
         <!-- Member Detail -->
-<div id="member-detail-view" class="section-view">
-    <div class="top-bar glass">
-        <h2 id="member-name-header">Member Details</h2>
-        <div style="display:flex; gap:10px;">
-            <button class="btn btn-secondary" onclick="navTo('team-view')">
-                <i class="fas fa-arrow-left"></i> Back
-            </button>
-            <button class="btn btn-primary" onclick="openJobModal()">
-                <i class="fas fa-tasks"></i> Assign Job
-            </button>
-        </div>
-    </div>
-
-    <div class="glass" style="padding: 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 20px;">
-        <div style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--neon-primary); overflow: hidden; flex-shrink: 0; background: #222;">
-            <img id="member-detail-photo" src="" style="width: 100%; height: 100%; object-fit: cover; display: none;">
-            <div id="member-photo-placeholder" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 30px; color: #555;">
-                <i class="fas fa-user"></i>
+        <div id="member-detail-view" class="section-view">
+            <div class="top-bar glass">
+                <h2 id="member-name-header">Member Details</h2>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn btn-secondary" onclick="navTo('team-view')">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <button class="btn btn-primary" onclick="openJobModal()">
+                        <i class="fas fa-tasks"></i> Assign Job
+                    </button>
+                </div>
+            </div>
+            <div class="glass" style="padding: 28px; margin-bottom: 20px;">
+                <h3 style="margin-bottom:20px; color: var(--text-secondary); font-weight: 600;">Assigned Jobs</h3>
+                <div class="item-list" id="member-jobs-list"></div>
             </div>
         </div>
-        <div>
-            <h2 id="member-detail-name" style="margin: 0; color: white;">Full Name</h2>
-            <p id="member-detail-role" style="margin: 5px 0 0 0; color: var(--neon-primary); font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Role</p>
-        </div>
-    </div>
-
-    <div class="glass" style="padding: 28px; margin-bottom: 20px;">
-        <h3 style="margin-bottom:20px; color: var(--text-secondary); font-weight: 600;">Assigned Jobs</h3>
-        <div class="item-list" id="member-jobs-list"></div>
-    </div>
-</div>
 
     </div>
 
@@ -2451,36 +2437,46 @@ db.ref(`${baseRef}/transactions`).on('value', snapshot => {
             });
 
             // Team Listener
-            db.ref(`${baseRef}/teamandstaff`).on('value', snapshot => {
-                const list = document.getElementById('team-list');
-                list.innerHTML = '';
-                
-                snapshot.forEach(child => {
-                    const m = child.val();
-                    const key = child.key;
-                    const div = document.createElement('div');
-                    div.className = 'card glass';
-                    div.style.cursor = 'pointer';
-                    div.onclick = () => openMemberView(key, m.name);
-                    div.innerHTML = `
-                        <div>
-                            <i class="fas fa-user-circle card-icon"></i>
-                            <div>
-                                <div class="card-title">${m.name}</div>
-                                <div style="font-size:0.95rem; color:var(--primary); margin: 6px 0;">${m.role}</div>
-                                <div class="card-meta">${m.status}</div>
-                            </div>
-                        </div>
-<button class="btn btn-danger btn-sm" 
-        style="margin-top: 16px; width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; flex-shrink: 0;" 
-        onclick="event.stopPropagation(); confirmDelete(() => deleteMember('${key}'))" 
-        title="Remove">
-    <i class="fas fa-trash" style="font-size: 12px;"></i>
-</button>
-                    `;
-                    list.appendChild(div);
-                });
-            });
+db.ref(`${baseRef}/teamandstaff`).on('value', snapshot => {
+    const list = document.getElementById('team-list');
+    list.innerHTML = '';
+    
+    snapshot.forEach(child => {
+        const m = child.val();
+        const key = child.key;
+        const div = document.createElement('div');
+        div.className = 'card glass';
+        div.style.cursor = 'pointer';
+        
+        // Pass the full object 'm' to your view function so it can load the photo there too
+        div.onclick = () => openMemberView(key, m); 
+
+        div.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div style="width: 55px; height: 55px; border-radius: 50%; border: 2px solid var(--primary); overflow: hidden; flex-shrink: 0; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center;">
+                    ${m.photoURL 
+                        ? `<img src="${m.photoURL}" style="width: 100%; height: 100%; object-fit: cover;">` 
+                        : `<i class="fas fa-user" style="font-size: 20px; color: var(--primary);"></i>`
+                    }
+                </div>
+
+                <div style="flex-grow: 1; min-width: 0;">
+                    <div class="card-title" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${m.name}</div>
+                    <div style="font-size:0.95rem; color:var(--primary); margin: 2px 0;">${m.role}</div>
+                    <div class="card-meta">${m.status}</div>
+                </div>
+
+                <button class="btn btn-danger btn-sm" 
+                        style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border-radius: 8px;" 
+                        onclick="event.stopPropagation(); confirmDelete(() => deleteMember('${key}'))" 
+                        title="Remove">
+                    <i class="fas fa-trash" style="font-size: 12px;"></i>
+                </button>
+            </div>
+        `;
+        list.appendChild(div);
+    });
+});
         }
 
         // --- SAVE FUNCTIONS ---
