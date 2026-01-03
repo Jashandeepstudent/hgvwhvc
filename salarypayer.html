@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Premium Digital Twin Shop</title>
+    <title>Digial Command Centre</title>
     <style>
         * {
             margin: 0;
@@ -422,37 +422,7 @@ body {
             box-shadow: 0 30px 80px rgba(0, 0, 0, 0.9);
             overflow-y: auto;
         }
-/* 🔥 MOBILE FIX FOR STORY CARD */
-@media (max-width: 768px) {
-    .story-card {
-        /* Adjust width to fit screen with small side margins */
-        width: 90%; 
-        max-width: 380px; /* Limits size on larger phones/tablets */
-        
-        /* Reduce padding to give content more room */
-        padding: 20px;
-        
-        /* Adjust height for smaller screens */
-        max-height: 80vh; 
-        
-        /* Tweak border and radius for a sleeker look on mobile */
-        border-width: 2px;
-        border-radius: 20px;
-        
-        /* Ensure the scaling transition still works perfectly */
-        transform: translate(-50%, -50%) scale(0);
-    }
 
-    /* Active state for the transition */
-    .story-card.active {
-        transform: translate(-50%, -50%) scale(1);
-    }
-
-    /* Optional: Scale down the header inside the card */
-    .story-card h2 {
-        font-size: 20px !important;
-    }
-}
         .story-card.active { transform: translate(-50%, -50%) scale(1); opacity: 1; }
         .story-card h2 { color: var(--neon-primary); margin-bottom: 25px; font-size: 32px; text-shadow: 0 0 20px var(--neon-primary); }
         .story-section { margin-bottom: 25px; padding: 20px; background: rgba(0, 0, 0, 0.3); border-radius: 15px; border-left: 4px solid var(--neon-secondary); }
@@ -490,44 +460,27 @@ body {
     overflow-y: auto;
 }
 
-/* 🔥 MOBILE FIX - COMPACT TOP-LEFT VERSION */
+/* 🔥 MOBILE FIX */
 @media (max-width: 768px) {
     .controls {
-        /* Position Fix: Top Left */
-        top: 15px;      
-        left: 15px;     
-        bottom: auto;   /* Removes the bottom alignment */
-        transform: none; /* Removes the centering transform */
+        top: auto;
+        left: 50%;
+        bottom: 12px;
+        transform: translateX(-50%);
 
-        /* Size Fix: Compact & Adaptive */
-        width: auto;
-        min-width: 140px; /* Smallest usable width */
-        max-width: 200px; /* Prevents it from covering the screen */
-        
-        /* Aesthetic Fix */
-        padding: 10px;
-        border-width: 1.5px; /* Thinner border for small screens */
-        border-radius: 10px;
-        background: rgba(15, 15, 35, 0.95); /* Slightly more solid for readability */
+        width: calc(100% - 24px);
+        min-width: unset;
+        max-width: 420px;
 
-        /* Content Scaling */
-        max-height: 60vh; 
-        font-size: 12px;  /* Smaller text for a "mini" feel */
-    }
+        padding: 12px;
+        border-width: 2px;
+        border-radius: 12px;
 
-    /* Scaling down buttons or inputs inside the controls if they exist */
-    .controls button, 
-    .controls input {
-        padding: 6px 8px;
-        font-size: 11px;
-        margin-bottom: 5px;
-    }
-    
-    .controls h3 {
-        font-size: 13px;
-        margin-bottom: 8px;
+        max-height: 45vh;
+        font-size: 14px;
     }
 }
+
         .controls h3 { color: var(--neon-primary); margin-bottom: 15px; font-size: 18px; }
         .control-group { margin-bottom: 15px; }
         .control-group label { display: block; margin-bottom: 8px; color: #ccc; font-size: 14px; }
@@ -1284,7 +1237,7 @@ node.style.transform = `translateZ(${floorZ}px)`;
             <div class="story-section" style="border-left-color: var(--neon-accent); background: rgba(127, 255, 0, 0.05);">
                 <h3>💰 Price Value</h3>
                 <p style="font-size: 24px; color: var(--neon-accent); font-weight: bold; text-shadow: 0 0 10px var(--neon-accent);">
-                    {product.price}
+                    ${product.price}
                 </p>
             </div>
 
