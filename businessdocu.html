@@ -2705,45 +2705,56 @@ function previewImage(event) {
     reader.readAsDataURL(event.target.files[0]);
 }
        async function saveMember() {
-    const user = firebase.auth().currentUser;
-    if (!user) return alert("Please log in first!");
-
-    const file = document.getElementById('team-photo').files[0];
     const name = document.getElementById('team-name').value;
     const role = document.getElementById('team-role').value;
+    const email = document.getElementById('team-email').value;
     const status = document.getElementById('team-status').value;
-    const saveBtn = document.getElementById('save-btn');
+    // Get the file from the input we added earlier
+    const file = document.getElementById('team-photo').files[0];
 
-    if (!name || !file) return alert("Name and Photo are required!");
+    if (!name) return alert("Name required");
+    if (!file) return alert("Please select a photo");
 
-    saveBtn.disabled = true;
+    // Show a "loading" state on your button if you want
+    const saveBtn = document.querySelector('[onclick="saveMember()"]');
+    const originalText = saveBtn.innerHTML;
     saveBtn.innerHTML = "Uploading...";
+    saveBtn.disabled = true;
 
     try {
-        // 1. SAVE PHOTO IN STORAGE
+        // 1. Upload Photo to Firebase Storage
         const storageRef = firebase.storage().ref(`staff_photos/${Date.now()}_${file.name}`);
         const snapshot = await storageRef.put(file);
         const photoURL = await snapshot.ref.getDownloadURL();
 
-        // 2. SAVE INFO IN DATABASE (Inside your allowed path)
-        // Path: Businesses > YOUR_UID > team
-        const teamRef = firebase.database().ref(`Businesses/${user.uid}/team`).push();
-        
-        await teamRef.set({
-            name: name,
-            role: role,
-            status: status,
-            photoURL: photoURL
+        // 2. Save Data to Realtime DB (Including the photoURL)
+        await db.ref(`BusinessOwners/${currentUserId}/BusinessItems/teamandstaff`).push({
+            name, 
+            role, 
+            email, 
+            status, 
+            photoURL: photoURL, // <--- Link to the storage image
+            timestamp: Date.now()
         });
 
+        // Your existing meta update and close modal logic
+        updateMeta('team');
         closeModals();
-        resetTeamModal(); // Clear the form
+
+        // Clear form
+        document.getElementById('team-name').value = '';
+        document.getElementById('team-role').value = '';
+        document.getElementById('team-email').value = '';
+        document.getElementById('team-photo').value = ''; // Clear file input
+        document.getElementById('profile-preview').style.display = 'none';
+        document.getElementById('upload-icon').style.display = 'block';
+
     } catch (error) {
-        console.error("Error:", error);
-        alert("Permission Denied or Upload Failed. Check Console.");
+        console.error("Upload failed:", error);
+        alert("Error saving member. Check console.");
     } finally {
+        saveBtn.innerHTML = originalText;
         saveBtn.disabled = false;
-        saveBtn.innerHTML = '<i class="fas fa-user-plus"></i> Add Member';
     }
 }
 
