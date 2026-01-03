@@ -1649,22 +1649,36 @@
 
         <!-- Member Detail -->
         <div id="member-detail-view" class="section-view">
-            <div class="top-bar glass">
-                <h2 id="member-name-header">Member Details</h2>
-                <div style="display:flex; gap:10px;">
-                    <button class="btn btn-secondary" onclick="navTo('team-view')">
-                        <i class="fas fa-arrow-left"></i> Back
-                    </button>
-                    <button class="btn btn-primary" onclick="openJobModal()">
-                        <i class="fas fa-tasks"></i> Assign Job
-                    </button>
-                </div>
-            </div>
-            <div class="glass" style="padding: 28px; margin-bottom: 20px;">
-                <h3 style="margin-bottom:20px; color: var(--text-secondary); font-weight: 600;">Assigned Jobs</h3>
-                <div class="item-list" id="member-jobs-list"></div>
+    <div class="top-bar glass">
+        <h2 id="member-name-header">Member Details</h2> 
+        <div style="display:flex; gap:10px;">
+            <button class="btn btn-secondary" onclick="navTo('team-view')">
+                <i class="fas fa-arrow-left"></i> Back
+            </button>
+            <button class="btn btn-primary" onclick="openJobModal()">
+                <i class="fas fa-tasks"></i> Assign Job
+            </button>
+        </div>
+    </div>
+
+    <div class="glass" style="padding: 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 20px;">
+        <div style="width: 70px; height: 70px; border-radius: 50%; border: 2px solid var(--primary); overflow: hidden; background: rgba(255,255,255,0.1);">
+            <img id="detail-member-photo" src="" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+            <div id="detail-member-icon" style="width:100%; height:100%; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-user-circle" style="font-size: 40px; color: var(--primary);"></i>
             </div>
         </div>
+        <div>
+            <h3 id="detail-member-name" style="margin: 0; color: white;">Member Name</h3>
+            <p id="detail-member-role" style="margin: 5px 0 0 0; color: var(--primary); opacity: 0.8;">Role</p>
+        </div>
+    </div>
+
+    <div class="glass" style="padding: 28px; margin-bottom: 20px;">
+        <h3 style="margin-bottom:20px; color: var(--text-secondary); font-weight: 600;">Assigned Jobs</h3>
+        <div class="item-list" id="member-jobs-list"></div>
+    </div>
+</div>
 
     </div>
 
