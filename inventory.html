@@ -2852,10 +2852,11 @@ async function generatePremiumPDF() {
         });
         
         // ============================================
-        // LAST PAGE: SUMMARY (NO EMOJIS - FIXED)
+        // LAST PAGE: SUMMARY & INSIGHTS
         // ============================================
         doc.addPage();
         
+        // Page Header
         doc.setFillColor(37, 99, 235);
         doc.rect(0, 0, pageWidth, 25, 'F');
         
@@ -2870,79 +2871,166 @@ async function generatePremiumPDF() {
         
         let summaryY = 40;
         
-// KEY INSIGHTS (NO EMOJI)
+        // Key Insights Section
         doc.setFillColor(248, 250, 252);
-        doc.roundedRect(15, summaryY, pageWidth - 30, 60, 3, 3, 'F');
+        doc.roundedRect(15, summaryY, pageWidth - 30, 50, 3, 3, 'F');
         
         doc.setFont("helvetica", "bold");
         doc.setFontSize(12);
-        doc.setTextColor(37, 99, 235);
-        doc.text("CRITICAL INVENTORY INSIGHTS", 25, summaryY + 10);
+        doc.setTextColor(30, 41, 59);
+        doc.text("📊 KEY INSIGHTS", 20, summaryY + 10);
         
-        doc.setFontSize(10);
-        doc.setTextColor(51, 65, 85);
         doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.setTextColor(71, 85, 105);
         
         const insights = [
-            `1. Stock Availability: ${((totalProducts - outOfStockCount) / totalProducts * 100).toFixed(1)}% of your catalog is currently in stock.`,
-            `2. Urgent Attention: There are ${outOfStockCount} items completely out of stock and ${lowStockCount} items at critical levels.`,
-            `3. Quality Control: ${expiringCount} items require immediate inspection due to upcoming or past expiry dates.`,
-            `4. Volume: You are currently managing a total of ${totalStock} individual units across all categories.`
+            `• Total inventory value across ${totalProducts} unique products`,
+            `• ${totalStock} total units currently in stock`,
+            `• ${((products.filter(p => p.quantity > 0).length / totalProducts) * 100).toFixed(1)}% of products are in stock`,
+            `• ${outOfStockCount} products require immediate restocking`,
+            `• ${expiringCount} products are expiring within ${notificationDays} days`
         ];
         
-        let insightY = summaryY + 22;
-        insights.forEach(line => {
-            doc.text(line, 25, insightY);
-            insightY += 8;
+        insights.forEach((insight, idx) => {
+            doc.text(insight, 20, summaryY + 20 + (idx * 6));
         });
-
-        // RECOMMENDATIONS SECTION
-        summaryY += 75;
+        
+        summaryY += 60;
+        
+        // Critical Actions Section
+        doc.setFillColor(254, 242, 242);
+        doc.roundedRect(15, summaryY, pageWidth - 30, 40, 3, 3, 'F');
+        doc.setDrawColor(239, 68, 68);
+        doc.setLineWidth(0.5);
+        doc.roundedRect(15, summaryY, pageWidth - 30, 40, 3, 3, 'S');
+        
         doc.setFont("helvetica", "bold");
         doc.setFontSize(12);
-        doc.setTextColor(37, 99, 235);
-        doc.text("STRATEGIC RECOMMENDATIONS", 15, summaryY);
+        doc.setTextColor(220, 38, 38);
+        doc.text("⚠️ CRITICAL ACTIONS REQUIRED", 20, summaryY + 10);
+        
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.setTextColor(127, 29, 29);
+        
+        const criticalActions = [];
+        if (outOfStockCount > 0) {
+            criticalActions.push(`• Restock ${outOfStockCount} out-of-stock products immediately`);
+        }
+        if (expiringCount > 0) {
+            criticalActions.push(`• Review ${expiringCount} products expiring soon`);
+        }
+        if (lowStockCount > 0) {
+            criticalActions.push(`• Plan reorder for ${lowStockCount} low-stock items`);
+        }
+        
+        if (criticalActions.length === 0) {
+            doc.setTextColor(16, 185, 129);
+            doc.text("✓ No critical actions required. Inventory is healthy!", 20, summaryY + 20);
+        } else {
+            criticalActions.forEach((action, idx) => {
+                doc.text(action, 20, summaryY + 20 + (idx * 6));
+            });
+        }
+        
+        summaryY += 50;
+        
+        // Recommendations Section
+        doc.setFillColor(236, 253, 245);
+        doc.roundedRect(15, summaryY, pageWidth - 30, 50, 3, 3, 'F');
+        doc.setDrawColor(16, 185, 129);
+        doc.setLineWidth(0.5);
+        doc.roundedRect(15, summaryY, pageWidth - 30, 50, 3, 3, 'S');
+        
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.setTextColor(6, 95, 70);
+        doc.text("💡 RECOMMENDATIONS", 20, summaryY + 10);
+        
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.setTextColor(6, 78, 59);
         
         const recommendations = [
-            { title: "Restock Priority:", desc: "Immediate procurement suggested for 'Out of Stock' items to prevent revenue loss." },
-            { title: "Waste Mitigation:", desc: "Prioritize sales or promotions for the " + expiringCount + " items expiring soon." },
-            { title: "Inventory Buffers:", desc: "Review 'Low Stock' thresholds for high-turnover products to avoid frequent outages." }
+            "• Set expiry dates for all products to enable better tracking",
+            "• Maintain minimum stock levels of 10 units per product",
+            "• Review inventory weekly to prevent stockouts",
+            "• Consider automated reordering for fast-moving items",
+            "• Implement FIFO (First In, First Out) for perishable goods"
         ];
-
-        let recY = summaryY + 10;
-        recommendations.forEach(rec => {
-            doc.setFont("helvetica", "bold");
-            doc.setTextColor(51, 65, 85);
-            doc.text(rec.title, 15, recY);
-            doc.setFont("helvetica", "normal");
-            doc.text(rec.desc, 55, recY);
-            recY += 10;
-        });
-
-        // FINAL SIGNATURE AREA
-        const sigY = 230;
-        doc.setDrawColor(203, 213, 225);
-        doc.line(15, sigY, 80, sigY);
-        doc.line(pageWidth - 80, sigY, pageWidth - 15, sigY);
         
+        recommendations.forEach((rec, idx) => {
+            doc.text(rec, 20, summaryY + 20 + (idx * 6));
+        });
+        
+        summaryY += 60;
+        
+        // Report Signature Section
+        doc.setDrawColor(226, 232, 240);
+        doc.setLineWidth(0.5);
+        doc.line(15, summaryY, pageWidth - 15, summaryY);
+        
+        summaryY += 10;
+        
+        doc.setFont("helvetica", "italic");
         doc.setFontSize(9);
-        doc.text("Authorized Signature", 15, sigY + 5);
-        doc.text("Date of Approval", pageWidth - 15, sigY + 5, { align: 'right' });
-
-        // Save the PDF
-        const fileName = `${businessNameClean}_Premium_Report_${Date.now().toString().slice(-4)}.pdf`;
+        doc.setTextColor(100, 116, 139);
+        doc.text("Report prepared by:", 20, summaryY);
+        
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(11);
+        doc.setTextColor(30, 41, 59);
+        doc.text(fullName, 20, summaryY + 7);
+        
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.setTextColor(148, 163, 184);
+        doc.text(`Authorized Signatory - ${businessNameClean}`, 20, summaryY + 13);
+        
+        // Final Footer
+        doc.setDrawColor(37, 99, 235);
+        doc.setLineWidth(1);
+        doc.line(15, pageHeight - 30, pageWidth - 15, pageHeight - 30);
+        
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(9);
+        doc.setTextColor(37, 99, 235);
+        doc.text("ScaleVest", pageWidth / 2, pageHeight - 22, { align: 'center' });
+        
+        doc.setFont("helvetica", "italic");
+        doc.setFontSize(7);
+        doc.setTextColor(148, 163, 184);
+        doc.text("Powered by ScaleVest", pageWidth / 2, pageHeight - 17, { align: 'center' });
+        doc.text("This is a ScaleVest-generated document and does not require a signature", pageWidth / 2, pageHeight - 13, { align: 'center' });
+        
+        // Save with incremental naming
+        const fileName = `${businessNameClean}ProductReport${reportCounter}.pdf`;
         doc.save(fileName);
         
         reportCounter++;
-        if (typeof triggerSuccess === "function") {
-            triggerSuccess(`Premium Report downloaded: ${fileName}`);
-        }
-
+        
+        closeReportModal();
+        triggerSuccess(`✓ Premium Report Downloaded: ${fileName}`);
+        
     } catch (error) {
-        console.error("Premium PDF Error:", error);
-        alert("Error generating Premium PDF. Please check the console.");
+        console.error("PDF Generation Error:", error);
+        alert("Error generating PDF: " + error.message);
+    } finally {
+        btn.innerHTML = originalHTML;
+        btn.disabled = false;
     }
 }
+
+// Add spin animation
+const styleElement = document.createElement('style');
+styleElement.textContent = `
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+`;
+document.head.appendChild(styleElement);
 </script>
 
 </body>
