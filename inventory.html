@@ -2697,8 +2697,8 @@ async function generatePremiumPDF() {
         doc.text("", pageWidth / 2, pageHeight - 15, { align: 'center' });
         doc.text("", pageWidth / 2, pageHeight - 10, { align: 'center' });
         
-        // ============================================
-// PAGE 2+: DETAILED TABLE (EXPIRY STATUS REMOVED)
+// ============================================
+// PAGE 2+: DETAILED TABLE 
 // ============================================
 doc.addPage();
 
@@ -2818,14 +2818,14 @@ doc.autoTable({
         );
         
         // Border frame
-        doc.setDrawColor(226, 232, 240);
-        doc.setLineWidth(0.5);
-        doc.rect(10, 10, pageWidth - 20, pageHeight - 20, 'S');
+doc.setDrawColor(226, 232, 240);
+doc.setLineWidth(0.5);
+doc.rect(10, 25, pageWidth - 20, pageHeight - 35, 'S');
     }
 });
         
-// ============================================
-        // LAST PAGE: SUMMARY & INSIGHTS (ENCODING FIXED)
+        // ============================================
+        // LAST PAGE: SUMMARY & INSIGHTS 
         // ============================================
         doc.addPage();
         
