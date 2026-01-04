@@ -175,7 +175,7 @@ body {
     display: grid;
     grid-template-columns: repeat(10, 1fr);
     grid-template-rows: repeat(10, 1fr);
-    gap: 2px;
+    gap: 0px;
     left: 50%;
     top: 50%;
     transform-style: preserve-3d;
@@ -188,6 +188,7 @@ body {
             backdrop-filter: blur(5px);
             transition: all 0.5s ease;
             cursor: default;
+box-sizing: border-box; 
         }
 
         .grid-cell.exchange-mode {
@@ -626,7 +627,14 @@ body {
     h1 { font-size: 1.2rem; }
     .mega-alert-title { font-size: 1rem !important; }
     .mega-alert-timer { padding: 8px 15px; font-size: 0.8rem; }
-}        .controls h3 { color: var(--neon-primary); margin-bottom: 15px; font-size: 18px; }
+}        .controls h3 {
+    color: var(--neon-primary);
+    margin-bottom: 15px;
+    font-size: 18px;
+    display: flex;
+    justify-content: space-between; 
+    align-items: center;
+}
         .control-group { margin-bottom: 15px; }
         .control-group label { display: block; margin-bottom: 8px; color: #ccc; font-size: 14px; }
 
@@ -1866,18 +1874,27 @@ function moveProductToPosition(product, newX, newY, newFloor) {
             // Calculate Max Sales for normalization
             const maxSales = Math.max(...productsData.map(p => p.sales || 0), 1);
 
-            document.querySelectorAll('.grid-cell').forEach(cell => {
-                const x = parseInt(cell.dataset.x);
-                const y = parseInt(cell.dataset.y);
-                const floor = parseInt(cell.dataset.floor || 0);
-                
-                const product = productsData.find(p => p.x === x && p.y === y && (p.floor || 0) === floor);
+document.querySelectorAll('.grid-cell').forEach(cell => {
+    const x = parseInt(cell.dataset.x);
+    const y = parseInt(cell.dataset.y);
+    const floor = parseInt(cell.dataset.floor || 0);
+    
+    // Find product at this EXACT position
+    const product = productsData.find(p => {
+        const match = p.x === x && p.y === y && (p.floor || 0) === floor;
+        return match;
+    });
 
-                // Reset base
-                cell.className = 'grid-cell';
-                cell.style.background = '';
+    // Reset base
+    cell.className = 'grid-cell';
+    cell.style.background = '';
+    
+    // If in exchange mode, add that class back
+    if (exchangeModeActive) {
+        cell.classList.add('exchange-mode');
+    }
 
-if (product) {
+    if (product) {
                     const expiryStatus = getExpiryStatus(product);
                     
                     if (expiryStatus === 'expired') {
@@ -1972,25 +1989,26 @@ node.dataset.productId = product.id;
 // Normal Mode Colors
 updateNodeVisuals(node, product);
 
-// Calculate grid cell size from floor dimensions
-const floorWidth = 800; // Floor is 800px wide
-const gridCells = 10; // 10x10 grid
-const cellSize = floorWidth / gridCells; // 80px per cell
+// Calculate exact grid positioning WITHOUT gap
+const floorWidth = 800;
+const gridCells = 10;
+const cellSize = floorWidth / gridCells; // Exactly 80px per cell now (no gap)
 const floorZ = (product.floor || 0) * 250;
 
-// Center the product on its grid cell
-// Floor starts at -400px (left: 50% with translate(-50%))
-// So cell (0,0) is at -400px, cell (1,0) is at -320px, etc.
+// Calculate position: floor starts at -400, each cell is 80px
 const xPosition = -400 + (product.x * cellSize) + (cellSize / 2);
 const yPosition = -400 + (product.y * cellSize) + (cellSize / 2);
 
 node.style.position = 'absolute';
-node.style.left = '50%'; // Center relative to world
-node.style.top = '50%';  // Center relative to world
+node.style.left = '50%';
+node.style.top = '50%';
 node.style.transform = `translate(${xPosition}px, ${yPosition}px) translateZ(${floorZ + 40}px)`;
 node.style.width = '80px';
 node.style.height = '80px';
 node.style.transformStyle = 'preserve-3d';
+node.style.pointerEvents = 'auto';node.style.width = '80px';
+node.style.height = '80px';
+
 
                 const expiryStatus = getExpiryStatus(product, isTimeTravelMode ? new Date(Date.now() + timeTravelDaysOffset * 86400000) : null);
                 const daysLeft = product.expiryDate ? getDaysUntilExpiry(product.expiryDate, isTimeTravelMode ? new Date(Date.now() + timeTravelDaysOffset * 86400000) : null) : null;
