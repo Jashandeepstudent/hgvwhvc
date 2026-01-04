@@ -1434,121 +1434,152 @@ auth.onAuthStateChanged(u => {
 
 
 // PRODUCT ANALYTICS SYSTEM
+// PRODUCT ANALYTICS SYSTEM - ONE PRODUCT PER CATEGORY
 function updateProductAnalytics(productId, productName, quantitySold) {
+    if (!currentUserId) {
+        console.error("User not authenticated");
+        return;
+    }
+    
     const analyticsRef = db.ref(`Businesses/${currentUserId}/analytics`);
     const timestamp = Date.now();
     
-    // 1. UPDATE MOST SELLING
-    analyticsRef.child('mostSelling').child(productId).once('value', s => {
-        const current = s.val() || { name: productName, totalSold: 0, lastUpdated: timestamp };
-        analyticsRef.child('mostSelling').child(productId).set({
-            name: productName,
-            totalSold: current.totalSold + quantitySold,
-            lastUpdated: timestamp
-        });
-    });
-    
-    // 2. UPDATE LEAST SELLING
-    analyticsRef.child('leastSelling').child(productId).once('value', s => {
-        const current = s.val() || { name: productName, totalSold: 0, lastUpdated: timestamp };
-        analyticsRef.child('leastSelling').child(productId).set({
-            name: productName,
-            totalSold: current.totalSold + quantitySold,
-            lastUpdated: timestamp
-        });
-    });
-    
-    // 3. UPDATE TRENDING (Recent sales within 7 days)
-    analyticsRef.child('trendingSelling').child(productId).once('value', s => {
-        const current = s.val() || { name: productName, recentSold: 0, firstSaleDate: timestamp };
+    // Get all sales data to calculate rankings
+    db.ref(`Businesses/${currentUserId}/sales`).once('value', salesSnapshot => {
+        const sales = salesSnapshot.val() || {};
         
+        // Calculate total sales per product
+        const productSales = {};
+        
+        Object.values(sales).forEach(sale => {
+            const pid = sale.productId;
+            const pname = sale.productName;
+            const qty = sale.quantity || 0;
+            
+            if (!productSales[pid]) {
+                productSales[pid] = {
+                    name: pname,
+                    totalSold: 0,
+                    lastSaleTime: 0
+                };
+            }
+            
+            productSales[pid].totalSold += qty;
+            productSales[pid].lastSaleTime = Math.max(
+                productSales[pid].lastSaleTime, 
+                sale.timestamp || 0
+            );
+        });
+        
+        // Convert to array for sorting
+        const productsArray = Object.entries(productSales).map(([id, data]) => ({
+            id,
+            ...data
+        }));
+        
+        if (productsArray.length === 0) return;
+        
+        // 1. MOST SELLING - Highest total sales
+        const mostSelling = productsArray.reduce((max, product) => 
+            product.totalSold > max.totalSold ? product : max
+        );
+        
+        analyticsRef.child('mostSelling').set({
+            productId: mostSelling.id,
+            name: mostSelling.name,
+            totalSold: mostSelling.totalSold,
+            lastUpdated: timestamp
+        });
+        
+        // 2. LEAST SELLING - Lowest total sales (but must have at least 1 sale)
+        const leastSelling = productsArray.reduce((min, product) => 
+            product.totalSold < min.totalSold ? product : min
+        );
+        
+        analyticsRef.child('leastSelling').set({
+            productId: leastSelling.id,
+            name: leastSelling.name,
+            totalSold: leastSelling.totalSold,
+            lastUpdated: timestamp
+        });
+        
+        // 3. TRENDING SELLING - Most sales in last 7 days
         const weekAgo = timestamp - (7 * 24 * 60 * 60 * 1000);
         
-        // If first sale was more than 7 days ago, reset
-        if (current.firstSaleDate < weekAgo) {
-            analyticsRef.child('trendingSelling').child(productId).set({
-                name: productName,
-                recentSold: quantitySold,
-                firstSaleDate: timestamp,
+        // Calculate recent sales (last 7 days)
+        const recentSales = {};
+        
+        Object.entries(sales).forEach(([saleId, sale]) => {
+            const saleTime = sale.timestamp || 0;
+            
+            if (saleTime >= weekAgo) {
+                const pid = sale.productId;
+                const pname = sale.productName;
+                const qty = sale.quantity || 0;
+                
+                if (!recentSales[pid]) {
+                    recentSales[pid] = {
+                        name: pname,
+                        recentSold: 0,
+                        firstSaleDate: saleTime
+                    };
+                }
+                
+                recentSales[pid].recentSold += qty;
+                recentSales[pid].firstSaleDate = Math.min(
+                    recentSales[pid].firstSaleDate, 
+                    saleTime
+                );
+            }
+        });
+        
+        // Find product with most recent sales
+        const recentArray = Object.entries(recentSales).map(([id, data]) => ({
+            id,
+            ...data
+        }));
+        
+        if (recentArray.length > 0) {
+            const trending = recentArray.reduce((max, product) => 
+                product.recentSold > max.recentSold ? product : max
+            );
+            
+            analyticsRef.child('trendingSelling').set({
+                productId: trending.id,
+                name: trending.name,
+                recentSold: trending.recentSold,
+                firstSaleDate: trending.firstSaleDate,
                 lastUpdated: timestamp
             });
         } else {
-            analyticsRef.child('trendingSelling').child(productId).set({
-                name: productName,
-                recentSold: current.recentSold + quantitySold,
-                firstSaleDate: current.firstSaleDate,
-                lastUpdated: timestamp
-            });
+            // No sales in last 7 days - clear trending
+            analyticsRef.child('trendingSelling').remove();
         }
     });
-    
-    // 4. SORT AND CLEANUP
-    setTimeout(() => sortAnalytics(), 2000);
 }
 
 function sortAnalytics() {
-    const analyticsRef = db.ref(`Businesses/${currentUserId}/analytics`);
-    
-    // SORT MOST SELLING (Top 10)
-    analyticsRef.child('mostSelling').once('value', s => {
-        const products = s.val() || {};
-        const sorted = Object.entries(products)
-            .sort((a, b) => b[1].totalSold - a[1].totalSold)
-            .slice(0, 10);
-        
-        const topSelling = {};
-        sorted.forEach(([id, data]) => {
-            topSelling[id] = data;
-        });
-        
-        analyticsRef.child('mostSelling').set(topSelling);
-    });
-    
-    // SORT LEAST SELLING (Bottom 10)
-    analyticsRef.child('leastSelling').once('value', s => {
-        const products = s.val() || {};
-        const sorted = Object.entries(products)
-            .sort((a, b) => a[1].totalSold - b[1].totalSold)
-            .slice(0, 10);
-        
-        const leastSelling = {};
-        sorted.forEach(([id, data]) => {
-            leastSelling[id] = data;
-        });
-        
-        analyticsRef.child('leastSelling').set(leastSelling);
-    });
+    // NO LONGER NEEDED - Analytics updated in real-time
+    // Keeping function for backward compatibility
+    console.log("Analytics auto-updated");
 }
 
 function updateTrendingProducts() {
+    if (!currentUserId) return;
+    
     const analyticsRef = db.ref(`Businesses/${currentUserId}/analytics/trendingSelling`);
     const weekAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
     
     analyticsRef.once('value', s => {
-        const products = s.val() || {};
-        const validTrending = {};
+        const trending = s.val();
         
-        Object.entries(products).forEach(([id, data]) => {
-            // Keep only products with sales in last 7 days
-            if (data.firstSaleDate >= weekAgo) {
-                validTrending[id] = data;
-            }
-        });
-        
-        // Sort by recent sales and keep top 10
-        const sorted = Object.entries(validTrending)
-            .sort((a, b) => b[1].recentSold - a[1].recentSold)
-            .slice(0, 10);
-        
-        const topTrending = {};
-        sorted.forEach(([id, data]) => {
-            topTrending[id] = data;
-        });
-        
-        analyticsRef.set(topTrending);
+        if (trending && trending.firstSaleDate < weekAgo) {
+            // Trending product is older than 7 days - remove it
+            analyticsRef.remove();
+            console.log("Cleared outdated trending product");
+        }
     });
 }
-
 // --- EXPIRY DATE FUNCTIONS ---
 function openExpiryModal(productId, productName) {
     currentExpiryProductId = productId;
