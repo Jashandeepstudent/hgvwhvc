@@ -86,7 +86,90 @@ body{margin:0;background:#f6f7fb;padding:30px}
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0,0,0,0.12);
 }
+.pdf-type-card {
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 25px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
 
+.pdf-type-card:hover {
+    border-color: #3b82f6;
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(59, 130, 246, 0.2);
+}
+
+.pdf-type-card.premium:hover {
+    border-color: #d97706;
+    box-shadow: 0 10px 30px rgba(217, 119, 6, 0.2);
+}
+
+.pdf-type-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+}
+
+.pdf-type-card h3 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 10px 0;
+}
+
+.pdf-type-card p {
+    font-size: 13px;
+    color: #64748b;
+    margin-bottom: 15px;
+}
+
+.pdf-type-card ul {
+    text-align: left;
+    padding-left: 20px;
+    margin: 15px 0;
+}
+
+.pdf-type-card ul li {
+    font-size: 12px;
+    color: #475569;
+    margin-bottom: 6px;
+}
+
+.select-pdf-btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 15px;
+    transition: 0.2s;
+}
+
+.select-pdf-btn.standard {
+    background: #2563eb;
+    color: white;
+}
+
+.select-pdf-btn.standard:hover {
+    background: #1d4ed8;
+}
+
+.select-pdf-btn.premium {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+}
+
+.select-pdf-btn.premium:hover {
+    transform: scale(1.05);
+}
 .expiry-text-btn {
     border-color: #dbeafe;
     color: #3b82f6;
@@ -1160,13 +1243,68 @@ input:focus, select:focus, textarea:focus {
         
         <div class="report-actions">
             <button class="btn-cancel-report" onclick="closeReportModal()">Cancel</button>
-            <button class="btn-generate-report" onclick="generatePDF()">
+            <button class="btn-generate-report" onclick="showPDFTypeModal()">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
                 </svg>
                 Generate PDF Report
             </button>
         </div>
+    </div>
+</div>
+
+<!-- PDF TYPE SELECTION MODAL -->
+<div id="pdfTypeModal" class="custom-modal" style="z-index: 3000;">
+    <div class="report-modal-content" style="max-width: 600px;">
+        <h2 style="margin-bottom: 15px;">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" style="display: inline-block; vertical-align: middle;">
+                <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/>
+            </svg>
+            Choose Report Type
+        </h2>
+        <p style="margin-bottom: 30px;">Select the PDF format that suits your needs</p>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <!-- Standard PDF Card -->
+            <div class="pdf-type-card" onclick="generatePDF('standard')">
+                <div class="pdf-type-icon" style="background: #dbeafe; color: #2563eb;">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+                    </svg>
+                </div>
+                <h3>Standard Report</h3>
+                <p>Clean, simple layout with essential information</p>
+                <ul>
+                    <li>Quick generation</li>
+                    <li>Compact format</li>
+                    <li>Basic styling</li>
+                    <li>Perfect for daily use</li>
+                </ul>
+                <button class="select-pdf-btn standard">Select Standard</button>
+            </div>
+            
+            <!-- Premium PDF Card -->
+            <div class="pdf-type-card premium" onclick="generatePDF('premium')">
+                <div class="pdf-type-icon" style="background: #fef3c7; color: #d97706;">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                    </svg>
+                </div>
+                <h3>Premium Report</h3>
+                <p>Stunning design with detailed insights and analytics</p>
+                <ul>
+                    <li>Beautiful cover page</li>
+                    <li>Detailed statistics</li>
+                    <li>Color-coded tables</li>
+                    <li>Business insights</li>
+                </ul>
+                <button class="select-pdf-btn premium">Select Premium</button>
+            </div>
+        </div>
+        
+        <button class="btn-cancel-report" onclick="closePDFTypeModal()" style="width: 100%; margin-top: 20px;">
+            Cancel
+        </button>
     </div>
 </div>
 <div class="inventory-grid-wrapper">
@@ -2214,6 +2352,7 @@ function stopScanner() {
 // --- ULTIMATE PDF REPORT FUNCTIONS ---
 let reportCounter = 1;
 let businessNameGlobal = "";
+let reportFormData = {};
 
 function openReportModal() {
     // Load business name from Firebase
@@ -2236,7 +2375,7 @@ function closeReportModal() {
     document.getElementById("reportModal").style.display = "none";
 }
 
-async function generatePDF() {
+function showPDFTypeModal() {
     const businessName = document.getElementById("reportBusinessName").value.trim();
     const fullName = document.getElementById("reportFullName").value.trim();
     const reportDate = document.getElementById("reportDate").value;
@@ -2246,11 +2385,163 @@ async function generatePDF() {
         return;
     }
     
-    // Show loading state
-    const btn = document.querySelector(".btn-generate-report");
-    const originalHTML = btn.innerHTML;
-    btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite;"><circle cx="12" cy="12" r="10"/></svg> Generating Premium Report...';
-    btn.disabled = true;
+    // Store form data
+    reportFormData = { businessName, fullName, reportDate };
+    
+    // Close report modal and show type selection
+    document.getElementById("reportModal").style.display = "none";
+    document.getElementById("pdfTypeModal").style.display = "flex";
+}
+
+function closePDFTypeModal() {
+    document.getElementById("pdfTypeModal").style.display = "none";
+    document.getElementById("reportModal").style.display = "flex";
+}
+
+async function generatePDF(type) {
+    document.getElementById("pdfTypeModal").style.display = "none";
+    
+    if (type === 'standard') {
+        await generateStandardPDF();
+    } else {
+        await generatePremiumPDF();
+    }
+}
+
+// ============================================
+// STANDARD PDF (Simple & Clean)
+// ============================================
+async function generateStandardPDF() {
+    const { businessName, fullName, reportDate } = reportFormData;
+    
+    try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        // Blue Banner
+        doc.setFillColor(37, 99, 235);
+        doc.rect(0, 0, 210, 45, 'F');
+        
+        // Business Name
+        doc.setFont("times", "italic");
+        doc.setFontSize(28);
+        doc.setTextColor(255, 255, 255);
+        const businessNameClean = businessName.replace(/\s+/g, '');
+        doc.text(businessNameClean, 105, 25, { align: 'center' });
+        
+        doc.setFontSize(16);
+        doc.text("Product Report", 105, 35, { align: 'center' });
+        
+        // Details
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(11);
+        doc.setTextColor(60, 60, 60);
+        doc.text(`Name: ${fullName}`, 20, 55);
+        
+        const formattedDate = new Date(reportDate).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        doc.text(`Date: ${formattedDate}`, 20, 62);
+        
+        // Table Header
+        doc.setFillColor(248, 250, 252);
+        doc.rect(15, 72, 180, 10, 'F');
+        
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10);
+        doc.setTextColor(71, 85, 105);
+        doc.text("Product Name", 20, 78);
+        doc.text("Quantity", 100, 78);
+        doc.text("Expiry Date", 130, 78);
+        doc.text("Status", 170, 78);
+        
+        // Products
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        
+        let yPosition = 88;
+        const products = Object.values(inventory);
+        
+        products.forEach((product, index) => {
+            if (index % 2 === 0) {
+                doc.setFillColor(249, 250, 251);
+                doc.rect(15, yPosition - 5, 180, 8, 'F');
+            }
+            
+            doc.setTextColor(30, 41, 59);
+            doc.text(product.name.substring(0, 30), 20, yPosition);
+            doc.text(`${product.quantity} ${product.unit}`, 100, yPosition);
+            
+            if (product.expiryDate) {
+                const expiryFormatted = new Date(product.expiryDate).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                });
+                doc.text(expiryFormatted, 130, yPosition);
+            } else {
+                doc.setTextColor(156, 163, 175);
+                doc.text("Not Set", 130, yPosition);
+                doc.setTextColor(30, 41, 59);
+            }
+            
+            let status = "OK";
+            let statusColor = [16, 185, 129];
+            
+            if (product.quantity === 0) {
+                status = "Out";
+                statusColor = [239, 68, 68];
+            } else if (product.quantity < 10) {
+                status = "Low";
+                statusColor = [217, 119, 6];
+            } else if (product.expiryDate && product.quantity >= 1) {
+                const daysLeft = getDaysUntilExpiry(product.expiryDate);
+                if (daysLeft < 0) {
+                    status = "Expired";
+                    statusColor = [220, 38, 38];
+                } else if (daysLeft >= 0 && daysLeft <= notificationDays) {
+                    status = "Expiring";
+                    statusColor = [245, 158, 11];
+                }
+            }
+            
+            doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
+            doc.text(status, 170, yPosition);
+            doc.setTextColor(30, 41, 59);
+            
+            yPosition += 8;
+            
+            if (yPosition > 270) {
+                doc.addPage();
+                yPosition = 20;
+            }
+        });
+        
+        // Footer
+        doc.setFontSize(8);
+        doc.setTextColor(156, 163, 175);
+        doc.text(`Generated on ${new Date().toLocaleString()}`, 105, 285, { align: 'center' });
+        doc.text(`Total Products: ${products.length}`, 105, 290, { align: 'center' });
+        
+        const fileName = `${businessNameClean}ProductReport${reportCounter}.pdf`;
+        doc.save(fileName);
+        
+        reportCounter++;
+        triggerSuccess(`Report downloaded: ${fileName}`);
+        
+    } catch (error) {
+        console.error("PDF Error:", error);
+        alert("Error generating PDF");
+    }
+}
+
+// ============================================
+// PREMIUM PDF (Beautiful & Detailed) - FIXED ENCODING
+// ============================================
+async function generatePremiumPDF() {
+    const { businessName, fullName, reportDate } = reportFormData;
     
     try {
         const { jsPDF } = window.jspdf;
@@ -2262,7 +2553,7 @@ async function generatePDF() {
         // PAGE 1: COVER PAGE
         // ============================================
         
-        // Gradient Background Effect (simulated with rectangles)
+        // Gradient Background
         const gradientSteps = 50;
         for (let i = 0; i < gradientSteps; i++) {
             const r = 37 + (i * (59 - 37) / gradientSteps);
@@ -2272,28 +2563,26 @@ async function generatePDF() {
             doc.rect(0, i * (pageHeight / gradientSteps), pageWidth, pageHeight / gradientSteps, 'F');
         }
         
-        // Decorative Corner Elements
+        // Decorative Elements
         doc.setFillColor(255, 255, 255, 0.1);
         doc.circle(10, 10, 30, 'F');
         doc.circle(pageWidth - 10, pageHeight - 10, 40, 'F');
         
-        // Main Title Area - White Box
+        // Title Box
         doc.setFillColor(255, 255, 255);
         doc.roundedRect(20, 60, pageWidth - 40, 80, 5, 5, 'F');
-        
-        // Shadow effect for title box
         doc.setDrawColor(37, 99, 235);
         doc.setLineWidth(0.5);
         doc.roundedRect(20, 60, pageWidth - 40, 80, 5, 5, 'S');
         
-        // Business Name - Elegant Typography
+        // Business Name
         doc.setFont("times", "bold");
         doc.setFontSize(38);
         doc.setTextColor(30, 41, 59);
         const businessNameClean = businessName.replace(/\s+/g, ' ');
         doc.text(businessNameClean, pageWidth / 2, 95, { align: 'center' });
         
-        // Decorative Line under business name
+        // Line
         doc.setDrawColor(37, 99, 235);
         doc.setLineWidth(1);
         doc.line(60, 102, pageWidth - 60, 102);
@@ -2304,7 +2593,7 @@ async function generatePDF() {
         doc.setTextColor(71, 85, 105);
         doc.text("INVENTORY PRODUCT REPORT", pageWidth / 2, 115, { align: 'center' });
         
-        // Report Details Card
+        // Details Card
         doc.setFillColor(248, 250, 252);
         doc.roundedRect(30, 160, pageWidth - 60, 50, 3, 3, 'F');
         
@@ -2317,7 +2606,6 @@ async function generatePDF() {
         doc.setFontSize(10);
         doc.setTextColor(71, 85, 105);
         
-        // Report Information
         doc.text("Prepared By:", 40, 182);
         doc.setFont("helvetica", "bold");
         doc.text(fullName, 75, 182);
@@ -2339,7 +2627,7 @@ async function generatePDF() {
         const reportId = `${businessNameClean.substring(0, 3).toUpperCase()}-${Date.now().toString().slice(-6)}`;
         doc.text(reportId, 75, 202);
         
-        // Statistics Overview Card
+        // Statistics
         const products = Object.values(inventory);
         const totalProducts = products.length;
         const totalStock = products.reduce((sum, p) => sum + p.quantity, 0);
@@ -2364,13 +2652,11 @@ async function generatePDF() {
         doc.setTextColor(51, 65, 85);
         doc.text("INVENTORY STATISTICS", 40, 237);
         
-        // Stats Grid
         const statsY = 248;
         doc.setFont("helvetica", "normal");
         doc.setFontSize(9);
         doc.setTextColor(100, 116, 139);
         
-        // Row 1
         doc.text("Total Products:", 40, statsY);
         doc.setFont("helvetica", "bold");
         doc.setTextColor(37, 99, 235);
@@ -2383,7 +2669,6 @@ async function generatePDF() {
         doc.setTextColor(37, 99, 235);
         doc.text(totalStock.toString(), 155, statsY);
         
-        // Row 2
         doc.setFont("helvetica", "normal");
         doc.setTextColor(100, 116, 139);
         doc.text("Low Stock:", 40, statsY + 8);
@@ -2398,7 +2683,6 @@ async function generatePDF() {
         doc.setTextColor(239, 68, 68);
         doc.text(outOfStockCount.toString(), 155, statsY + 8);
         
-        // Row 3
         doc.setFont("helvetica", "normal");
         doc.setTextColor(100, 116, 139);
         doc.text("Expiring Soon:", 40, statsY + 16);
@@ -2406,7 +2690,7 @@ async function generatePDF() {
         doc.setTextColor(245, 158, 11);
         doc.text(expiringCount.toString(), 80, statsY + 16);
         
-        // Footer on cover page
+        // Footer
         doc.setFont("helvetica", "italic");
         doc.setFontSize(8);
         doc.setTextColor(148, 163, 184);
@@ -2414,11 +2698,11 @@ async function generatePDF() {
         doc.text("Confidential - For Internal Use Only", pageWidth / 2, pageHeight - 10, { align: 'center' });
         
         // ============================================
-        // PAGE 2+: DETAILED PRODUCT TABLE
+        // PAGE 2+: DETAILED TABLE
         // ============================================
         doc.addPage();
         
-        // Page Header
+        // Header
         doc.setFillColor(37, 99, 235);
         doc.rect(0, 0, pageWidth, 25, 'F');
         
@@ -2431,41 +2715,31 @@ async function generatePDF() {
         doc.setFontSize(10);
         doc.text("Detailed Product Inventory", 15, 19);
         
-        // Report ID in header
         doc.setFontSize(8);
         doc.text(`Report ID: ${reportId}`, pageWidth - 15, 12, { align: 'right' });
-        doc.text(`Page 2 of ${Math.ceil(products.length / 15) + 1}`, pageWidth - 15, 17, { align: 'right' });
+        doc.text(`Page 2`, pageWidth - 15, 17, { align: 'right' });
         
-        // Prepare table data with enhanced information
+        // Table Data
         const tableData = products.map((product, index) => {
             let status = "In Stock";
-            let statusColor = [16, 185, 129]; // Green
             
             if (product.quantity === 0) {
                 status = "Out of Stock";
-                statusColor = [239, 68, 68];
             } else if (product.quantity < 10) {
                 status = "Low Stock";
-                statusColor = [217, 119, 6];
             }
             
-            // Check expiry
             let expiryStatus = "-";
-            let expiryColor = [100, 116, 139];
             if (product.expiryDate && product.quantity >= 1) {
                 const daysLeft = getDaysUntilExpiry(product.expiryDate);
                 if (daysLeft < 0) {
                     expiryStatus = `EXPIRED (${Math.abs(daysLeft)}d ago)`;
-                    expiryColor = [220, 38, 38];
                 } else if (daysLeft === 0) {
                     expiryStatus = "Expires Today!";
-                    expiryColor = [220, 38, 38];
                 } else if (daysLeft <= notificationDays) {
                     expiryStatus = `${daysLeft} days left`;
-                    expiryColor = [245, 158, 11];
                 } else {
                     expiryStatus = `${daysLeft} days left`;
-                    expiryColor = [16, 185, 129];
                 }
             }
             
@@ -2483,7 +2757,6 @@ async function generatePDF() {
             ];
         });
         
-        // Generate Advanced Table with autoTable
         doc.autoTable({
             startY: 32,
             head: [['#', 'Product Name', 'Quantity', 'Expiry Date', 'Expiry Status', 'Stock Status']],
@@ -2515,7 +2788,6 @@ async function generatePDF() {
                 fillColor: [249, 250, 251]
             },
             didParseCell: function(data) {
-                // Color code the Stock Status column
                 if (data.column.index === 5 && data.section === 'body') {
                     const status = data.cell.raw;
                     if (status === "Out of Stock") {
@@ -2530,7 +2802,6 @@ async function generatePDF() {
                     }
                 }
                 
-                // Color code the Expiry Status column
                 if (data.column.index === 4 && data.section === 'body') {
                     const status = data.cell.raw;
                     if (status.includes("EXPIRED") || status.includes("Today")) {
@@ -2548,7 +2819,6 @@ async function generatePDF() {
                 }
             },
             didDrawPage: function(data) {
-                // Page footer
                 const pageNumber = doc.internal.getCurrentPageInfo().pageNumber;
                 const totalPages = doc.internal.getNumberOfPages();
                 
@@ -2575,7 +2845,6 @@ async function generatePDF() {
                     { align: 'right' }
                 );
                 
-                // Page border
                 doc.setDrawColor(226, 232, 240);
                 doc.setLineWidth(0.5);
                 doc.rect(10, 10, pageWidth - 20, pageHeight - 20, 'S');
@@ -2583,11 +2852,10 @@ async function generatePDF() {
         });
         
         // ============================================
-        // LAST PAGE: SUMMARY & INSIGHTS
+        // LAST PAGE: SUMMARY (NO EMOJIS - FIXED)
         // ============================================
         doc.addPage();
         
-        // Page Header
         doc.setFillColor(37, 99, 235);
         doc.rect(0, 0, pageWidth, 25, 'F');
         
@@ -2602,166 +2870,79 @@ async function generatePDF() {
         
         let summaryY = 40;
         
-        // Key Insights Section
+// KEY INSIGHTS (NO EMOJI)
         doc.setFillColor(248, 250, 252);
-        doc.roundedRect(15, summaryY, pageWidth - 30, 50, 3, 3, 'F');
+        doc.roundedRect(15, summaryY, pageWidth - 30, 60, 3, 3, 'F');
         
         doc.setFont("helvetica", "bold");
         doc.setFontSize(12);
-        doc.setTextColor(30, 41, 59);
-        doc.text("📊 KEY INSIGHTS", 20, summaryY + 10);
+        doc.setTextColor(37, 99, 235);
+        doc.text("CRITICAL INVENTORY INSIGHTS", 25, summaryY + 10);
         
+        doc.setFontSize(10);
+        doc.setTextColor(51, 65, 85);
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(9);
-        doc.setTextColor(71, 85, 105);
         
         const insights = [
-            `• Total inventory value across ${totalProducts} unique products`,
-            `• ${totalStock} total units currently in stock`,
-            `• ${((products.filter(p => p.quantity > 0).length / totalProducts) * 100).toFixed(1)}% of products are in stock`,
-            `• ${outOfStockCount} products require immediate restocking`,
-            `• ${expiringCount} products are expiring within ${notificationDays} days`
+            `1. Stock Availability: ${((totalProducts - outOfStockCount) / totalProducts * 100).toFixed(1)}% of your catalog is currently in stock.`,
+            `2. Urgent Attention: There are ${outOfStockCount} items completely out of stock and ${lowStockCount} items at critical levels.`,
+            `3. Quality Control: ${expiringCount} items require immediate inspection due to upcoming or past expiry dates.`,
+            `4. Volume: You are currently managing a total of ${totalStock} individual units across all categories.`
         ];
         
-        insights.forEach((insight, idx) => {
-            doc.text(insight, 20, summaryY + 20 + (idx * 6));
+        let insightY = summaryY + 22;
+        insights.forEach(line => {
+            doc.text(line, 25, insightY);
+            insightY += 8;
         });
-        
-        summaryY += 60;
-        
-        // Critical Actions Section
-        doc.setFillColor(254, 242, 242);
-        doc.roundedRect(15, summaryY, pageWidth - 30, 40, 3, 3, 'F');
-        doc.setDrawColor(239, 68, 68);
-        doc.setLineWidth(0.5);
-        doc.roundedRect(15, summaryY, pageWidth - 30, 40, 3, 3, 'S');
-        
+
+        // RECOMMENDATIONS SECTION
+        summaryY += 75;
         doc.setFont("helvetica", "bold");
         doc.setFontSize(12);
-        doc.setTextColor(220, 38, 38);
-        doc.text("⚠️ CRITICAL ACTIONS REQUIRED", 20, summaryY + 10);
-        
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(9);
-        doc.setTextColor(127, 29, 29);
-        
-        const criticalActions = [];
-        if (outOfStockCount > 0) {
-            criticalActions.push(`• Restock ${outOfStockCount} out-of-stock products immediately`);
-        }
-        if (expiringCount > 0) {
-            criticalActions.push(`• Review ${expiringCount} products expiring soon`);
-        }
-        if (lowStockCount > 0) {
-            criticalActions.push(`• Plan reorder for ${lowStockCount} low-stock items`);
-        }
-        
-        if (criticalActions.length === 0) {
-            doc.setTextColor(16, 185, 129);
-            doc.text("✓ No critical actions required. Inventory is healthy!", 20, summaryY + 20);
-        } else {
-            criticalActions.forEach((action, idx) => {
-                doc.text(action, 20, summaryY + 20 + (idx * 6));
-            });
-        }
-        
-        summaryY += 50;
-        
-        // Recommendations Section
-        doc.setFillColor(236, 253, 245);
-        doc.roundedRect(15, summaryY, pageWidth - 30, 50, 3, 3, 'F');
-        doc.setDrawColor(16, 185, 129);
-        doc.setLineWidth(0.5);
-        doc.roundedRect(15, summaryY, pageWidth - 30, 50, 3, 3, 'S');
-        
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(12);
-        doc.setTextColor(6, 95, 70);
-        doc.text("💡 RECOMMENDATIONS", 20, summaryY + 10);
-        
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(9);
-        doc.setTextColor(6, 78, 59);
+        doc.setTextColor(37, 99, 235);
+        doc.text("STRATEGIC RECOMMENDATIONS", 15, summaryY);
         
         const recommendations = [
-            "• Set expiry dates for all products to enable better tracking",
-            "• Maintain minimum stock levels of 10 units per product",
-            "• Review inventory weekly to prevent stockouts",
-            "• Consider automated reordering for fast-moving items",
-            "• Implement FIFO (First In, First Out) for perishable goods"
+            { title: "Restock Priority:", desc: "Immediate procurement suggested for 'Out of Stock' items to prevent revenue loss." },
+            { title: "Waste Mitigation:", desc: "Prioritize sales or promotions for the " + expiringCount + " items expiring soon." },
+            { title: "Inventory Buffers:", desc: "Review 'Low Stock' thresholds for high-turnover products to avoid frequent outages." }
         ];
-        
-        recommendations.forEach((rec, idx) => {
-            doc.text(rec, 20, summaryY + 20 + (idx * 6));
+
+        let recY = summaryY + 10;
+        recommendations.forEach(rec => {
+            doc.setFont("helvetica", "bold");
+            doc.setTextColor(51, 65, 85);
+            doc.text(rec.title, 15, recY);
+            doc.setFont("helvetica", "normal");
+            doc.text(rec.desc, 55, recY);
+            recY += 10;
         });
+
+        // FINAL SIGNATURE AREA
+        const sigY = 230;
+        doc.setDrawColor(203, 213, 225);
+        doc.line(15, sigY, 80, sigY);
+        doc.line(pageWidth - 80, sigY, pageWidth - 15, sigY);
         
-        summaryY += 60;
-        
-        // Report Signature Section
-        doc.setDrawColor(226, 232, 240);
-        doc.setLineWidth(0.5);
-        doc.line(15, summaryY, pageWidth - 15, summaryY);
-        
-        summaryY += 10;
-        
-        doc.setFont("helvetica", "italic");
         doc.setFontSize(9);
-        doc.setTextColor(100, 116, 139);
-        doc.text("Report prepared by:", 20, summaryY);
-        
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(11);
-        doc.setTextColor(30, 41, 59);
-        doc.text(fullName, 20, summaryY + 7);
-        
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(8);
-        doc.setTextColor(148, 163, 184);
-        doc.text(`Authorized Signatory - ${businessNameClean}`, 20, summaryY + 13);
-        
-        // Final Footer
-        doc.setDrawColor(37, 99, 235);
-        doc.setLineWidth(1);
-        doc.line(15, pageHeight - 30, pageWidth - 15, pageHeight - 30);
-        
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(9);
-        doc.setTextColor(37, 99, 235);
-        doc.text("AI INVENTORY PRO", pageWidth / 2, pageHeight - 22, { align: 'center' });
-        
-        doc.setFont("helvetica", "italic");
-        doc.setFontSize(7);
-        doc.setTextColor(148, 163, 184);
-        doc.text("Powered by Advanced AI Technology • www.aiinventorypro.com", pageWidth / 2, pageHeight - 17, { align: 'center' });
-        doc.text("This is a computer-generated document and does not require a signature", pageWidth / 2, pageHeight - 13, { align: 'center' });
-        
-        // Save with incremental naming
-        const fileName = `${businessNameClean}ProductReport${reportCounter}.pdf`;
+        doc.text("Authorized Signature", 15, sigY + 5);
+        doc.text("Date of Approval", pageWidth - 15, sigY + 5, { align: 'right' });
+
+        // Save the PDF
+        const fileName = `${businessNameClean}_Premium_Report_${Date.now().toString().slice(-4)}.pdf`;
         doc.save(fileName);
         
         reportCounter++;
-        
-        closeReportModal();
-        triggerSuccess(`✓ Premium Report Downloaded: ${fileName}`);
-        
+        if (typeof triggerSuccess === "function") {
+            triggerSuccess(`Premium Report downloaded: ${fileName}`);
+        }
+
     } catch (error) {
-        console.error("PDF Generation Error:", error);
-        alert("Error generating PDF: " + error.message);
-    } finally {
-        btn.innerHTML = originalHTML;
-        btn.disabled = false;
+        console.error("Premium PDF Error:", error);
+        alert("Error generating Premium PDF. Please check the console.");
     }
 }
-
-// Add spin animation
-const styleElement = document.createElement('style');
-styleElement.textContent = `
-    @keyframes spin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-    }
-`;
-document.head.appendChild(styleElement);
 </script>
 
 </body>
