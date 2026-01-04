@@ -1518,7 +1518,9 @@
             <div class="subtitle">Secure Document & Operations Management</div>
         </div>
     </div>
-<!-- Progress Overview Cards -->
+</header>
+
+<!-- Progress Overview Cards - MOVED OUTSIDE HEADER -->
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px;">
     <!-- Transactions Progress -->
     <div class="glass" style="padding: 20px; text-align: center; transition: all 0.3s ease;">
@@ -1974,11 +1976,19 @@ auth.onAuthStateChanged((user) => {
         initListeners();
         
         // Restore page view from URL on refresh
-        const urlParams = new URLSearchParams(window.location.search);
-        const viewParam = urlParams.get('view');
-        if (viewParam) {
-            setTimeout(() => navTo(viewParam), 100);
+// Restore page view from URL on refresh
+const urlParams = new URLSearchParams(window.location.search);
+const viewParam = urlParams.get('view');
+if (viewParam) {
+    setTimeout(() => {
+        navTo(viewParam);
+        // Hide progress cards if not on dashboard
+        const progressCards = document.querySelector('.container > div[style*="grid-template-columns"]');
+        if (progressCards && viewParam !== 'dashboard-view') {
+            progressCards.style.display = 'none';
         }
+    }, 100);
+}
         
         // Handle browser back/forward buttons
         window.addEventListener('popstate', (event) => {
@@ -2337,6 +2347,16 @@ document.head.appendChild(styleSheet);
 function navTo(viewId) {
     document.querySelectorAll('.section-view, #dashboard-view').forEach(el => el.style.display = 'none');
     document.getElementById(viewId).style.display = 'block';
+    
+    // Show/hide progress cards based on view
+    const progressCards = document.querySelector('.container > div[style*="grid-template-columns"]');
+    if (progressCards) {
+        if (viewId === 'dashboard-view') {
+            progressCards.style.display = 'grid';
+        } else {
+            progressCards.style.display = 'none';
+        }
+    }
     
     // Push state to browser history for page persistence
     if (viewId !== 'dashboard-view') {
