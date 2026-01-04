@@ -168,19 +168,19 @@ body {
             position: relative;
         }
 
-        .floor {
-            position: absolute;
-            width: 800px;
-            height: 800px;
-            display: grid;
-            grid-template-columns: repeat(10, 1fr);
-            grid-template-rows: repeat(10, 1fr);
-            gap: 2px;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%); /* Z handled in JS */
-            transform-style: preserve-3d;
-        }
+.floor {
+    position: absolute;
+    width: 800px;
+    height: 800px;
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    grid-template-rows: repeat(10, 1fr);
+    gap: 2px;
+    left: 50%;
+    top: 50%;
+    transform-style: preserve-3d;
+
+}
 
         .grid-cell {
             background: rgba(255, 255, 255, 0.03);
@@ -301,16 +301,17 @@ body {
         }
 
         /* Product Node Styles */
-        .product-node {
-            position: absolute;
-            width: 160px;
-            height: 160px;
-            transform-style: preserve-3d;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.5s ease;
-        }
+.product-node {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    transform-style: preserve-3d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.5s ease;
+    pointer-events: auto;
+}
 
         .product-card {
             width: 100px;
@@ -1794,11 +1795,17 @@ import { getDatabase, ref, onValue, update, get } from 'https://www.gstatic.com/
             }
         }
 
-        function handleCellClick(e) {
-            if (!exchangeModeActive || !grabbedProduct) return;
-            const x = parseInt(e.target.dataset.x);
-            const y = parseInt(e.target.dataset.y);
-            const floor = parseInt(e.target.dataset.floor || 0);
+function handleCellClick(e) {
+    if (!exchangeModeActive || !grabbedProduct) return;
+    
+    const cell = e.target.closest('.grid-cell');
+    if (!cell) return;
+    
+    const x = parseInt(cell.dataset.x);
+    const y = parseInt(cell.dataset.y);
+    const floor = parseInt(cell.dataset.floor || 0);
+    
+    console.log(`Placing product at x:${x}, y:${y}, floor:${floor}`);
 
             // Check if cell is occupied (simple check, not robust for multi-floor yet in legacy code, 
             // but for auto-expand feature we just ensure visuals work. 
@@ -1965,16 +1972,25 @@ node.dataset.productId = product.id;
 // Normal Mode Colors
 updateNodeVisuals(node, product);
 
-const gridSize = 80; 
-const floorZ = (product.floor || 0) * 250; 
+// Calculate grid cell size from floor dimensions
+const floorWidth = 800; // Floor is 800px wide
+const gridCells = 10; // 10x10 grid
+const cellSize = floorWidth / gridCells; // 80px per cell
+const floorZ = (product.floor || 0) * 250;
+
+// Center the product on its grid cell
+// Floor starts at -400px (left: 50% with translate(-50%))
+// So cell (0,0) is at -400px, cell (1,0) is at -320px, etc.
+const xPosition = -400 + (product.x * cellSize) + (cellSize / 2);
+const yPosition = -400 + (product.y * cellSize) + (cellSize / 2);
 
 node.style.position = 'absolute';
-node.style.left = `${400 + (product.x * gridSize)}px`;
-node.style.top = `${400 + (product.y * gridSize)}px`;
-node.style.transform = `translateZ(${floorZ}px)`;
+node.style.left = '50%'; // Center relative to world
+node.style.top = '50%';  // Center relative to world
+node.style.transform = `translate(${xPosition}px, ${yPosition}px) translateZ(${floorZ + 40}px)`;
+node.style.width = '80px';
+node.style.height = '80px';
 node.style.transformStyle = 'preserve-3d';
-node.style.width = '160px';
-node.style.height = '160px';
 
                 const expiryStatus = getExpiryStatus(product, isTimeTravelMode ? new Date(Date.now() + timeTravelDaysOffset * 86400000) : null);
                 const daysLeft = product.expiryDate ? getDaysUntilExpiry(product.expiryDate, isTimeTravelMode ? new Date(Date.now() + timeTravelDaysOffset * 86400000) : null) : null;
