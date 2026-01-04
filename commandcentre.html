@@ -869,8 +869,8 @@ box-sizing: border-box;
 
         .stock-badge { position: absolute; top: 8px; right: 8px; background: #ff4444; color: #fff; padding: 3px 8px; border-radius: 5px; font-size: 10px; font-weight: bold; transform: translateZ(25px); }
 
-.overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px); z-index: 999; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
-.overlay.active { opacity: 1; pointer-events: all; }
+        .overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px); z-index: 999; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+        .overlay.active { opacity: 1; pointer-events: all; }
 
         .toast { position: fixed; bottom: 30px; right: 30px; background: rgba(15, 15, 35, 0.95); backdrop-filter: blur(10px); border: 2px solid var(--neon-accent); border-radius: 10px; padding: 15px 20px; z-index: 2000; transform: translateY(150%); transition: transform 0.3s ease; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); min-width: 250px; }
         .toast.show { transform: translateY(0); }
@@ -1732,10 +1732,7 @@ box-sizing: border-box;
 <button class="control-toggle-btn" onclick="toggleControls()">
     <i class="fas fa-cog"></i> Digital Controls
 </button>
-    <a href="mainbusinesshub.html" style="background: rgba(15, 15, 35, 0.9); border: 2px solid var(--neon-primary); color: var(--neon-primary); padding: 12px 20px; border-radius: 10px; text-decoration: none; font-weight: bold; display: flex; align-items: center; gap: 8px; font-size: 14px; white-space: nowrap;">
-        <i class="fas fa-arrow-left"></i> Back
-    </a>
-</div>
+
 <!-- Top Right: Leaderboard + Back Button -->
 <div style="position: fixed; top: 10px; right: 10px; display: flex; gap: 10px; align-items: flex-start; z-index: 900;">
     <div class="inventory-leaderboard" id="outOfStockPanel" style="margin: 0;">
@@ -1743,6 +1740,10 @@ box-sizing: border-box;
         <div id="oosList"></div>
     </div>
     
+    <a href="mainbusinesshub.html" style="background: rgba(15, 15, 35, 0.9); border: 2px solid var(--neon-primary); color: var(--neon-primary); padding: 12px 20px; border-radius: 10px; text-decoration: none; font-weight: bold; display: flex; align-items: center; gap: 8px; font-size: 14px; white-space: nowrap;">
+        <i class="fas fa-arrow-left"></i> Back
+    </a>
+</div>
 <div class="controls" id="controlsPanel">
     <h3>
         <span>🎮 Digital Controls</span>
@@ -2103,7 +2104,7 @@ document.querySelectorAll('.grid-cell').forEach(cell => {
 }
 
             });
-        
+        }
 
 window.toggleHeatmap = function() {
     heatmapEnabled = !heatmapEnabled;
@@ -2120,14 +2121,10 @@ window.toggleHeatmap = function() {
         overlay.classList.add('active');
         popup.classList.add('active');
         
-        // Allow clicking overlay to close
-        overlay.onclick = function() {
-            closeHeatmapLegend();
-        };
-        
         // Auto-close after 3 seconds
         setTimeout(() => {
-            closeHeatmapLegend();
+            popup.classList.remove('active');
+            overlay.classList.remove('active');
         }, 3000);
         
         showToast('🔥 Heatmap On', 'Color coding active');
@@ -2136,11 +2133,29 @@ window.toggleHeatmap = function() {
     }
 };
 window.closeHeatmapLegend = function() {
-    const popup = document.getElementById('heatmap-legend-popup');
-    const overlay = document.getElementById('overlay');
-    if (popup) popup.classList.remove('active');
-    if (overlay) overlay.classList.remove('active');
+    document.getElementById('heatmap-legend-popup').classList.remove('active');
+    document.getElementById('overlay').classList.remove('active');
 };
+function showHeatmapLegend() {
+    const legendHTML = `
+        <div style="text-align: left; line-height: 1.8;">
+            <div><span style="color: #ff0040;">🔴 Red</span> = Out of Stock</div>
+            <div><span style="color: #ffff00;">🟡 Yellow</span> = Low Stock (&lt;5)</div>
+            <div><span style="color: #ffaa00;">🟠 Orange</span> = High Sales (&gt;50)</div>
+            <div><span style="color: #00d4ff;">🔵 Blue</span> = Low Sales (&lt;10)</div>
+            <div><span style="color: #00f3ff;">💧 Cyan</span> = Normal Stock</div>
+        </div>
+    `;
+    
+    const toast = document.getElementById('toast');
+    document.getElementById('toastTitle').textContent = '🔥 Heatmap Legend';
+    document.getElementById('toastMessage').innerHTML = legendHTML;
+    toast.classList.add('show');
+    
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
+}
 
         function renderShop(products) {
             const container = document.getElementById('products-container');
@@ -2187,7 +2202,8 @@ node.style.transform = `translate(${xPosition}px, ${yPosition}px) translateZ(${f
 node.style.width = '80px';
 node.style.height = '80px';
 node.style.transformStyle = 'preserve-3d';
-node.style.pointerEvents = 'auto';
+node.style.pointerEvents = 'auto';node.style.width = '80px';
+node.style.height = '80px';
 
 
                 const expiryStatus = getExpiryStatus(product, isTimeTravelMode ? new Date(Date.now() + timeTravelDaysOffset * 86400000) : null);
@@ -2244,14 +2260,13 @@ node.style.pointerEvents = 'auto';
                     }
                 });
 
-container.appendChild(node);
+                container.appendChild(node);
             });
 
             updateHeatmap(); // Apply heatmap if active
             updateOutOfStockLeaderboard(products);
-        } // END of renderShop function
-
-        // Calculate days until expiry
+        }
+// Calculate days until expiry
         function getDaysUntilExpiry(expiryDate, simulatedDate = null) {
             if (!expiryDate) return null;
             
