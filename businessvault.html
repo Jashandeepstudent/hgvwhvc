@@ -3137,13 +3137,15 @@ async function deleteMember(memberKey) {
 
         // --- PREVIEW FUNCTION ---
 
+} // Close any unclosed bracket
+
+        // --- PREVIEW FUNCTION ---
         function previewDoc(url) {
             if(!url) return;
             const contentArea = document.getElementById('preview-content-area');
             
             // Clear previous content
             contentArea.innerHTML = '';
-
             // Check if it's likely a PDF (Firebase URLs often contain the file extension or metadata)
             if (url.toLowerCase().includes('.pdf') || url.includes('application%2Fpdf')) {
                 contentArea.innerHTML = `<iframe src="${url}" style="width:100%; height:100%; border:none; border-radius:8px;"></iframe>`;
