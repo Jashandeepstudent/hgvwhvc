@@ -1728,22 +1728,28 @@ box-sizing: border-box;
     </div>
 <div class="header-row" style="display: flex !important; flex-direction: row; align-items: flex-start; justify-content: space-between; gap: 15px; margin-bottom: 20px; width: 100%;">
     
+<!-- Control Buttons Row -->
+<div style="position: fixed; top: 10px; left: 10px; display: flex; gap: 10px; z-index: 200;">
+    <!-- Back Button -->
+    <a href="mainbusinesshub.html" style="background: rgba(15, 15, 35, 0.9); border: 2px solid var(--neon-primary); color: var(--neon-primary); padding: 12px 20px; border-radius: 10px; text-decoration: none; font-weight: bold; display: flex; align-items: center; gap: 8px; font-size: 14px; transition: all 0.3s ease;">
+        <i class="fas fa-arrow-left"></i> Back
+    </a>
 <!-- Digital Controls Toggle Button -->
 <button class="control-toggle-btn" onclick="toggleControls()">
     <i class="fas fa-cog"></i> Digital Controls
 </button>
-    <div class="inventory-leaderboard" id="outOfStockPanel" style="margin: 0; flex: 1; min-width: 0;">
+
+<!-- Top Right: Leaderboard + Back Button -->
+<div style="position: fixed; top: 10px; right: 10px; display: flex; gap: 10px; align-items: flex-start; z-index: 900;">
+    <div class="inventory-leaderboard" id="outOfStockPanel" style="margin: 0;">
         <div class="leaderboard-title">🚨 Out of Stock <span id="oosCount">0</span></div>
         <div id="oosList"></div>
     </div>
-
-    <button class="control-toggle-btn" onclick="toggleControls()">
-    <i class="fas fa-cog"></i> Digital Controls
-</button>
-<!-- Back Button to Main Business Hub -->
-<a href="mainbusinesshub.html" style="position: fixed; top: 10px; right: 10px; background: rgba(15, 15, 35, 0.9); border: 2px solid var(--neon-primary); color: var(--neon-primary); padding: 12px 20px; border-radius: 10px; text-decoration: none; font-weight: bold; z-index: 200; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; font-size: 14px;">
-    <i class="fas fa-arrow-left"></i> Back to Hub
-</a>
+    
+    <a href="mainbusinesshub.html" style="background: rgba(15, 15, 35, 0.9); border: 2px solid var(--neon-primary); color: var(--neon-primary); padding: 12px 20px; border-radius: 10px; text-decoration: none; font-weight: bold; display: flex; align-items: center; gap: 8px; font-size: 14px; white-space: nowrap;">
+        <i class="fas fa-arrow-left"></i> Back
+    </a>
+</div>
 <div class="controls" id="controlsPanel">
     <h3>
         <span>🎮 Digital Controls</span>
@@ -1992,21 +1998,24 @@ function moveProductToPosition(product, newX, newY, newFloor) {
 
         function updateHeatmap() {
             if (!heatmapEnabled) {
-                document.querySelectorAll('.grid-cell').forEach(cell => {
-                    cell.className = 'grid-cell'; // Reset classes
-                    cell.style.background = '';
-                });
-                // Re-apply normal mode coloring in renderShop
-                const productNodes = document.querySelectorAll('.product-node');
-                productNodes.forEach(node => {
-                    // Re-add normal mode classes if needed (handled in renderShop generally)
-                    // But we can force redraw or toggle classes
-                    const pid = node.dataset.productId;
-                    const prod = productsData.find(p => p.id === pid);
-                    if (prod) updateNodeVisuals(node, prod);
-                });
-                return;
-            }
+    document.querySelectorAll('.grid-cell').forEach(cell => {
+        cell.className = 'grid-cell';
+        cell.style.background = '';
+    });
+    
+    // RESET all product cards
+    document.querySelectorAll('.product-node').forEach(node => {
+        const card = node.querySelector('.product-card');
+        if (card) {
+            card.style.background = '';
+            card.style.filter = '';
+        }
+        const pid = node.dataset.productId;
+        const prod = productsData.find(p => p.id === pid);
+        if (prod) updateNodeVisuals(node, prod);
+    });
+    return;
+}
 
             // Calculate Max Sales for normalization
             const maxSales = Math.max(...productsData.map(p => p.sales || 0), 1);
@@ -2031,34 +2040,75 @@ document.querySelectorAll('.grid-cell').forEach(cell => {
         cell.classList.add('exchange-mode');
     }
 
-    if (product) {
+  if (product) {
     const expiryStatus = getExpiryStatus(product);
     const productNode = document.querySelector(`[data-product-id="${product.id}"]`);
     
     if (expiryStatus === 'expired') {
         cell.classList.add('expired');
-        if (productNode) productNode.classList.add('is-expired');
+        if (productNode) {
+            productNode.classList.add('is-expired');
+            const card = productNode.querySelector('.product-card');
+            if (card) {
+                card.style.background = 'linear-gradient(180deg, rgba(64, 64, 64, 0.6), rgba(32, 32, 32, 0.7))';
+                card.style.filter = 'grayscale(0.7)';
+            }
+        }
     } else if (expiryStatus === 'expiring-soon') {
         cell.classList.add('expiring-soon');
-        if (productNode) productNode.classList.add('is-expiring-soon');
+        if (productNode) {
+            productNode.classList.add('is-expiring-soon');
+            const card = productNode.querySelector('.product-card');
+            if (card) {
+                card.style.background = 'linear-gradient(180deg, rgba(139, 69, 19, 0.6), rgba(101, 67, 33, 0.7))';
+                card.style.filter = 'brightness(0.8) sepia(0.5)';
+            }
+        }
     } else if (product.stock === 0) {
         cell.classList.add('heatmap-oos');
-        if (productNode) productNode.classList.add('is-out-of-stock');
+        if (productNode) {
+            productNode.classList.add('is-out-of-stock');
+            const card = productNode.querySelector('.product-card');
+            if (card) {
+                card.style.background = 'linear-gradient(180deg, rgba(255, 0, 64, 0.7), rgba(100, 0, 20, 0.8))';
+                card.style.filter = 'saturate(1.5) brightness(1.2)';
+            }
+        }
     } else if (product.stock < 5) {
         cell.classList.add('heatmap-lowstock');
-        if (productNode) productNode.classList.add('is-low-stock');
+        if (productNode) {
+            productNode.classList.add('is-low-stock');
+            const card = productNode.querySelector('.product-card');
+            if (card) {
+                card.style.background = 'linear-gradient(180deg, rgba(255, 255, 0, 0.6), rgba(180, 180, 0, 0.7))';
+                card.style.filter = 'saturate(1.3) brightness(1.1)';
+            }
+        }
     } else {
         if (product.sales > 50) {
             cell.classList.add('heatmap-high');
-            if (productNode) productNode.style.filter = 'hue-rotate(30deg) saturate(1.5)';
+            if (productNode) {
+                const card = productNode.querySelector('.product-card');
+                if (card) {
+                    card.style.background = 'linear-gradient(180deg, rgba(255, 170, 0, 0.6), rgba(200, 120, 0, 0.7))';
+                    card.style.filter = 'hue-rotate(30deg) saturate(1.5)';
+                }
+            }
         } else if (product.sales < 10) {
             cell.classList.add('heatmap-low');
-            if (productNode) productNode.style.filter = 'hue-rotate(180deg)';
+            if (productNode) {
+                const card = productNode.querySelector('.product-card');
+                if (card) {
+                    card.style.background = 'linear-gradient(180deg, rgba(0, 212, 255, 0.6), rgba(0, 100, 200, 0.7))';
+                    card.style.filter = 'hue-rotate(180deg) brightness(1.1)';
+                }
+            }
         } else {
             cell.classList.add('heatmap-med');
         }
     }
 }
+
             });
         }
 
@@ -2067,23 +2117,29 @@ window.toggleHeatmap = function() {
     const toggle = document.getElementById('heatmapToggle');
     toggle.classList.toggle('active');
     
+    // FIRST: Apply the heatmap colors
+    updateHeatmap();
+    
+    // THEN: Show the popup (if turning ON)
     if (heatmapEnabled) {
-        // Show legend popup for 3 seconds
         const popup = document.getElementById('heatmap-legend-popup');
         const overlay = document.getElementById('overlay');
         overlay.classList.add('active');
         popup.classList.add('active');
         
+        // Auto-close after 3 seconds WITHOUT removing heatmap colors
         setTimeout(() => {
             popup.classList.remove('active');
             overlay.classList.remove('active');
+            // RE-APPLY heatmap after popup closes to ensure colors stay
+            updateHeatmap();
         }, 3000);
+        
+        showToast('🔥 Heatmap On', 'Color coding active');
+    } else {
+        showToast('❄️ Heatmap Off', 'Normal view restored');
     }
-    
-    updateHeatmap();
-    showToast(heatmapEnabled ? '🔥 Heatmap On' : '❄️ Heatmap Off', 'Color coding active');
 };
-
 window.closeHeatmapLegend = function() {
     document.getElementById('heatmap-legend-popup').classList.remove('active');
     document.getElementById('overlay').classList.remove('active');
