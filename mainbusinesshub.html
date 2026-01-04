@@ -1492,20 +1492,18 @@ body {
         </div>
         <button class="exit-time-travel" onclick="exitTimeTravel()">EXIT</button>
     </div>
-
-<div style="display: flex; align-items: flex-start; gap: 20px;">
-    <div class="inventory-leaderboard" id="outOfStockPanel" style="flex: 1;">
-        <div class="leaderboard-title">🚨 Out of Stock <span id="oosCount">0</span></div>
-        <div id="oosList"></div>
-    </div>
-
-    <a href="mainbusinesshub.html" class="btn btn-secondary" style="height: fit-content; padding: 15px 25px; white-space: nowrap;">
+<a href="mainbusinesshub.html" class="btn btn-secondary" style="height: fit-content; padding: 15px 25px; white-space: nowrap;">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
             <path d="M19 12H5M12 19l-7-7 7-7"/>
         </svg>
         Back
     </a>
 </div>
+
+    <div class="inventory-leaderboard" id="outOfStockPanel">
+        <div class="leaderboard-title">🚨 Out of Stock <span id="oosCount">0</span></div>
+        <div id="oosList"></div>
+    </div>
 
     <div class="controls">
         <h3><span class="status-indicator" id="statusIndicator"></span>🎮 Controls</h3>
