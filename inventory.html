@@ -1418,37 +1418,42 @@ function render() {
           ${expiryWarning}
       </div>
   </div>
+  
   <div class="col-stat" style="font-weight: 600;">
       ${p.quantity} <span style="font-size: 12px; color: #94a3b8; font-weight: 400;">${p.unit}</span>
   </div>
+  
   <div class="col-status">
       <div class="status ${c}">${s}</div>
   </div>
-  <div class="action-buttons">
-    <button class="action-text-btn expiry-text-btn ${hasExpiry}" onclick="openExpiryModal('${id}', '${p.name}')" title="${p.expiryDate ? 'Expiry: ' + p.expiryDate : 'Set expiry date'}">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-        </svg>
-        Expiry
-    </button>
-    <button class="action-text-btn decrease-text-btn" onclick="askQuantity('${id}', -1)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <line x1="5" y1="12" x2="19" y2="12"/>
-        </svg>
-        Decrease
-    </button>
-    <button class="action-text-btn restock-text-btn" onclick="askQuantity('${id}', 1)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-        </svg>
-        Restock
-    </button>
-    <button class="action-text-btn remove-text-btn" onclick="handleManualDelete('${id}', '${p.name}')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-        </svg>
-        Remove
-    </button>
+  
+  <div class="col-actions">
+      <div class="action-buttons">
+        <button class="action-text-btn expiry-text-btn ${hasExpiry}" onclick="openExpiryModal('${id}', '${p.name}')" title="${p.expiryDate ? 'Expiry: ' + p.expiryDate : 'Set expiry date'}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+            Expiry
+        </button>
+        <button class="action-text-btn decrease-text-btn" onclick="askQuantity('${id}', -1)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Decrease
+        </button>
+        <button class="action-text-btn restock-text-btn" onclick="askQuantity('${id}', 1)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Restock
+        </button>
+        <button class="action-text-btn remove-text-btn" onclick="handleManualDelete('${id}', '${p.name}')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+            Remove
+        </button>
+      </div>
   </div>
 </div>`;
   });
@@ -1457,8 +1462,7 @@ function render() {
   document.getElementById("low").textContent = lowC;
   document.getElementById("out").textContent = outC;
   document.getElementById("expiring").textContent = expiringC;
-}
-// --- MANUAL ADD LOGIC ---
+}// --- MANUAL ADD LOGIC ---
 function toggleAddMenu() {
     const menu = document.getElementById("addMenu");
     menu.style.display = (menu.style.display === "flex") ? "none" : "flex";
