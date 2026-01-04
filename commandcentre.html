@@ -2245,13 +2245,14 @@ node.style.height = '80px';
                     }
                 });
 
-                container.appendChild(node);
+container.appendChild(node);
             });
 
             updateHeatmap(); // Apply heatmap if active
             updateOutOfStockLeaderboard(products);
-        }
-// Calculate days until expiry
+        } // END of renderShop function
+
+        // Calculate days until expiry
         function getDaysUntilExpiry(expiryDate, simulatedDate = null) {
             if (!expiryDate) return null;
             
