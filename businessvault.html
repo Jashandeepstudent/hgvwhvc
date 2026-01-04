@@ -1518,6 +1518,48 @@
             <div class="subtitle">Secure Document & Operations Management</div>
         </div>
     </div>
+<!-- Progress Overview Cards -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px;">
+    <!-- Transactions Progress -->
+    <div class="glass" style="padding: 20px; text-align: center; transition: all 0.3s ease;">
+        <i class="fas fa-chart-line" style="font-size: 2rem; color: var(--primary); margin-bottom: 12px;"></i>
+        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px;">Transactions</div>
+        <div style="font-size: 1.8rem; font-weight: 700; color: var(--text-primary);">
+            <span id="completed-trans">0</span>/<span id="total-trans">0</span>
+        </div>
+        <div style="margin-top: 8px; font-size: 0.75rem; color: var(--success);">Completed</div>
+    </div>
+
+    <!-- Orders Progress -->
+    <div class="glass" style="padding: 20px; text-align: center; transition: all 0.3s ease;">
+        <i class="fas fa-box-open" style="font-size: 2rem; color: var(--primary); margin-bottom: 12px;"></i>
+        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px;">Orders</div>
+        <div style="font-size: 1.8rem; font-weight: 700; color: var(--text-primary);">
+            <span id="completed-orders">0</span>/<span id="total-orders">0</span>
+        </div>
+        <div style="margin-top: 8px; font-size: 0.75rem; color: var(--success);">Completed</div>
+    </div>
+
+    <!-- Notes Progress -->
+    <div class="glass" style="padding: 20px; text-align: center; transition: all 0.3s ease;">
+        <i class="fas fa-sticky-note" style="font-size: 2rem; color: var(--primary); margin-bottom: 12px;"></i>
+        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px;">Notes</div>
+        <div style="font-size: 1.8rem; font-weight: 700; color: var(--text-primary);">
+            <span id="completed-notes">0</span>/<span id="total-notes">0</span>
+        </div>
+        <div style="margin-top: 8px; font-size: 0.75rem; color: var(--success);">Completed</div>
+    </div>
+
+    <!-- Staff Tasks Progress -->
+    <div class="glass" style="padding: 20px; text-align: center; transition: all 0.3s ease;">
+        <i class="fas fa-tasks" style="font-size: 2rem; color: var(--primary); margin-bottom: 12px;"></i>
+        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px;">Staff Tasks</div>
+        <div style="font-size: 1.8rem; font-weight: 700; color: var(--text-primary);">
+            <span id="completed-tasks">0</span>/<span id="total-tasks">0</span>
+        </div>
+        <div style="margin-top: 8px; font-size: 0.75rem; color: var(--success);">Completed</div>
+    </div>
+</div>
         </header>
 
         <!-- Dashboard -->
@@ -1929,11 +1971,29 @@ auth.onAuthStateChanged((user) => {
         checkDeadlines();
         
         initListeners();
+
+initListeners();
+        
+        // Restore page view from URL on refresh
+        const urlParams = new URLSearchParams(window.location.search);
+        const viewParam = urlParams.get('view');
+        if (viewParam) {
+            setTimeout(() => navTo(viewParam), 100);
+        
+
     } else {
         console.log("No user found. Redirecting to login...");
         window.location.href = "login.html"; 
     }
 });
+// Handle browser back/forward buttons
+        window.addEventListener('popstate', (event) => {
+            if (event.state && event.state.view) {
+                const viewId = event.state.view === 'dashboard' ? 'dashboard-view' : event.state.view;
+                document.querySelectorAll('.section-view, #dashboard-view').forEach(el => el.style.display = 'none');
+                document.getElementById(viewId).style.display = 'block';
+            }
+        });
 // Request audio permission on first user interaction
 let audioPermissionGranted = false;
 
@@ -1991,10 +2051,13 @@ function checkDeadlines() {
     let criticalAlerts = []; // Today's deadlines
 
     // Check Transactions
-    db.ref(`${baseRef}/transactions`).once('value', snapshot => {
-        snapshot.forEach(child => {
-            const t = child.val();
-            if (t.date === tomorrowStr) {
+db.ref(`${baseRef}/transactions`).once('value', snapshot => {
+    snapshot.forEach(child => {
+        const t = child.val();
+        // Skip completed items
+        if (t.completed) return;
+        
+        if (t.date === tomorrowStr) {
                 urgentAlerts.push({
                     type: 'transaction',
                     icon: 'fa-dollar-sign',
@@ -2014,11 +2077,14 @@ function checkDeadlines() {
         checkOrders();
     });
 
-    function checkOrders() {
-        db.ref(`${baseRef}/pendingorders`).once('value', snapshot => {
-            snapshot.forEach(child => {
-                const o = child.val();
-                if (o.deadline === tomorrowStr) {
+function checkOrders() {
+    db.ref(`${baseRef}/pendingorders`).once('value', snapshot => {
+        snapshot.forEach(child => {
+            const o = child.val();
+            // Skip completed items
+            if (o.completed) return;
+            
+            if (o.deadline === tomorrowStr) {
                     urgentAlerts.push({
                         type: 'order',
                         icon: 'fa-box-open',
@@ -2039,11 +2105,14 @@ function checkDeadlines() {
         });
     }
 
-    function checkNotes() {
-        db.ref(`${baseRef}/notes`).once('value', snapshot => {
-            snapshot.forEach(child => {
-                const n = child.val();
-                if (n.date === tomorrowStr) {
+function checkNotes() {
+    db.ref(`${baseRef}/notes`).once('value', snapshot => {
+        snapshot.forEach(child => {
+            const n = child.val();
+            // Skip completed items
+            if (n.completed) return;
+            
+            if (n.date === tomorrowStr) {
                     urgentAlerts.push({
                         type: 'note',
                         icon: 'fa-sticky-note',
@@ -2254,10 +2323,17 @@ const styleSheet = document.createElement('style');
 styleSheet.textContent = shakeKeyframes;
 document.head.appendChild(styleSheet);
         // --- NAVIGATION ---
-        function navTo(viewId) {
-            document.querySelectorAll('.section-view, #dashboard-view').forEach(el => el.style.display = 'none');
-            document.getElementById(viewId).style.display = 'block';
-        }
+function navTo(viewId) {
+    document.querySelectorAll('.section-view, #dashboard-view').forEach(el => el.style.display = 'none');
+    document.getElementById(viewId).style.display = 'block';
+    
+    // Push state to browser history for page persistence
+    if (viewId !== 'dashboard-view') {
+        history.pushState({ view: viewId }, '', `?view=${viewId}`);
+    } else {
+        history.pushState({ view: 'dashboard' }, '', window.location.pathname);
+    }
+}
 
         function openModal(modalId) {
             document.getElementById(modalId).style.display = 'flex';
@@ -2319,6 +2395,64 @@ document.head.appendChild(styleSheet);
                 deleteCallback = null;
             };
         }
+// Update task counter across all team members
+function updateTaskCounter() {
+    let totalTasks = 0;
+    let completedTasks = 0;
+    
+    db.ref(`BusinessOwners/${currentUserId}/BusinessItems/teamandstaff`).once('value', snapshot => {
+        snapshot.forEach(memberChild => {
+            const member = memberChild.val();
+            if (member.jobs) {
+                Object.values(member.jobs).forEach(job => {
+                    totalTasks++;
+                    if (job.completed) completedTasks++;
+                });
+            }
+        });
+        
+        document.getElementById('completed-tasks').textContent = completedTasks;
+        document.getElementById('total-tasks').textContent = totalTasks;
+    });
+}
+// Mark item as complete
+function markComplete(type, itemKey) {
+    const baseRef = `BusinessOwners/${currentUserId}/BusinessItems`;
+    let path = '';
+    
+    if (type === 'transaction') {
+        path = `${baseRef}/transactions/${itemKey}`;
+    } else if (type === 'order') {
+        path = `${baseRef}/pendingorders/${itemKey}`;
+    } else if (type === 'note') {
+        path = `${baseRef}/notes/${itemKey}`;
+    }
+    
+    if (path) {
+        db.ref(path).update({ completed: true }).then(() => {
+            // Clear deadline alert dismissal so it recalculates
+            localStorage.removeItem('megaAlertDismissed');
+            
+            // Show success feedback
+            const successMsg = document.createElement('div');
+            successMsg.className = 'alert-banner glass';
+            successMsg.style.background = 'linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.1))';
+            successMsg.style.borderLeftColor = 'var(--success)';
+            successMsg.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <i class="fas fa-check-circle" style="color: var(--success); font-size: 1.5rem;"></i>
+                    <span style="font-weight: 600;">Marked as Complete!</span>
+                </div>
+            `;
+            document.body.appendChild(successMsg);
+            
+            setTimeout(() => {
+                successMsg.style.animation = 'slideDown 0.4s ease reverse';
+                setTimeout(() => successMsg.remove(), 400);
+            }, 2000);
+        });
+    }
+}
 
         // --- DATABASE LISTENERS ---
         function initListeners() {
@@ -2357,34 +2491,49 @@ document.head.appendChild(styleSheet);
 
             // Transactions Listener
 // --- Inside initListeners() for Transactions ---
+// Transactions Listener
 db.ref(`${baseRef}/transactions`).on('value', snapshot => {
     const list = document.getElementById('trans-list');
     list.innerHTML = '';
     
+    let totalCount = 0;
+    let completedCount = 0;
+    
     snapshot.forEach(child => {
         const t = child.val();
         const transKey = child.key;
+        totalCount++;
+        if (t.completed) completedCount++;
+        
         const colorClass = t.type === 'owe' ? 'badge-red' : 'badge-green';
         const label = t.type === 'owe' ? 'I Owe' : 'Owed to Me';
+        const isCompleted = t.completed === true;
         
         const div = document.createElement('div');
         div.className = 'list-item glass';
+        div.style.opacity = isCompleted ? '0.6' : '1';
         div.innerHTML = `
             <div class="list-item-content">
                 <div style="display:flex; justify-content:space-between; margin-bottom:8px; align-items: center;">
-                    <span style="font-weight:600; font-size:1.15rem;">${t.name}</span>
-                    <span class="badge ${colorClass}">${label}</span>
+                    <span style="font-weight:600; font-size:1.15rem; ${isCompleted ? 'text-decoration: line-through;' : ''}">${t.name}</span>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        ${isCompleted ? '<span class="badge badge-green" style="font-size: 0.7rem;"><i class="fas fa-check"></i> DONE</span>' : ''}
+                        <span class="badge ${colorClass}">${label}</span>
+                    </div>
                 </div>
                 <div style="color: var(--text-secondary); font-size:0.95rem; margin-bottom: 4px;">${t.details}</div>
                 <div style="margin-top:10px; font-weight:600; font-size: 1.1rem; color: var(--text-primary);">
-    <span class="currency-symbol">${currencySymbol}</span>${t.amount} 
-    <span style="font-weight:400; color: var(--text-muted); font-size:0.85rem; margin-left:12px;">
+                    <span class="currency-symbol">${currencySymbol}</span>${t.amount} 
+                    <span style="font-weight:400; color: var(--text-muted); font-size:0.85rem; margin-left:12px;">
                         <i class="fas fa-calendar-alt"></i> ${t.date}
                     </span>
                 </div>
                 ${t.url ? `<button class="btn btn-secondary" style="margin-top:12px; padding:8px 14px; font-size:0.8rem;" onclick="previewDoc('${t.url}')"><i class="fas fa-receipt"></i> View Receipt</button>` : ''}
             </div>
             <div class="item-actions">
+                ${!isCompleted ? `<button class="btn btn-primary" style="padding: 10px 16px; font-size: 0.85rem;" onclick="markComplete('transaction', '${transKey}')">
+                    <i class="fas fa-check-circle"></i> Complete
+                </button>` : ''}
                 <button class="btn btn-danger" onclick="confirmDelete(() => deleteTransaction('${transKey}'))">
                     <i class="fas fa-trash"></i>
                 </button>
@@ -2392,63 +2541,108 @@ db.ref(`${baseRef}/transactions`).on('value', snapshot => {
         `;
         list.appendChild(div);
     });
+    
+    // Update progress card
+    document.getElementById('completed-trans').textContent = completedCount;
+    document.getElementById('total-trans').textContent = totalCount;
+});
+            // Notes Listener
+            // Notes Listener
+db.ref(`${baseRef}/notes`).on('value', snapshot => {
+    const list = document.getElementById('notes-list');
+    list.innerHTML = '';
+    
+    let totalCount = 0;
+    let completedCount = 0;
+    
+    snapshot.forEach(child => {
+        const n = child.val();
+        const noteKey = child.key;
+        totalCount++;
+        if (n.completed) completedCount++;
+        
+        const isCompleted = n.completed === true;
+        
+        const div = document.createElement('div');
+        div.className = 'card glass';
+        div.style.height = 'auto';
+        div.style.cursor = 'default';
+        div.style.opacity = isCompleted ? '0.6' : '1';
+        div.innerHTML = `
+            <div>
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                    <div class="card-title" style="${isCompleted ? 'text-decoration: line-through;' : ''}">${n.title}</div>
+                    ${isCompleted ? '<span class="badge badge-green" style="font-size: 0.7rem;"><i class="fas fa-check"></i> DONE</span>' : ''}
+                </div>
+                <div style="color: var(--text-secondary); font-size:0.95rem; margin:12px 0; white-space: pre-wrap; line-height: 1.6;">${n.content}</div>
+                <div class="card-meta"><i class="fas fa-calendar"></i> ${n.date || 'No date'}</div>
+            </div>
+            <div style="display: flex; gap: 8px; margin-top: 16px;">
+                ${!isCompleted ? `<button class="btn btn-primary" style="flex: 1;" onclick="markComplete('note', '${noteKey}')">
+                    <i class="fas fa-check-circle"></i> Complete
+                </button>` : ''}
+                <button class="btn btn-danger" style="width: 45px; height: 45px; border-radius: 10px; display: flex; align-items: center; justify-content: center; padding: 0;" onclick="confirmDelete(() => deleteNote('${noteKey}'))" title="Delete Note">
+                    <i class="fas fa-trash-can" style="font-size: 1.2rem;"></i>
+                </button>
+            </div>
+        `;
+        list.appendChild(div);
+    });
+    
+    // Update progress card
+    document.getElementById('completed-notes').textContent = completedCount;
+    document.getElementById('total-notes').textContent = totalCount;
 });
 
-            // Notes Listener
-            db.ref(`${baseRef}/notes`).on('value', snapshot => {
-                const list = document.getElementById('notes-list');
-                list.innerHTML = '';
-                
-                snapshot.forEach(child => {
-                    const n = child.val();
-                    const noteKey = child.key;
-                    const div = document.createElement('div');
-                    div.className = 'card glass';
-                    div.style.height = 'auto';
-                    div.style.cursor = 'default';
-                    div.innerHTML = `
-                        <div>
-                            <div class="card-title">${n.title}</div>
-                            <div style="color: var(--text-secondary); font-size:0.95rem; margin:12px 0; white-space: pre-wrap; line-height: 1.6;">${n.content}</div>
-                            <div class="card-meta"><i class="fas fa-calendar"></i> ${n.date || 'No date'}</div>
-                        </div>
-                        <button class="btn btn-danger" style="margin-top: 16px; width: 45px; height: 45px; border-radius: 10px; display: flex; align-items: center; justify-content: center; padding: 0;" onclick="confirmDelete(() => deleteNote('${noteKey}'))" title="Delete Note">
-    <i class="fas fa-trash-can" style="font-size: 1.2rem;"></i>
-</button>
-                    `;
-                    list.appendChild(div);
-                });
-            });
-
             // Pending Orders Listener
-            db.ref(`${baseRef}/pendingorders`).on('value', snapshot => {
-                const list = document.getElementById('orders-list');
-                list.innerHTML = '';
-                
-                snapshot.forEach(child => {
-                    const o = child.val();
-                    const orderKey = child.key;
-                    const div = document.createElement('div');
-                    div.className = 'list-item glass';
-                    div.innerHTML = `
-                        <div class="list-item-content">
-                            <div style="display:flex; justify-content:space-between; align-items: center; margin-bottom: 8px;">
-                                <span style="font-weight:600; font-size: 1.1rem;">${o.category}</span>
-                                <span style="color:var(--danger); font-size:0.85rem; font-weight: 600;">
-                                    <i class="fas fa-clock"></i> Due: ${o.deadline}
-                                </span>
-                            </div>
-                            <div style="margin-top:8px; color: var(--text-secondary); font-size: 0.95rem;">${o.desc}</div>
-                        </div>
-                        <div class="item-actions">
-                            <button class="btn btn-danger" onclick="confirmDelete(() => deleteOrder('${orderKey}'))">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    `;
-                    list.appendChild(div);
-                });
-            });
+            // Pending Orders Listener
+db.ref(`${baseRef}/pendingorders`).on('value', snapshot => {
+    const list = document.getElementById('orders-list');
+    list.innerHTML = '';
+    
+    let totalCount = 0;
+    let completedCount = 0;
+    
+    snapshot.forEach(child => {
+        const o = child.val();
+        const orderKey = child.key;
+        totalCount++;
+        if (o.completed) completedCount++;
+        
+        const isCompleted = o.completed === true;
+        
+        const div = document.createElement('div');
+        div.className = 'list-item glass';
+        div.style.opacity = isCompleted ? '0.6' : '1';
+        div.innerHTML = `
+            <div class="list-item-content">
+                <div style="display:flex; justify-content:space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="font-weight:600; font-size: 1.1rem; ${isCompleted ? 'text-decoration: line-through;' : ''}">${o.category}</span>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        ${isCompleted ? '<span class="badge badge-green" style="font-size: 0.7rem;"><i class="fas fa-check"></i> DONE</span>' : 
+                        `<span style="color:var(--danger); font-size:0.85rem; font-weight: 600;">
+                            <i class="fas fa-clock"></i> Due: ${o.deadline}
+                        </span>`}
+                    </div>
+                </div>
+                <div style="margin-top:8px; color: var(--text-secondary); font-size: 0.95rem;">${o.desc}</div>
+            </div>
+            <div class="item-actions">
+                ${!isCompleted ? `<button class="btn btn-primary" style="padding: 10px 16px; font-size: 0.85rem;" onclick="markComplete('order', '${orderKey}')">
+                    <i class="fas fa-check-circle"></i> Complete
+                </button>` : ''}
+                <button class="btn btn-danger" onclick="confirmDelete(() => deleteOrder('${orderKey}'))">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `;
+        list.appendChild(div);
+    });
+    
+    // Update progress card
+    document.getElementById('completed-orders').textContent = completedCount;
+    document.getElementById('total-orders').textContent = totalCount;
+});
 
             // Team Listener
 db.ref(`${baseRef}/teamandstaff`).on('value', snapshot => {
@@ -2598,9 +2792,11 @@ db.ref(`${baseRef}/teamandstaff`).on('value', snapshot => {
 
             if(!title) return alert("Title required");
 
-            db.ref(`BusinessOwners/${currentUserId}/BusinessItems/notes`).push({
-                title, content, date, timestamp: Date.now()
-            });
+db.ref(`BusinessOwners/${currentUserId}/BusinessItems/notes`).push({
+    title, content, date, 
+    completed: false, // NEW: Track completion
+    timestamp: Date.now()
+});
             localStorage.removeItem('megaAlertDismissed');
             updateMeta('notes');
             closeModals();
@@ -2682,7 +2878,8 @@ await db.ref(`BusinessOwners/${currentUserId}/BusinessItems/transactions`).push(
     type, name, amount, details, date,
     url: mainUrl, 
     preview: finalThumbUrl || "",
-    currency: userCurrency, // NEW: Store currency
+    currency: userCurrency,
+    completed: false, // NEW: Track completion
     timestamp: fileId
 });
 localStorage.removeItem('megaAlertDismissed');
@@ -2706,9 +2903,11 @@ localStorage.removeItem('megaAlertDismissed');
 
             if(!desc) return alert("Description required");
 
-            db.ref(`BusinessOwners/${currentUserId}/BusinessItems/pendingorders`).push({
-                category: cat, desc, deadline, timestamp: Date.now()
-            });
+db.ref(`BusinessOwners/${currentUserId}/BusinessItems/pendingorders`).push({
+    category: cat, desc, deadline, 
+    completed: false, // NEW: Track completion
+    timestamp: Date.now()
+});
             localStorage.removeItem('megaAlertDismissed');
             updateMeta('pendingorders');
             closeModals();
@@ -2814,6 +3013,8 @@ function previewImage(event) {
         const list = document.getElementById('member-jobs-list');
         list.innerHTML = '';
         
+updateTaskCounter();
+
         if(!snapshot.exists()) {
             list.innerHTML = '<div style="color: var(--text-muted); font-style:italic; text-align: center; padding: 20px;">No jobs assigned yet.</div>';
             return;
