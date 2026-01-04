@@ -1447,6 +1447,7 @@ auth.onAuthStateChanged(u => {
 // PRODUCT ANALYTICS SYSTEM
 // PRODUCT ANALYTICS SYSTEM - FIXED CALCULATION
 // PRODUCT ANALYTICS SYSTEM - ONLY ACTIVE PRODUCTS
+// PRODUCT ANALYTICS SYSTEM - NO DUPLICATE PRODUCTS
 function updateProductAnalytics(productId, productName, quantitySold) {
     if (!currentUserId) {
         console.error("User not authenticated");
@@ -1485,10 +1486,10 @@ function updateProductAnalytics(productId, productName, quantitySold) {
             const qty = sale.quantity || 0;
             const saleTime = sale.timestamp || 0;
             
-            // ✅ CRITICAL FIX: Only count sales for products that still exist
+            // Only count sales for products that still exist
             if (!activeProductIds.has(pid)) {
                 console.log(`⚠️ Skipping deleted product: ${pname} (${pid})`);
-                return; // Skip this sale
+                return;
             }
             
             // TOTAL SALES (All Time)
@@ -1531,31 +1532,59 @@ function updateProductAnalytics(productId, productName, quantitySold) {
             ...data
         }));
         
-        // 1. MOST SELLING - Highest TOTAL sales (all time)
-        if (totalSalesArray.length > 0) {
-            const mostSelling = totalSalesArray.reduce((max, current) => 
-                current.totalSold > max.totalSold ? current : max
-            );
+        // ✅ CRITICAL FIX: Only show analytics if there are 2+ products with sales
+        if (totalSalesArray.length < 2) {
+            console.log("⚠️ Not enough products with sales data (need at least 2)");
             
-            console.log("🥇 Most Selling:", mostSelling);
+            // If only 1 product, show it ONLY in Most Selling
+            if (totalSalesArray.length === 1) {
+                const onlyProduct = totalSalesArray[0];
+                
+                analyticsRef.child('mostSelling').set({
+                    productId: onlyProduct.productId,
+                    name: onlyProduct.name,
+                    totalSold: onlyProduct.totalSold,
+                    lastUpdated: timestamp
+                });
+                
+                // Remove least selling and trending (no point showing same product)
+                analyticsRef.child('leastSelling').remove();
+                analyticsRef.child('trendingSelling').remove();
+                
+                console.log("✅ Only 1 product - showing in Most Selling only");
+            } else {
+                // No products with sales
+                analyticsRef.child('mostSelling').remove();
+                analyticsRef.child('leastSelling').remove();
+                analyticsRef.child('trendingSelling').remove();
+            }
             
-            analyticsRef.child('mostSelling').set({
-                productId: mostSelling.productId,
-                name: mostSelling.name,
-                totalSold: mostSelling.totalSold,
-                lastUpdated: timestamp
-            });
-        } else {
-            console.log("⚠️ No sales data for active products");
-            analyticsRef.child('mostSelling').remove();
+            return;
         }
         
+        // 1. MOST SELLING - Highest TOTAL sales (all time)
+        const mostSelling = totalSalesArray.reduce((max, current) => 
+            current.totalSold > max.totalSold ? current : max
+        );
+        
+        console.log("🥇 Most Selling:", mostSelling);
+        
+        analyticsRef.child('mostSelling').set({
+            productId: mostSelling.productId,
+            name: mostSelling.name,
+            totalSold: mostSelling.totalSold,
+            lastUpdated: timestamp
+        });
+        
         // 2. LEAST SELLING - Lowest TOTAL sales (all time)
-        if (totalSalesArray.length > 0) {
-            const leastSelling = totalSalesArray.reduce((min, current) => 
-                current.totalSold < min.totalSold ? current : min
-            );
-            
+        // ✅ FIX: Make sure it's DIFFERENT from most selling
+        const leastSelling = totalSalesArray
+            .filter(p => p.productId !== mostSelling.productId) // Exclude most selling
+            .reduce((min, current) => 
+                !min || current.totalSold < min.totalSold ? current : min
+            , null);
+        
+        if (leastSelling) {
             console.log("🥉 Least Selling:", leastSelling);
             
             analyticsRef.child('leastSelling').set({
@@ -1565,27 +1594,38 @@ function updateProductAnalytics(productId, productName, quantitySold) {
                 lastUpdated: timestamp
             });
         } else {
-            console.log("⚠️ No sales data for active products");
+            console.log("⚠️ No product qualifies for Least Selling");
             analyticsRef.child('leastSelling').remove();
         }
         
         // 3. TRENDING - Most sales in LAST 7 DAYS
+        // ✅ FIX: Different from most and least selling
         if (recentSalesArray.length > 0) {
-            const trending = recentSalesArray.reduce((max, current) => 
-                current.recentSold > max.recentSold ? current : max
-            );
+            const trending = recentSalesArray
+                .filter(p => 
+                    p.productId !== mostSelling.productId && 
+                    (!leastSelling || p.productId !== leastSelling.productId)
+                )
+                .reduce((max, current) => 
+                    !max || current.recentSold > max.recentSold ? current : max
+                , null);
             
-            console.log("🔥 Trending (Last 7 Days):", trending);
-            
-            analyticsRef.child('trendingSelling').set({
-                productId: trending.productId,
-                name: trending.name,
-                recentSold: trending.recentSold,
-                firstSaleDate: trending.firstSaleDate,
-                lastUpdated: timestamp
-            });
+            if (trending) {
+                console.log("🔥 Trending (Last 7 Days):", trending);
+                
+                analyticsRef.child('trendingSelling').set({
+                    productId: trending.productId,
+                    name: trending.name,
+                    recentSold: trending.recentSold,
+                    firstSaleDate: trending.firstSaleDate,
+                    lastUpdated: timestamp
+                });
+            } else {
+                // All recent sales are from most/least selling products
+                console.log("⚠️ No unique product for trending");
+                analyticsRef.child('trendingSelling').remove();
+            }
         } else {
-            // No sales in last 7 days
             console.log("⚠️ No sales in last 7 days - clearing trending");
             analyticsRef.child('trendingSelling').remove();
         }
