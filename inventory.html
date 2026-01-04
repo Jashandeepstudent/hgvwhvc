@@ -50,30 +50,38 @@ body{margin:0;background:#f6f7fb;padding:30px}
 #reader__scan_region {
     background: #000;
 }
-
 .action-buttons {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     flex-wrap: wrap;
 }
 
 .action-text-btn {
-    padding: 8px 14px;
+    padding: 6px 10px;
     border-radius: 8px;
     border: 1px solid #e2e8f0;
     background: white;
     color: #475569;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     transition: all 0.2s;
     white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.action-text-btn svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
 }
 
 .action-text-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.12);
 }
 
 .expiry-text-btn {
@@ -83,6 +91,7 @@ body{margin:0;background:#f6f7fb;padding:30px}
 
 .expiry-text-btn:hover {
     background: #dbeafe;
+    border-color: #3b82f6;
 }
 
 .expiry-text-btn.set {
@@ -97,6 +106,7 @@ body{margin:0;background:#f6f7fb;padding:30px}
 
 .decrease-text-btn:hover {
     background: #fef3c7;
+    border-color: #f59e0b;
 }
 
 .restock-text-btn {
@@ -106,7 +116,85 @@ body{margin:0;background:#f6f7fb;padding:30px}
 
 .restock-text-btn:hover {
     background: #d1fae5;
+    border-color: #10b981;
 }
+
+.remove-text-btn {
+    border-color: #fee2e2;
+    color: #ef4444;
+}
+
+.remove-text-btn:hover {
+    background: #fee2e2;
+    border-color: #ef4444;
+}
+
+.step-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    background: white;
+    color: #7c3aed;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.2s;
+}
+
+.step-btn:hover {
+    background: #f5f3ff;
+    border-color: #7c3aed;
+    transform: translateY(-2px);
+}
+
+.remove-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    border: 1px solid #fee2e2;
+    background: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 10px;
+    transition: 0.2s;
+}
+
+.remove-btn:hover {
+    background: #ef4444;
+}
+
+.remove-btn:hover svg {
+    stroke: white;
+}
+
+.expiry-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    border: 1px solid #dbeafe;
+    background: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.2s;
+}
+
+.expiry-btn:hover {
+    background: #dbeafe;
+    border-color: #3b82f6;
+    transform: translateY(-2px);
+}
+
+.expiry-btn.set {
+    background: #dbeafe;
+    border-color: #3b82f6;
+}
+
 /* STATS */
 .stats-container {
     display: flex;
@@ -181,59 +269,7 @@ body{margin:0;background:#f6f7fb;padding:30px}
 .stat-sub {
     display: none;
 }
-.master-select-container {
-    background: #f8fafc;
-    padding: 15px;
-    border-radius: 12px;
-    margin-bottom: 20px;
-    border: 2px solid #e2e8f0;
-}
 
-.master-select-row {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    margin-bottom: 10px;
-}
-
-.master-select-row input[type="date"] {
-    flex: 1;
-    padding: 10px;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    font-size: 14px;
-}
-
-.master-select-row button {
-    padding: 10px 20px;
-    background: #3b82f6;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-}
-
-.master-select-row button:hover {
-    background: #2563eb;
-}
-
-.selectable-row {
-    cursor: pointer;
-    transition: background 0.2s;
-}
-
-.selectable-row.selected {
-    background: #eff6ff !important;
-    border-left: 4px solid #3b82f6;
-}
-
-.select-checkbox {
-    width: 20px;
-    height: 20px;
-    cursor: pointer;
-    accent-color: #3b82f6;
-}
 /* DESKTOP UPGRADE */
 @media (min-width: 768px) {
     .stats-container { gap: 20px; }
@@ -625,7 +661,113 @@ input:focus, select:focus, textarea:focus {
     border-radius: 8px;
     font-size: 14px;
 }
+.master-select-container {
+    background: #f8fafc;
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    border: 2px dashed #cbd5e1;
+    display: none;
+}
 
+.master-select-container.active {
+    display: block;
+    border-color: #3b82f6;
+    background: #eff6ff;
+}
+
+.master-select-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.master-select-row input[type="date"] {
+    flex: 1;
+    padding: 12px;
+    border: 2px solid #cbd5e1;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.master-select-row button {
+    padding: 12px 24px;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.master-select-row button:hover {
+    background: #2563eb;
+    transform: scale(1.05);
+}
+
+.master-toggle-btn {
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: 0.3s;
+}
+
+.master-toggle-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 16px rgba(102, 126, 234, 0.4);
+}
+
+.master-toggle-btn.active {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.selectable-row {
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.selectable-row.selected {
+    background: #eff6ff !important;
+    border-left: 4px solid #3b82f6;
+}
+
+.select-checkbox {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: #3b82f6;
+}
+
+.expiry-tag.expired {
+    background: #fee2e2;
+    color: #dc2626;
+    animation: none;
+    font-weight: 800;
+}
+
+.date-saved {
+    background: #d1fae5 !important;
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.date-saved input {
+    background: #d1fae5 !important;
+    border-color: #10b981 !important;
+    color: #065f46 !important;
+    font-weight: 700;
+}
 #scanner{position:relative;width:100%;height:240px;background:#000;border-radius:14px;overflow:hidden}
 .flash{position:fixed;inset:0;background:rgba(34,197,94,.25);pointer-events:none;z-index:3000;opacity:0;transition:.15s}
 .flash.show{opacity:1}
@@ -791,16 +933,29 @@ input:focus, select:focus, textarea:focus {
             </svg>
             Bulk Add Expiry Dates
         </h2>
-        <p style="font-size: 13px; color: #666; margin-bottom: 20px;">Set expiry dates for products that don't have one yet</p>
+        <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Set expiry dates for products that don't have one yet</p>
+        
+        <!-- MASTER SELECT TOGGLE BUTTON -->
+        <button class="master-toggle-btn" id="masterToggleBtn" onclick="toggleMasterSelect()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            </svg>
+            <span id="masterToggleText">Enable Master Select</span>
+        </button>
         
         <!-- MASTER SELECT FEATURE -->
-        <div class="master-select-container">
+        <div class="master-select-container" id="masterSelectContainer">
             <div class="master-select-row">
                 <input type="date" id="masterExpiryDate" placeholder="Select common expiry date">
-                <button onclick="applyMasterExpiry()">Apply to Selected</button>
+                <button onclick="applyMasterExpiry()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block; vertical-align:middle; margin-right:5px">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    Set Dates to Selected
+                </button>
             </div>
             <p style="font-size: 11px; color: #64748b; margin: 5px 0 0 0;">
-                Select products below, pick a date, then click "Apply to Selected"
+                ✓ Select products below → Pick a date → Click "Set Dates to Selected"
             </p>
         </div>
         
@@ -808,8 +963,8 @@ input:focus, select:focus, textarea:focus {
             <table>
                 <thead>
                     <tr>
-                        <th style="width: 40px;">
-                            <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()" class="select-checkbox">
+                        <th style="width: 40px;" id="checkboxHeader">
+                            <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()" class="select-checkbox" style="display:none;">
                         </th>
                         <th>Product Name</th>
                         <th>Current Stock</th>
@@ -826,7 +981,7 @@ input:focus, select:focus, textarea:focus {
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block; vertical-align:middle; margin-right:5px">
                     <polyline points="20 6 9 17 4 12"/>
                 </svg>
-                Save All Dates
+                Save Expiry Dates
             </button>
             <button class="btn-close" onclick="closeBulkExpiryModal()">Close</button>
         </div>
@@ -1026,9 +1181,19 @@ function saveNotificationPreference() {
 }
 
 // --- BULK EXPIRY DATES ---
+let masterSelectMode = false;
+let savedProductDates = new Set(); // Track products with saved dates
+
 function openBulkExpiryModal() {
     const tbody = document.getElementById("bulkExpiryTableBody");
     tbody.innerHTML = "";
+    masterSelectMode = false;
+    savedProductDates.clear();
+    
+    document.getElementById("masterSelectContainer").classList.remove("active");
+    document.getElementById("masterToggleBtn").classList.remove("active");
+    document.getElementById("masterToggleText").textContent = "Enable Master Select";
+    document.getElementById("selectAllCheckbox").style.display = "none";
     
     // Get products without expiry dates
     const productsWithoutExpiry = Object.entries(inventory).filter(([_, p]) => !p.expiryDate);
@@ -1044,7 +1209,7 @@ function openBulkExpiryModal() {
         row.setAttribute("data-product-id", id);
         row.innerHTML = `
             <td style="text-align: center;">
-                <input type="checkbox" class="select-checkbox product-checkbox" data-product-id="${id}">
+                <input type="checkbox" class="select-checkbox product-checkbox" data-product-id="${id}" style="display:none;">
             </td>
             <td style="font-weight: 600;">${product.name}</td>
             <td style="color: #64748b;">${product.quantity} ${product.unit}</td>
@@ -1053,34 +1218,50 @@ function openBulkExpiryModal() {
             </td>
         `;
         
-        // Make row clickable to toggle checkbox
-        row.onclick = (e) => {
-            if (e.target.type !== 'checkbox' && e.target.type !== 'date') {
-                const checkbox = row.querySelector('.product-checkbox');
-                checkbox.checked = !checkbox.checked;
-                row.classList.toggle('selected', checkbox.checked);
-            }
-        };
-        
-        // Handle checkbox change
-        row.querySelector('.product-checkbox').onchange = (e) => {
-            row.classList.toggle('selected', e.target.checked);
-            e.stopPropagation();
-        };
-        
         tbody.appendChild(row);
     });
     
     document.getElementById("bulkExpiryModal").style.display = "flex";
 }
+function toggleMasterSelect() {
+    masterSelectMode = !masterSelectMode;
+    const container = document.getElementById("masterSelectContainer");
+    const btn = document.getElementById("masterToggleBtn");
+    const checkboxes = document.querySelectorAll(".product-checkbox");
+    const selectAll = document.getElementById("selectAllCheckbox");
+    
+    if (masterSelectMode) {
+        container.classList.add("active");
+        btn.classList.add("active");
+        document.getElementById("masterToggleText").textContent = "Disable Master Select";
+        selectAll.style.display = "block";
+        checkboxes.forEach(cb => cb.style.display = "block");
+    } else {
+        container.classList.remove("active");
+        btn.classList.remove("active");
+        document.getElementById("masterToggleText").textContent = "Enable Master Select";
+        selectAll.style.display = "none";
+        selectAll.checked = false;
+        checkboxes.forEach(cb => {
+            cb.style.display = "none";
+            cb.checked = false;
+        });
+        document.querySelectorAll(".selectable-row").forEach(row => row.classList.remove("selected"));
+    }
+}
+
 function toggleSelectAll() {
     const selectAll = document.getElementById("selectAllCheckbox");
     const checkboxes = document.querySelectorAll(".product-checkbox");
     
     checkboxes.forEach(checkbox => {
-        checkbox.checked = selectAll.checked;
-        const row = checkbox.closest('.selectable-row');
-        row.classList.toggle('selected', selectAll.checked);
+        // Only select rows that haven't been saved
+        const productId = checkbox.getAttribute("data-product-id");
+        if (!savedProductDates.has(productId)) {
+            checkbox.checked = selectAll.checked;
+            const row = checkbox.closest('.selectable-row');
+            row.classList.toggle('selected', selectAll.checked);
+        }
     });
 }
 
@@ -1092,29 +1273,51 @@ function applyMasterExpiry() {
         return;
     }
     
-    const selectedCheckboxes = document.querySelectorAll(".product-checkbox:checked");
+    const selectedCheckboxes = Array.from(document.querySelectorAll(".product-checkbox:checked"))
+        .filter(cb => !savedProductDates.has(cb.getAttribute("data-product-id")));
     
     if (selectedCheckboxes.length === 0) {
         alert("Please select at least one product");
         return;
     }
     
+    // Save to Firebase immediately
+    const updates = {};
     selectedCheckboxes.forEach(checkbox => {
         const productId = checkbox.getAttribute("data-product-id");
-        const dateInput = document.querySelector(`.bulk-expiry-input[data-product-id="${productId}"]`);
-        if (dateInput) {
-            dateInput.value = masterDate;
-        }
+        updates[productId] = { expiryDate: masterDate };
+        savedProductDates.add(productId);
+        
+        // Update UI
+        const row = checkbox.closest('tr');
+        row.classList.add('date-saved');
+        const dateInput = row.querySelector('.bulk-expiry-input');
+        dateInput.value = masterDate;
+        dateInput.disabled = true;
+        checkbox.disabled = true;
+        checkbox.checked = false;
+        row.classList.remove('selected');
     });
     
-    triggerSuccess(`Applied date to ${selectedCheckboxes.length} products`);
+    // Batch update Firebase
+    const updatePromises = Object.entries(updates).map(([id, data]) => {
+        return invRef.child(id).update(data);
+    });
+    
+    Promise.all(updatePromises).then(() => {
+        triggerSuccess(`✓ Saved ${selectedCheckboxes.length} expiry dates`);
+        document.getElementById("masterExpiryDate").value = "";
+        checkAndPromptNotificationSettings();
+    }).catch(err => {
+        alert("Error saving expiry dates: " + err.message);
+    });
 }
 function closeBulkExpiryModal() {
     document.getElementById("bulkExpiryModal").style.display = "none";
 }
 
 function saveBulkExpiryDates() {
-    const inputs = document.querySelectorAll(".bulk-expiry-input");
+    const inputs = document.querySelectorAll(".bulk-expiry-input:not(:disabled)");
     let updateCount = 0;
     let updates = {};
     
@@ -1122,14 +1325,15 @@ function saveBulkExpiryDates() {
         const productId = input.getAttribute("data-product-id");
         const expiryDate = input.value;
         
-        if (expiryDate) {
+        // Only save if date is set and not already saved
+        if (expiryDate && !savedProductDates.has(productId)) {
             updates[productId] = { expiryDate: expiryDate };
             updateCount++;
         }
     });
     
     if (updateCount === 0) {
-        alert("Please set at least one expiry date");
+        alert("All dates have been saved already, or no new dates entered");
         return;
     }
     
@@ -1140,13 +1344,12 @@ function saveBulkExpiryDates() {
     
     Promise.all(updatePromises).then(() => {
         closeBulkExpiryModal();
-        triggerSuccess(`Updated ${updateCount} expiry dates`);
+        triggerSuccess(`✓ Saved ${updateCount} remaining expiry dates`);
         checkAndPromptNotificationSettings();
     }).catch(err => {
         alert("Error saving expiry dates: " + err.message);
     });
 }
-
 // --- CALCULATE DAYS UNTIL EXPIRY ---
 function getDaysUntilExpiry(expiryDate) {
     if (!expiryDate) return null;
@@ -1168,8 +1371,7 @@ function isExpired(expiryDate) {
     return daysUntil !== null && daysUntil < 0;
 }
 
-function isAboutToExpire(expiryDate, quantity) {
-    if (!quantity || quantity < 1) return false; 
+function isAboutToExpire(expiryDate) {
     const daysUntil = getDaysUntilExpiry(expiryDate);
     return daysUntil !== null && daysUntil >= 0 && daysUntil <= notificationDays;
 }
@@ -1191,10 +1393,8 @@ function render() {
         const daysLeft = getDaysUntilExpiry(p.expiryDate);
         
         if (daysLeft < 0) {
-            // Product is expired
             expiryWarning = `<span class="expiry-tag expired">⚠️ EXPIRED</span>`;
-        } else if (isAboutToExpire(p.expiryDate, p.quantity)) {
-            // Product is about to expire
+        } else if (daysLeft >= 0 && daysLeft <= notificationDays) {
             expiryWarning = `<span class="expiry-tag warning">⏰ ${daysLeft}d left</span>`;
             expiringC++;
             if (daysLeft === 0) {
@@ -1226,13 +1426,28 @@ function render() {
   </div>
   <div class="action-buttons">
     <button class="action-text-btn expiry-text-btn ${hasExpiry}" onclick="openExpiryModal('${id}', '${p.name}')" title="${p.expiryDate ? 'Expiry: ' + p.expiryDate : 'Set expiry date'}">
-        Set Expiry Date
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+        Expiry
     </button>
     <button class="action-text-btn decrease-text-btn" onclick="askQuantity('${id}', -1)">
-        Decrease Stock
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Decrease
     </button>
     <button class="action-text-btn restock-text-btn" onclick="askQuantity('${id}', 1)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
         Restock
+    </button>
+    <button class="action-text-btn remove-text-btn" onclick="handleManualDelete('${id}', '${p.name}')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+        </svg>
+        Remove
     </button>
   </div>
 </div>`;
