@@ -42,6 +42,35 @@
 #createHubCard:hover img.hub-icon {
     transform: scale(1.1) rotate(-2deg);
 }
+    #createHubCard {
+    display: flex;
+    flex-direction: column; 
+    align-items: center;    
+    justify-content: center;
+    text-align: center;     
+    padding: 20px;
+    width: 100%;           
+    box-sizing: border-box; 
+}
+
+.hub-icon {
+    width: 60px;            
+    height: auto;
+    margin-bottom: 15px;    
+    display: block;
+    flex-shrink: 0;         
+}
+
+#createHubCard h2 {
+    margin: 10px 0;
+    font-size: 1.5rem;      
+}
+
+#createHubCard p {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
     /* MODERN 5-BOX GRID */
     .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
 
@@ -110,14 +139,14 @@
 <div id="createHubCard">
     <img src="shop.svg" alt="Shop" class="hub-icon">
     <h2>Initialize Business Hub</h2>
-    <p>Launch your professional ecosystem and grow your Business with ScaleVest Brain</p>
+    <p>Launch your ecosystem and grow your Business with ScaleVest</p>
 </div>
 
 <div id="nameModal">
     <div class="modal-box">
         <h3>Workspace Name</h3>
         <input id="businessNameInput" placeholder="e.g. Nexus Corp">
-        <button onclick="saveBusinessName()">Launch Dashboard</button>
+        <button onclick="saveBusinessName()">Launch Hub</button>
     </div>
 </div>
 
@@ -237,6 +266,7 @@ auth.onAuthStateChanged(user => {
 
 </body>
 </html>
+
 
 
 
