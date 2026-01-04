@@ -1732,7 +1732,10 @@ box-sizing: border-box;
 <button class="control-toggle-btn" onclick="toggleControls()">
     <i class="fas fa-cog"></i> Digital Controls
 </button>
-
+    <a href="mainbusinesshub.html" style="background: rgba(15, 15, 35, 0.9); border: 2px solid var(--neon-primary); color: var(--neon-primary); padding: 12px 20px; border-radius: 10px; text-decoration: none; font-weight: bold; display: flex; align-items: center; gap: 8px; font-size: 14px; white-space: nowrap;">
+        <i class="fas fa-arrow-left"></i> Back
+    </a>
+</div>
 <!-- Top Right: Leaderboard + Back Button -->
 <div style="position: fixed; top: 10px; right: 10px; display: flex; gap: 10px; align-items: flex-start; z-index: 900;">
     <div class="inventory-leaderboard" id="outOfStockPanel" style="margin: 0;">
@@ -1740,10 +1743,6 @@ box-sizing: border-box;
         <div id="oosList"></div>
     </div>
     
-    <a href="mainbusinesshub.html" style="background: rgba(15, 15, 35, 0.9); border: 2px solid var(--neon-primary); color: var(--neon-primary); padding: 12px 20px; border-radius: 10px; text-decoration: none; font-weight: bold; display: flex; align-items: center; gap: 8px; font-size: 14px; white-space: nowrap;">
-        <i class="fas fa-arrow-left"></i> Back
-    </a>
-</div>
 <div class="controls" id="controlsPanel">
     <h3>
         <span>🎮 Digital Controls</span>
@@ -2188,7 +2187,7 @@ node.style.transform = `translate(${xPosition}px, ${yPosition}px) translateZ(${f
 node.style.width = '80px';
 node.style.height = '80px';
 node.style.transformStyle = 'preserve-3d';
-node.style.pointerEvents = 'auto';node.style.width = '80px';
+node.style.pointerEvents = 'auto';
 node.style.height = '80px';
 
 
