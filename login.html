@@ -375,7 +375,7 @@ async function emailSignup() {
   try {
     await auth.createUserWithEmailAndPassword(email, password);
     // Redirect immediately without sending verification email
-    window.location.href = "mainbusinesshub.html";
+    window.location.href = "business-side.html";
   } catch (err) {
     isAuthFlowActive = false;
     if (err.code === "auth/email-already-in-use") {
@@ -491,3 +491,4 @@ auth.onAuthStateChanged(user => {
 
 </body>
 </html>
+
