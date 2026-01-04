@@ -60,7 +60,19 @@
         position: relative;
     }
     .box:hover { transform: translateY(-8px); border-color: var(--primary); box-shadow: 0 20px 30px rgba(0,0,0,0.08); }
+.icon-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Ensure the wrapper has a fixed height/width if not already set */
+}
 
+.icon-img {
+    width: 24px;   /* Match your original SVG size */
+    height: 24px;
+    display: block; /* Removes the "baseline" gap below images */
+    object-fit: contain; /* Prevents distortion */
+}
     /* ICON STYLING */
     .icon-wrapper { width: 52px; height: 52px; background: #f8fafc; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; transition: 0.3s; }
     .box:hover .icon-wrapper { background: var(--primary); }
@@ -225,6 +237,7 @@ auth.onAuthStateChanged(user => {
 
 </body>
 </html>
+
 
 
 
