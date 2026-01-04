@@ -2039,6 +2039,7 @@ function fetchUserCurrency() {
 // ============================================
 
 // Check for approaching and overdue deadlines
+// Check for approaching and overdue deadlines
 function checkDeadlines() {
     const today = new Date();
     const tomorrow = new Date(today);
@@ -2051,13 +2052,13 @@ function checkDeadlines() {
     let criticalAlerts = []; // Today's deadlines
 
     // Check Transactions
-db.ref(`${baseRef}/transactions`).once('value', snapshot => {
-    snapshot.forEach(child => {
-        const t = child.val();
-        // Skip completed items
-        if (t.completed) return;
-        
-        if (t.date === tomorrowStr) {
+    db.ref(`${baseRef}/transactions`).once('value', snapshot => {
+        snapshot.forEach(child => {
+            const t = child.val();
+            // Skip completed items
+            if (t.completed) return;
+            
+            if (t.date === tomorrowStr) {
                 urgentAlerts.push({
                     type: 'transaction',
                     icon: 'fa-dollar-sign',
@@ -2077,14 +2078,14 @@ db.ref(`${baseRef}/transactions`).once('value', snapshot => {
         checkOrders();
     });
 
-function checkOrders() {
-    db.ref(`${baseRef}/pendingorders`).once('value', snapshot => {
-        snapshot.forEach(child => {
-            const o = child.val();
-            // Skip completed items
-            if (o.completed) return;
-            
-            if (o.deadline === tomorrowStr) {
+    function checkOrders() {
+        db.ref(`${baseRef}/pendingorders`).once('value', snapshot => {
+            snapshot.forEach(child => {
+                const o = child.val();
+                // Skip completed items
+                if (o.completed) return;
+                
+                if (o.deadline === tomorrowStr) {
                     urgentAlerts.push({
                         type: 'order',
                         icon: 'fa-box-open',
@@ -2105,14 +2106,14 @@ function checkOrders() {
         });
     }
 
-function checkNotes() {
-    db.ref(`${baseRef}/notes`).once('value', snapshot => {
-        snapshot.forEach(child => {
-            const n = child.val();
-            // Skip completed items
-            if (n.completed) return;
-            
-            if (n.date === tomorrowStr) {
+    function checkNotes() {
+        db.ref(`${baseRef}/notes`).once('value', snapshot => {
+            snapshot.forEach(child => {
+                const n = child.val();
+                // Skip completed items
+                if (n.completed) return;
+                
+                if (n.date === tomorrowStr) {
                     urgentAlerts.push({
                         type: 'note',
                         icon: 'fa-sticky-note',
@@ -2169,7 +2170,7 @@ function checkNotes() {
         });
     }
 }
-
+// Display MEGA full-screen alert
 // Display MEGA full-screen alert
 function showMegaAlert(alerts, isCritical) {
     const overlay = document.getElementById('mega-alert-overlay');
@@ -2183,8 +2184,7 @@ function showMegaAlert(alerts, isCritical) {
     // 2. USE 'alerts.length' INSTEAD OF 'urgentItems.length'
     if (alerts.length > 0 && isDismissed !== 'true') {
         overlay.style.display = 'flex';
-        // Note: Ensure alertSound variable is defined globally if used
-        if(typeof alertSound !== 'undefined' && alertSound) alertSound.play();
+        playAlertSound(); // Call the sound function
     } else {
         overlay.style.display = 'none';
         return; // Stop if there's nothing to show
@@ -2216,8 +2216,18 @@ function showMegaAlert(alerts, isCritical) {
         `;
         container.appendChild(item);
     });
-}
-    // Show overlay
+    
+    // Prevent closing by clicking outside (force user to acknowledge)
+    overlay.onclick = (e) => {
+        if (e.target === overlay) {
+            // Shake animation when trying to click outside
+            document.querySelector('.mega-alert-container').style.animation = 'shake 0.5s ease';
+            setTimeout(() => {
+                document.querySelector('.mega-alert-container').style.animation = 'containerPulse 2s ease-in-out infinite';
+            }, 500);
+        }
+    };
+}    // Show overlay
     overlay.style.display = 'flex';
     
     // Play alert sound
@@ -3127,23 +3137,22 @@ async function deleteMember(memberKey) {
 
         // --- PREVIEW FUNCTION ---
 
-function previewDoc(url) {
-    if(!url) return;
-    const contentArea = document.getElementById('preview-content-area');
-    
-    // Clear previous content
-    contentArea.innerHTML = '';
+        function previewDoc(url) {
+            if(!url) return;
+            const contentArea = document.getElementById('preview-content-area');
+            
+            // Clear previous content
+            contentArea.innerHTML = '';
 
-    // Check if it's likely a PDF (Firebase URLs often contain the file extension or metadata)
-    if (url.toLowerCase().includes('.pdf') || url.includes('application%2Fpdf')) {
-        contentArea.innerHTML = `<iframe src="${url}" style="width:100%; height:100%; border:none; border-radius:8px;"></iframe>`;
-    } else {
-        contentArea.innerHTML = `<img src="${url}" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:8px;">`;
-    }
-    
-    document.getElementById('preview-modal').style.display = 'flex';
-}
-
+            // Check if it's likely a PDF (Firebase URLs often contain the file extension or metadata)
+            if (url.toLowerCase().includes('.pdf') || url.includes('application%2Fpdf')) {
+                contentArea.innerHTML = `<iframe src="${url}" style="width:100%; height:100%; border:none; border-radius:8px;"></iframe>`;
+            } else {
+                contentArea.innerHTML = `<img src="${url}" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:8px;">`;
+            }
+            
+            document.getElementById('preview-modal').style.display = 'flex';
+        }
     </script>
 </body>
 </html>
