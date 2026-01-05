@@ -691,51 +691,51 @@
             document.getElementById('financialReports').innerHTML = html;
         }
 
-        // Gemini AI Integration via ScaleVest CFO API
-        async function getGeminiAnalysis(prompt) {
-            try {
-               // Around line 538 in your code:
-const response = await fetch('https://ai-inventory-pro-sigma.vercel.app/api/gemini', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-body: JSON.stringify({ 
-    messages: [
-        { 
-            role: 'system', 
-            content: `You are the ScaleVest AI CFO. Use this business data for context if needed: ${JSON.stringify(firebaseData)}` 
-        },
-        { 
-            role: 'user', 
-            content: prompt // This is the "Hi" or "Hello" you typed
-        }
-    ] 
-})
+        // CFO.html line 700
+async function getGeminiAnalysis(prompt) {
+    try {
+        const VERCEL_URL = 'https://ai-inventory-pro-sigma.vercel.app/api/gemini';
 
-                if (response.ok) {
-                    console.log("SCALEVEST CFO LIVE");
-                    const reader = response.body.getReader();
-                    const decoder = new TextDecoder();
-                    let fullText = '';
-                    
-                    while (true) {
-                        const { done, value } = await reader.read();
-                        if (done) break;
-                        
-                        const chunk = decoder.decode(value, { stream: true });
-                        const cleanChunk = chunk.replace(/0:\"/g, '').replace(/\"/g, '');
-                        fullText += cleanChunk;
+        const response = await fetch(VERCEL_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                messages: [
+                    { 
+                        role: 'system', 
+                        content: `You are the ScaleVest AI CFO. Business data: ${JSON.stringify(firebaseData)}` 
+                    },
+                    { 
+                        role: 'user', 
+                        content: prompt 
                     }
-                    
-                    return fullText || 'Analysis unavailable';
-                } else {
-                    console.error("Connection failed:", response.statusText);
-                    return 'CFO is currently offline. Please try again.';
-                }
-            } catch (error) {
-                console.error('Network Error:', error);
-                return 'Error connecting to ScaleVest CFO.';
+                ]
+            })
+        });
+
+        if (response.ok) {
+            console.log("SCALEVEST CFO LIVE");
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let fullText = '';
+            
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                
+                const chunk = decoder.decode(value, { stream: true });
+                const cleanChunk = chunk.replace(/0:\"/g, '').replace(/\"/g, '');
+                fullText += cleanChunk;
             }
+            return fullText;
+        } else {
+            return 'CFO is offline.';
         }
+    } catch (error) {
+        console.error('Network Error:', error);
+        return 'Error connecting to CFO.';
+    }
+}
 
         // Inventory Modal
         window.showInventoryModal = async function() {
