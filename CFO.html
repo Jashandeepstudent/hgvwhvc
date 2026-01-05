@@ -839,7 +839,13 @@ onAuthStateChanged(auth, (user) => {
         runOnboarding(user.uid);
         fetchAnalytics(user.uid); 
         fetchRevenuePulse(user.uid);
-        setupProductAnalysisNavigation(user.uid); 
+        setupProductAnalysisNavigation(user.uid);
+        fetchExpiryAlerts(user.uid); 
+        
+        // Refresh expiry alerts every hour
+        setInterval(() => {
+            fetchExpiryAlerts(user.uid);
+        }, 3600000); 
     } else {
         window.location.href = "login.html";
     }
@@ -968,25 +974,31 @@ async function fetchProductAnalysis(userId) {
                 }
             });
             
-            // Determine status
-            let status = "Stable";
-            let statusColor = "#94a3b8";
-            
-            if (weekSold > 0) {
-                if (weekSold >= totalSold * 0.5) {
-                    status = "🔥 Hot Seller";
-                    statusColor = "#4ade80";
-                } else if (weekSold >= totalSold * 0.3) {
-                    status = "📈 Growing";
-                    statusColor = "#3b82f6";
-                }
-            } else if (totalSold === 0) {
-                status = "⚠️ No Sales Yet";
-                statusColor = "#fb923c";
-            } else {
-                status = "😴 Slow This Week";
-                statusColor = "#94a3b8";
-            }
+let status = "Stable";
+let statusColor = "#94a3b8";
+
+if (totalSold === 0) {
+    status = "⚠️ No Sales Yet";
+    statusColor = "#fb923c";
+} else if (weekSold === 0) {
+    status = "😴 Slow This Week";
+    statusColor = "#94a3b8";
+} else if (weekSold >= 10) {
+    // If sold 10+ units this week, it's hot
+    status = "🔥 Hot Seller";
+    statusColor = "#4ade80";
+} else if (weekSold >= 5) {
+    // If sold 5-9 units this week, it's growing
+    status = "📈 Growing";
+    statusColor = "#3b82f6";
+} else if (weekSold >= totalSold * 0.5) {
+    // If this week's sales are 50%+ of all-time, it's trending up
+    status = "📈 Growing";
+    statusColor = "#3b82f6";
+} else {
+    status = "Stable";
+    statusColor = "#94a3b8";
+}
             
             products.push({
                 id: productId,
@@ -1103,8 +1115,126 @@ function setupProductAnalysisNavigation(userId) {
     });
 }
 
+// Fetch and display expiry alerts
+async function fetchExpiryAlerts(userId) {
+    const dbRef = ref(getDatabase());
+    
+    try {
+        // Fetch notification preference (default 3 days if not set)
+        const notificationSnapshot = await get(child(dbRef, `BusinessOwners/${userId}/__expiryDateNotification`));
+        const notificationDays = notificationSnapshot.exists() ? parseInt(notificationSnapshot.val()) : 3;
+        
+        // Fetch inventory with expiry dates
+        const inventorySnapshot = await get(child(dbRef, `Businesses/${userId}/inventory`));
+        if (!inventorySnapshot.exists()) return;
+        
+        const inventory = inventorySnapshot.val();
+        const now = new Date();
+        const expiringProducts = [];
+        
+        // Check each product for expiry
+        for (const [productId, productData] of Object.entries(inventory)) {
+            if (productData.expiryDate) {
+                const expiryDate = new Date(productData.expiryDate);
+                const daysUntilExpiry = Math.ceil((expiryDate - now) / (1000 * 60 * 60 * 24));
+                
+                // If expires within notification window
+                if (daysUntilExpiry <= notificationDays && daysUntilExpiry >= 0) {
+                    expiringProducts.push({
+                        name: productData.name || "Unknown Product",
+                        daysUntilExpiry,
+                        quantity: productData.quantity || 0,
+                        unit: productData.unit || "units"
+                    });
+                }
+            }
+        }
+        
+        // Sort by urgency (closest expiry first)
+        expiringProducts.sort((a, b) => a.daysUntilExpiry - b.daysUntilExpiry);
+        
+        // Update UI
+        updateExpiryAlertCard(expiringProducts);
+        updateCFOAdviceForExpiry(expiringProducts);
+        
+    } catch (error) {
+        console.error("Error fetching expiry alerts:", error);
+    }
+}
 
+function updateExpiryAlertCard(expiringProducts) {
+    const alertCard = document.querySelector('.alert-card');
+    const alertTitle = alertCard.querySelector('.alert-title');
+    const alertText = alertCard.querySelector('.alert-text');
+    const launchBtn = alertCard.querySelector('.launch-btn');
+    
+    if (expiringProducts.length === 0) {
+        alertTitle.innerText = "ALL CLEAR ✓";
+        alertText.innerText = "No products expiring soon";
+        launchBtn.style.display = "none";
+        alertCard.style.background = "linear-gradient(135deg, rgba(74, 222, 128, 0.12) 0%, rgba(74, 222, 128, 0.02) 100%)";
+        alertCard.style.borderColor = "rgba(74, 222, 128, 0.4)";
+        alertCard.style.animation = "none";
+        return;
+    }
+    
+    // Show the most urgent product
+    const urgent = expiringProducts[0];
+    const timeText = urgent.daysUntilExpiry === 0 ? "TODAY!" : 
+                     urgent.daysUntilExpiry === 1 ? "24 hours" : 
+                     `${urgent.daysUntilExpiry} days`;
+    
+    alertTitle.innerText = "⚠️ EXPIRY ALERT";
+    alertText.innerHTML = `<strong>${urgent.name}</strong> (Expires in ${timeText})<br><span style="font-size: 14px; opacity: 0.8;">${urgent.quantity} ${urgent.unit} in stock</span>`;
+    launchBtn.style.display = "block";
+    launchBtn.innerText = urgent.daysUntilExpiry === 0 ? "URGENT: FLASH SALE NOW!" : "LAUNCH FLASH SALE";
+    
+    // If multiple products expiring
+    if (expiringProducts.length > 1) {
+        alertText.innerHTML += `<div style="margin-top: 10px; font-size: 12px; color: rgba(255,255,255,0.6);">+ ${expiringProducts.length - 1} more product(s) expiring soon</div>`;
+    }
+    
+    // Restore alert styling
+    alertCard.style.background = "linear-gradient(135deg, rgba(251, 146, 60, 0.12) 0%, rgba(251, 146, 60, 0.02) 100%)";
+    alertCard.style.borderColor = "rgba(251, 146, 60, 0.4)";
+    alertCard.style.animation = "alertPulse 3s infinite";
+}
 
+function updateCFOAdviceForExpiry(expiringProducts) {
+    const adviceCard = document.querySelector('.advice-card .advice-text');
+    
+    if (expiringProducts.length === 0) {
+        // Keep default advice if no expiry issues
+        return;
+    }
+    
+    const urgent = expiringProducts[0];
+    const productName = urgent.name;
+    const daysLeft = urgent.daysUntilExpiry;
+    
+    let advice = "";
+    
+    if (daysLeft === 0) {
+        advice = `🚨 CRITICAL: ${productName} expires TODAY! Launch an immediate flash sale or donate to avoid loss. Consider bundling with popular items.`;
+    } else if (daysLeft === 1) {
+        advice = `⚠️ URGENT: ${productName} expires in 24 hours! Start a flash sale NOW with 30-50% discount to move inventory quickly.`;
+    } else if (daysLeft <= 2) {
+        advice = `⏰ ALERT: ${productName} expires in ${daysLeft} days. Recommend placing it at store front, offering bundle deals, or running a limited-time promotion.`;
+    } else {
+        advice = `📢 Notice: ${productName} is expiring in ${daysLeft} days. Consider strategic placement and promotional planning to ensure sales before expiry.`;
+    }
+    
+    if (expiringProducts.length > 1) {
+        advice += ` Note: ${expiringProducts.length} products need attention.`;
+    }
+    
+    adviceCard.innerText = advice;
+}
+
+function launchFlashSale() {
+    alert("Flash Sale feature coming soon! This will allow you to create instant discount campaigns.");
+    // You can build this feature later to create automatic discounts
+}
 async function askCFO(userInput) {
     const adviceTextEl = document.querySelector('.advice-text');
     
@@ -1304,7 +1434,7 @@ async function askCFO(userInput) {
             <div class="card alert-card">
                 <div class="card-title alert-title">EXPIRY ALERT</div>
                 <div class="alert-text">Milk Powder (Expires in 48h)</div>
-                <button class="launch-btn">LAUNCH FLASH SALE</button>
+                <button class="launch-btn" onclick="launchFlashSale()">LAUNCH FLASH SALE</button>
             </div>
 
            <div class="card momentum-card" id="product-analysis-card" style="cursor: pointer;">
@@ -1314,6 +1444,7 @@ async function askCFO(userInput) {
         <div style="font-size: 16px; color: rgba(255,255,255,0.7);">Click to view detailed analysis</div>
     </div>
 </div>
+
 
             <div class="card advice-card">
                 <div class="card-title">CFO ADVICE</div>
@@ -1415,7 +1546,7 @@ document.addEventListener("DOMContentLoaded", () => {
 <div id="product-analysis-page" style="display: none; position: fixed; inset: 0; background: #0a0e27; z-index: 10000; overflow-y: auto; padding: 30px;">
     <div class="container">
         <button id="back-btn" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); padding: 12px 24px; border-radius: 12px; color: white; cursor: pointer; margin-bottom: 20px; font-size: 14px; display: flex; align-items: center; gap: 8px;">
-            ← Back to Dashboard
+            ← Back 
         </button>
         
         <div style="text-align: center; margin-bottom: 40px;">
