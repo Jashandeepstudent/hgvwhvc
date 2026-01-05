@@ -1901,12 +1901,16 @@ import { getDatabase, ref, onValue, update, get } from 'https://www.gstatic.com/
         let expiryNotificationDays = 3; 
         let expiryAlerts = []; 
 
-        const iconMap = {
+const iconMap = {
             'apple': '🍎', 'bread': '🍞', 'milk': '🥛', 'fish': '🐟', 'salmon': '🐟',
             'coffee': '☕', 'yogurt': '🥣', 'honey': '🍯', 'avocado': '🥑',
             'pasta': '🍝', 'oil': '🫒', 'cheese': '🧀', 'egg': '🥚', 'tomato': '🍅',
             'carrot': '🥕', 'banana': '🍌', 'orange': '🍊', 'grape': '🍇', 'strawberry': '🍓'
         };
+
+        // Exchange Mode Variables (for future features)
+        let exchangeModeActive = false;
+        let grabbedProduct = null;
 
         // Initialize multiple floors dynamically
         function renderFloors(numFloors) {
