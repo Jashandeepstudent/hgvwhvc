@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ScaleVt Dashboard</title>
+    <title>ScaleVest Dashboard</title>
     <style>
         * {
             margin: 0;
@@ -650,6 +650,15 @@ function updateProductUI(analytics) {
         document.getElementById('analytics-reason').innerText = `Momentum: ${analytics.trendingSelling.name} is rising fast!`;
     }
 }
+// --- Auth State Logic ---
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        runOnboarding(user.uid);
+        fetchAnalytics(user.uid); 
+    } else {
+        window.location.href = "login.html";
+    }
+});
   async function runOnboarding(userId) {
     const nameSpan = document.getElementById('user-name-display');
     const welcomeOverlay = document.getElementById('onboarding-overlay');
@@ -1016,15 +1025,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
-// --- Auth State Logic ---
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        runOnboarding(user.uid);
-        fetchAnalytics(user.uid); 
-    } else {
-        window.location.href = "login.html";
-    }
-});
+
 </script>
 
 </body>
