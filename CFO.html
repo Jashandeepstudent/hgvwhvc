@@ -1199,7 +1199,9 @@ async function askCFO(userInput) {
 document.addEventListener("DOMContentLoaded", () => {
     const termsCheck = document.getElementById("terms-check");
     const startBtn = document.getElementById("start-cfo-btn");
+    const onboardingOverlay = document.getElementById("onboarding-container"); // Change this to your actual popup ID
 
+    // Toggle button state based on checkbox
     termsCheck.addEventListener("change", () => {
         if (termsCheck.checked) {
             startBtn.style.opacity = "1";
@@ -1213,8 +1215,26 @@ document.addEventListener("DOMContentLoaded", () => {
             startBtn.classList.remove("active");
         }
     });
-});
 
+    // START APP LOGIC
+    startBtn.addEventListener("click", () => {
+        if (!startBtn.disabled) {
+            console.log("Starting App...");
+            
+            // 1. Hide the popup
+            if (onboardingOverlay) {
+                onboardingOverlay.style.display = "none";
+            }
+
+            // 2. Fetch User Data (Assuming you are logged in)
+            const user = auth.currentUser;
+            if (user) {
+                fetchAnalytics(user.uid);
+                fetchRevenuePulse(user.uid);
+            }
+        }
+    });
+});
 
 </script>
 
