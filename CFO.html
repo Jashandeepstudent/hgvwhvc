@@ -469,30 +469,46 @@
     }
 
         // Analyze Products
-function analyzeProducts() {
-    // Your data has IDs like "-Oi9XM..." directly inside inventory
-    const inventory = firebaseData.inventory || {};
-    const analytics = firebaseData.analytics || {}; 
-    
-    let mostSelling = { name: 'N/A', sales: 0 };
+        function analyzeProducts() {
+            const analytics = firebaseData.analytics || {};
+            const inventory = firebaseData.inventory || {};
+            
+            let mostSelling = { name: 'N/A', sales: 0 };
+            let leastSelling = { name: 'N/A', sales: Infinity };
+            let trending = { name: 'N/A', sales: 0 };
 
-    Object.entries(inventory).forEach(([id, product]) => {
-        // Look for recentSold inside the analytics node using the product ID
-        const salesData = analytics[id] || {};
-        const sales = salesData.recentSold || 0;
-        
-        if (sales > mostSelling.sales) {
-            mostSelling = { name: product.name, sales };
+            Object.entries(analytics).forEach(([id, data]) => {
+                const sales = data.recentSold || 0;
+                const product = inventory[id];
+                
+                if (product) {
+                    if (sales > mostSelling.sales) {
+                        mostSelling = { name: product.name, sales };
+                    }
+                    if (sales < leastSelling.sales && sales > 0) {
+                        leastSelling = { name: product.name, sales };
+                    }
+                    if (sales > 20) {
+                        trending = { name: product.name, sales };
+                    }
+                }
+            });
+
+            document.getElementById('productAnalysis').innerHTML = `
+                <div class="product-item">
+                    <div class="product-name">🏆 Most Selling</div>
+                    <div class="product-stat">${mostSelling.name} - ${mostSelling.sales} units sold</div>
+                </div>
+                <div class="product-item">
+                    <div class="product-name">📉 Least Selling</div>
+                    <div class="product-stat">${leastSelling.name === 'N/A' ? 'N/A' : leastSelling.name + ' - ' + leastSelling.sales + ' units sold'}</div>
+                </div>
+                <div class="product-item">
+                    <div class="product-name">🔥 Trending</div>
+                    <div class="product-stat">${trending.name} - ${trending.sales} units sold</div>
+                </div>
+            `;
         }
-    });
-
-    document.getElementById('productAnalysis').innerHTML = `
-        <div class="product-item">
-            <div class="product-name">🏆 Most Selling</div>
-            <div class="product-stat">${mostSelling.name} - ${mostSelling.sales} units sold</div>
-        </div>
-    `;
-}
 
         // Analyze Financials with AI
         async function analyzeFinancials() {
@@ -772,13 +788,14 @@ function analyzeProducts() {
             try {
                 const context = `You are a CFO AI assistant for ScaleVest. Current business data: ${JSON.stringify(firebaseData, null, 2)}. User question: ${message}. Provide actionable financial advice.`;
                 
-                const response = await fetch('/api/cfoscalevest', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        messages: [{ role: 'user', content: context }]
-                    })
-                });
+// Around line 538 in your code:
+const response = await fetch('https://ai-inventory-pro-sigma.vercel.app/api/gemini', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ 
+        messages: [{ role: 'user', content: `Analyze this data: ${JSON.stringify(businessData)}` }] 
+    })
+});
 
                 if (response.ok) {
                     console.log("SCALEVEST CFO LIVE");
