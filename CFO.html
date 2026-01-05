@@ -272,11 +272,6 @@
             margin-top: 20px;
         }
 
-        .product[style*="grid-column: span 2"] {
-            background: linear-gradient(135deg, rgba(74, 222, 128, 0.08) 0%, rgba(74, 222, 128, 0.02) 100%);
-            border: 1px solid rgba(74, 222, 128, 0.2);
-        }
-
         .product {
             text-align: center;
             padding: 20px;
@@ -619,15 +614,45 @@ const firebaseConfig = {
   const db = getDatabase(app);
 
   // --- Auth State Logic ---
-  onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, (user) => {
     if (user) {
-      // User is signed in, run the onboarding flow
-      runOnboarding(user.uid);
+        // User is signed in, fetch their specific business analytics
+        const db = getDatabase();
+        const analyticsPath = `Businesses/${user.uid}/analytics`;
+        const analyticsRef = ref(db, analyticsPath);
+
+        onValue(analyticsRef, (snapshot) => {
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+
+                // 1. Update MOST SELLING
+                const most = data.mostSelling;
+                document.getElementById('most-selling-name').innerText = most?.name || "No Data";
+                document.getElementById('most-selling-stat').innerText = `${most?.totalSold || 0} Total Sold`;
+
+                // 2. Update TRENDING
+                const trending = data.trendingSelling;
+                document.getElementById('trending-name').innerText = trending?.name || "No Data";
+                document.getElementById('trending-stat').innerText = `Recently: ${trending?.recentSold || 0}`;
+
+                // 3. Update LEAST SELLING
+                const least = data.leastSelling;
+                document.getElementById('least-selling-name').innerText = least?.name || "No Data";
+                document.getElementById('least-selling-stat').innerText = `Only ${least?.totalSold || 0} Sold`;
+
+                // 4. Update the Insight Reason
+                const reasonEl = document.getElementById('analytics-reason');
+                if (least) {
+                    reasonEl.innerText = `Reason: ${least.name} has low traction compared to ${most?.name}.`;
+                }
+            }
+        });
+
+        runOnboarding(user.uid);
     } else {
-      // No user is signed in, redirect to login
-      window.location.href = "login.html";
+        window.location.href = "login.html";
     }
-  });
+});
 
   async function runOnboarding(userId) {
     const nameSpan = document.getElementById('user-name-display');
@@ -647,7 +672,7 @@ const firebaseConfig = {
       // 2. Check if CFO is already named
       const cfoSnapshot = await get(ref(db, `BusinessOwners/${userId}/CFO/name`));
       
-if (cfoSnapshot.exists()) {
+      if (cfoSnapshot.exists()) {
         // Skip onboarding if already set
         welcomeOverlay.style.display = "none";
         displayCFOName(cfoSnapshot.val());
@@ -670,9 +695,8 @@ if (cfoSnapshot.exists()) {
             trialStarted: new Date().toISOString()
         });
 
-displayCFOName(cfoName);
+        displayCFOName(cfoName);
         cfoPopup.style.display = "none";
-        loadProductAnalytics(userId);
     });
   }
 
@@ -722,10 +746,13 @@ async function askCFO(userInput) {
         });
 
         if (response.ok) {
+            // Print the success message to the console as requested
             console.log("SCALEVEST CFO LIVE");
+
+            // Handle the streaming response
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
-            adviceTextEl.innerText = "";
+            adviceTextEl.innerText = ""; // Clear existing placeholder text
 
             while (true) {
                 const { done, value } = await reader.read();
@@ -742,76 +769,6 @@ async function askCFO(userInput) {
     } catch (error) {
         console.error("Network Error:", error);
         adviceTextEl.innerText = "Error connecting to ScaleVest CFO.";
-    }
-}
-
-async function loadProductAnalytics(userId) {
-    try {
-        const analyticsSnapshot = await get(ref(db, `Businesses/${userId}/analytics`));
-        
-        if (!analyticsSnapshot.exists()) {
-            console.log("No analytics data found");
-            return;
-        }
-
-        const analytics = analyticsSnapshot.val();
-        const mostSelling = analytics.mostSelling || {};
-        const leastSelling = analytics.leastSelling || {};
-        const trending = analytics.trending || {};
-
-        updateProductsDisplay(mostSelling, leastSelling, trending);
-    } catch (error) {
-        console.error("Error loading product analytics:", error);
-    }
-}
-
-function updateProductsDisplay(mostSelling, leastSelling, trending) {
-    const productsContainer = document.querySelector('.products');
-    
-    const getProductEmoji = (name) => {
-        const nameLower = (name || '').toLowerCase();
-        if (nameLower.includes('boot') || nameLower.includes('shoe')) return '👢';
-        if (nameLower.includes('sandal')) return '👡';
-        if (nameLower.includes('spray') || nameLower.includes('water')) return '💧';
-        if (nameLower.includes('milk') || nameLower.includes('powder')) return '🥛';
-        if (nameLower.includes('electronic')) return '⚡';
-        if (nameLower.includes('leather')) return '👜';
-        return '📦';
-    };
-
-    productsContainer.innerHTML = `
-        <div class="product">
-            <div class="product-header">
-                <span class="star-badge">⭐</span>
-                <span>THE STAR</span>
-            </div>
-            <div class="product-icon">${getProductEmoji(mostSelling.productName)}</div>
-            <div class="product-name">${mostSelling.productName || 'No Data'}</div>
-            <div class="product-badge">(${mostSelling.totalSales || 0} Sales)</div>
-        </div>
-        <div class="product">
-            <div class="product-header">
-                <span class="ghost-badge">⭐</span>
-                <span>THE GHOST</span>
-            </div>
-            <div class="product-icon" style="opacity: 0.3;">👻</div>
-            <div class="product-name">${leastSelling.productName || 'No Data'}</div>
-            <div class="product-badge">(${leastSelling.totalSales || 0} Sales)</div>
-        </div>
-        <div class="product" style="grid-column: span 2;">
-            <div class="product-header">
-                <span style="color: #4ade80; font-size: 16px;">📈</span>
-                <span>TRENDING</span>
-            </div>
-            <div class="product-icon">${getProductEmoji(trending.productName)}</div>
-            <div class="product-name">${trending.productName || 'No Data'}</div>
-            <div class="product-badge" style="color: #4ade80;">(+${trending.growthPercentage || 0}% Growth)</div>
-        </div>
-    `;
-
-    const reasonEl = document.querySelector('.reason');
-    if (reasonEl) {
-        reasonEl.innerText = `Reason: ${leastSelling.reason || 'Low Demand'}`;
     }
 }
 </script>
@@ -877,17 +834,33 @@ function updateProductsDisplay(mostSelling, leastSelling, trending) {
                 </div>
             </div>
 
-            <div class="card products-card">
-    <div class="bulk-ship">BULK SHIP</div>
-    <div class="card-title" style="margin-top: 30px;">PRODUCTS</div>
+<div class="card products-card">
+    <div class="bulk-ship">BUSINESS ANALYTICS</div>
+    <div class="card-title" style="margin-top: 30px;">PERFORMANCE</div>
+    
     <div class="products">
-        <!-- Products will load dynamically from Firebase -->
         <div class="product">
-            <div class="product-icon">⏳</div>
-            <div class="product-name">Loading...</div>
+            <div class="product-header">🏆 <span>MOST SELLING</span></div>
+            <div class="product-icon">🔥</div>
+            <div class="product-name" id="most-selling-name">...</div>
+            <div class="product-badge" id="most-selling-stat">0 Sold</div>
+        </div>
+
+        <div class="product">
+            <div class="product-header">⚡ <span>TRENDING</span></div>
+            <div class="product-icon">📈</div>
+            <div class="product-name" id="trending-name">...</div>
+            <div class="product-badge" id="trending-stat">0 Recent</div>
+        </div>
+
+        <div class="product">
+            <div class="product-header">👻 <span>LEAST SELLING</span></div>
+            <div class="product-icon" style="opacity: 0.3;">❄️</div>
+            <div class="product-name" id="least-selling-name">...</div>
+            <div class="product-badge" id="least-selling-stat">0 Sold</div>
         </div>
     </div>
-    <div class="reason">Loading analytics data...</div>
+    <div class="reason" id="analytics-reason">Reason: Loading...</div>
 </div>
 
             <div class="card status-card">
