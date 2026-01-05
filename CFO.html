@@ -841,12 +841,14 @@ onAuthStateChanged(auth, (user) => {
         fetchRevenuePulse(user.uid);
         setupProductAnalysisNavigation(user.uid);
         fetchExpiryAlerts(user.uid);
-        fetchPricingAnalysis(user.uid); 
+        fetchPricingAnalysis(user.uid);
+        fetchStockRadar(user.uid); 
         
-        // Refresh alerts every hour
+        // Refresh all alerts every hour
         setInterval(() => {
             fetchExpiryAlerts(user.uid);
-            fetchPricingAnalysis(user.uid); 
+            fetchPricingAnalysis(user.uid);
+            fetchStockRadar(user.uid); 
         }, 3600000); // 1 hour
     } else {
         window.location.href = "login.html";
@@ -1346,6 +1348,8 @@ function updatePricingCard(prices, issues) {
     const momentumCard = document.querySelector('.momentum-card');
     const momentumText = momentumCard.querySelector('.momentum-text');
     const priceWarning = momentumCard.querySelector('.price-warning');
+    const svgPath = momentumCard.querySelector('path[stroke="#3b82f6"]');
+    const svgFillPath = momentumCard.querySelector('path[fill*="gradient1"]');
     
     if (!prices || Object.keys(prices).length === 0) {
         momentumText.innerHTML = "No Pricing Data";
@@ -1359,6 +1363,11 @@ function updatePricingCard(prices, issues) {
         momentumText.style.color = "#4ade80";
         priceWarning.innerHTML = "✓ All prices are optimized";
         priceWarning.style.color = "rgba(74, 222, 128, 0.8)";
+        
+        // Update chart to show upward trend (GREEN)
+        svgPath.setAttribute("stroke", "#4ade80");
+        svgPath.setAttribute("d", "M 0 70 L 50 65 L 100 58 L 150 52 L 200 40 L 250 25 L 300 15");
+        svgFillPath.setAttribute("d", "M 0 70 L 50 65 L 100 58 L 150 52 L 200 40 L 250 25 L 300 15 L 300 80 L 0 80 Z");
         return;
     }
     
@@ -1372,59 +1381,262 @@ function updatePricingCard(prices, issues) {
         momentumText.style.color = "#f87171";
         priceWarning.innerHTML = `🚨 Selling below cost! Loss: $${criticalIssue.loss.toFixed(2)} per unit`;
         priceWarning.style.color = "rgba(248, 113, 113, 0.9)";
+        
+        // Update chart to show DOWNWARD trend (RED)
+        svgPath.setAttribute("stroke", "#f87171");
+        svgPath.setAttribute("d", "M 0 15 L 50 25 L 100 40 L 150 48 L 200 58 L 250 68 L 300 75");
+        svgFillPath.setAttribute("d", "M 0 15 L 50 25 L 100 40 L 150 48 L 200 58 L 250 68 L 300 75 L 300 80 L 0 80 Z");
+        
     } else if (criticalIssue.type === "too_high") {
         momentumText.innerHTML = `${criticalIssue.productName}`;
         momentumText.style.color = "#fb923c";
         priceWarning.innerHTML = `⚠️ Price too high (${criticalIssue.marginPercent}% margin) - May hurt sales`;
         priceWarning.style.color = "rgba(251, 146, 60, 0.8)";
+        
+        // Update chart to show DOWNWARD trend (ORANGE)
+        svgPath.setAttribute("stroke", "#fb923c");
+        svgPath.setAttribute("d", "M 0 20 L 50 28 L 100 42 L 150 50 L 200 60 L 250 67 L 300 73");
+        svgFillPath.setAttribute("d", "M 0 20 L 50 28 L 100 42 L 150 50 L 200 60 L 250 67 L 300 73 L 300 80 L 0 80 Z");
+        
     } else if (criticalIssue.type === "low_margin") {
         momentumText.innerHTML = `${criticalIssue.productName}`;
         momentumText.style.color = "#3b82f6";
         priceWarning.innerHTML = `💡 Low margin (${criticalIssue.marginPercent}%) - Consider increasing`;
         priceWarning.style.color = "rgba(59, 130, 246, 0.8)";
+        
+        // Update chart to show FLAT trend (BLUE)
+        svgPath.setAttribute("stroke", "#3b82f6");
+        svgPath.setAttribute("d", "M 0 50 L 50 52 L 100 51 L 150 53 L 200 52 L 250 54 L 300 53");
+        svgFillPath.setAttribute("d", "M 0 50 L 50 52 L 100 51 L 150 53 L 200 52 L 250 54 L 300 53 L 300 80 L 0 80 Z");
+        
     } else {
         momentumText.innerHTML = "Pricing Issues Detected";
         priceWarning.innerHTML = `⚠️ ${issues.length} product(s) need price setup`;
         priceWarning.style.color = "rgba(251, 146, 60, 0.8)";
     }
 }
-
 function updateCFOAdviceForPricing(pricingIssues) {
+    // Store pricing issues globally
+    window.pricingIssues = pricingIssues;
+    updateMasterCFOAdvice();
+}
+
+function updateCFOAdviceForExpiry(expiringProducts) {
+    // Store expiry issues globally
+    window.expiringProducts = expiringProducts;
+    updateMasterCFOAdvice();
+}
+
+function updateCFOAdviceForStock(lowStockProducts) {
+    // Store stock issues globally
+    window.lowStockAlerts = lowStockProducts;
+    updateMasterCFOAdvice();
+}
+
+// MASTER CFO ADVICE - Combines all alerts
+function updateMasterCFOAdvice() {
     const adviceCard = document.querySelector('.advice-card .advice-text');
+    const expiringProducts = window.expiringProducts || [];
+    const pricingIssues = window.pricingIssues || [];
+    const lowStockAlerts = window.lowStockAlerts || [];
     
-    if (pricingIssues.length === 0) {
-        // Check if there's already an expiry warning
-        if (!adviceCard.innerText.includes("expires") && !adviceCard.innerText.includes("CRITICAL")) {
-            adviceCard.innerHTML = "💡 <strong>Tip:</strong> Always set your selling and cost prices in Sales Flow to help ScaleVest CFO track your financial reports and provide better insights.";
-        }
-        return;
+    let adviceHTML = "";
+    let alertCount = 0;
+    
+    // 1. CRITICAL EXPIRY ALERTS (Highest Priority)
+    const criticalExpiry = expiringProducts.filter(p => p.daysUntilExpiry <= 1);
+    if (criticalExpiry.length > 0) {
+        const product = criticalExpiry[0];
+        adviceHTML += `🚨 <strong>CRITICAL EXPIRY:</strong> ${product.name} expires ${product.daysUntilExpiry === 0 ? 'TODAY' : 'in 24 hours'}! Launch flash sale immediately.<br><br>`;
+        alertCount++;
     }
     
-    let adviceHTML = "<strong>Pricing Alerts:</strong><br><br>";
+    // 2. LOSS-MAKING PRICES (Second Priority)
+    const lossProducts = pricingIssues.filter(p => p.type === "loss");
+    if (lossProducts.length > 0 && alertCount < 3) {
+        const product = lossProducts[0];
+        adviceHTML += `💰 <strong>PRICING LOSS:</strong> ${product.productName} selling at $${product.sellPrice} but costs $${product.costPrice}. You're losing $${product.loss.toFixed(2)} per unit! Increase to $${product.suggestedPrice}.<br><br>`;
+        alertCount++;
+    }
     
-    pricingIssues.forEach((issue, index) => {
-        if (index < 3) { // Show max 3 issues
-            if (issue.type === "loss") {
-                adviceHTML += `🚨 <strong>${issue.productName}:</strong> Selling at $${issue.sellPrice} but cost is $${issue.costPrice}. You're losing $${issue.loss.toFixed(2)} (${issue.lossPercent}%) per unit! <strong>Increase price to at least $${issue.suggestedPrice}</strong> for 25% profit margin.<br><br>`;
-            } else if (issue.type === "too_high") {
-                adviceHTML += `⚠️ <strong>${issue.productName}:</strong> Selling at $${issue.sellPrice} with ${issue.marginPercent}% margin. Price may be too high and hurt sales. <strong>Consider lowering to $${issue.suggestedPrice}</strong> for competitive 40% margin.<br><br>`;
-            } else if (issue.type === "low_margin") {
-                adviceHTML += `💡 <strong>${issue.productName}:</strong> Current margin is only ${issue.marginPercent}%. <strong>Increase price to $${issue.suggestedPrice}</strong> for healthier 25% profit margin.<br><br>`;
-            } else if (issue.type === "missing") {
-                adviceHTML += `⚙️ <strong>${issue.productName}:</strong> Prices not set. Go to Sales Flow and set cost & selling prices for accurate financial tracking.<br><br>`;
-            }
-        }
-    });
+    // 3. CRITICAL STOCK ALERTS
+    const criticalStock = lowStockAlerts.filter(p => p.severity === "critical");
+    if (criticalStock.length > 0 && alertCount < 3) {
+        const product = criticalStock[0];
+        adviceHTML += `📦 <strong>CRITICAL STOCK:</strong> ${product.name} has only ${product.currentStock} ${product.unit} left${product.daysUntilStockout < 999 ? ` (~${product.daysUntilStockout} days)` : ''}. Contact supplier urgently for restocking.<br><br>`;
+        alertCount++;
+    }
     
-    if (pricingIssues.length > 3) {
-        adviceHTML += `<em>+ ${pricingIssues.length - 3} more pricing issue(s)</em>`;
+    // 4. UPCOMING EXPIRY (3-7 days)
+    const upcomingExpiry = expiringProducts.filter(p => p.daysUntilExpiry > 1 && p.daysUntilExpiry <= 7);
+    if (upcomingExpiry.length > 0 && alertCount < 3) {
+        const product = upcomingExpiry[0];
+        adviceHTML += `⏰ <strong>EXPIRY ALERT:</strong> ${product.name} expires in ${product.daysUntilExpiry} days. Plan promotional strategy now.<br><br>`;
+        alertCount++;
+    }
+    
+    // 5. LOW STOCK WARNINGS
+    const warningStock = lowStockAlerts.filter(p => p.severity === "warning" || p.severity === "low");
+    if (warningStock.length > 0 && alertCount < 3) {
+        const product = warningStock[0];
+        adviceHTML += `📊 <strong>LOW STOCK:</strong> ${product.name} running low (${product.currentStock} ${product.unit})${product.daysUntilStockout < 999 ? `, ~${product.daysUntilStockout} days supply` : ''}. Consider restocking soon.<br><br>`;
+        alertCount++;
+    }
+    
+    // 6. HIGH PRICE WARNINGS
+    const highPriceProducts = pricingIssues.filter(p => p.type === "too_high");
+    if (highPriceProducts.length > 0 && alertCount < 3) {
+        const product = highPriceProducts[0];
+        adviceHTML += `💡 <strong>PRICING:</strong> ${product.productName} priced at ${product.marginPercent}% margin. May hurt sales. Consider lowering to $${product.suggestedPrice}.<br><br>`;
+        alertCount++;
+    }
+    
+    // 7. Show summary if more alerts exist
+    const totalAlerts = expiringProducts.length + pricingIssues.length + lowStockAlerts.length;
+    if (totalAlerts > alertCount) {
+        adviceHTML += `<em style="opacity: 0.7;">+ ${totalAlerts - alertCount} more alert(s) detected</em><br><br>`;
+    }
+    
+    // 8. DEFAULT TIP (No Alerts)
+    if (adviceHTML === "") {
+        adviceHTML = "💡 <strong>Pro Tip:</strong> Always set your selling and cost prices in Sales Flow to help ScaleVest CFO track your financial reports and provide intelligent business insights. Your dashboard is looking healthy! 🎯";
     }
     
     adviceCard.innerHTML = adviceHTML;
 }
+// Fetch and analyze stock levels
+async function fetchStockRadar(userId) {
+    const dbRef = ref(getDatabase());
+    
+    try {
+        // Fetch inventory
+        const inventorySnapshot = await get(child(dbRef, `Businesses/${userId}/inventory`));
+        if (!inventorySnapshot.exists()) {
+            updateStockRadarCard([]);
+            return;
+        }
+        
+        const inventory = inventorySnapshot.val();
+        
+        // Fetch sales to calculate burn rate
+        const salesSnapshot = await get(child(dbRef, `Businesses/${userId}/sales`));
+        const salesData = salesSnapshot.exists() ? salesSnapshot.val() : {};
+        
+        const now = new Date();
+        const sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+        
+        const lowStockProducts = [];
+        
+        // Analyze each product
+        for (const [productId, productData] of Object.entries(inventory)) {
+            const currentStock = parseInt(productData.quantity) || 0;
+            
+            // Check if stock is below 15
+            if (currentStock <= 15) {
+                // Calculate weekly sales for this product
+                let weeklySales = 0;
+                Object.values(salesData).forEach(sale => {
+                    if (sale.productId === productId) {
+                        const saleDate = new Date(sale.timestamp);
+                        if (saleDate > sevenDaysAgo) {
+                            weeklySales += parseInt(sale.quantity) || 0;
+                        }
+                    }
+                });
+                
+                // Calculate daily burn rate and predict stockout
+                const dailyBurnRate = weeklySales / 7;
+                const daysUntilStockout = dailyBurnRate > 0 ? Math.ceil(currentStock / dailyBurnRate) : 999;
+                
+                lowStockProducts.push({
+                    name: productData.name || "Unknown Product",
+                    currentStock,
+                    unit: productData.unit || "units",
+                    weeklySales,
+                    dailyBurnRate: dailyBurnRate.toFixed(1),
+                    daysUntilStockout,
+                    severity: currentStock <= 5 ? "critical" : currentStock <= 10 ? "warning" : "low"
+                });
+            }
+        }
+        
+        // Sort by severity and days until stockout
+        lowStockProducts.sort((a, b) => {
+            const severityOrder = { critical: 0, warning: 1, low: 2 };
+            if (severityOrder[a.severity] !== severityOrder[b.severity]) {
+                return severityOrder[a.severity] - severityOrder[b.severity];
+            }
+            return a.daysUntilStockout - b.daysUntilStockout;
+        });
+        
+        // Update UI
+        updateStockRadarCard(lowStockProducts);
+        updateCFOAdviceForStock(lowStockProducts);
+        
+    } catch (error) {
+        console.error("Error fetching stock radar:", error);
+    }
+}
 
+function updateStockRadarCard(lowStockProducts) {
+    const stockCard = document.querySelector('.stock-card');
+    const stockFill = stockCard.querySelector('.stock-fill');
+    const stockText = stockCard.querySelector('.stock-text');
+    
+    if (lowStockProducts.length === 0) {
+        stockFill.style.width = "85%";
+        stockFill.style.background = "linear-gradient(90deg, #4ade80 0%, #22c55e 100%)";
+        stockFill.style.boxShadow = "0 0 10px rgba(74, 222, 128, 0.5)";
+        stockText.innerHTML = "All Products: Healthy Stock Levels ✓";
+        stockText.style.color = "rgba(74, 222, 128, 0.9)";
+        return;
+    }
+    
+    // Show most critical product
+    const critical = lowStockProducts[0];
+    const stockPercent = Math.min((critical.currentStock / 15) * 100, 100);
+    
+    // Set color based on severity
+    let fillColor = "";
+    if (critical.severity === "critical") {
+        fillColor = "linear-gradient(90deg, #f87171 0%, #ef4444 100%)";
+        stockFill.style.boxShadow = "0 0 10px rgba(248, 113, 113, 0.5)";
+    } else if (critical.severity === "warning") {
+        fillColor = "linear-gradient(90deg, #fb923c 0%, #f97316 100%)";
+        stockFill.style.boxShadow = "0 0 10px rgba(251, 146, 60, 0.5)";
+    } else {
+        fillColor = "linear-gradient(90deg, #3b82f6 0%, #60a5fa 100%)";
+        stockFill.style.boxShadow = "0 0 10px rgba(59, 130, 246, 0.5)";
+    }
+    
+    stockFill.style.width = `${stockPercent}%`;
+    stockFill.style.background = fillColor;
+    
+    // Create status text
+    let statusText = `<strong>${critical.name}</strong>: Only ${critical.currentStock} ${critical.unit} left`;
+    
+    if (critical.daysUntilStockout < 999) {
+        if (critical.daysUntilStockout <= 3) {
+            statusText += ` <span style="color: #f87171;">(Will stock out in ~${critical.daysUntilStockout} days)</span>`;
+        } else if (critical.daysUntilStockout <= 7) {
+            statusText += ` <span style="color: #fb923c;">(Will stock out in ~${critical.daysUntilStockout} days)</span>`;
+        } else {
+            statusText += ` <span style="color: #3b82f6;">(~${critical.daysUntilStockout} days supply)</span>`;
+        }
+    }
+    
+    if (lowStockProducts.length > 1) {
+        statusText += `<br><span style="font-size: 11px; opacity: 0.7;">+ ${lowStockProducts.length - 1} more product(s) running low</span>`;
+    }
+    
+    stockText.innerHTML = statusText;
+}
 
-
+function updateCFOAdviceForStock(lowStockProducts) {
+    // We'll combine this with other alerts in the master advice function
+    // Store it globally for now
+    window.lowStockAlerts = lowStockProducts;
+}
 
 
 
