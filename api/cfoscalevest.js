@@ -2,16 +2,17 @@ import { google } from '@ai-sdk/google';
 import { streamText } from 'ai';
 
 // REMOVED: export const config = { runtime: 'edge' }; 
-// The standard Node.js runtime is more compatible with these modules.
+// Using the default Node.js runtime fixes the "unsupported modules" error.
 
 export default async function handler(req) {
-    // 1. Handle CORS (Cross-Origin Resource Sharing)
+    // 1. Setup CORS headers so your GitHub frontend can talk to this Vercel backend
     const headers = {
-        'Access-Control-Allow-Origin': '*', // Allow your GitHub site to talk to Vercel
+        'Access-Control-Allow-Origin': '*', // Allows any domain to access (or put your github URL)
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
     };
 
+    // 2. Handle the "Preflight" request from the browser
     if (req.method === 'OPTIONS') {
         return new Response(null, { status: 204, headers });
     }
@@ -19,26 +20,20 @@ export default async function handler(req) {
     try {
         const { messages } = await req.json();
 
-        // 2. Initialize Gemini 1.5 Pro
+        // 3. Initialize the AI Stream
         const result = await streamText({
-            model: google('gemini-1.5-pro-latest'), // Simplified model string
+            model: google('gemini-1.5-pro-latest'),
             messages: messages,
-            system: `
-                # ROLE
-                You are the "ScaleVest Elite CFO," a strategic financial advisor. 
-                # ANALYSIS GUIDELINES
-                - Identify Strengths, Weaknesses, Opportunities, and Threats.
-                - Use "Stock Radar" to predict restock needs.
-                - Provide one clear "Next Step" actionable advice.
-            `,
+            system: `You are the ScaleVest Elite CFO. Analyze the provided inventory and sales data 
+                     to give professional financial advice and stock alerts.`,
         });
 
-        // 3. Return streaming response
+        // 4. Return the response with CORS headers
         return result.toDataStreamResponse({ headers });
 
     } catch (error) {
         console.error('CFO Error:', error);
-        return new Response(JSON.stringify({ error: error.message }), { 
+        return new Response(JSON.stringify({ error: "CFO is busy thinking. Try again." }), { 
             status: 500, 
             headers 
         });
