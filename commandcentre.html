@@ -2512,25 +2512,19 @@ function spawnCashNotes() {
     }
 }
 
-// DEMO MODE: Simulate sales (remove this in production)
-function startDemoMode() {
-    setInterval(() => {
-        const randomSale = Math.random() * 200;
-        addSale(randomSale);
-        
-        // Reset at $3500 for demo
-        if (dailySalesTotal > 3500) {
-            dailySalesTotal = 0;
-            localStorage.setItem('dailySalesTotal', '0');
-            updateEngineVisuals();
-        }
-    }, 3000);
-}
+window.updateArchitectWithRealSales = function(totalSales) {
+    // Only update if it's a new value
+    if (dailySalesTotal !== totalSales) {
+        dailySalesTotal = totalSales;
+        localStorage.setItem('dailySalesTotal', dailySalesTotal.toString());
+        updateEngineVisuals();
+    }
+};
 
 // Initialize engine when page loads
 setTimeout(() => {
     initArchitectsEngine();
-    startDemoMode(); // Remove this in production
+    // ✅ No demo mode - uses real Firebase data
 }, 1000);
 
 function handleCellClick(e) {
