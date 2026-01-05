@@ -201,6 +201,20 @@
             color: rgba(255, 255, 255, 0.9);
             font-weight: 500;
         }
+.dynamic-icon {
+    width: 45px;
+    height: 45px;
+    background: linear-gradient(135deg, #6366f1, #a855f7); 
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: bold;
+    color: white;
+    margin: 15px auto;
+    text-transform: uppercase;
+}
 
         .burn-rate {
             display: inline-block;
@@ -628,26 +642,39 @@ async function fetchAnalytics(userId) {
 }
 
 function updateProductUI(analytics) {
-    // 1. Most Selling (Apple)
-    if (analytics.mostSelling) {
-        document.getElementById('star-name').innerText = analytics.mostSelling.name;
-        document.getElementById('star-sold').innerText = `${analytics.mostSelling.totalSold} Sold`;
-    }
+    if (!analytics) return;
 
-    // 2. Least Selling (Banana)
-    if (analytics.leastSelling) {
-        document.getElementById('ghost-name').innerText = analytics.leastSelling.name;
-        document.getElementById('ghost-sold').innerText = `${analytics.leastSelling.totalSold} Sold`;
-    }
-
-    // 3. Trending Selling (Oreos)
-    if (analytics.trendingSelling) {
-        document.getElementById('trending-name').innerText = analytics.trendingSelling.name;
-        // Firebase uses 'recentSold' for the trending node
-        document.getElementById('trending-sold').innerText = `${analytics.trendingSelling.recentSold} Recent`;
+    // Helper function to set Name, Sold count, and the First Letter Icon
+    const updateSlot = (prefix, data, isTrending = false) => {
+        if (!data) return;
         
-        // Update the reason text at the bottom
-        document.getElementById('analytics-reason').innerText = `Momentum: ${analytics.trendingSelling.name} is rising fast!`;
+        const nameEl = document.getElementById(`${prefix}-name`);
+        const soldEl = document.getElementById(`${prefix}-sold`);
+        const iconEl = document.getElementById(`${prefix}-icon`);
+
+        if (nameEl) nameEl.innerText = data.name;
+        
+        // Handle 'totalSold' vs 'recentSold'
+        if (soldEl) {
+            const count = isTrending ? data.recentSold : data.totalSold;
+            const label = isTrending ? 'Recent' : 'Sold';
+            soldEl.innerText = `${count} ${label}`;
+        }
+
+        // SET THE DYNAMIC ICON: Take the first letter of the name
+        if (iconEl && data.name) {
+            iconEl.innerText = data.name.charAt(0);
+        }
+    };
+
+    updateSlot('star', analytics.mostSelling);
+    updateSlot('trending', analytics.trendingSelling, true);
+    updateSlot('ghost', analytics.leastSelling);
+
+    // Update the footer reason
+    if (analytics.trendingSelling) {
+        document.getElementById('analytics-reason').innerText = 
+            `Momentum: ${analytics.trendingSelling.name} is the current trend!`;
     }
 }
 // --- Auth State Logic ---
@@ -840,7 +867,7 @@ async function askCFO(userInput) {
                 </div>
             </div>
 
-            <div class="card products-card">
+           <div class="card products-card">
     <div class="card-title" style="margin-top: 30px;">PRODUCTS</div>
     <div class="products" style="grid-template-columns: 1fr 1fr 1fr;"> 
         <div class="product">
@@ -848,7 +875,7 @@ async function askCFO(userInput) {
                 <span class="star-badge">⭐</span>
                 <span>THE STAR</span>
             </div>
-            <div class="product-icon">🍎</div>
+            <div id="star-icon" class="dynamic-icon">?</div> 
             <div id="star-name" class="product-name">Loading...</div>
             <div id="star-sold" class="product-badge">...</div>
         </div>
@@ -858,7 +885,7 @@ async function askCFO(userInput) {
                 <span style="color: #4ade80;">📈</span>
                 <span>TRENDING</span>
             </div>
-            <div class="product-icon">🍪</div>
+            <div id="trending-icon" class="dynamic-icon">?</div>
             <div id="trending-name" class="product-name">Loading...</div>
             <div id="trending-sold" class="product-badge">...</div>
         </div>
@@ -868,7 +895,7 @@ async function askCFO(userInput) {
                 <span class="ghost-badge">👻</span>
                 <span>THE GHOST</span>
             </div>
-            <div class="product-icon" style="opacity: 0.3;">🍌</div>
+            <div id="ghost-icon" class="dynamic-icon" style="opacity: 0.5;">?</div>
             <div id="ghost-name" class="product-name">Loading...</div>
             <div id="ghost-sold" class="product-badge">...</div>
         </div>
