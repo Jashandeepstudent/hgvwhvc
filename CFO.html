@@ -1366,49 +1366,63 @@ function updatePricingCard(prices, issues) {
         return;
     }
     
-    // Show most critical issue
-    const criticalIssue = issues.find(i => i.type === "loss") || 
-                          issues.find(i => i.type === "too_high") || 
-                          issues[0];
+    // Determine the most critical issue for chart color
+    const hasLoss = issues.some(i => i.type === "loss");
+    const hasTooHigh = issues.some(i => i.type === "too_high");
+    const hasLowMargin = issues.some(i => i.type === "low_margin");
     
-    if (criticalIssue.type === "loss") {
-        momentumText.innerHTML = `⚠️ ${criticalIssue.productName}`;
+    // Set chart color based on severity
+    if (hasLoss) {
+        momentumText.innerHTML = "⚠️ PRICING ALERTS";
         momentumText.style.color = "#f87171";
-        priceWarning.innerHTML = `🚨 Selling below cost! Loss: $${criticalIssue.loss.toFixed(2)} per unit`;
-        priceWarning.style.color = "rgba(248, 113, 113, 0.9)";
-        
-        // Update chart to show DOWNWARD trend (RED)
         svgPath.setAttribute("stroke", "#f87171");
         svgPath.setAttribute("d", "M 0 15 L 50 25 L 100 40 L 150 48 L 200 58 L 250 68 L 300 75");
         svgFillPath.setAttribute("d", "M 0 15 L 50 25 L 100 40 L 150 48 L 200 58 L 250 68 L 300 75 L 300 80 L 0 80 Z");
-        
-    } else if (criticalIssue.type === "too_high") {
-        momentumText.innerHTML = `${criticalIssue.productName}`;
+    } else if (hasTooHigh) {
+        momentumText.innerHTML = "⚠️ PRICING WARNINGS";
         momentumText.style.color = "#fb923c";
-        priceWarning.innerHTML = `⚠️ Price too high (${criticalIssue.marginPercent}% margin) - May hurt sales`;
-        priceWarning.style.color = "rgba(251, 146, 60, 0.8)";
-        
-        // Update chart to show DOWNWARD trend (ORANGE)
         svgPath.setAttribute("stroke", "#fb923c");
         svgPath.setAttribute("d", "M 0 20 L 50 28 L 100 42 L 150 50 L 200 60 L 250 67 L 300 73");
         svgFillPath.setAttribute("d", "M 0 20 L 50 28 L 100 42 L 150 50 L 200 60 L 250 67 L 300 73 L 300 80 L 0 80 Z");
-        
-    } else if (criticalIssue.type === "low_margin") {
-        momentumText.innerHTML = `${criticalIssue.productName}`;
+    } else if (hasLowMargin) {
+        momentumText.innerHTML = "💡 PRICING NOTICES";
         momentumText.style.color = "#3b82f6";
-        priceWarning.innerHTML = `💡 Low margin (${criticalIssue.marginPercent}%) - Consider increasing`;
-        priceWarning.style.color = "rgba(59, 130, 246, 0.8)";
-        
-        // Update chart to show FLAT trend (BLUE)
         svgPath.setAttribute("stroke", "#3b82f6");
         svgPath.setAttribute("d", "M 0 50 L 50 52 L 100 51 L 150 53 L 200 52 L 250 54 L 300 53");
         svgFillPath.setAttribute("d", "M 0 50 L 50 52 L 100 51 L 150 53 L 200 52 L 250 54 L 300 53 L 300 80 L 0 80 Z");
-        
-    } else {
-        momentumText.innerHTML = "Pricing Issues Detected";
-        priceWarning.innerHTML = `⚠️ ${issues.length} product(s) need price setup`;
-        priceWarning.style.color = "rgba(251, 146, 60, 0.8)";
     }
+    
+    // Show ALL pricing issues
+    let warningHTML = "";
+    
+    // 1. Show all LOSS products
+    issues.filter(i => i.type === "loss").forEach((issue, index) => {
+        if (index > 0) warningHTML += "<br><br>";
+        warningHTML += `🚨 <strong>${issue.productName}:</strong> Selling below cost! Loss: $${issue.loss.toFixed(2)} per unit`;
+    });
+    
+    // 2. Show all TOO HIGH products
+    issues.filter(i => i.type === "too_high").forEach((issue, index) => {
+        if (warningHTML !== "" || index > 0) warningHTML += "<br><br>";
+        warningHTML += `⚠️ <strong>${issue.productName}:</strong> Price too high (${issue.marginPercent}% margin) - May hurt sales`;
+    });
+    
+    // 3. Show all LOW MARGIN products
+    issues.filter(i => i.type === "low_margin").forEach((issue, index) => {
+        if (warningHTML !== "" || index > 0) warningHTML += "<br><br>";
+        warningHTML += `💡 <strong>${issue.productName}:</strong> Low margin (${issue.marginPercent}%) - Consider increasing`;
+    });
+    
+    // 4. Show all MISSING prices
+    issues.filter(i => i.type === "missing").forEach((issue, index) => {
+        if (warningHTML !== "" || index > 0) warningHTML += "<br><br>";
+        warningHTML += `⚠️ <strong>${issue.productName}:</strong> Prices not set`;
+    });
+    
+    priceWarning.innerHTML = warningHTML;
+    priceWarning.style.color = hasLoss ? "rgba(248, 113, 113, 0.9)" : 
+                                hasTooHigh ? "rgba(251, 146, 60, 0.8)" : 
+                                "rgba(59, 130, 246, 0.8)";
 }
 function updateCFOAdviceForPricing(pricingIssues) {
     // Store pricing issues globally
