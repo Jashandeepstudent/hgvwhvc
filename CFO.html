@@ -854,7 +854,7 @@ onAuthStateChanged(auth, (user) => {
         window.location.href = "login.html";
     }
 });
-  async function runOnboarding(userId) {
+ async function runOnboarding(userId) {
     const nameSpan = document.getElementById('user-name-display');
     const welcomeOverlay = document.getElementById('onboarding-overlay');
     const welcomeText = document.getElementById('welcome-text');
@@ -889,14 +889,23 @@ onAuthStateChanged(auth, (user) => {
         if (!checkbox.checked) return;
         const cfoName = cfoInput.value.trim() || "Mark";
 
-        // Store under BusinessOwners/user.id/CFO/name
-        await set(ref(db, `BusinessOwners/${userId}/CFO`), {
-            name: cfoName,
-            trialStarted: new Date().toISOString()
-        });
+        try {
+            // Import set function
+            const { set } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js");
+            
+            // Store under BusinessOwners/user.id/CFO/name
+            await set(ref(db, `BusinessOwners/${userId}/CFO`), {
+                name: cfoName,
+                trialStarted: new Date().toISOString()
+            });
 
-        displayCFOName(cfoName);
-        cfoPopup.style.display = "none";
+            displayCFOName(cfoName);
+            cfoPopup.style.display = "none";
+            welcomeOverlay.style.display = "none"; // Also hide the overlay
+        } catch (error) {
+            console.error("Error saving CFO:", error);
+            alert("Failed to save CFO. Please try again.");
+        }
     });
   }
 
@@ -1420,6 +1429,7 @@ function updateCFOAdviceForStock(lowStockProducts) {
 }
 
 // MASTER CFO ADVICE - Combines all alerts
+// MASTER CFO ADVICE - Combines ALL alerts
 function updateMasterCFOAdvice() {
     const adviceCard = document.querySelector('.advice-card .advice-text');
     const expiringProducts = window.expiringProducts || [];
@@ -1427,61 +1437,48 @@ function updateMasterCFOAdvice() {
     const lowStockAlerts = window.lowStockAlerts || [];
     
     let adviceHTML = "";
-    let alertCount = 0;
     
-    // 1. CRITICAL EXPIRY ALERTS (Highest Priority)
+    // 1. CRITICAL EXPIRY ALERTS (Highest Priority) - SHOW ALL
     const criticalExpiry = expiringProducts.filter(p => p.daysUntilExpiry <= 1);
-    if (criticalExpiry.length > 0) {
-        const product = criticalExpiry[0];
+    criticalExpiry.forEach(product => {
         adviceHTML += `🚨 <strong>CRITICAL EXPIRY:</strong> ${product.name} expires ${product.daysUntilExpiry === 0 ? 'TODAY' : 'in 24 hours'}! Launch flash sale immediately.<br><br>`;
-        alertCount++;
-    }
+    });
     
-    // 2. LOSS-MAKING PRICES (Second Priority)
+    // 2. LOSS-MAKING PRICES (Second Priority) - SHOW ALL
     const lossProducts = pricingIssues.filter(p => p.type === "loss");
-    if (lossProducts.length > 0 && alertCount < 3) {
-        const product = lossProducts[0];
+    lossProducts.forEach(product => {
         adviceHTML += `💰 <strong>PRICING LOSS:</strong> ${product.productName} selling at $${product.sellPrice} but costs $${product.costPrice}. You're losing $${product.loss.toFixed(2)} per unit! Increase to $${product.suggestedPrice}.<br><br>`;
-        alertCount++;
-    }
+    });
     
-    // 3. CRITICAL STOCK ALERTS
+    // 3. CRITICAL STOCK ALERTS - SHOW ALL
     const criticalStock = lowStockAlerts.filter(p => p.severity === "critical");
-    if (criticalStock.length > 0 && alertCount < 3) {
-        const product = criticalStock[0];
+    criticalStock.forEach(product => {
         adviceHTML += `📦 <strong>CRITICAL STOCK:</strong> ${product.name} has only ${product.currentStock} ${product.unit} left${product.daysUntilStockout < 999 ? ` (~${product.daysUntilStockout} days)` : ''}. Contact supplier urgently for restocking.<br><br>`;
-        alertCount++;
-    }
+    });
     
-    // 4. UPCOMING EXPIRY (3-7 days)
+    // 4. UPCOMING EXPIRY (3-7 days) - SHOW ALL
     const upcomingExpiry = expiringProducts.filter(p => p.daysUntilExpiry > 1 && p.daysUntilExpiry <= 7);
-    if (upcomingExpiry.length > 0 && alertCount < 3) {
-        const product = upcomingExpiry[0];
+    upcomingExpiry.forEach(product => {
         adviceHTML += `⏰ <strong>EXPIRY ALERT:</strong> ${product.name} expires in ${product.daysUntilExpiry} days. Plan promotional strategy now.<br><br>`;
-        alertCount++;
-    }
+    });
     
-    // 5. LOW STOCK WARNINGS
+    // 5. LOW STOCK WARNINGS - SHOW ALL
     const warningStock = lowStockAlerts.filter(p => p.severity === "warning" || p.severity === "low");
-    if (warningStock.length > 0 && alertCount < 3) {
-        const product = warningStock[0];
+    warningStock.forEach(product => {
         adviceHTML += `📊 <strong>LOW STOCK:</strong> ${product.name} running low (${product.currentStock} ${product.unit})${product.daysUntilStockout < 999 ? `, ~${product.daysUntilStockout} days supply` : ''}. Consider restocking soon.<br><br>`;
-        alertCount++;
-    }
+    });
     
-    // 6. HIGH PRICE WARNINGS
+    // 6. HIGH PRICE WARNINGS - SHOW ALL
     const highPriceProducts = pricingIssues.filter(p => p.type === "too_high");
-    if (highPriceProducts.length > 0 && alertCount < 3) {
-        const product = highPriceProducts[0];
+    highPriceProducts.forEach(product => {
         adviceHTML += `💡 <strong>PRICING:</strong> ${product.productName} priced at ${product.marginPercent}% margin. May hurt sales. Consider lowering to $${product.suggestedPrice}.<br><br>`;
-        alertCount++;
-    }
+    });
     
-    // 7. Show summary if more alerts exist
-    const totalAlerts = expiringProducts.length + pricingIssues.length + lowStockAlerts.length;
-    if (totalAlerts > alertCount) {
-        adviceHTML += `<em style="opacity: 0.7;">+ ${totalAlerts - alertCount} more alert(s) detected</em><br><br>`;
-    }
+    // 7. LOW MARGIN PRODUCTS - SHOW ALL
+    const lowMarginProducts = pricingIssues.filter(p => p.type === "low_margin");
+    lowMarginProducts.forEach(product => {
+        adviceHTML += `📈 <strong>LOW MARGIN:</strong> ${product.productName} has ${product.marginPercent}% profit margin. Consider increasing to $${product.suggestedPrice} for better profitability.<br><br>`;
+    });
     
     // 8. DEFAULT TIP (No Alerts)
     if (adviceHTML === "") {
@@ -1578,7 +1575,7 @@ function updateStockRadarCard(lowStockProducts) {
         return;
     }
     
-    // Show most critical product
+    // Show most critical product for the bar
     const critical = lowStockProducts[0];
     const stockPercent = Math.min((critical.currentStock / 15) * 100, 100);
     
@@ -1598,26 +1595,27 @@ function updateStockRadarCard(lowStockProducts) {
     stockFill.style.width = `${stockPercent}%`;
     stockFill.style.background = fillColor;
     
-    // Create status text
-    let statusText = `<strong>${critical.name}</strong>: Only ${critical.currentStock} ${critical.unit} left`;
+    // Show ALL low stock products
+    let statusText = "";
     
-    if (critical.daysUntilStockout < 999) {
-        if (critical.daysUntilStockout <= 3) {
-            statusText += ` <span style="color: #f87171;">(Will stock out in ~${critical.daysUntilStockout} days)</span>`;
-        } else if (critical.daysUntilStockout <= 7) {
-            statusText += ` <span style="color: #fb923c;">(Will stock out in ~${critical.daysUntilStockout} days)</span>`;
-        } else {
-            statusText += ` <span style="color: #3b82f6;">(~${critical.daysUntilStockout} days supply)</span>`;
+    lowStockProducts.forEach((product, index) => {
+        if (index > 0) statusText += "<br><br>";
+        
+        statusText += `<strong>${product.name}</strong>: Only ${product.currentStock} ${product.unit} left`;
+        
+        if (product.daysUntilStockout < 999) {
+            if (product.daysUntilStockout <= 3) {
+                statusText += ` <span style="color: #f87171;">(Will stock out in ~${product.daysUntilStockout} days)</span>`;
+            } else if (product.daysUntilStockout <= 7) {
+                statusText += ` <span style="color: #fb923c;">(Will stock out in ~${product.daysUntilStockout} days)</span>`;
+            } else {
+                statusText += ` <span style="color: #3b82f6;">(~${product.daysUntilStockout} days supply)</span>`;
+            }
         }
-    }
-    
-    if (lowStockProducts.length > 1) {
-        statusText += `<br><span style="font-size: 11px; opacity: 0.7;">+ ${lowStockProducts.length - 1} more product(s) running low</span>`;
-    }
+    });
     
     stockText.innerHTML = statusText;
 }
-
 
 
 
