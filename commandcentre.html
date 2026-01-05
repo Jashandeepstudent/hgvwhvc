@@ -1989,162 +1989,161 @@ function moveProductToPosition(product, newX, newY, newFloor) {
 }        // --- CORE FEATURES ---
 
         function updateHeatmap() {
-            if (!heatmapEnabled) {
+    if (!heatmapEnabled) {
+        document.querySelectorAll('.grid-cell').forEach(cell => {
+            cell.className = 'grid-cell';
+            cell.style.background = '';
+        });
+        
+        // RESET all product cards
+        document.querySelectorAll('.product-node').forEach(node => {
+            const card = node.querySelector('.product-card');
+            if (card) {
+                card.style.background = '';
+                card.style.filter = '';
+            }
+            const pid = node.dataset.productId;
+            const prod = productsData.find(p => p.id === pid);
+            if (prod) updateNodeVisuals(node, prod);
+        });
+        return;
+    }
+
+    // Calculate Max Sales for normalization
+    const maxSales = Math.max(...productsData.map(p => p.sales || 0), 1);
+
     document.querySelectorAll('.grid-cell').forEach(cell => {
+        const x = parseInt(cell.dataset.x);
+        const y = parseInt(cell.dataset.y);
+        const floor = parseInt(cell.dataset.floor || 0);
+        
+        // Find product at this EXACT position
+        const product = productsData.find(p => {
+            const match = p.x === x && p.y === y && (p.floor || 0) === floor;
+            return match;
+        });
+
+        // Reset base
         cell.className = 'grid-cell';
         cell.style.background = '';
-    });
-    
-    // RESET all product cards
-    document.querySelectorAll('.product-node').forEach(node => {
-        const card = node.querySelector('.product-card');
-        if (card) {
-            card.style.background = '';
-            card.style.filter = '';
+        
+        // If in exchange mode, add that class back
+        if (exchangeModeActive) {
+            cell.classList.add('exchange-mode');
         }
-        const pid = node.dataset.productId;
-        const prod = productsData.find(p => p.id === pid);
-        if (prod) updateNodeVisuals(node, prod);
-    });
-    return;
-}
 
-            // Calculate Max Sales for normalization
-            const maxSales = Math.max(...productsData.map(p => p.sales || 0), 1);
-
-document.querySelectorAll('.grid-cell').forEach(cell => {
-    const x = parseInt(cell.dataset.x);
-    const y = parseInt(cell.dataset.y);
-    const floor = parseInt(cell.dataset.floor || 0);
-    
-    // Find product at this EXACT position
-    const product = productsData.find(p => {
-        const match = p.x === x && p.y === y && (p.floor || 0) === floor;
-        return match;
-    });
-
-    // Reset base
-    cell.className = 'grid-cell';
-    cell.style.background = '';
-    
-    // If in exchange mode, add that class back
-    if (exchangeModeActive) {
-        cell.classList.add('exchange-mode');
-    }
-
-  if (product) {
-    const expiryStatus = getExpiryStatus(product);
-    const productNode = document.querySelector(`[data-product-id="${product.id}"]`);
-    
-    // ===== HEATMAP SALES COLORS WITH SMART PRIORITY =====
-    
-    if (product.stock === 0) {
-        // PRIORITY 1: Out of Stock (RED - always shows)
-        cell.classList.add('heatmap-oos');
-        if (productNode) {
-            productNode.classList.add('is-out-of-stock');
-            const card = productNode.querySelector('.product-card');
-            if (card) {
-                card.style.background = 'linear-gradient(180deg, rgba(255, 0, 64, 0.7), rgba(100, 0, 20, 0.8))';
-                card.style.filter = 'saturate(1.5) brightness(1.2)';
-            }
-        }
-    }
-    else if (expiryStatus === 'expired') {
-        // PRIORITY 2: Expired (GRAY - overrides sales)
-        cell.classList.add('expired');
-        if (productNode) {
-            productNode.classList.add('is-expired');
-            const card = productNode.querySelector('.product-card');
-            if (card) {
-                card.style.background = 'linear-gradient(180deg, rgba(64, 64, 64, 0.6), rgba(32, 32, 32, 0.7))';
-                card.style.filter = 'grayscale(0.7)';
-            }
-        }
-    }
-    else if (expiryStatus === 'expiring-soon') {
-        // PRIORITY 3: Expiring Soon (BROWN - overrides sales)
-        cell.classList.add('expiring-soon');
-        if (productNode) {
-            productNode.classList.add('is-expiring-soon');
-            const card = productNode.querySelector('.product-card');
-            if (card) {
-                card.style.background = 'linear-gradient(180deg, rgba(139, 69, 19, 0.6), rgba(101, 67, 33, 0.7))';
-                card.style.filter = 'brightness(0.8) sepia(0.5)';
-            }
-        }
-    }
-    else if (product.stock < 5) {
-        // PRIORITY 4: Low Stock (YELLOW - overrides sales)
-        cell.classList.add('heatmap-lowstock');
-        if (productNode) {
-            productNode.classList.add('is-low-stock');
-            const card = productNode.querySelector('.product-card');
-            if (card) {
-                card.style.background = 'linear-gradient(180deg, rgba(255, 255, 0, 0.6), rgba(180, 180, 0, 0.7))';
-                card.style.filter = 'saturate(1.3) brightness(1.1)';
-            }
-        }
-    }
-    else {
-        // ===== SALES PERFORMANCE COLORS (only for healthy stock) =====
-        if (product.sales > 50) {
-            // HIGH SALES - ORANGE 🔥
-            cell.classList.add('heatmap-high');
-            if (productNode) {
-                const card = productNode.querySelector('.product-card');
-                if (card) {
-                    card.style.background = 'linear-gradient(180deg, rgba(255, 170, 0, 0.7), rgba(200, 120, 0, 0.8))';
-                    card.style.filter = 'hue-rotate(20deg) saturate(1.6) brightness(1.2)';
+        if (product) {
+            const expiryStatus = getExpiryStatus(product);
+            const productNode = document.querySelector(`[data-product-id="${product.id}"]`);
+            
+            // ===== HEATMAP SALES COLORS WITH SMART PRIORITY =====
+            
+            if (product.stock === 0) {
+                // PRIORITY 1: Out of Stock (RED - always shows)
+                cell.classList.add('heatmap-oos');
+                if (productNode) {
+                    productNode.classList.add('is-out-of-stock');
+                    const card = productNode.querySelector('.product-card');
+                    if (card) {
+                        card.style.background = 'linear-gradient(180deg, rgba(255, 0, 64, 0.7), rgba(100, 0, 20, 0.8))';
+                        card.style.filter = 'saturate(1.5) brightness(1.2)';
+                    }
                 }
             }
-        } else if (product.sales < 10) {
-            // LOW SALES - DARK BLUE 🔵
-            cell.classList.add('heatmap-low');
-            if (productNode) {
-                const card = productNode.querySelector('.product-card');
-                if (card) {
-                    card.style.background = 'linear-gradient(180deg, rgba(0, 136, 204, 0.7), rgba(0, 80, 150, 0.8))';
-                    card.style.filter = 'hue-rotate(200deg) saturate(1.4) brightness(0.9)';
+            else if (expiryStatus === 'expired') {
+                // PRIORITY 2: Expired (GRAY - overrides sales)
+                cell.classList.add('expired');
+                if (productNode) {
+                    productNode.classList.add('is-expired');
+                    const card = productNode.querySelector('.product-card');
+                    if (card) {
+                        card.style.background = 'linear-gradient(180deg, rgba(64, 64, 64, 0.6), rgba(32, 32, 32, 0.7))';
+                        card.style.filter = 'grayscale(0.7)';
+                    }
                 }
             }
-        } else {
-            // NORMAL SALES - CYAN 💧
-            cell.classList.add('heatmap-med');
-            if (productNode) {
-                const card = productNode.querySelector('.product-card');
-                if (card) {
-                    card.style.background = 'linear-gradient(180deg, rgba(0, 243, 255, 0.4), rgba(0, 168, 204, 0.5))';
-                    card.style.filter = 'saturate(1.2) brightness(1.05)';
+            else if (expiryStatus === 'expiring-soon') {
+                // PRIORITY 3: Expiring Soon (BROWN - overrides sales)
+                cell.classList.add('expiring-soon');
+                if (productNode) {
+                    productNode.classList.add('is-expiring-soon');
+                    const card = productNode.querySelector('.product-card');
+                    if (card) {
+                        card.style.background = 'linear-gradient(180deg, rgba(139, 69, 19, 0.6), rgba(101, 67, 33, 0.7))';
+                        card.style.filter = 'brightness(0.8) sepia(0.5)';
+                    }
+                }
+            }
+            else if (product.stock < 5) {
+                // PRIORITY 4: Low Stock (YELLOW - overrides sales)
+                cell.classList.add('heatmap-lowstock');
+                if (productNode) {
+                    productNode.classList.add('is-low-stock');
+                    const card = productNode.querySelector('.product-card');
+                    if (card) {
+                        card.style.background = 'linear-gradient(180deg, rgba(255, 255, 0, 0.6), rgba(180, 180, 0, 0.7))';
+                        card.style.filter = 'saturate(1.3) brightness(1.1)';
+                    }
+                }
+            }
+            else {
+                // ===== SALES PERFORMANCE COLORS (only for healthy stock) =====
+                if (product.sales > 50) {
+                    // HIGH SALES - ORANGE 🔥
+                    cell.classList.add('heatmap-high');
+                    if (productNode) {
+                        const card = productNode.querySelector('.product-card');
+                        if (card) {
+                            card.style.background = 'linear-gradient(180deg, rgba(255, 170, 0, 0.7), rgba(200, 120, 0, 0.8))';
+                            card.style.filter = 'hue-rotate(20deg) saturate(1.6) brightness(1.2)';
+                        }
+                    }
+                } else if (product.sales < 10) {
+                    // LOW SALES - DARK BLUE 🔵
+                    cell.classList.add('heatmap-low');
+                    if (productNode) {
+                        const card = productNode.querySelector('.product-card');
+                        if (card) {
+                            card.style.background = 'linear-gradient(180deg, rgba(0, 136, 204, 0.7), rgba(0, 80, 150, 0.8))';
+                            card.style.filter = 'hue-rotate(200deg) saturate(1.4) brightness(0.9)';
+                        }
+                    }
+                } else {
+                    // NORMAL SALES - CYAN 💧
+                    cell.classList.add('heatmap-med');
+                    if (productNode) {
+                        const card = productNode.querySelector('.product-card');
+                        if (card) {
+                            card.style.background = 'linear-gradient(180deg, rgba(0, 243, 255, 0.4), rgba(0, 168, 204, 0.5))';
+                            card.style.filter = 'saturate(1.2) brightness(1.05)';
+                        }
+                    }
                 }
             }
         }
-    }
+    });
 }
 
 
 window.toggleHeatmap = function() {
-            heatmapEnabled = !heatmapEnabled;
-            const toggle = document.getElementById('heatmapToggle');
-            toggle.classList.toggle('active');
-            
-            // Show legend popup when heatmap is FIRST enabled
-            if (heatmapEnabled) {
-                showHeatmapLegend();
-            }
-            
-            updateHeatmap();
-        };
+    heatmapEnabled = !heatmapEnabled;
+    const toggle = document.getElementById('heatmapToggle');
+    toggle.classList.toggle('active');
+    
+    // Show legend popup when heatmap is FIRST enabled
+    if (heatmapEnabled) {
+        showHeatmapLegend();
+    }
+    
+    updateHeatmap();
+};
 
-        function showHeatmapLegend() {
-            const popup = document.getElementById('heatmap-legend-popup');
-            const overlay = document.getElementById('overlay');
-            popup.classList.add('active');
-            overlay.classList.add('active');
-        }
-
-
-
+function showHeatmapLegend() {
+    const popup = document.getElementById('heatmap-legend-popup');
+    const overlay = document.getElementById('overlay');
+    popup.classList.add('active');
+    overlay.classList.add('active');
+}
 
 window.closeHeatmapLegend = function() {
     document.getElementById('heatmap-legend-popup').classList.remove('active');
