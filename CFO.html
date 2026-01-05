@@ -469,46 +469,30 @@
     }
 
         // Analyze Products
-        function analyzeProducts() {
-            const analytics = firebaseData.analytics || {};
-            const inventory = firebaseData.inventory || {};
-            
-            let mostSelling = { name: 'N/A', sales: 0 };
-            let leastSelling = { name: 'N/A', sales: Infinity };
-            let trending = { name: 'N/A', sales: 0 };
+function analyzeProducts() {
+    // Your data has IDs like "-Oi9XM..." directly inside inventory
+    const inventory = firebaseData.inventory || {};
+    const analytics = firebaseData.analytics || {}; 
+    
+    let mostSelling = { name: 'N/A', sales: 0 };
 
-            Object.entries(analytics).forEach(([id, data]) => {
-                const sales = data.recentSold || 0;
-                const product = inventory[id];
-                
-                if (product) {
-                    if (sales > mostSelling.sales) {
-                        mostSelling = { name: product.name, sales };
-                    }
-                    if (sales < leastSelling.sales && sales > 0) {
-                        leastSelling = { name: product.name, sales };
-                    }
-                    if (sales > 20) {
-                        trending = { name: product.name, sales };
-                    }
-                }
-            });
-
-            document.getElementById('productAnalysis').innerHTML = `
-                <div class="product-item">
-                    <div class="product-name">🏆 Most Selling</div>
-                    <div class="product-stat">${mostSelling.name} - ${mostSelling.sales} units sold</div>
-                </div>
-                <div class="product-item">
-                    <div class="product-name">📉 Least Selling</div>
-                    <div class="product-stat">${leastSelling.name === 'N/A' ? 'N/A' : leastSelling.name + ' - ' + leastSelling.sales + ' units sold'}</div>
-                </div>
-                <div class="product-item">
-                    <div class="product-name">🔥 Trending</div>
-                    <div class="product-stat">${trending.name} - ${trending.sales} units sold</div>
-                </div>
-            `;
+    Object.entries(inventory).forEach(([id, product]) => {
+        // Look for recentSold inside the analytics node using the product ID
+        const salesData = analytics[id] || {};
+        const sales = salesData.recentSold || 0;
+        
+        if (sales > mostSelling.sales) {
+            mostSelling = { name: product.name, sales };
         }
+    });
+
+    document.getElementById('productAnalysis').innerHTML = `
+        <div class="product-item">
+            <div class="product-name">🏆 Most Selling</div>
+            <div class="product-stat">${mostSelling.name} - ${mostSelling.sales} units sold</div>
+        </div>
+    `;
+}
 
         // Analyze Financials with AI
         async function analyzeFinancials() {
