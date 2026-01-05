@@ -146,106 +146,67 @@ body {
 }
 
 /* ============================================
-   BENTO GRID - THE ARCHITECT'S ENGINE
+   FLOATING CRYSTAL - THE ARCHITECT'S ENGINE
    ============================================ */
 
-.bento-grid-container {
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    z-index: 500;
+.floating-crystal-container {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) translateZ(600px);
+    width: 200px;
+    height: 200px;
+    transform-style: preserve-3d;
     pointer-events: none;
 }
 
-.bento-tile {
-    width: 320px;
-    height: 320px;
-    background: linear-gradient(135deg, rgba(15, 15, 35, 0.95), rgba(30, 30, 60, 0.9));
-    border: 3px solid var(--neon-primary);
-    border-radius: 24px;
-    padding: 20px;
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(20px);
-    pointer-events: auto;
-}
-
-/* High Sales Banner */
-.high-sales-banner {
+/* High Sales Banner (Floating Above Crystal) */
+.high-sales-banner-world {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
+    top: -80px;
+    left: 50%;
+    transform: translateX(-50%) translateZ(50px);
     background: linear-gradient(135deg, #ff0040, #ffaa00);
-    padding: 12px;
-    transform: translateY(-100%);
-    transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    z-index: 10;
+    padding: 10px 20px;
+    border-radius: 20px;
+    opacity: 0;
+    transform-origin: center;
+    transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
     box-shadow: 0 4px 20px rgba(255, 170, 0, 0.6);
+    white-space: nowrap;
 }
 
-.high-sales-banner.active {
-    transform: translateY(0);
-    animation: bannerPulse 1s ease-in-out infinite;
+.high-sales-banner-world.active {
+    opacity: 1;
+    animation: bannerFloat 2s ease-in-out infinite;
 }
 
-@keyframes bannerPulse {
-    0%, 100% { box-shadow: 0 4px 20px rgba(255, 170, 0, 0.6); }
-    50% { box-shadow: 0 4px 30px rgba(255, 170, 0, 1); }
-}
-
-.banner-content {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    color: white;
-    font-weight: bold;
-}
-
-.banner-content i {
-    font-size: 24px;
-    animation: trophySpin 2s linear infinite;
-}
-
-@keyframes trophySpin {
-    0% { transform: rotateY(0deg); }
-    100% { transform: rotateY(360deg); }
-}
-
-.banner-title {
-    font-size: 16px;
-    letter-spacing: 2px;
-}
-
-.banner-subtitle {
-    font-size: 11px;
-    opacity: 0.9;
+@keyframes bannerFloat {
+    0%, 100% { 
+        transform: translateX(-50%) translateZ(50px) translateY(0px);
+        box-shadow: 0 4px 20px rgba(255, 170, 0, 0.6);
+    }
+    50% { 
+        transform: translateX(-50%) translateZ(50px) translateY(-10px);
+        box-shadow: 0 8px 30px rgba(255, 170, 0, 1);
+    }
 }
 
 /* Crystal Container */
-.crystal-container {
+.crystal-octahedron {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     width: 150px;
     height: 150px;
-    perspective: 1000px;
-    transform-style: preserve-3d;
-}
-
-.crystal-octahedron {
-    position: relative;
-    width: 100%;
-    height: 100%;
     transform-style: preserve-3d;
     animation: crystalFloat 3s ease-in-out infinite;
 }
 
 @keyframes crystalFloat {
-    0%, 100% { transform: translateY(0px) rotateX(0deg) rotateY(0deg); }
-    50% { transform: translateY(-20px) rotateX(10deg) rotateY(5deg); }
+    0%, 100% { transform: translate(-50%, -50%) translateY(0px) rotateX(0deg) rotateY(0deg); }
+    50% { transform: translate(-50%, -50%) translateY(-20px) rotateX(10deg) rotateY(5deg); }
 }
 
 /* Rotation States */
@@ -258,8 +219,8 @@ body {
 .crystal-octahedron.state-legendary { animation: crystalFloat 3s ease-in-out infinite, crystalRotate 2.4s linear infinite; }
 
 @keyframes crystalRotate {
-    0% { transform: rotateY(0deg) rotateX(20deg); }
-    100% { transform: rotateY(360deg) rotateX(20deg); }
+    0% { transform: translate(-50%, -50%) rotateY(0deg) rotateX(20deg); }
+    100% { transform: translate(-50%, -50%) rotateY(360deg) rotateX(20deg); }
 }
 
 .crystal-face {
@@ -423,87 +384,36 @@ body {
     }
 }
 
-/* Stats Display */
-.engine-stats {
+/* Stats Label (Floating Below Crystal) */
+.crystal-stats-label {
     position: absolute;
-    bottom: 20px;
-    left: 20px;
-    right: 20px;
+    bottom: -80px;
+    left: 50%;
+    transform: translateX(-50%) translateZ(30px);
     text-align: center;
+    background: rgba(15, 15, 35, 0.9);
+    padding: 10px 20px;
+    border-radius: 15px;
+    border: 2px solid var(--neon-primary);
+    box-shadow: 0 0 20px rgba(0, 243, 255, 0.5);
+    white-space: nowrap;
+    animation: labelFloat 3s ease-in-out infinite;
 }
 
-.stat-row {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    font-size: 28px;
-    font-weight: 900;
-    color: var(--neon-accent);
-    text-shadow: 0 0 20px var(--neon-accent);
-    margin-bottom: 5px;
-}
-
-.stat-label {
-    font-size: 12px;
-    color: #888;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 10px;
-}
-
-.progress-bar {
-    width: 100%;
-    height: 8px;
-    background: rgba(0, 0, 0, 0.5);
-    border-radius: 10px;
-    overflow: hidden;
-    border: 1px solid rgba(0, 243, 255, 0.3);
-}
-
-.progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--neon-primary), var(--neon-accent));
-    border-radius: 10px;
-    width: 0%;
-    transition: width 0.5s ease;
-    box-shadow: 0 0 20px var(--neon-primary);
-}
-
-/* Title */
-.engine-title {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    right: 20px;
-    text-align: center;
-    font-size: 14px;
-    font-weight: bold;
-    color: var(--neon-primary);
-    text-shadow: 0 0 10px var(--neon-primary);
-    letter-spacing: 2px;
+@keyframes labelFloat {
+    0%, 100% { transform: translateX(-50%) translateZ(30px) translateY(0px); }
+    50% { transform: translateX(-50%) translateZ(30px) translateY(-5px); }
 }
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
-    .bento-grid-container {
-        bottom: 80px;
-        left: 10px;
+    .floating-crystal-container {
+        transform: translate(-50%, -50%) translateZ(400px) scale(0.7);
     }
     
-    .bento-tile {
-        width: 280px;
-        height: 280px;
-        padding: 15px;
-    }
-    
-    .crystal-container {
-        width: 120px;
-        height: 120px;
-    }
-    
-    .stat-row {
-        font-size: 24px;
+    .crystal-stats-label {
+        font-size: 12px;
+        padding: 8px 15px;
     }
 }
         .exit-time-travel {
@@ -2094,21 +2004,7 @@ box-sizing: border-box;
 <button class="control-toggle-btn" onclick="toggleControls()">
     <i class="fas fa-cog"></i> Digital Controls
 </button>
-<!-- ============================================
-   BENTO GRID - THE ARCHITECT'S ENGINE
-   ============================================ -->
-<div class="bento-grid-container">
-    <div class="bento-tile architects-engine" id="architectsEngine">
-        <!-- High Sales Banner -->
-        <div class="high-sales-banner" id="highSalesBanner">
-            <div class="banner-content">
-                <i class="fas fa-trophy"></i>
-                <div>
-                    <div class="banner-title">🏆 HIGH SALES DAY</div>
-                    <div class="banner-subtitle">SECTOR SECURED</div>
-                </div>
-            </div>
-        </div>
+
 
         <!-- Crystal Container -->
         <div class="crystal-container" id="crystalContainer">
@@ -2206,14 +2102,58 @@ box-sizing: border-box;
         </button>
     </div>
 
-    <div class="perspective-container" id="perspectiveContainer">
-        <div class="world" id="world">
-            <div id="floors-container">
-                <!-- Floors will be generated here -->
-            </div>
-            <div id="products-container"></div>
+<div class="perspective-container" id="perspectiveContainer">
+    <div class="world" id="world">
+        <div id="floors-container">
+            <!-- Floors will be generated here -->
         </div>
+        
+        <!-- ✨ ARCHITECT'S ENGINE - FLOATING CRYSTAL -->
+        <div class="floating-crystal-container" id="floatingCrystal">
+            <!-- High Sales Banner -->
+            <div class="high-sales-banner-world" id="highSalesBanner">
+                <div style="text-align: center; color: white; font-weight: bold; font-size: 14px; text-shadow: 0 0 10px #ffaa00;">
+                    🏆 HIGH SALES DAY 🏆
+                </div>
+            </div>
+
+            <!-- Crystal -->
+            <div class="crystal-octahedron" id="crystal">
+                <div class="crystal-face"></div>
+                <div class="crystal-face"></div>
+                <div class="crystal-face"></div>
+                <div class="crystal-face"></div>
+                <div class="crystal-face"></div>
+                <div class="crystal-face"></div>
+                <div class="crystal-face"></div>
+                <div class="crystal-face"></div>
+            </div>
+            
+            <!-- Equipment (Wings + Shield) -->
+            <div class="crystal-equipment" id="crystalEquipment">
+                <div class="crystal-wing wing-left"></div>
+                <div class="crystal-wing wing-right"></div>
+                <div class="crystal-shield"></div>
+            </div>
+
+            <!-- Particle System -->
+            <div class="particle-container" id="particleContainer"></div>
+
+            <!-- Cash Notes -->
+            <div class="cash-notes-container" id="cashNotesContainer"></div>
+
+            <!-- Stats Display (Floating Label) -->
+            <div class="crystal-stats-label" id="crystalStatsLabel">
+                <div style="font-size: 24px; font-weight: 900; color: var(--neon-accent); text-shadow: 0 0 20px var(--neon-accent);">
+                    💰 $<span id="salesDisplay">0.00</span>
+                </div>
+                <div style="font-size: 10px; color: #888; margin-top: 5px;">TODAY'S SALES</div>
+            </div>
+        </div>
+        
+        <div id="products-container"></div>
     </div>
+</div>
 
     <div class="overlay" id="overlay"></div>
     
