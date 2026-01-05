@@ -698,10 +698,18 @@
 const response = await fetch('https://ai-inventory-pro-sigma.vercel.app/api/gemini', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ 
-        messages: [{ role: 'user', content: `Analyze this data: ${JSON.stringify(businessData)}` }] 
-    })
-});
+body: JSON.stringify({ 
+    messages: [
+        { 
+            role: 'system', 
+            content: `You are the ScaleVest AI CFO. Use this business data for context if needed: ${JSON.stringify(firebaseData)}` 
+        },
+        { 
+            role: 'user', 
+            content: prompt // This is the "Hi" or "Hello" you typed
+        }
+    ] 
+})
 
                 if (response.ok) {
                     console.log("SCALEVEST CFO LIVE");
@@ -793,10 +801,18 @@ const response = await fetch('https://ai-inventory-pro-sigma.vercel.app/api/gemi
 const response = await fetch('https://ai-inventory-pro-sigma.vercel.app/api/gemini', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ 
-        messages: [{ role: 'user', content: `Analyze this data: ${JSON.stringify(businessData)}` }] 
-    })
-});
+body: JSON.stringify({ 
+    messages: [
+        { 
+            role: 'system', 
+            content: `You are the ScaleVest AI CFO. Use this business data for context if needed: ${JSON.stringify(firebaseData)}` 
+        },
+        { 
+            role: 'user', 
+            content: prompt // This is the "Hi" or "Hello" you typed
+        }
+    ] 
+})
 
                 if (response.ok) {
                     console.log("SCALEVEST CFO LIVE");
@@ -831,5 +847,4 @@ const response = await fetch('https://ai-inventory-pro-sigma.vercel.app/api/gemi
     </script>
 </body>
 </html>
-
 
