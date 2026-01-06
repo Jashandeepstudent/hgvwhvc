@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quick Actions - ScaleVest</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -131,8 +132,8 @@ const action = urlParams.get('action');
 
 // Global user data storage
 let userData = {
-    Businesses: null,
-    BusinessOwners: null
+    businesses: null,
+    businessOwners: null
 };
 
 auth.onAuthStateChanged(async (user) => {
@@ -530,70 +531,87 @@ async function loadSyncOperations(userId) {
     const dbRef = ref(getDatabase());
     
     try {
-        const businessItemsSnapshot = await get(child(dbRef, `BusinessOwners/${userId}/businessItems`));
+        // Load data from the correct path based on your Firebase structure
+        const userSnapshot = await get(child(dbRef, userId));
         
-        if (!businessItemsSnapshot.exists()) {
-            document.getElementById('pending-operations-list').innerHTML = '<div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.6);">No business items found</div>';
+        if (!userSnapshot.exists()) {
+            document.getElementById('pending-operations-list').innerHTML = '<div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.6);">No data found</div>';
             return;
         }
         
-        const businessItems = businessItemsSnapshot.val();
+        const userData = userSnapshot.val();
         const pendingTasks = [];
         
-        if (businessItems.notes) {
-            for (const [noteId, noteData] of Object.entries(businessItems.notes)) {
-                if (noteData.completed === false) {
-                    pendingTasks.push({
-                        type: 'note',
-                        id: noteId,
-                        title: noteData.title || 'Untitled Note',
-                        deadline: noteData.lastDate || businessItems.meta?.noteslastdate || 'No deadline',
-                        completed: false
-                    });
-                }
-            }
-        }
-        
-        if (businessItems.pendingorder) {
-            for (const [orderId, orderData] of Object.entries(businessItems.pendingorder)) {
-                if (orderData.completed === false) {
-                    pendingTasks.push({
-                        type: 'order',
-                        id: orderId,
-                        title: orderData.category || 'Pending Order',
-                        deadline: orderData.lastDate || businessItems.meta?.pendingorderslastdate || 'No deadline',
-                        completed: false
-                    });
-                }
-            }
-        }
-        
-        if (businessItems.transactions) {
-            for (const [transId, transData] of Object.entries(businessItems.transactions)) {
-                if (transData.completed === false) {
+        // Load transactions (from root level of user)
+        if (userData) {
+            for (const [key, value] of Object.entries(userData)) {
+                // Skip non-transaction keys like CFO, National Currency, etc.
+                if (typeof value === 'object' && value !== null && 
+                    value.completed === false && 
+                    value.name && 
+                    !['CFO', 'National Currency', 'businessName', 'createdAt', 'expiryDateNotification'].includes(key)) {
+                    
                     pendingTasks.push({
                         type: 'transaction',
-                        id: transId,
-                        title: transData.name || 'Transaction',
-                        deadline: transData.lastDate || businessItems.meta?.translastdate || 'No deadline',
+                        id: key,
+                        title: value.name || 'Unnamed Transaction',
+                        amount: value.amount ? `${value.currency || ''} ${value.amount}` : '',
+                        transactionType: value.type || '',
+                        deadline: value.date || 'No deadline',
+                        details: value.details || '',
                         completed: false
                     });
                 }
             }
         }
         
-        if (businessItems.teamandstaff) {
-            for (const [staffId, staffData] of Object.entries(businessItems.teamandstaff)) {
-                if (staffData.jobs) {
-                    for (const [jobId, jobData] of Object.entries(staffData.jobs)) {
-                        if (jobData.completed === false) {
-                            pendingTasks.push({
-                                type: 'job',
-                                id: jobId,
-                                title: jobData.desc || 'Job Task',
-                                deadline: jobData.lastDate || businessItems.meta?.teamlastdate || 'No deadline',
-                                completed: false
-                            });
+        // Try to load from BusinessOwners path as well (if it exists)
+        const businessOwnersSnapshot = await get(child(dbRef, `BusinessOwners/${userId}/businessItems`));
+        
+        if (businessOwnersSnapshot.exists()) {
+            const businessItems = businessOwnersSnapshot.val();
+            
+            if (businessItems.notes) {
+                for (const [noteId, noteData] of Object.entries(businessItems.notes)) {
+                    if (noteData.completed === false) {
+                        pendingTasks.push({
+                            type: 'note',
+                            id: noteId,
+                            title: noteData.title || 'Untitled Note',
+                            deadline: noteData.lastDate || businessItems.meta?.noteslastdate || 'No deadline',
+                            completed: false
+                        });
+                    }
+                }
+            }
+            
+            if (businessItems.pendingorder) {
+                for (const [orderId, orderData] of Object.entries(businessItems.pendingorder)) {
+                    if (orderData.completed === false) {
+                        pendingTasks.push({
+                            type: 'order',
+                            id: orderId,
+                            title: orderData.category || 'Pending Order',
+                            deadline: orderData.lastDate || businessItems.meta?.pendingorderslastdate || 'No deadline',
+                            completed: false
+                        });
+                    }
+                }
+            }
+            
+            if (businessItems.teamandstaff) {
+                for (const [staffId, staffData] of Object.entries(businessItems.teamandstaff)) {
+                    if (staffData.jobs) {
+                        for (const [jobId, jobData] of Object.entries(staffData.jobs)) {
+                            if (jobData.completed === false) {
+                                pendingTasks.push({
+                                    type: 'job',
+                                    id: jobId,
+                                    title: jobData.desc || 'Job Task',
+                                    deadline: jobData.lastDate || businessItems.meta?.teamlastdate || 'No deadline',
+                                    completed: false
+                                });
+                            }
                         }
                     }
                 }
@@ -638,6 +656,12 @@ async function loadSyncOperations(userId) {
                 (daysUntil < 0 ? '#f87171' : daysUntil <= 3 ? '#fb923c' : '#4ade80') : 
                 '#94a3b8';
             
+            // Extra info for transactions
+            const extraInfo = task.type === 'transaction' && task.amount ? 
+                `<div style="font-size: 13px; color: rgba(255,255,255,0.5); margin-top: 4px;">
+                    ${task.amount} ${task.transactionType ? `• ${task.transactionType.toUpperCase()}` : ''}
+                </div>` : '';
+            
             return `
                 <div style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; border-left: 4px solid ${typeColors[task.type]}; position: relative; margin-bottom: 15px;">
                     <div style="display: flex; justify-content: space-between; align-items: start; gap: 15px;">
@@ -650,6 +674,7 @@ async function loadSyncOperations(userId) {
                             <div style="font-size: 13px; color: rgba(255,255,255,0.6);">
                                 Deadline: ${task.deadline}
                             </div>
+                            ${extraInfo}
                         </div>
                         <div style="background: ${urgencyColor}20; color: ${urgencyColor}; padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 700; white-space: nowrap;">
                             ${urgency}
