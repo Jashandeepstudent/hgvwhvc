@@ -129,8 +129,35 @@ const db = getDatabase(app);
 const urlParams = new URLSearchParams(window.location.search);
 const action = urlParams.get('action');
 
-auth.onAuthStateChanged((user) => {
-    if (user) {
+// Global user data storage
+let userData = {
+    businesses: null,
+    businessOwners: null
+};
+
+auth.onAuthStateChanged(async (user) => {
+    if (!user) {
+        window.location.href = "login.html";
+        return;
+    }
+    
+    // Load all user data from both paths
+    const dbRef = ref(getDatabase());
+    try {
+        const [businessesSnapshot, businessOwnersSnapshot] = await Promise.all([
+            get(child(dbRef, `Businesses/${user.uid}`)),
+            get(child(dbRef, `BusinessOwners/${user.uid}`))
+        ]);
+        
+        if (businessesSnapshot.exists()) {
+            userData.businesses = businessesSnapshot.val();
+        }
+        
+        if (businessOwnersSnapshot.exists()) {
+            userData.businessOwners = businessOwnersSnapshot.val();
+        }
+        
+        // Load appropriate action
         if (action === 'flashsale') {
             loadFlashSale(user.uid);
         } else if (action === 'order') {
@@ -138,8 +165,9 @@ auth.onAuthStateChanged((user) => {
         } else if (action === 'sync') {
             loadSyncOperations(user.uid);
         }
-    } else {
-        window.location.href = "login.html";
+    } catch (error) {
+        console.error("Error loading user data:", error);
+        alert("Error loading data. Please try again.");
     }
 });
 
@@ -419,48 +447,18 @@ function showQuantitySection() {
     
     listEl.innerHTML = selectedProducts.map(product => `
         <div style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 15px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; gap: 15px;">
-                <div style="flex: 1;">
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <div>
                     <div style="font-weight: 600; margin-bottom: 5px;">${product.name}</div>
-                    <div style="font-size: 12px; color: rgba(255,255,255,0.5);">Current: ${product.currentStock} ${product.unit}</div>
+                    <div style="font-size: 12px; color: rgba(255,255,255,0.5);">Current Stock: ${product.currentStock}</div>
                 </div>
-                <input type="number" id="qty-${product.id}" placeholder="Order quantity" min="1" style="width: 150px; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: white; outline: none;">
+                <textarea id="qty-${product.id}" placeholder="Enter order details, quantity, notes..." rows="2" style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: white; outline: none; resize: vertical; font-family: inherit;"></textarea>
             </div>
         </div>
     `).join('');
 }
 
-window.generateOrderPDF = function() {
-    const orderData = [];
-    
-    for (const productId of selectedOrderProducts) {
-        const qtyInput = document.getElementById(`qty-${productId}`);
-        const qty = parseInt(qtyInput.value);
-        
-        if (!qty || qty <= 0) {
-            alert(`Please enter a valid quantity for all selected products`);
-            return;
-        }
-        
-        const product = window.lowStockProductsData.find(p => p.id === productId);
-        orderData.push({
-            name: product.name,
-            currentStock: product.currentStock,
-            unit: product.unit,
-            orderQty: qty
-        });
-    }
-    
-    const orderId = `ORD-${Date.now()}`;
-    const date = new Date().toLocaleDateString();
-    
-    let pdfHTML = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <style>
-                body { font-family: Arial, sans-serif; padding: 40px; background: #fff; color: #000; }
-                .header { text-align: center; margin-bottom: 40px; border-bottom: 3px solid #3b82f6; padding-bottom: 20px; }
+px; border-bottom: 3px solid #3b82f6; padding-bottom: 20px; }
                 .header h1 { color: #3b82f6; margin: 0; font-size: 36px; }
                 .order-id { font-size: 18px; color: #666; margin-top: 10px; }
                 table { width: 100%; border-collapse: collapse; margin-top: 30px; }
