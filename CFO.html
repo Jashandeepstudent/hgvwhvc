@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <title>ScaleVest CFO</title>
+    <title>ScaleVest CFOD</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         * {
@@ -1507,85 +1507,100 @@ function generateExecutiveSummary(data) {
 }function generateFinancePDF(reportName) {
     const data = window.financeData;
     if (!data) {
-        alert('No financial data available. Please wait for data to load.');
+        alert('Data not loaded.');
         return;
     }
 
-    // 1. Target the main dashboard container
-    const dashboardElement = document.getElementById('dashboard-container');
-    if (!dashboardElement) {
-        alert('Error: dashboard-container not found. Please add id="dashboard-container" to your main div.');
-        return;
-    }
-
+    // 1. Hide UI elements so they don't appear in the PDF
     const modal = document.getElementById('export-modal');
-    modal.style.display = 'none'; // Hide modal from PDF
+    if (modal) modal.style.display = 'none';
 
-    // 2. Create the Wrapper for all pages
-    const pdfWrapper = document.createElement('div');
-    pdfWrapper.style.background = '#0a0e27'; // Maintain your dark theme
+    // 2. Create a high-quality "Report Builder" element
+    const reportBuilder = document.createElement('div');
+    reportBuilder.style.cssText = 'background: white; color: #000; font-family: "Helvetica", "Arial", sans-serif;';
 
-    // --- PAGE 1: FULL COPY OF DASHBOARD ---
-    const page1 = dashboardElement.cloneNode(true);
-    page1.style.padding = "20px";
-    page1.style.marginBottom = "50px";
-    pdfWrapper.appendChild(page1);
+    // --- PAGE 1: THE DASHBOARD SNAPSHOT (RE-STYLED FOR PRINT) ---
+    const dashboardClone = document.getElementById('dashboard-container').cloneNode(true);
+    dashboardClone.style.cssText = 'padding: 20px; background: #0a0e27; width: 1000px; margin: 0 auto;';
+    reportBuilder.appendChild(dashboardClone);
 
-    // --- PAGE 2 & 3: PROFESSIONAL REPORT ---
-    const reportContent = document.createElement('div');
-    // Force page break
-    reportContent.style.cssText = 'page-break-before: always; background: white; color: #1a1a1a; padding: 60px; font-family: Arial, sans-serif;';
-    
-    reportContent.innerHTML = `
-        <div style="text-align: center; margin-bottom: 50px; border-bottom: 3px solid #3b82f6; padding-bottom: 30px;">
-            <div style="font-size: 36px; font-weight: 700; color: #3b82f6; margin-bottom: 10px;">SCALEVEST</div>
-            <div style="font-size: 28px; font-weight: 700; color: #1a1a1a; margin-bottom: 10px;">Business Finance Certificate</div>
-            <div style="font-size: 16px; color: #666;">${reportName}</div>
-            <div style="font-size: 14px; color: #999; margin-top: 10px;">Generated on ${new Date().toLocaleDateString()}</div>
+    // --- PAGE 2: PROFESSIONAL CFO SUMMARY (WHITE BACKGROUND) ---
+    const page2 = document.createElement('div');
+    page2.style.cssText = 'page-break-before: always; padding: 60px; min-height: 1100px;';
+    page2.innerHTML = `
+        <div style="border-bottom: 4px solid #3b82f6; padding-bottom: 20px; margin-bottom: 40px; text-align: center;">
+            <h1 style="font-size: 42px; margin: 0; color: #3b82f6;">SCALEVEST</h1>
+            <h2 style="font-size: 24px; color: #334155; margin-top: 10px;">Executive Financial Certificate</h2>
+            <p style="color: #64748b;">Report: ${reportName} | Date: ${new Date().toLocaleDateString()}</p>
         </div>
 
-        <div style="margin-bottom: 40px;">
-            <div style="font-size: 20px; font-weight: 700; color: #3b82f6; margin-bottom: 20px; border-left: 4px solid #3b82f6; padding-left: 15px;">Financial Summary</div>
-            <table style="width: 100%; border-collapse: collapse;">
-                <tr style="border-bottom: 1px solid #ddd;"><td style="padding: 15px;">Total Revenue</td><td style="text-align: right; color: #10b981; font-weight: 700;">$${data.totalRevenue.toLocaleString()}</td></tr>
-                <tr style="border-bottom: 1px solid #ddd;"><td style="padding: 15px;">Total Costs</td><td style="text-align: right; color: #f59e0b; font-weight: 700;">$${data.totalCosts.toLocaleString()}</td></tr>
-                <tr style="border-bottom: 2px solid #3b82f6;"><td style="padding: 15px; font-size: 18px; font-weight: 700;">Net Profit</td><td style="text-align: right; font-size: 18px; font-weight: 700; color: ${data.netProfit >= 0 ? '#10b981' : '#ef4444'};">$${data.netProfit.toLocaleString()}</td></tr>
-            </table>
-        </div>
-
-        <div style="margin-bottom: 40px; page-break-inside: avoid;">
-            <div style="font-size: 20px; font-weight: 700; color: #3b82f6; margin-bottom: 20px; border-left: 4px solid #3b82f6; padding-left: 15px;">CFO's Executive Summary</div>
-            <div style="line-height: 1.8; color: #333; background: #f8fafc; padding: 25px; border-radius: 12px; border: 1px solid #e2e8f0;">
-                ${document.getElementById('executive-summary').innerHTML}
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 40px;">
+            <div style="padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                <h3 style="color: #64748b; font-size: 14px; text-transform: uppercase;">Total Revenue</h3>
+                <p style="font-size: 28px; font-weight: bold; color: #10b981;">$${data.totalRevenue.toLocaleString()}</p>
+            </div>
+            <div style="padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                <h3 style="color: #64748b; font-size: 14px; text-transform: uppercase;">Net Profit</h3>
+                <p style="font-size: 28px; font-weight: bold; color: ${data.netProfit >= 0 ? '#10b981' : '#ef4444'};">$${data.netProfit.toLocaleString()}</p>
             </div>
         </div>
 
-        <div style="page-break-before: always;">
-            <div style="font-size: 20px; font-weight: 700; color: #3b82f6; margin-bottom: 20px; border-left: 4px solid #3b82f6; padding-left: 15px;">Product Performance Detail</div>
-            <table style="width: 100%; border-collapse: collapse;">
-                ${data.productRevenue.slice(0, 10).map(([name, prodData]) => `
-                    <tr style="border-bottom: 1px solid #eee;">
-                        <td style="padding: 12px; font-weight: 600;">${name}</td>
-                        <td style="padding: 12px; text-align: center; color: #64748b;">${prodData.quantity} units</td>
-                        <td style="padding: 12px; text-align: right; font-weight: 700; color: #10b981;">$${prodData.revenue.toFixed(2)}</td>
-                    </tr>`).join('')}
-            </table>
+        <h3 style="border-left: 5px solid #3b82f6; padding-left: 15px; margin-bottom: 20px;">Strategic Executive Analysis</h3>
+        <div style="line-height: 1.8; font-size: 16px; color: #1e293b; background: #f8fafc; padding: 30px; border-radius: 12px;">
+            ${document.getElementById('executive-summary').innerHTML}
         </div>
     `;
-    pdfWrapper.appendChild(reportContent);
+    reportBuilder.appendChild(page2);
 
-    // 3. Convert to PDF
+    // --- PAGE 3: DETAILED LEDGER & SIGN-OFF ---
+    const page3 = document.createElement('div');
+    page3.style.cssText = 'page-break-before: always; padding: 60px;';
+    page3.innerHTML = `
+        <h3 style="border-left: 5px solid #3b82f6; padding-left: 15px; margin-bottom: 20px;">Product Performance Audit</h3>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+            <thead>
+                <tr style="background: #f1f5f9; text-align: left;">
+                    <th style="padding: 12px; border: 1px solid #e2e8f0;">Product Name</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0;">Volume</th>
+                    <th style="padding: 12px; border: 1px solid #e2e8f0; text-align: right;">Revenue</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${data.productRevenue.slice(0, 15).map(([name, p]) => `
+                    <tr>
+                        <td style="padding: 12px; border: 1px solid #e2e8f0;">${name}</td>
+                        <td style="padding: 12px; border: 1px solid #e2e8f0;">${p.quantity}</td>
+                        <td style="padding: 12px; border: 1px solid #e2e8f0; text-align: right; font-weight: bold;">$${p.revenue.toFixed(2)}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+
+        <div style="margin-top: 100px; display: flex; justify-content: space-between;">
+            <div style="width: 200px; border-top: 1px solid #000; text-align: center; padding-top: 10px;">CFO Signature</div>
+            <div style="width: 200px; border-top: 1px solid #000; text-align: center; padding-top: 10px;">Audit Date</div>
+        </div>
+    `;
+    reportBuilder.appendChild(page3);
+
+    // 3. PDF Configuration (Fixes the Blank Page bug)
     const opt = {
         margin: 0,
-        filename: `${reportName}_ScaleVest_Report.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#0a0e27' },
+        filename: `${reportName}_ScaleVest_CFO.pdf`,
+        image: { type: 'jpeg', quality: 1 },
+        html2canvas: { 
+            scale: 2, 
+            useCORS: true, 
+            scrollY: 0, // CRITICAL: Fixes the blank page issue
+            backgroundColor: '#ffffff' 
+        },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
         pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     };
 
-    html2pdf().set(opt).from(pdfWrapper).save().then(() => {
-        alert('PDF generated! Page 1 is your Dashboard copy, Pages 2-3 are the full report.');
+    // 4. Run the generator
+    html2pdf().set(opt).from(reportBuilder).save().then(() => {
+        alert("Professional CFO Report Generated.");
     });
 }
 
