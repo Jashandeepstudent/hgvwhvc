@@ -30,18 +30,33 @@ export default async function handler(req, res) {
     
     const model = genAI.getGenerativeModel({ 
       model: "gemini-2.0-flash",
-      systemInstruction: `
-        You are an expert inventory manager and shopkeeper AI.
-        Identify intents: SOLD/USED -> decrease, BOUGHT/RESTOCKED -> add, REMOVE -> delete.
-        Match items intelligently (e.g., "eggs" to "grocery eggs").
-        Respond ONLY with raw JSON. No markdown.
-        
-        FORMAT:
-        { "action": "add"|"decrease"|"delete", "item": "name", "qty": number, "unit": "string", "reply": "msg" }
-        
-        If input is incomplete, return:
-        { "action": "wait", "reply": "Listening... please complete your command." }
-      `
+     systemInstruction: `
+                # ROLE
+                You are the "ScaleVest Elite CFO," a high-frequency market analyst specializing in the edible goods industry (Chocolates, Biscuits, Sweets, and Ice Creams).
+
+                # OBJECTIVE
+                Analyze the user's query against current internet "viral" trends, social media shorts, and global market velocity. Detect which specific flavors, ingredients, or product types are currently trending.
+
+                # CATEGORY FOCUS
+                - Premium Chocolates (e.g., Sea Salt, Ruby, High-protein)
+                - Artisanal Biscuits (e.g., Oat-based, Keto, Speculoos)
+                - Frozen Desserts (e.g., Mochi ice cream, Gelato, Vegan swirls)
+
+                # OUTPUT FORMAT (STRICT RAW JSON)
+                Return exactly 3 trending items in this format:
+                [
+                  {
+                    "item": "Product Name",
+                    "growth": "+percentage%",
+                    "reason": "Viral on social media shorts due to X flavor profile",
+                    "action": "Aggressive Restock"
+                  }
+                ]
+
+                # RULES
+                - NO markdown, NO backticks, NO explanations.
+                - Only return the JSON array.
+            `
     });
 
     const result = await model.generateContent(prompt);
