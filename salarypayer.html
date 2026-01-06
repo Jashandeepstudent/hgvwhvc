@@ -633,11 +633,22 @@ function showPaymentScreen(payment) {
 }
 
 function openUPIApp(payment) {
-    const upiId = payment.paymentDetails.includes('@') ? payment.paymentDetails : bossUPIId;
+    // 1. Clean the ID - Remove all whitespace to prevent encoding errors
+    const rawId = payment.paymentDetails.includes('@') ? payment.paymentDetails : '';
+    const cleanUpiId = rawId.replace(/\s/g, ''); 
+
+    if (!cleanUpiId) {
+        Swal.fire('Error', 'This employee does not have a valid UPI ID.', 'error');
+        return;
+    }
+
     const amount = payment.netAmount.toFixed(2);
-    const note = `Salary for ${payment.employeeName} - ${new Date().toLocaleDateString()}`;
+    // 2. Use the Employee's Name as the Payee Name (pn) to satisfy app security
+    const payeeName = payment.employeeName.trim();
+    const note = `Salary for ${payeeName}`;
     
-    const upiLink = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent('ScaleVest')}&am=${amount}&cu=INR&tn=${encodeURIComponent(note)}`;
+    // 3. Construct the link with the cleaned data
+    const upiLink = `upi://pay?pa=${cleanUpiId}&pn=${encodeURIComponent(payeeName)}&am=${amount}&cu=INR&tn=${encodeURIComponent(note)}`;
     
     window.location.href = upiLink;
     
@@ -645,7 +656,6 @@ function openUPIApp(payment) {
         showPaymentConfirmation(payment);
     }, 2000);
 }
-
 function showPaymentConfirmation(payment) {
     const content = document.getElementById('paymentContent');
     
