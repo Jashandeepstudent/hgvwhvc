@@ -217,6 +217,12 @@ function renderEmployees() {
             <div class="employee-card glass-card rounded-2xl shadow-lg p-6 ${isSelected ? 'selected-card' : ''}" data-id="${id}">
                 <div class="flex justify-between mb-2">
                     <button onclick="event.stopPropagation(); editEmployee('${id}')" class="text-indigo-500 hover:text-indigo-700">✏️ Edit</button>
+<div class="mt-4 flex gap-2">
+    <button onclick="event.stopPropagation(); payIndividual('${id}')" 
+            class="w-full bg-green-500 hover:bg-green-600 text-white text-xs font-bold py-2 rounded-lg transition">
+        💸 Pay ${emp.name}
+    </button>
+</div>
                     <button onclick="event.stopPropagation(); deleteEmployee('${id}')" class="text-red-500 hover:text-red-700">🗑️ Remove</button>
                 </div>
                 <div class="flex flex-col items-center mb-4">
@@ -400,7 +406,20 @@ async function askForGlobalDeductions() {
         await askForBonus();
     }
 }
+window.payIndividual = function(id) {
+    const emp = employees[id];
+    const upiId = emp.paymentDetails.includes('@') ? emp.paymentDetails : '';
+    
+    if (!upiId) {
+        Swal.fire('Error', 'This employee does not have a UPI ID saved.', 'error');
+        return;
+    }
 
+    const netAmount = emp.salary; // Simple individual payment
+    const upiLink = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(emp.name)}&am=${netAmount}&cu=INR&tn=Salary`;
+    
+    window.location.href = upiLink;
+};
 async function askForBonus() {
     if (selectedEmployees.size === 0) return;
 
@@ -602,32 +621,92 @@ function calculateAndShowSummary(bonus) {
     });
 }
 
+// Replace your old processPayment with this
 function processPayment(amount, selectedEmps, bonus) {
-    const paymentData = {
-        selectedEmps: selectedEmps,
-        totalAmount: amount,
-        bonus: bonus,
-        platformFee: selectedEmps.length * 5
-    };
-
-    const options = {
-        key: "rzp_test_1DP5mmOlF5G5ag",
-        amount: amount * 100,
-        currency: "INR",
-        name: "ScaleVest",
-        description: `Salary Payment for ${selectedEmps.length} employee(s)`,
-        handler: function (response) {
-            triggerConfetti();
-            savePaymentToHistory(response.razorpay_payment_id, paymentData);
-        },
-        prefill: { name: bossName },
-        theme: { color: "#4F46E5" }
-    };
-
-    const rzp = new Razorpay(options);
-    rzp.open();
+    // We create a queue of employees to pay
+    const paymentQueue = [...selectedEmps];
+    
+    Swal.fire({
+        title: 'UPI Payment Sequence',
+        text: `You are about to pay ${paymentQueue.length} employee(s) via UPI.`,
+        icon: 'info',
+        confirmButtonText: 'Start Payments',
+        confirmButtonColor: '#4F46E5'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            processNextInQueue(paymentQueue, 0, bonus);
+        }
+    });
 }
 
+function processNextInQueue(queue, index, bonus) {
+    if (index >= queue.length) {
+        triggerConfetti();
+        // Since we can't verify external UPI success automatically, 
+        // we assume completion after the last link is clicked
+        const mockPaymentId = 'UPI-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+        const finalData = {
+            selectedEmps: queue,
+            totalAmount: queue.reduce((sum, e) => sum + e.total, 0) + (queue.length * 5),
+            bonus: bonus,
+            platformFee: queue.length * 5
+        };
+        savePaymentToHistory(mockPaymentId, finalData);
+        return;
+    }
+
+    const emp = queue[index];
+    const upiId = emp.paymentDetails.includes('@') ? emp.paymentDetails : '';
+    
+    // Fallback if no UPI ID is found
+    if (!upiId) {
+        Swal.fire({
+            title: 'No UPI ID',
+            text: `Skipping ${emp.name} (Bank details provided instead of UPI).`,
+            icon: 'warning',
+            confirmButtonText: 'Next'
+        }).then(() => processNextInQueue(queue, index + 1, bonus));
+        return;
+    }
+
+    Swal.fire({
+        title: `Step ${index + 1} of ${queue.length}`,
+        html: `
+            <div class="p-4">
+                <p class="text-lg font-bold">Paying: ${emp.name}</p>
+                <p class="text-2xl text-green-600 font-bold mb-4">${formatCurrency(emp.total)}</p>
+                <p class="text-sm text-gray-500">Clicking pay will open your UPI App.</p>
+            </div>
+        `,
+        confirmButtonText: `Pay ${emp.name}`,
+        confirmButtonColor: '#10B981',
+        allowOutsideClick: false
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Generate UPI Deep Link
+            const upiLink = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(emp.name)}&am=${emp.total}&cu=INR&tn=${encodeURIComponent('Salary Payment - ScaleVest')}`;
+            
+            // Open the UPI App
+            window.location.href = upiLink;
+
+            // Wait a few seconds for the user to finish in the other app, then prompt for next
+            setTimeout(() => {
+                Swal.fire({
+                    title: 'Payment Done?',
+                    text: `Did you complete the payment for ${emp.name}?`,
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, Next Employee',
+                    cancelButtonText: 'Stop Here',
+                    confirmButtonColor: '#4F46E5'
+                }).then((res) => {
+                    if (res.isConfirmed) {
+                        processNextInQueue(queue, index + 1, bonus);
+                    }
+                });
+            }, 3000); // 3-second delay before asking for next
+        }
+    });
+}
 // Save payment to Firebase History
 async function savePaymentToHistory(paymentId, paymentData) {
     const currentDate = new Date().toISOString();
