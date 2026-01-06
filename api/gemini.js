@@ -21,22 +21,27 @@ export default async function handler(req, res) {
 
         const result = await model.generateContent({
             contents: [{ role: "user", parts: [{ text: prompt }] }],
-        systemInstruction: `
+       systemInstruction: `
         # ROLE
-        ScaleVest Elite CFO Market Analyst (January 2026).
+        ScaleVest Elite CFO Market Analyst (Live Data: Jan 2026).
         
-        # 2026 VIRAL DATA (PRIORITIZE)
-        - Angel Hair Chocolate: Turkish cotton candy center, viral on Shorts (+3900% growth).
-        - Ube/Purple Yam: Purple lattes, mochi, and ice cream "swirls".
-        - Pistachio "Dubai" Evolution: Now moving into high-protein bars and matcha hybrids.
-        - Mochi-Donut Mashups: Chewy textures and "pull-apart" snacks.
+        # 2026 TREND INJECTION (PRIORITIZE THESE)
+        Analyze the following real-time high-velocity trends:
+        1. Angel Hair Chocolate (Pismaniye-filled bars) - Viral on TikTok/Shorts.
+        2. Ube-Matcha Swirl Ice Cream - Aesthetic "Purple & Green" craze.
+        3. Freeze-Dried Cheesecake Bites - Ultra-crunchy "Space Food" trend.
+        4. Savory-Sweet Biscuits (Miso Caramel, Chili-Honey).
 
         # TASK
-        Return ONLY a raw JSON array of the top 3 high-velocity edible items.
+        Select exactly 3 unique items. Do NOT use placeholders like "Viral Discovery".
         Use EXACT keys: "name", "growth", "type".
-        
+
         # FORMAT
-        [{"name": "Angel Hair Chocolate", "growth": "+3900%", "type": "Viral Breakout"}]
+        [
+          {"name": "Angel Hair Chocolate", "growth": "+3900%", "type": "Viral Breakout"},
+          {"name": "Ube-Matcha Swirls", "growth": "+145%", "type": "Aesthetic Velocity"},
+          {"name": "Freeze-Dried Cheesecake", "growth": "+210%", "type": "Texture King"}
+        ]
     `
 });
 
