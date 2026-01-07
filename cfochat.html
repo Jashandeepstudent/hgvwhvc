@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CFO Assistant Chat</title>
+    <title>CFddO Assistant Chat | ScaleVest</title>
     <style>
         * {
             margin: 0;
@@ -13,7 +13,8 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #0a0e27; /* Matching your startup config theme */
+            color: white;
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -22,95 +23,88 @@
         }
 
         .chat-container {
-            background: white;
+            background: #151b3d;
             border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 800px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            max-width: 900px;
             width: 100%;
-            height: 600px;
+            height: 80vh;
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .chat-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1e2652 0%, #0a0e27 100%);
             color: white;
             padding: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .chat-header h1 {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .user-info {
-            font-size: 14px;
-            opacity: 0.9;
+            font-size: 12px;
+            opacity: 0.6;
+            margin-top: 5px;
         }
 
         .chat-messages {
             flex: 1;
             overflow-y: auto;
-            padding: 20px;
-            background: #f5f5f5;
+            padding: 25px;
+            background: #0f1432;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
         }
 
         .message {
-            margin-bottom: 16px;
-            display: flex;
-            animation: fadeIn 0.3s ease-in;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .message.assistant { justify-content: flex-start; }
-        .message.user { justify-content: flex-end; }
-
-        .message-content {
-            max-width: 70%;
+            max-width: 80%;
             padding: 12px 18px;
-            border-radius: 18px;
+            border-radius: 15px;
             font-size: 15px;
-            line-height: 1.5;
-            white-space: pre-wrap;
+            line-height: 1.6;
+            word-wrap: break-word;
         }
 
-        .message.assistant .message-content {
-            background: white;
-            color: #333;
-            border-bottom-left-radius: 4px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        .message.assistant {
+            align-self: flex-start;
+            background: #1e2652;
+            color: #e0e0e0;
+            border-bottom-left-radius: 2px;
         }
 
-        .message.user .message-content {
+        .message.user {
+            align-self: flex-end;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            border-bottom-right-radius: 4px;
+            border-bottom-right-radius: 2px;
         }
 
         .chat-input-area {
             padding: 20px;
-            background: white;
-            border-top: 1px solid #e0e0e0;
+            background: #151b3d;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
-            gap: 10px;
-            align-items: center;
+            gap: 12px;
         }
 
         .chat-input {
             flex: 1;
-            padding: 12px 18px;
-            border: 2px solid #e0e0e0;
-            border-radius: 25px;
+            padding: 14px 20px;
+            background: #0a0e27;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 30px;
+            color: white;
             font-size: 15px;
-            transition: border-color 0.3s;
         }
 
         .chat-input:focus {
@@ -119,9 +113,9 @@
         }
 
         .send-btn {
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 48px;
+            height: 48px;
+            background: #667eea;
             color: white;
             border: none;
             border-radius: 50%;
@@ -129,78 +123,49 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: transform 0.2s;
+            transition: 0.3s;
         }
 
-        .send-btn:hover { transform: scale(1.1); }
+        .send-btn:hover { background: #764ba2; transform: scale(1.05); }
 
-        .back-btn {
-            position: fixed;
-            bottom: 30px;
-            left: 30px;
-            padding: 12px 24px;
-            background: white;
-            color: #667eea;
-            border: none;
-            border-radius: 25px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            transition: transform 0.2s;
-        }
+        .loading-dots { display: flex; gap: 4px; padding: 5px; }
+        .dot { width: 8px; height: 8px; background: #667eea; border-radius: 50%; animation: bounce 1.4s infinite; }
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
 
-        .loading { display: flex; gap: 4px; padding: 12px 18px; }
-        .loading span {
-            width: 8px; height: 8px;
-            background: #667eea;
-            border-radius: 50%;
-            animation: bounce 1.4s infinite ease-in-out both;
-        }
-        .loading span:nth-child(1) { animation-delay: -0.32s; }
-        .loading span:nth-child(2) { animation-delay: -0.16s; }
-
-        @keyframes bounce {
-            0%, 80%, 100% { transform: scale(0); }
-            40% { transform: scale(1); }
-        }
-
-        .status-indicator {
-            font-size: 12px;
-            color: #4ade80;
-            margin-top: 4px;
-        }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
     </style>
 </head>
 <body>
-    <div class="chat-container" id="chatContainer">
+
+    <div class="chat-container">
         <div class="chat-header">
-            <div>
-                <h1>💼 CFO Assistant</h1>
-                <div class="user-info" id="userInfo">Connecting...</div>
-                <div class="status-indicator" id="statusText">○ Initializing session...</div>
+            <h1>💼 CFO Strategic Assistant</h1>
+            <div id="userInfo" class="user-info">Verifying identity...</div>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="message assistant">
+                System online. I have access to your startup profile and financial metrics. How can I assist with your strategy today?
             </div>
         </div>
-        <div class="chat-messages" id="chatMessages"></div>
+
         <div class="chat-input-area">
-            <input type="text" class="chat-input" id="chatInput" placeholder="Ask about your business metrics..." onkeypress="handleKeyPress(event)">
-            <button class="send-btn" onclick="sendMessage()">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+            <input type="text" id="chatInput" class="chat-input" placeholder="Analyze my burn rate..." autocomplete="off">
+            <button class="send-btn" onclick="handleSend()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                 </svg>
             </button>
         </div>
     </div>
 
-    <button class="back-btn" id="backBtn" onclick="goBack()">← Back to Dashboard</button>
-
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getDatabase, ref, get } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
         import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-
-        // --- CONFIGURATION ---
-        const API_URL = 'https://ai-inventory-pro-sigma.vercel.app/api/cfoscalevest'; 
+        import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getVertexAI, getGenerativeModel } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-vertexai.js';
 
         const firebaseConfig = {
             apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
@@ -209,115 +174,112 @@
             projectId: "scalevest-163a0",
             storageBucket: "scalevest-163a0.firebasestorage.app",
             messagingSenderId: "938358950124",
-            appId: "1:938358950124:web:043506aeaacea2a96bfdc9",
-            measurementId: "G-QD3TWBZHR0"
+            appId: "1:938358950124:web:043506aeaacea2a96bfdc9"
         };
 
+        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
-        const database = getDatabase(app);
         const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        // Initialize Vertex AI (Gemini)
+        const vertexAI = getVertexAI(app);
+        const model = getGenerativeModel(vertexAI, { 
+            model: "gemini-1.5-flash",
+            systemInstruction: "You are the ScaleVest CFO Agent. You have access to the user's startup profile, valuation, and revenue. Your goal is to provide high-level financial advice. Be concise, use professional language, and always conclude with a specific 'CFO COMMAND'."
+        });
 
-        // State
-        window.userData = null;
+        let currentUser = null;
+        let startupData = null;
 
-        onAuthStateChanged(auth, (user) => {
-            if (!user) {
-                window.location.href = 'login.html';
+        // Auth Listener
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('userInfo').textContent = `Authorized: ${user.email}`;
+                await fetchStartupData(user.uid);
             } else {
-                document.getElementById('userInfo').textContent = `ID: ${user.uid.substring(0, 8)}`;
-                loadUserData(user.uid);
+                window.location.href = 'login2.html';
             }
         });
 
-        async function loadUserData(userId) {
+        async function fetchStartupData(uid) {
             try {
-                const pricesRef = ref(database, `prices/${userId}`);
-                const salesRef = ref(database, `sales/${userId}`);
-                
-                const [pricesSnap, salesSnap] = await Promise.all([
-                    get(pricesRef),
-                    get(salesRef)
-                ]);
-
-                window.userData = {
-                    prices: pricesSnap.exists() ? pricesSnap.val() : "No inventory data.",
-                    sales: salesSnap.exists() ? salesSnap.val() : "No sales data."
-                };
-
-                document.getElementById('statusText').textContent = "● Data Vault Decrypted";
-                
-                const greetings = [
-                    "Connection established. What is our objective today?",
-                    "CFO Assistant online. Ready to review your business performance.",
-                    "Hello! I've loaded your metrics. What would you like to analyze?"
-                ];
-                addMessage('assistant', greetings[Math.floor(Math.random() * greetings.length)]);
-
-            } catch (error) {
-                console.error('Data Error:', error);
-                document.getElementById('statusText').textContent = "● Access Error";
-                addMessage('assistant', "Error accessing your financial vault. Please check permissions.");
+                const docRef = doc(db, "scalestartup", "startupprofile", "users", uid);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    startupData = docSnap.data();
+                    console.log("Startup Context Loaded:", startupData);
+                }
+            } catch (e) {
+                console.error("Error loading profile:", e);
             }
         }
 
-        async function sendMessage() {
+        async function handleSend() {
             const input = document.getElementById('chatInput');
-            const message = input.value.trim();
-            if (!message) return;
+            const text = input.value.trim();
+            if (!text) return;
 
-            addMessage('user', message);
+            // Add User Message
+            addMessage(text, 'user');
             input.value = '';
-            addLoadingMessage();
+
+            // Add Loading Indicator
+            const loadingId = addLoading();
 
             try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        message: message,
-                        userData: window.userData
-                    })
-                });
+                // Construct context-aware prompt
+                const context = startupData ? 
+                    `Context: Startup Name: ${startupData.startupName}, Valuation: ${startupData.valuation} USD, Revenue: ${startupData.revenue} USD, Category: ${startupData.category}. ` : 
+                    "Context: Startup profile not yet completed.";
 
-                const data = await response.json();
-                removeLoadingMessage();
-                addMessage('assistant', data.response || "I'm sorry, I couldn't process that request.");
+                const prompt = `${context} \n\n User Question: ${text}`;
+
+                // Call Gemini
+                const result = await model.generateContent(prompt);
+                const response = result.response.text();
+
+                removeLoading(loadingId);
+                addMessage(response, 'assistant');
             } catch (error) {
-                console.error('Fetch Error:', error);
-                removeLoadingMessage();
-                addMessage('assistant', "I'm having trouble connecting to the brain. Please check your internet or Vercel URL.");
+                removeLoading(loadingId);
+                addMessage("Analysis interrupted. Please ensure Vertex AI is enabled in your Firebase console.", 'assistant');
+                console.error(error);
             }
         }
 
-        function addMessage(type, content) {
+        function addMessage(text, sender) {
             const container = document.getElementById('chatMessages');
-            const msgDiv = document.createElement('div');
-            msgDiv.className = `message ${type}`;
-            msgDiv.innerHTML = `<div class="message-content">${content}</div>`;
-            container.appendChild(msgDiv);
+            const div = document.createElement('div');
+            div.className = `message ${sender}`;
+            div.textContent = text;
+            container.appendChild(div);
             container.scrollTop = container.scrollHeight;
         }
 
-        function addLoadingMessage() {
+        function addLoading() {
+            const id = 'load-' + Date.now();
             const container = document.getElementById('chatMessages');
-            const loader = document.createElement('div');
-            loader.className = 'message assistant';
-            loader.id = 'loadingMessage';
-            loader.innerHTML = `<div class="message-content loading"><span></span><span></span><span></span></div>`;
-            container.appendChild(loader);
+            const div = document.createElement('div');
+            div.className = 'message assistant';
+            div.id = id;
+            div.innerHTML = `<div class="loading-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
+            container.appendChild(div);
             container.scrollTop = container.scrollHeight;
+            return id;
         }
 
-        function removeLoadingMessage() {
-            const loader = document.getElementById('loadingMessage');
-            if (loader) loader.remove();
+        function removeLoading(id) {
+            const el = document.getElementById(id);
+            if (el) el.remove();
         }
 
-        // Global assignments for HTML attributes
-        window.sendMessage = sendMessage;
-        window.handleKeyPress = (e) => { if (e.key === 'Enter') sendMessage(); };
-        window.goBack = () => { window.location.href = 'CFO.html'; };
-
+        // Global shortcut
+        window.handleSend = handleSend;
+        document.getElementById('chatInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleSend();
+        });
     </script>
 </body>
 </html>
