@@ -440,23 +440,23 @@
                     <div class="error-message" id="locationError">Location is required</div>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">Languages You Speak <span class="required">*</span></label>
-                    <input type="text" class="form-input" id="languages" placeholder="e.g., English, Hindi, Spanish" required>
-                    <div class="error-message" id="languagesError">Languages are required</div>
-                </div>
+<div class="form-group">
+    <label class="form-label">Languages You Speak <span class="required">*</span></label>
+    <input type="text" class="form-input" id="languages" placeholder="..." required>
+    <div class="error-message" id="languagesError">Languages are required</div>
+</div>
 
-                <div class="form-group">
-                    <label class="form-label">Your Age <span class="required">*</span></label>
-                    <input type="number" class="form-input" id="userAge" placeholder="25" required>
-                    <div class="error-message" id="ageError">Age is required</div>
-                </div>
+<div class="form-group">
+    <label class="form-label">Your Age <span class="required">*</span></label>
+    <input type="number" class="form-input" id="userAge" placeholder="25" required>
+    <div class="error-message" id="userAgeError">Age is required</div>
+</div>
 
-                <div class="form-group">
-                    <label class="form-label">Graduation/Education <span class="required">*</span></label>
-                    <input type="text" class="form-input" id="graduation" placeholder="e.g., B.Tech in Computer Science" required>
-                    <div class="error-message" id="graduationError">Education is required</div>
-                </div>
+<div class="form-group">
+    <label class="form-label">Graduation/Education <span class="required">*</span></label>
+    <input type="text" class="form-input" id="graduation" placeholder="..." required>
+    <div class="error-message" id="graduationError">Education is required</div>
+</div>
 
                 <div class="form-group">
                     <label class="form-label">Awards & Recognition</label>
@@ -782,24 +782,30 @@ const firebaseConfig = {
         }
 
         // Validation
-        function validateFounderForm() {
-            let isValid = true;
-            const fields = ['location', 'languages', 'userAge', 'graduation', 'experience'];
-            
-            fields.forEach(field => {
-                const input = document.getElementById(field);
-                const error = document.getElementById(field + 'Error');
-                
-                if (!input.value.trim()) {
-                    error.classList.add('show');
-                    isValid = false;
-                } else {
-                    error.classList.remove('show');
-                }
-            });
-
-            return isValid;
+function validateFounderForm() {
+    let isValid = true;
+    const fields = ['location', 'languages', 'userAge', 'graduation', 'experience'];
+    
+    fields.forEach(field => {
+        const input = document.getElementById(field);
+        const error = document.getElementById(field + 'Error');
+        
+        // ADD THIS CHECK: Ensure both input and error div exist
+        if (input && error) {
+            if (!input.value.trim()) {
+                error.classList.add('show');
+                isValid = false;
+            } else {
+                error.classList.remove('show');
+            }
+        } else {
+            // Log a warning if you forgot to add a div in the HTML
+            console.warn(`Missing element for: ${field} or ${field}Error`);
         }
+    });
+
+    return isValid;
+}
 
         function validateStartupForm() {
             let isValid = true;
