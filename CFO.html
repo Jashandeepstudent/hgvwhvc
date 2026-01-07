@@ -1635,8 +1635,7 @@ function generateExecutiveSummary(data) {
     `;
 
     // PAGE 1: EXECUTIVE COVER
-    const coverPage = document.createElement('div');
-    coverPage.innerHTML = `
+    pdfContainer.innerHTML += `
         ${sharedStyles}
         <div class="page" style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
             <div style="font-size: 14px; font-weight: 600; letter-spacing: 3px; margin-bottom: 10px;">CONFIDENTIAL</div>
@@ -1644,19 +1643,16 @@ function generateExecutiveSummary(data) {
             <div style="width: 100px; height: 4px; background: white; margin: 25px 0;"></div>
             <div style="font-size: 16px; font-weight: 500; margin-bottom: 40px;">Q${Math.ceil(new Date().getMonth() / 3)} ${new Date().getFullYear()} • Fiscal Analysis & Strategic Recommendations</div>
             <div style="margin-top: 60px; font-size: 14px;">
-                <div style="margin-bottom: 8px;"><strong>Prepared by:</strong> Chief Financial Officer</div>
+                <div style="margin-bottom: 8px;"><strong>Prepared by:</strong> ScaleVest AI CFO</div>
                 <div style="margin-bottom: 8px;"><strong>Report Date:</strong> ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</div>
                 <div><strong>Company:</strong> ScaleVest Analytics</div>
             </div>
             <div style="position: absolute; bottom: 30px; font-size: 10px; opacity: 0.8;">This report contains proprietary and confidential information</div>
         </div>
     `;
-    pdfContainer.appendChild(coverPage);
 
     // PAGE 2: EXECUTIVE SUMMARY
-    const summaryPage = document.createElement('div');
-    summaryPage.innerHTML = `
-        ${sharedStyles}
+    pdfContainer.innerHTML += `
         <div class="page">
             <div class="header-bar">
                 <div class="logo">SCALEVEST</div>
@@ -1706,12 +1702,10 @@ function generateExecutiveSummary(data) {
             </div>
         </div>
     `;
-    pdfContainer.appendChild(summaryPage);
 
     // PAGE 3: REVENUE ANALYSIS
-    const revenuePage = document.createElement('div');
-    revenuePage.innerHTML = `
-        ${sharedStyles}
+    const revenueTransactions = (data.transactions || []).filter(t => t.amount > 0).slice(0, 5);
+    pdfContainer.innerHTML += `
         <div class="page">
             <div class="header-bar">
                 <div class="logo">SCALEVEST</div>
@@ -1732,7 +1726,7 @@ function generateExecutiveSummary(data) {
                     </tr>
                 </thead>
                 <tbody>
-                    ${data.transactions.filter(t => t.amount > 0).slice(0, 5).map((t, i) => `
+                    ${revenueTransactions.length > 0 ? revenueTransactions.map(t => `
                         <tr>
                             <td style="font-weight: 600;">${t.category}</td>
                             <td>$${t.amount.toLocaleString()}</td>
@@ -1740,12 +1734,12 @@ function generateExecutiveSummary(data) {
                             <td class="positive">+8.7%</td>
                             <td>${((t.amount / data.totalRevenue) * 100).toFixed(1)}%</td>
                         </tr>
-                    `).join('')}
+                    `).join('') : '<tr><td colspan="5" style="text-align: center;">No revenue data available</td></tr>'}
                 </tbody>
             </table>
 
             <div class="section-title">Revenue Composition</div>
-            <p class="text-block">Revenue diversification remains strong across multiple business segments. Primary revenue drivers include ${data.transactions.filter(t => t.amount > 0)[0]?.category} contributing ${((data.transactions.filter(t => t.amount > 0)[0]?.amount / data.totalRevenue) * 100).toFixed(1)}% of total revenue, followed by ${data.transactions.filter(t => t.amount > 0)[1]?.category} at ${((data.transactions.filter(t => t.amount > 0)[1]?.amount / data.totalRevenue) * 100).toFixed(1)}%. This balanced portfolio reduces concentration risk and provides stability.</p>
+            <p class="text-block">Revenue diversification remains strong across multiple business segments. ${revenueTransactions[0] ? `Primary revenue drivers include ${revenueTransactions[0].category} contributing ${((revenueTransactions[0].amount / data.totalRevenue) * 100).toFixed(1)}% of total revenue.` : ''} This balanced portfolio reduces concentration risk and provides stability.</p>
 
             <div class="highlight-box">
                 <h4 style="font-weight: 600; margin-bottom: 8px;">CFO Recommendation</h4>
@@ -1758,12 +1752,10 @@ function generateExecutiveSummary(data) {
             </div>
         </div>
     `;
-    pdfContainer.appendChild(revenuePage);
 
     // PAGE 4: EXPENSE ANALYSIS
-    const expensePage = document.createElement('div');
-    expensePage.innerHTML = `
-        ${sharedStyles}
+    const expenseTransactions = (data.transactions || []).filter(t => t.amount < 0).slice(0, 6);
+    pdfContainer.innerHTML += `
         <div class="page">
             <div class="header-bar">
                 <div class="logo">SCALEVEST</div>
@@ -1774,15 +1766,15 @@ function generateExecutiveSummary(data) {
             <div class="metric-grid">
                 <div class="metric-card">
                     <div class="metric-label">Total Expenses</div>
-                    <div class="metric-value">$${data.totalExpenses.toLocaleString()}</div>
+                    <div class="metric-value">$${(data.totalExpenses || 0).toLocaleString()}</div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-label">Operating Costs</div>
-                    <div class="metric-value">$${(data.totalExpenses * 0.7).toFixed(0).toLocaleString()}</div>
+                    <div class="metric-value">$${((data.totalExpenses || 0) * 0.7).toFixed(0).toLocaleString()}</div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-label">Cost Efficiency</div>
-                    <div class="metric-value">${((data.totalExpenses / data.totalRevenue) * 100).toFixed(1)}%</div>
+                    <div class="metric-value">${(((data.totalExpenses || 0) / data.totalRevenue) * 100).toFixed(1)}%</div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-label">Budget Variance</div>
@@ -1801,7 +1793,7 @@ function generateExecutiveSummary(data) {
                     </tr>
                 </thead>
                 <tbody>
-                    ${data.transactions.filter(t => t.amount < 0).slice(0, 6).map(t => `
+                    ${expenseTransactions.length > 0 ? expenseTransactions.map(t => `
                         <tr>
                             <td style="font-weight: 600;">${t.category}</td>
                             <td>$${Math.abs(t.amount).toLocaleString()}</td>
@@ -1809,17 +1801,12 @@ function generateExecutiveSummary(data) {
                             <td class="positive">-${(5 + Math.random() * 3).toFixed(1)}%</td>
                             <td>${((Math.abs(t.amount) / data.totalRevenue) * 100).toFixed(1)}%</td>
                         </tr>
-                    `).join('')}
+                    `).join('') : '<tr><td colspan="5" style="text-align: center;">No expense data available</td></tr>'}
                 </tbody>
             </table>
 
             <div class="section-title">Cost Optimization Insights</div>
-            <p class="text-block">Expense management remains disciplined with total costs at ${((data.totalExpenses / data.totalRevenue) * 100).toFixed(1)}% of revenue. Operating leverage improvements of 320 basis points year-over-year demonstrate effective cost control measures and scalability of our business model.</p>
-
-            <div class="warning-box">
-                <h4 style="font-weight: 600; margin-bottom: 8px;">Action Items</h4>
-                <p class="text-block" style="margin: 0;">Review discretionary spending in underperforming categories. Implement automated expense tracking for real-time visibility. Consider vendor consolidation opportunities to improve negotiating leverage.</p>
-            </div>
+            <p class="text-block">Expense management remains disciplined with total costs at ${(((data.totalExpenses || 0) / data.totalRevenue) * 100).toFixed(1)}% of revenue. Operating leverage improvements demonstrate effective cost control measures and scalability of our business model.</p>
 
             <div class="footer-bar">
                 <span>ScaleVest Financial Report • ${new Date().getFullYear()}</span>
@@ -1827,12 +1814,9 @@ function generateExecutiveSummary(data) {
             </div>
         </div>
     `;
-    pdfContainer.appendChild(expensePage);
 
-    // PAGE 5: CASH FLOW & FORECASTING
-    const cashflowPage = document.createElement('div');
-    cashflowPage.innerHTML = `
-        ${sharedStyles}
+    // PAGE 5: CASH FLOW
+    pdfContainer.innerHTML += `
         <div class="page">
             <div class="header-bar">
                 <div class="logo">SCALEVEST</div>
@@ -1863,11 +1847,8 @@ function generateExecutiveSummary(data) {
 
             <div class="highlight-box">
                 <h4 style="font-weight: 600; margin-bottom: 10px;">12-Month Cash Flow Projection</h4>
-                <p class="text-block">Based on current trajectory and market conditions, we project sustained positive cash flow with an average monthly increase of ${(data.weeklyGrowth * 0.8).toFixed(1)}%. Cash reserves are expected to reach $${(data.netProfit * 15).toLocaleString()} by year-end, providing ample liquidity for strategic initiatives.</p>
+                <p class="text-block">Based on current trajectory and market conditions, we project sustained positive cash flow with an average monthly increase of ${(data.weeklyGrowth * 0.8).toFixed(1)}%. Cash reserves are expected to reach $${(data.netProfit * 15).toLocaleString()} by year-end.</p>
             </div>
-
-            <div class="section-title">Liquidity & Capital Allocation</div>
-            <p class="text-block">Current liquidity position remains strong with operating cash flow exceeding operational requirements by ${(data.profitMargin * 1.5).toFixed(0)}%. Management recommends allocating 60% of excess cash to growth initiatives, 25% to debt reduction, and 15% to shareholder returns. This balanced approach optimizes capital efficiency while maintaining financial flexibility.</p>
 
             <div class="footer-bar">
                 <span>ScaleVest Financial Report • ${new Date().getFullYear()}</span>
@@ -1875,12 +1856,9 @@ function generateExecutiveSummary(data) {
             </div>
         </div>
     `;
-    pdfContainer.appendChild(cashflowPage);
 
     // PAGE 6: CFO CERTIFICATION
-    const certPage = document.createElement('div');
-    certPage.innerHTML = `
-        ${sharedStyles}
+    pdfContainer.innerHTML += `
         <div class="page">
             <div class="header-bar">
                 <div class="logo">SCALEVEST</div>
@@ -1891,24 +1869,24 @@ function generateExecutiveSummary(data) {
             <div class="highlight-box">
                 <h4 style="font-weight: 600; margin-bottom: 10px;">CFO Strategic Recommendations</h4>
                 <ol style="margin-left: 20px; line-height: 1.8; font-size: 11px;">
-                    <li><strong>Revenue Acceleration:</strong> Capitalize on ${data.weeklyGrowth}% growth momentum by expanding high-margin product lines and entering adjacent markets with estimated TAM of $${(data.totalRevenue * 50).toLocaleString()}.</li>
-                    <li><strong>Operational Excellence:</strong> Maintain current profit margin of ${data.profitMargin}% through continued process optimization and strategic automation investments.</li>
-                    <li><strong>Capital Allocation:</strong> Deploy $${(data.netProfit * 0.4).toFixed(0).toLocaleString()} toward R&D and market expansion while preserving balance sheet strength.</li>
-                    <li><strong>Risk Management:</strong> Implement hedging strategies to protect against market volatility and establish contingency reserves equivalent to 90 days operating expenses.</li>
-                    <li><strong>Stakeholder Value:</strong> Target sustainable EBITDA growth of ${(data.weeklyGrowth * 1.2).toFixed(0)}% annually while maintaining disciplined capital deployment.</li>
+                    <li><strong>Revenue Acceleration:</strong> Capitalize on ${data.weeklyGrowth}% growth momentum by expanding high-margin product lines and entering adjacent markets.</li>
+                    <li><strong>Operational Excellence:</strong> Maintain current profit margin of ${data.profitMargin}% through continued process optimization.</li>
+                    <li><strong>Capital Allocation:</strong> Deploy resources toward R&D and market expansion while preserving balance sheet strength.</li>
+                    <li><strong>Risk Management:</strong> Implement hedging strategies and establish contingency reserves.</li>
+                    <li><strong>Stakeholder Value:</strong> Target sustainable growth while maintaining disciplined capital deployment.</li>
                 </ol>
             </div>
 
             <div style="margin: 30px 0; padding: 20px; background: #f8f9fa; border-left: 4px solid #00875a;">
                 <h4 style="font-weight: 600; margin-bottom: 10px; color: #00875a;">Financial Health Score: ${data.profitMargin > 25 ? 'A+' : data.profitMargin > 20 ? 'A' : 'B+'}</h4>
-                <p class="text-block">The company demonstrates exceptional financial performance across all key metrics. Revenue growth, profitability, and cash generation significantly exceed industry benchmarks. Current trajectory supports aggressive growth initiatives while maintaining fiscal responsibility.</p>
+                <p class="text-block">The company demonstrates exceptional financial performance across all key metrics. Current trajectory supports growth initiatives while maintaining fiscal responsibility.</p>
             </div>
 
             <div class="signature-section">
                 <div class="signature-block">
-                    <div class="signature-line" style="font-family: 'Brush Script MT', cursive; font-size: 24px; border-top: none; margin-top: 0;">Sarah Chen</div>
+                    <div class="signature-line" style="font-family: 'Brush Script MT', cursive; font-size: 24px; border-top: none; margin-top: 0;">ScaleVest AI CFO</div>
                     <div style="border-top: 2px solid #000; padding-top: 8px; margin-top: 5px;">
-                        <strong>Sarah Chen, CPA, CFA</strong><br>
+                        <strong>ScaleVest AI CFO</strong><br>
                         Chief Financial Officer<br>
                         ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                     </div>
@@ -1924,7 +1902,7 @@ function generateExecutiveSummary(data) {
             </div>
 
             <div style="margin-top: 30px; font-size: 9px; color: #666; line-height: 1.5; border-top: 1px solid #ddd; padding-top: 15px;">
-                <strong>Certification Statement:</strong> I, Sarah Chen, Chief Financial Officer of ScaleVest Analytics, certify that this report accurately represents the financial position and results of operations for the period ended ${new Date().toLocaleDateString()}. All material financial information has been reviewed and verified in accordance with GAAP standards and internal control procedures.
+                <strong>Certification Statement:</strong> ScaleVest AI CFO certifies that this report accurately represents the financial position and results of operations for the period ended ${new Date().toLocaleDateString()}. All material financial information has been reviewed and verified in accordance with GAAP standards.
             </div>
 
             <div class="footer-bar">
@@ -1933,7 +1911,6 @@ function generateExecutiveSummary(data) {
             </div>
         </div>
     `;
-    pdfContainer.appendChild(certPage);
 
     // GENERATE PDF
     const opt = {
