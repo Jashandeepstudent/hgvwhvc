@@ -682,7 +682,30 @@ const firebaseConfig = {
         let currentUser = null;
         let cofoundersData = [];
         let logoFile = null;
+// 1. Start with a variable to track if Firebase is still "checking"
+let isInitialLoad = true;
 
+auth.onAuthStateChanged((user) => {
+    if (user) {
+        // User is found!
+        currentUser = user;
+        isInitialLoad = false;
+        console.log("User verified:", user.uid);
+        
+        // Hide a loading overlay if you have one
+        document.getElementById('loading').style.display = 'none';
+    } else {
+        // User is NOT found
+        if (!isInitialLoad) {
+            // Only redirect if Firebase has finished checking and confirmed there is no user
+            window.location.href = 'login2.html';
+        } else {
+            // Still checking... wait for the second trigger of this function
+            console.log("Firebase is still initializing...");
+            isInitialLoad = false;
+        }
+    }
+});
 
         function startConfiguration() {
             document.getElementById('welcomeScreen').classList.remove('active');
