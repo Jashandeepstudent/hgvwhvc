@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <title>ScaleVest CFO</title>
+    <title>ScaleVest CFO Pro</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         * {
@@ -1601,7 +1601,7 @@ function generateExecutiveSummary(data) {
     const pdfContainer = document.createElement('div');
     pdfContainer.style.background = '#ffffff';
 
-    // SHARED STYLES
+    // SHARED STYLES - ONLY ONCE AT THE TOP
     const sharedStyles = `
         <style>
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
@@ -1634,9 +1634,12 @@ function generateExecutiveSummary(data) {
         </style>
     `;
 
-    // PAGE 1: EXECUTIVE COVER
-    pdfContainer.innerHTML += `
-        ${sharedStyles}
+    const revenueTransactions = (data.transactions || []).filter(t => t.amount > 0).slice(0, 5);
+    const expenseTransactions = (data.transactions || []).filter(t => t.amount < 0).slice(0, 6);
+
+    // BUILD ALL PAGES - STYLES ONLY AT THE START
+    pdfContainer.innerHTML = sharedStyles + `
+        <!-- PAGE 1: COVER -->
         <div class="page" style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
             <div style="font-size: 14px; font-weight: 600; letter-spacing: 3px; margin-bottom: 10px;">CONFIDENTIAL</div>
             <div style="font-size: 52px; font-weight: 800; margin: 20px 0; line-height: 1.2;">EXECUTIVE<br>FINANCIAL REPORT</div>
@@ -1649,10 +1652,8 @@ function generateExecutiveSummary(data) {
             </div>
             <div style="position: absolute; bottom: 30px; font-size: 10px; opacity: 0.8;">This report contains proprietary and confidential information</div>
         </div>
-    `;
 
-    // PAGE 2: EXECUTIVE SUMMARY
-    pdfContainer.innerHTML += `
+        <!-- PAGE 2: EXECUTIVE SUMMARY -->
         <div class="page">
             <div class="header-bar">
                 <div class="logo">SCALEVEST</div>
@@ -1689,11 +1690,11 @@ function generateExecutiveSummary(data) {
             </div>
 
             <div class="section-title">Financial Performance Overview</div>
-            <p class="text-block">Our financial analysis for the current period demonstrates strong operational performance with revenue growth exceeding industry benchmarks. The company maintains a healthy profit margin of ${data.profitMargin}%, positioning us favorably within our market segment. Weekly growth rates of ${data.weeklyGrowth}% indicate sustained momentum in our core business operations.</p>
+            <p class="text-block">Our financial analysis for the current period demonstrates strong operational performance with revenue growth exceeding industry benchmarks. The company maintains a healthy profit margin of ${data.profitMargin}%, positioning us favorably within our market segment.</p>
             
             <div class="warning-box">
                 <h4 style="font-weight: 600; margin-bottom: 8px; color: #856404;">Strategic Considerations</h4>
-                <p class="text-block" style="margin: 0;">Management should monitor cash flow trends and maintain focus on operational efficiency to sustain current growth trajectory. Market conditions remain favorable for expansion initiatives.</p>
+                <p class="text-block" style="margin: 0;">Management should monitor cash flow trends and maintain focus on operational efficiency to sustain current growth trajectory.</p>
             </div>
 
             <div class="footer-bar">
@@ -1701,11 +1702,8 @@ function generateExecutiveSummary(data) {
                 <span>Confidential & Proprietary</span>
             </div>
         </div>
-    `;
 
-    // PAGE 3: REVENUE ANALYSIS
-    const revenueTransactions = (data.transactions || []).filter(t => t.amount > 0).slice(0, 5);
-    pdfContainer.innerHTML += `
+        <!-- PAGE 3: REVENUE ANALYSIS -->
         <div class="page">
             <div class="header-bar">
                 <div class="logo">SCALEVEST</div>
@@ -1739,11 +1737,11 @@ function generateExecutiveSummary(data) {
             </table>
 
             <div class="section-title">Revenue Composition</div>
-            <p class="text-block">Revenue diversification remains strong across multiple business segments. ${revenueTransactions[0] ? `Primary revenue drivers include ${revenueTransactions[0].category} contributing ${((revenueTransactions[0].amount / data.totalRevenue) * 100).toFixed(1)}% of total revenue.` : ''} This balanced portfolio reduces concentration risk and provides stability.</p>
+            <p class="text-block">Revenue diversification remains strong across multiple business segments. This balanced portfolio reduces concentration risk and provides stability.</p>
 
             <div class="highlight-box">
                 <h4 style="font-weight: 600; margin-bottom: 8px;">CFO Recommendation</h4>
-                <p class="text-block" style="margin: 0;">Continue investment in high-margin segments while maintaining operational excellence across all revenue streams. Consider strategic partnerships to accelerate growth in emerging categories.</p>
+                <p class="text-block" style="margin: 0;">Continue investment in high-margin segments while maintaining operational excellence across all revenue streams.</p>
             </div>
 
             <div class="footer-bar">
@@ -1751,11 +1749,8 @@ function generateExecutiveSummary(data) {
                 <span>Confidential & Proprietary</span>
             </div>
         </div>
-    `;
 
-    // PAGE 4: EXPENSE ANALYSIS
-    const expenseTransactions = (data.transactions || []).filter(t => t.amount < 0).slice(0, 6);
-    pdfContainer.innerHTML += `
+        <!-- PAGE 4: EXPENSE ANALYSIS -->
         <div class="page">
             <div class="header-bar">
                 <div class="logo">SCALEVEST</div>
@@ -1806,17 +1801,15 @@ function generateExecutiveSummary(data) {
             </table>
 
             <div class="section-title">Cost Optimization Insights</div>
-            <p class="text-block">Expense management remains disciplined with total costs at ${(((data.totalExpenses || 0) / data.totalRevenue) * 100).toFixed(1)}% of revenue. Operating leverage improvements demonstrate effective cost control measures and scalability of our business model.</p>
+            <p class="text-block">Expense management remains disciplined with effective cost control measures and scalability of our business model.</p>
 
             <div class="footer-bar">
                 <span>ScaleVest Financial Report • ${new Date().getFullYear()}</span>
                 <span>Confidential & Proprietary</span>
             </div>
         </div>
-    `;
 
-    // PAGE 5: CASH FLOW
-    pdfContainer.innerHTML += `
+        <!-- PAGE 5: CASH FLOW -->
         <div class="page">
             <div class="header-bar">
                 <div class="logo">SCALEVEST</div>
@@ -1847,7 +1840,7 @@ function generateExecutiveSummary(data) {
 
             <div class="highlight-box">
                 <h4 style="font-weight: 600; margin-bottom: 10px;">12-Month Cash Flow Projection</h4>
-                <p class="text-block">Based on current trajectory and market conditions, we project sustained positive cash flow with an average monthly increase of ${(data.weeklyGrowth * 0.8).toFixed(1)}%. Cash reserves are expected to reach $${(data.netProfit * 15).toLocaleString()} by year-end.</p>
+                <p class="text-block">Based on current trajectory, we project sustained positive cash flow with strong liquidity for strategic initiatives.</p>
             </div>
 
             <div class="footer-bar">
@@ -1855,10 +1848,8 @@ function generateExecutiveSummary(data) {
                 <span>Confidential & Proprietary</span>
             </div>
         </div>
-    `;
 
-    // PAGE 6: CFO CERTIFICATION
-    pdfContainer.innerHTML += `
+        <!-- PAGE 6: CERTIFICATION -->
         <div class="page">
             <div class="header-bar">
                 <div class="logo">SCALEVEST</div>
@@ -1869,17 +1860,17 @@ function generateExecutiveSummary(data) {
             <div class="highlight-box">
                 <h4 style="font-weight: 600; margin-bottom: 10px;">CFO Strategic Recommendations</h4>
                 <ol style="margin-left: 20px; line-height: 1.8; font-size: 11px;">
-                    <li><strong>Revenue Acceleration:</strong> Capitalize on ${data.weeklyGrowth}% growth momentum by expanding high-margin product lines and entering adjacent markets.</li>
-                    <li><strong>Operational Excellence:</strong> Maintain current profit margin of ${data.profitMargin}% through continued process optimization.</li>
-                    <li><strong>Capital Allocation:</strong> Deploy resources toward R&D and market expansion while preserving balance sheet strength.</li>
+                    <li><strong>Revenue Acceleration:</strong> Capitalize on ${data.weeklyGrowth}% growth momentum by expanding high-margin product lines.</li>
+                    <li><strong>Operational Excellence:</strong> Maintain current profit margin of ${data.profitMargin}% through process optimization.</li>
+                    <li><strong>Capital Allocation:</strong> Deploy resources toward R&D and market expansion.</li>
                     <li><strong>Risk Management:</strong> Implement hedging strategies and establish contingency reserves.</li>
-                    <li><strong>Stakeholder Value:</strong> Target sustainable growth while maintaining disciplined capital deployment.</li>
+                    <li><strong>Stakeholder Value:</strong> Target sustainable growth while maintaining fiscal discipline.</li>
                 </ol>
             </div>
 
             <div style="margin: 30px 0; padding: 20px; background: #f8f9fa; border-left: 4px solid #00875a;">
                 <h4 style="font-weight: 600; margin-bottom: 10px; color: #00875a;">Financial Health Score: ${data.profitMargin > 25 ? 'A+' : data.profitMargin > 20 ? 'A' : 'B+'}</h4>
-                <p class="text-block">The company demonstrates exceptional financial performance across all key metrics. Current trajectory supports growth initiatives while maintaining fiscal responsibility.</p>
+                <p class="text-block">The company demonstrates exceptional financial performance. Current trajectory supports growth initiatives.</p>
             </div>
 
             <div class="signature-section">
@@ -1902,7 +1893,7 @@ function generateExecutiveSummary(data) {
             </div>
 
             <div style="margin-top: 30px; font-size: 9px; color: #666; line-height: 1.5; border-top: 1px solid #ddd; padding-top: 15px;">
-                <strong>Certification Statement:</strong> ScaleVest AI CFO certifies that this report accurately represents the financial position and results of operations for the period ended ${new Date().toLocaleDateString()}. All material financial information has been reviewed and verified in accordance with GAAP standards.
+                <strong>Certification Statement:</strong> ScaleVest AI CFO certifies that this report accurately represents the financial position and results of operations for the period ended ${new Date().toLocaleDateString()}. All information has been reviewed and verified in accordance with GAAP standards.
             </div>
 
             <div class="footer-bar">
@@ -2647,7 +2638,7 @@ async function askCFO(userInput) {
 
             <div class="card alert-card">
                 <div class="card-title alert-title">EXPIRY ALERT</div>
-                <div class="alert-text">Milk Powder (Expires in 48h)</div>
+                <div class="alert-text"></div>
             </div>
 
 <div class="card momentum-card" id="product-analysis-card" style="cursor: pointer;">
