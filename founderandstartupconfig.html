@@ -1069,52 +1069,61 @@
             return isValid;
         }
 
-        async function saveFounderDetails() {
-            if (!validateFounderForm()) {
-                return;
-            }
+       async function saveFounderDetails() {
+    // Check if user is actually logged in before showing loading
+    if (!currentUser) {
+        alert("Authentication Error: Your browser is blocking storage or you aren't logged in. Please check your privacy settings.");
+        window.location.href = 'login2.html';
+        return;
+    }
 
-            const cofounders = [];
-            for (let cf of cofoundersData) {
-                const name = document.getElementById(`cofounderName${cf.index}`)?.value;
-                const email = document.getElementById(`cofounderEmail${cf.index}`)?.value;
-                const age = document.getElementById(`cofounderAge${cf.index}`)?.value;
-                
-                if (name && email && age) {
-                    cofounders.push({ name, email, age: parseInt(age) });
-                }
-            }
+    if (!validateFounderForm()) {
+        return;
+    }
 
-            const founderData = {
-                location: document.getElementById('location').value,
-                languages: document.getElementById('languages').value,
-                age: parseInt(document.getElementById('userAge').value),
-                graduation: document.getElementById('graduation').value,
-                awards: document.getElementById('awards').value,
-                experience: document.getElementById('experience').value,
-                cofounders: cofounders,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            };
+    // Show loading only after we know we have a user
+    document.getElementById('loading').style.display = 'block';
 
-            try {
-                document.getElementById('loading').style.display = 'block';
-                
-                await db.collection('scalestartup')
-                    .doc('founderprofile')
-                    .collection('users')
-                    .doc(currentUser.uid)
-                    .set(founderData);
-
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('founderScreen').classList.remove('active');
-                document.getElementById('startupScreen').classList.add('active');
-                updateStepProgress(2);
-            } catch (error) {
-                console.error('Error saving founder details:', error);
-                alert('Error saving data. Please try again.');
-                document.getElementById('loading').style.display = 'none';
-            }
+    const cofounders = [];
+    for (let cf of cofoundersData) {
+        const name = document.getElementById(`cofounderName${cf.index}`)?.value;
+        const email = document.getElementById(`cofounderEmail${cf.index}`)?.value;
+        const age = document.getElementById(`cofounderAge${cf.index}`)?.value;
+        
+        if (name && email && age) {
+            cofounders.push({ name, email, age: parseInt(age) });
         }
+    }
+
+    const founderData = {
+        location: document.getElementById('location').value,
+        languages: document.getElementById('languages').value,
+        age: parseInt(document.getElementById('userAge').value),
+        graduation: document.getElementById('graduation').value,
+        awards: document.getElementById('awards').value,
+        experience: document.getElementById('experience').value,
+        cofounders: cofounders,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    try {
+        await db.collection('scalestartup')
+            .doc('founderprofile')
+            .collection('users')
+            .doc(currentUser.uid)
+            .set(founderData);
+
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('founderScreen').classList.remove('active');
+        document.getElementById('startupScreen').classList.add('active');
+        updateStepProgress(2);
+    } catch (error) {
+        console.error('Error saving founder details:', error);
+        // CRITICAL: Hide loading on error so the screen isn't stuck
+        document.getElementById('loading').style.display = 'none';
+        alert('Error saving data: ' + error.message);
+    }
+}
 
         async function saveStartupProfile() {
             if (!validateStartupForm()) {
