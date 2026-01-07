@@ -1624,7 +1624,20 @@
           submitButton.innerHTML = "Create My Profile";
       }
   };
-
+auth.onAuthStateChanged(async (user) => {
+    if (!user) {
+        // User truly isn't logged in
+        window.location.href = "login2.html";
+    } else {
+        // Check if they ALREADY finished this page
+        const docSnap = await db.collection("startupprofile").doc(user.uid).get();
+        if (docSnap.exists) {
+            // They shouldn't be here, send them to dashboard
+            window.location.href = "founderdashboard.html";
+        }
+        // Otherwise, stay here and let them fill out the form
+    }
+});
   // 3. SUCCESS ANIMATION
   window.showImmersiveSuccess = function() {
       const overlay = document.getElementById('successOverlay');
