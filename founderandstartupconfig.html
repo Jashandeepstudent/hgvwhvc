@@ -680,14 +680,6 @@
         let cofoundersData = [];
         let logoFile = null;
 
-        // Auth State Check
-        auth.onAuthStateChanged(user => {
-            if (!user) {
-                window.location.href = 'login2.html';
-            } else {
-                currentUser = user;
-            }
-        });
 
         function startConfiguration() {
             document.getElementById('welcomeScreen').classList.remove('active');
