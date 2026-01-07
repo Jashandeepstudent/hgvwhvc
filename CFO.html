@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <title>ScaleVFest CFO</title>
+    <title>ScaleVest CFO</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         * {
@@ -1323,11 +1323,13 @@ function processFinancialData(sales, prices, inventory) {
     
     let totalRevenue = 0;
     let totalCosts = 0;
+    let totalExpenses = 0;
     let weeklyRevenue = 0;
     let previousWeekRevenue = 0;
     let monthlyRevenue = 0;
     
     const productRevenue = {};
+    const transactions = []; // FIXED: Initialize transactions array
     const weeklySales = Array(7).fill(0);
     const monthlySales = Array(4).fill(0);
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -1338,13 +1340,30 @@ function processFinancialData(sales, prices, inventory) {
         const revenue = parseFloat(sale.revenue) || 0;
         const productId = sale.productId;
         const quantity = parseInt(sale.quantity) || 0;
+        const productName = inventory[productId]?.name || "Unknown Product";
         
         totalRevenue += revenue;
+        
+        // Add revenue transaction
+        transactions.push({
+            category: productName,
+            amount: revenue,
+            type: "revenue"
+        });
         
         // Calculate costs
         if (prices[productId]) {
             const costPrice = parseFloat(prices[productId].costPrice) || 0;
-            totalCosts += (costPrice * quantity);
+            const costAmount = costPrice * quantity;
+            totalCosts += costAmount;
+            totalExpenses += costAmount;
+            
+            // Add expense transaction
+            transactions.push({
+                category: productName + " (Cost)",
+                amount: -costAmount,
+                type: "expense"
+            });
         }
         
         // Weekly tracking
@@ -1366,7 +1385,6 @@ function processFinancialData(sales, prices, inventory) {
         }
         
         // Product revenue
-        const productName = inventory[productId]?.name || "Unknown Product";
         if (!productRevenue[productName]) {
             productRevenue[productName] = { revenue: 0, quantity: 0, costs: 0 };
         }
@@ -1386,6 +1404,7 @@ function processFinancialData(sales, prices, inventory) {
     return {
         totalRevenue,
         totalCosts,
+        totalExpenses,
         netProfit,
         profitMargin,
         weeklyRevenue,
@@ -1393,6 +1412,7 @@ function processFinancialData(sales, prices, inventory) {
         monthlyRevenue,
         weeklySales,
         monthlySales,
+        transactions, // FIXED: Now returns transactions array
         productRevenue: Object.entries(productRevenue)
             .sort((a, b) => b[1].revenue - a[1].revenue)
             .slice(0, 10)
