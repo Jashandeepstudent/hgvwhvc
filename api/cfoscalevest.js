@@ -1,8 +1,8 @@
 import { google } from '@ai-sdk/google';
 import { generateText } from 'ai';
 
-export const config = { 
-  runtime: 'edge' 
+export const config = {
+  runtime: 'nodejs'
 };
 
 const corsHeaders = {
