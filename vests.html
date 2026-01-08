@@ -873,8 +873,9 @@ import { getDatabase, ref, set, push, get } from 'https://www.gstatic.com/fireba
     import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
     import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 // Locate your existing import and add 'update' to the list
-import {  
-    update
+import { 
+    update, 
+    onValue 
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
     const firebaseConfig = {
         apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
@@ -1065,7 +1066,7 @@ let cachedStartupData = null;
                 };
                 
                 // Save to Firebase and WAIT for it to complete
-                await set(ref(db, `founderProfile/${user.uid}`), cachedFounderData);
+                await update(ref(db, `founderProfile/${user.uid}`), cachedFounderData);
                 console.log('✅ Created new founder profile:', cachedFounderData);
             } else {
                 // Profile exists, load it
@@ -1081,7 +1082,7 @@ let cachedStartupData = null;
                     cachedFounderData.userId = generateUserId(username);
                     
                     // Save updated profile with userId
-                    await set(ref(db, `founderProfile/${user.uid}`), cachedFounderData);
+                    await update(ref(db, `founderProfile/${user.uid}`), cachedFounderData);
                     console.log('✅ Generated userId for existing profile:', cachedFounderData.userId);
                 }
                 
@@ -2968,7 +2969,7 @@ window.previousStep = function() {
         
         // Save vest as draft
         const vestRef = ref(db, `Vests/${currentUser.uid}`);
-        await set(push(vestRef), vestData);
+        await update(push(vestRef), vestData);
         
         btn.innerHTML = '✅ Saved!';
         setTimeout(() => { btn.innerHTML = originalText; btn.disabled = false; }, 2000);
@@ -2996,7 +2997,7 @@ window.previousStep = function() {
         
         // Then save vest
         const vestRef = ref(db, `Vests/${currentUser.uid}`);
-        await set(push(vestRef), vestData);
+        await update(push(vestRef), vestData);
         
         document.querySelector('.step-content.active').style.display = 'none';
         document.getElementById('celebration').classList.add('active');
