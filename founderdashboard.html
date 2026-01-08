@@ -921,7 +921,7 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
+          const auth = firebase.auth();
         const db = getDatabase(app);
 
         function generateUserId(username) {
@@ -995,33 +995,22 @@
                 console.error('Error loading data:', error);
             }
         }
-// Add a flag to check if this is the first time the page is loading
-let isInitialLoad = false;
+        let isInitialLoad = true;
 
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        // User is authenticated
-        loadUserData(user);
-        isInitialLoad = false;
-    } else {
-        // Only redirect if Firebase has finished checking and definitely found no user
-        if (!isInitialLoad) {
-            window.location.href = 'login2.html';
-        } else {
-            // If it's the first check and user is null, 
-            // wait a moment or check if a session exists
-            isInitialLoad = false;
-            
-            // Optional: Small delay to let Firebase finish verification
-            setTimeout(() => {
-                if (!auth.currentUser) {
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                currentUser = user;
+                isInitialLoad = false;
+                console.log("User verified:", user.uid);
+            } else {
+                if (!isInitialLoad) {
                     window.location.href = 'login2.html';
+                } else {
+                    console.log("Firebase is still initializing...");
+                    isInitialLoad = false;
                 }
-            }, 1000); 
-        }
-    }
-});
-
+            }
+        });
         window.logout = async function() {
             try {
                 await signOut(auth);
