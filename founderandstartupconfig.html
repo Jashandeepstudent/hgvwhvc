@@ -1095,8 +1095,8 @@ firebase.initializeApp(firebaseConfig);
         try {
             document.getElementById('loading').style.display = 'block';
             
-            // Saving to founderprofile/{uid}
-            await db.ref('founderprofile/' + currentUser.uid).set(founderData);
+            // Saving to founderProfile/{uid}
+            await db.ref('founderProfile/' + currentUser.uid).set(founderData);
 
             document.getElementById('loading').style.display = 'none';
             document.getElementById('founderScreen').classList.remove('active');
