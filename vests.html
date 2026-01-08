@@ -910,22 +910,28 @@ function loadFromLocalStorage() {
     };
 
     // 1. Authentication State Observer
-    onAuthStateChanged(auth, (user) => {
-        if (user) {
-            currentUser = user;
-            isInitialLoad = false;
-            console.log("User verified:", user.uid);
-        } else {
-            if (!isInitialLoad) {
-                window.location.href = 'login2.html';
-            } else {
-                setTimeout(() => {
-                    if (!auth.currentUser) window.location.href = 'login2.html';
-                }, 2000);
-                isInitialLoad = false;
-            }
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        currentUser = user;
+        isInitialLoad = false;
+        console.log("User verified:", user.uid);
+        
+        // Check hash and show appropriate view
+        const hash = window.location.hash.slice(1);
+        if (!hash || hash === 'founder_dashboard') {
+            window.location.hash = 'founder_dashboard';
         }
-    });
+    } else {
+        if (!isInitialLoad) {
+            window.location.href = 'login2.html';
+        } else {
+            setTimeout(() => {
+                if (!auth.currentUser) window.location.href = 'login2.html';
+            }, 2000);
+            isInitialLoad = false;
+        }
+    }
+});
 // Handle hash navigation
 window.addEventListener('hashchange', handleHashChange);
 window.addEventListener('load', handleHashChange);
@@ -934,6 +940,7 @@ function handleHashChange() {
     const hash = window.location.hash.slice(1); // Remove #
     
     if (hash === 'founder_dashboard') {
+        document.querySelector('.vest-container').style.display = 'none';
         showDashboard();
     } else if (hash.startsWith('vest_step')) {
         const stepNum = parseInt(hash.replace('vest_step', ''));
@@ -943,35 +950,34 @@ function handleHashChange() {
             showVestForm();
         }
     } else {
-        // Default to vest form
-        window.location.hash = 'vest_step1';
+        // Default to dashboard if no hash
+        window.location.hash = 'founder_dashboard';
     }
 }
-
 function showVestForm() {
     document.title = "Create Your Vest | ScaleVest"; 
     document.querySelector('.vest-container').style.display = 'block';
-    document.getElementById('dashboardContainer')?.remove();
+    const dashContainer = document.getElementById('dashboardContainer');
+    if (dashContainer) {
+        dashContainer.style.display = 'none';
+    }
 }
 
 function showDashboard() {
+    document.title = "Founder Dashboard | ScaleVest";
     document.querySelector('.vest-container').style.display = 'none';
     
     let container = document.getElementById('dashboardContainer');
     if (!container) {
-        // Create container if it doesn't exist
         container = document.createElement('div');
         container.id = 'dashboardContainer';
-        container.style.display = 'none';
         document.body.appendChild(container);
     }
     
+    container.style.display = 'block';
     createDashboard();
 }
 async function createDashboard() {
-    // Change page title
-    document.title = "Founder Dashboard | ScaleVest";
-    
     if (!currentUser) return;
     
     // Fetch user data
@@ -1020,220 +1026,871 @@ async function createDashboard() {
     const activeCount = Object.values(vestsData).filter(v => v.status === 'live').length;
     
     const dashboardHTML = `
-        <div style="max-width: 1400px; margin: 0 auto;">
-            <!-- Top Navigation Bar -->
-            <div style="background: #1a1a1a; padding: 15px 30px; border-radius: 15px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333;">
-                <div style="display: flex; align-items: center; gap: 40px;">
-                    <div style="font-size: 1.5rem; font-weight: bold; background: linear-gradient(135deg, #ff006e, #8338ec, #3a86ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-                        ScaleVest
+        <style>
+            #dashboardContainer * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            #dashboardContainer {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background: #000;
+                color: #fff;
+                min-height: 100vh;
+            }
+
+            .dash-top-nav {
+                background: #0a0a0a;
+                padding: 1.2rem 3rem;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border-bottom: 1px solid #222;
+                position: sticky;
+                top: 0;
+                z-index: 1000;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            }
+
+            .dash-logo {
+                font-size: 2rem;
+                font-weight: 700;
+                color: #fff;
+                cursor: pointer;
+                letter-spacing: 1px;
+                transition: all 0.3s;
+            }
+
+            .dash-logo:hover {
+                transform: scale(1.05);
+            }
+
+            .dash-nav-links {
+                display: flex;
+                gap: 2.5rem;
+                align-items: center;
+            }
+
+            .dash-nav-link {
+                color: #fff;
+                text-decoration: none;
+                font-weight: 500;
+                transition: all 0.3s;
+                position: relative;
+                cursor: pointer;
+                font-size: 0.95rem;
+            }
+
+            .dash-nav-link::after {
+                content: '';
+                position: absolute;
+                bottom: -5px;
+                left: 0;
+                width: 0;
+                height: 2px;
+                background: #fff;
+                transition: width 0.3s;
+            }
+
+            .dash-nav-link:hover::after {
+                width: 100%;
+            }
+
+            .dash-dropdown {
+                position: relative;
+            }
+
+            .dash-dropdown-content {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                background: #1a1a1a;
+                min-width: 220px;
+                border-radius: 12px;
+                margin-top: 1rem;
+                box-shadow: 0 10px 40px rgba(255, 255, 255, 0.1);
+                border: 1px solid #333;
+                overflow: hidden;
+                z-index: 1000;
+            }
+
+            .dash-dropdown:hover .dash-dropdown-content {
+                display: block;
+                animation: dashFadeIn 0.3s;
+            }
+
+            @keyframes dashFadeIn {
+                from { opacity: 0; transform: translateY(-10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+
+            .dash-dropdown-item {
+                padding: 1rem 1.5rem;
+                color: #fff;
+                text-decoration: none;
+                display: block;
+                transition: all 0.3s;
+                cursor: pointer;
+                border-left: 3px solid transparent;
+            }
+
+            .dash-dropdown-item:hover {
+                background: #222;
+                border-left-color: #fff;
+                padding-left: 2rem;
+            }
+
+            .dash-top-nav-right {
+                display: flex;
+                gap: 1.5rem;
+                align-items: center;
+            }
+
+            .dash-icon-btn {
+                width: 44px;
+                height: 44px;
+                border-radius: 50%;
+                background: #1a1a1a;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                transition: all 0.3s;
+                position: relative;
+                border: 1px solid #222;
+            }
+
+            .dash-icon-btn:hover {
+                background: #fff;
+                border-color: #fff;
+                transform: translateY(-3px) scale(1.1);
+                box-shadow: 0 5px 15px rgba(255, 255, 255, 0.2);
+            }
+
+            .dash-icon-btn:hover svg {
+                stroke: #000;
+            }
+
+            .dash-profile-dropdown {
+                position: relative;
+            }
+
+            .dash-profile-dropdown-content {
+                display: none;
+                position: absolute;
+                top: 100%;
+                right: 0;
+                background: #1a1a1a;
+                min-width: 300px;
+                border-radius: 12px;
+                margin-top: 1rem;
+                box-shadow: 0 10px 40px rgba(255, 255, 255, 0.1);
+                border: 1px solid #333;
+                padding: 1rem;
+                animation: dashFadeIn 0.3s;
+                z-index: 1000;
+            }
+
+            .dash-profile-dropdown-content.show {
+                display: block;
+            }
+
+            .dash-profile-info {
+                padding: 1rem;
+                border-bottom: 1px solid #333;
+                margin-bottom: 1rem;
+            }
+
+            .dash-profile-username {
+                font-weight: 600;
+                font-size: 1.2rem;
+            }
+
+            .dash-profile-userid {
+                color: #888;
+                font-size: 0.85rem;
+                margin-top: 0.5rem;
+            }
+
+            .dash-switch-btn {
+                background: #fff;
+                color: #000;
+                border: none;
+                padding: 0.9rem;
+                width: 100%;
+                border-radius: 8px;
+                cursor: pointer;
+                font-weight: 700;
+                margin-bottom: 1rem;
+                transition: all 0.3s;
+                font-size: 0.95rem;
+            }
+
+            .dash-switch-btn:hover {
+                background: #ddd;
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(255, 255, 255, 0.3);
+            }
+
+            .dash-profile-section {
+                padding: 0.5rem 0;
+            }
+
+            .dash-profile-link {
+                padding: 0.9rem 1rem;
+                display: block;
+                color: #fff;
+                text-decoration: none;
+                border-radius: 8px;
+                transition: all 0.3s;
+                cursor: pointer;
+                font-weight: 500;
+            }
+
+            .dash-profile-link:hover {
+                background: #222;
+                padding-left: 1.5rem;
+            }
+
+            .dash-container {
+                padding: 3rem 3rem;
+                display: flex;
+                gap: 3rem;
+                max-width: 1800px;
+                margin: 0 auto;
+            }
+
+            .dash-left-section {
+                width: 380px;
+                flex-shrink: 0;
+            }
+
+            .dash-right-section {
+                flex: 1;
+            }
+
+            .dash-welcome-section {
+                margin-bottom: 3rem;
+            }
+
+            .dash-welcome-text {
+                font-size: 2.5rem;
+                font-weight: 700;
+                margin-bottom: 0.5rem;
+                background: linear-gradient(90deg, #fff 0%, #888 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+
+            .dash-welcome-subtext {
+                color: #888;
+                font-size: 1.1rem;
+            }
+
+            .dash-left-cards {
+                display: flex;
+                flex-direction: column;
+                gap: 2rem;
+            }
+
+            .dash-card {
+                background: #0a0a0a;
+                border-radius: 16px;
+                padding: 2.5rem;
+                border: 1px solid #222;
+                transition: all 0.4s;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .dash-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 3px;
+                background: linear-gradient(90deg, #fff 0%, #666 100%);
+                transform: scaleX(0);
+                transition: transform 0.4s;
+            }
+
+            .dash-card:hover::before {
+                transform: scaleX(1);
+            }
+
+            .dash-card:hover {
+                border-color: #444;
+                transform: translateY(-5px);
+                box-shadow: 0 10px 40px rgba(255, 255, 255, 0.1);
+            }
+
+            .dash-profile-avatar {
+                width: 90px;
+                height: 90px;
+                border-radius: 50%;
+                background: #fff;
+                color: #000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 2.5rem;
+                font-weight: 800;
+                margin: 0 auto 1.5rem;
+                box-shadow: 0 5px 20px rgba(255, 255, 255, 0.2);
+            }
+
+            .dash-card-title {
+                text-align: center;
+                font-size: 1.3rem;
+                font-weight: 700;
+                margin-bottom: 0.5rem;
+            }
+
+            .dash-card-subtitle {
+                text-align: center;
+                color: #888;
+                font-size: 0.9rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .dash-card-btn {
+                background: transparent;
+                color: #fff;
+                border: 2px solid #fff;
+                padding: 0.9rem 1.5rem;
+                width: 100%;
+                border-radius: 10px;
+                cursor: pointer;
+                font-weight: 700;
+                transition: all 0.3s;
+                font-size: 0.95rem;
+            }
+
+            .dash-card-btn:hover {
+                background: #fff;
+                color: #000;
+                transform: scale(1.05);
+                box-shadow: 0 5px 20px rgba(255, 255, 255, 0.3);
+            }
+
+            .dash-startup-logo {
+                width: 90px;
+                height: 90px;
+                border-radius: 16px;
+                margin: 0 auto 1.5rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: #1a1a1a;
+                overflow: hidden;
+                border: 2px solid #333;
+                box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+            }
+
+            .dash-startup-logo img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+            .dash-availability-indicator {
+                width: 70px;
+                height: 70px;
+                border-radius: 50%;
+                margin: 0 auto 1.5rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: #fff;
+                box-shadow: 0 5px 20px rgba(255, 255, 255, 0.2);
+            }
+
+            .dash-card-description {
+                text-align: center;
+                color: #aaa;
+                font-size: 0.85rem;
+                margin-top: 1.5rem;
+                line-height: 1.6;
+            }
+
+            .dash-inbox-card {
+                max-height: 300px;
+                overflow-y: auto;
+            }
+
+            .dash-inbox-card::-webkit-scrollbar {
+                width: 6px;
+            }
+
+            .dash-inbox-card::-webkit-scrollbar-track {
+                background: #1a1a1a;
+                border-radius: 10px;
+            }
+
+            .dash-inbox-card::-webkit-scrollbar-thumb {
+                background: #444;
+                border-radius: 10px;
+            }
+
+            .dash-inbox-message {
+                padding: 1rem;
+                margin-bottom: 0.75rem;
+                background: #1a1a1a;
+                border-radius: 8px;
+                border-left: 3px solid #fff;
+            }
+
+            .dash-banners-section {
+                display: flex;
+                flex-direction: column;
+                gap: 2rem;
+            }
+
+            .dash-banner {
+                background: #0a0a0a;
+                border-radius: 16px;
+                padding: 3rem;
+                border: 1px solid #222;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                transition: all 0.4s;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .dash-banner::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 4px;
+                height: 100%;
+                background: #fff;
+                transform: scaleY(0);
+                transition: transform 0.4s;
+            }
+
+            .dash-banner:hover::before {
+                transform: scaleY(1);
+            }
+
+            .dash-banner:hover {
+                border-color: #444;
+                transform: translateX(10px);
+                box-shadow: 0 10px 40px rgba(255, 255, 255, 0.1);
+            }
+
+            .dash-banner-content h3 {
+                font-size: 1.8rem;
+                margin-bottom: 1rem;
+                font-weight: 700;
+            }
+
+            .dash-banner-content p {
+                color: #aaa;
+                line-height: 1.8;
+                font-size: 1.05rem;
+            }
+
+            .dash-banner-icon {
+                width: 100px;
+                height: 100px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: #1a1a1a;
+                border-radius: 20px;
+                border: 2px solid #333;
+                flex-shrink: 0;
+                margin-left: 2rem;
+            }
+
+            .dash-vests-header {
+                display: flex;
+                align-items: center;
+                gap: 1.5rem;
+                margin-bottom: 1rem;
+            }
+
+            .dash-vests-tabs {
+                display: flex;
+                gap: 0.5rem;
+            }
+
+            .dash-vest-tab {
+                padding: 0.5rem 1rem;
+                border-radius: 6px;
+                cursor: pointer;
+                transition: all 0.3s;
+                font-weight: 500;
+                font-size: 0.9rem;
+                background: transparent;
+                border: 1px solid #333;
+            }
+
+            .dash-vest-tab.active {
+                background: #fff;
+                color: #000;
+                border-color: #fff;
+            }
+
+            .dash-vest-tab:hover:not(.active) {
+                background: #222;
+                border-color: #444;
+            }
+
+            .dash-footer {
+                background: #0a0a0a;
+                border-top: 1px solid #222;
+                padding: 3rem;
+                margin-top: 4rem;
+            }
+
+            .dash-footer-content {
+                max-width: 1800px;
+                margin: 0 auto;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .dash-footer-logo {
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .dash-footer-logo-text {
+                font-size: 2rem;
+                font-weight: 700;
+                color: #fff;
+            }
+
+            .dash-footer-company {
+                color: #fff;
+                font-size: 0.9rem;
+                text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+                font-weight: 500;
+            }
+
+            .dash-footer-links {
+                display: flex;
+                gap: 2rem;
+            }
+
+            .dash-footer-link {
+                color: #888;
+                text-decoration: none;
+                transition: all 0.3s;
+                font-weight: 500;
+            }
+
+            .dash-footer-link:hover {
+                color: #fff;
+            }
+
+            @media (max-width: 1024px) {
+                .dash-container {
+                    flex-direction: column;
+                    padding: 2rem 1.5rem;
+                    gap: 2rem;
+                }
+
+                .dash-left-section {
+                    width: 100%;
+                }
+
+                .dash-top-nav {
+                    padding: 1rem 1.5rem;
+                    flex-wrap: wrap;
+                }
+
+                .dash-logo {
+                    font-size: 1.5rem;
+                }
+
+                .dash-nav-links {
+                    display: none;
+                }
+
+                .dash-welcome-text {
+                    font-size: 1.8rem;
+                }
+
+                .dash-banner {
+                    padding: 2rem;
+                    flex-direction: column;
+                    text-align: center;
+                }
+
+                .dash-banner-icon {
+                    margin-left: 0;
+                    margin-top: 1.5rem;
+                }
+            }
+        </style>
+
+        <!-- Top Navigation -->
+        <nav class="dash-top-nav">
+            <div class="dash-logo">ScaleVest</div>
+            <div class="dash-nav-links">
+                <a href="#founder_dashboard" class="dash-nav-link">Dashboard</a>
+                <a href="#" class="dash-nav-link">My Startup</a>
+                <a href="#" class="dash-nav-link">Analytics</a>
+                <div class="dash-dropdown">
+                    <span class="dash-nav-link" onclick="event.stopPropagation()">Scale and Elevate ▾</span>
+                    <div class="dash-dropdown-content">
+                        <a href="#" class="dash-dropdown-item">Founder Emergence</a>
+                        <a href="#" class="dash-dropdown-item">Referrals</a>
+                        <a href="#" class="dash-dropdown-item">Contacts</a>
+                        <a href="#" class="dash-dropdown-item">My Trials</a>
                     </div>
-                    <nav style="display: flex; gap: 30px;">
-                        <a href="#founder_dashboard" style="color: #fff; text-decoration: none; font-weight: 500; transition: color 0.3s;" onmouseover="this.style.color='#ff006e'" onmouseout="this.style.color='#fff'">Dashboard</a>
-                        <a href="#" style="color: #888; text-decoration: none; font-weight: 500; transition: color 0.3s;" onmouseover="this.style.color='#ff006e'" onmouseout="this.style.color='#888'">My Startup</a>
-                        <a href="#" style="color: #888; text-decoration: none; font-weight: 500; transition: color 0.3s;" onmouseover="this.style.color='#ff006e'" onmouseout="this.style.color='#888'">Analytics</a>
-                        <div style="position: relative; display: inline-block;">
-                            <a href="#" id="scaleElevateBtn" style="color: #888; text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 5px; transition: color 0.3s;" onmouseover="this.style.color='#ff006e'" onmouseout="this.style.color='#888'">
-                                Scale & Elevate
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M6 9l6 6 6-6"/>
-                                </svg>
-                            </a>
-                            <div id="scaleDropdown" style="display: none; position: absolute; top: 100%; left: 0; background: #222; border: 1px solid #333; border-radius: 10px; padding: 10px 0; margin-top: 10px; min-width: 200px; z-index: 1000;">
-                                <a href="#" style="display: block; padding: 12px 20px; color: #fff; text-decoration: none; transition: background 0.3s;" onmouseover="this.style.background='#333'" onmouseout="this.style.background='transparent'">Founder Emergence</a>
-                                <a href="#" style="display: block; padding: 12px 20px; color: #fff; text-decoration: none; transition: background 0.3s;" onmouseover="this.style.background='#333'" onmouseout="this.style.background='transparent'">Referrals</a>
-                                <a href="#" style="display: block; padding: 12px 20px; color: #fff; text-decoration: none; transition: background 0.3s;" onmouseover="this.style.background='#333'" onmouseout="this.style.background='transparent'">Contacts</a>
-                                <a href="#" style="display: block; padding: 12px 20px; color: #fff; text-decoration: none; transition: background 0.3s;" onmouseover="this.style.background='#333'" onmouseout="this.style.background='transparent'">My Trials</a>
-                            </div>
-                        </div>
-                    </nav>
                 </div>
-                
-                <div style="display: flex; align-items: center; gap: 20px;">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" style="cursor: pointer;" onmouseover="this.style.stroke='#ff006e'" onmouseout="this.style.stroke='#888'">
-                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </div>
+            <div class="dash-top-nav-right">
+                <div class="dash-icon-btn" title="Notifications">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                     </svg>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" style="cursor: pointer;" onmouseover="this.style.stroke='#ff006e'" onmouseout="this.style.stroke='#888'">
-                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </div>
+                <div class="dash-icon-btn" title="Messages">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                     </svg>
-                    <div style="position: relative;">
-                        <div id="profileDropdownBtn" style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #ff006e, #8338ec); display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; font-size: 1.2rem;">
-                            ${founderData?.founderImage || 'U'}
+                </div>
+                <div class="dash-profile-dropdown">
+                    <div class="dash-icon-btn" onclick="toggleDashProfileDropdown()" id="dashProfileIcon">
+                        <div style="font-size: 1.2rem; font-weight: 600;">${founderData?.founderImage || 'U'}</div>
+                    </div>
+                    <div class="dash-profile-dropdown-content" id="dashProfileDropdown">
+                        <div class="dash-profile-info">
+                            <div class="dash-profile-username">${founderData?.founderUsername || 'Username'}</div>
+                            <div class="dash-profile-userid">${founderData?.userId || 'USER_ID'}</div>
                         </div>
-                        <div id="profileDropdown" style="display: none; position: absolute; top: 100%; right: 0; background: #222; border: 1px solid #333; border-radius: 10px; padding: 15px; margin-top: 10px; min-width: 250px; z-index: 1000;">
-                            <div style="padding-bottom: 15px; border-bottom: 1px solid #333; margin-bottom: 15px;">
-                                <div style="font-weight: 600; color: #fff; margin-bottom: 5px;">${founderData?.founderUsername || 'User'}</div>
-                                <div style="font-size: 0.85rem; color: #888;">${founderData?.userId || 'USER_ID'}</div>
-                            </div>
-                            <a href="#" style="display: block; padding: 10px; color: #fff; text-decoration: none; border-radius: 8px; margin-bottom: 5px; transition: background 0.3s;" onmouseover="this.style.background='#333'" onmouseout="this.style.background='transparent'">Switch to Browse</a>
-                            <a href="#" style="display: block; padding: 10px; color: #fff; text-decoration: none; border-radius: 8px; margin-bottom: 5px; transition: background 0.3s;" onmouseover="this.style.background='#333'" onmouseout="this.style.background='transparent'">Refer a Friend</a>
-                            <a href="#" style="display: block; padding: 10px; color: #fff; text-decoration: none; border-radius: 8px; margin-bottom: 5px; transition: background 0.3s;" onmouseover="this.style.background='#333'" onmouseout="this.style.background='transparent'">Profile</a>
-                            <a href="#" onclick="auth.signOut(); return false;" style="display: block; padding: 10px; color: #ff006e; text-decoration: none; border-radius: 8px; transition: background 0.3s;" onmouseover="this.style.background='#333'" onmouseout="this.style.background='transparent'">Log Out</a>
+                        <button class="dash-switch-btn">Switch to Browse</button>
+                        <div class="dash-profile-section">
+                            <a href="#" class="dash-profile-link">Refer a Friend</a>
+                            <a href="#" class="dash-profile-link">Profile</a>
+                            <a href="#" class="dash-profile-link" onclick="auth.signOut(); return false;">Log Out</a>
                         </div>
                     </div>
                 </div>
             </div>
+        </nav>
 
-            <!-- Welcome Section -->
-            <div style="margin-bottom: 30px;">
-                <h2 style="font-size: 2rem; margin-bottom: 10px;">Welcome, ${founderData?.founderUsername || 'Founder'}! 👋</h2>
-                <p style="color: #888;">Here's what's happening with your startups today.</p>
-            </div>
-
-            <!-- 4 Box Grid -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 40px;">
-                <!-- Profile Box -->
-                <div style="background: #1a1a1a; border: 1px solid #333; border-radius: 15px; padding: 30px; text-align: center;">
-                    <div style="width: 80px; height: 80px; margin: 0 auto 15px; border-radius: 50%; background: linear-gradient(135deg, #ff006e, #8338ec); display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: bold;">
-                        ${founderData?.founderImage || 'U'}
+        <!-- Main Content -->
+        <div class="dash-container">
+            <!-- Left Section -->
+            <div class="dash-left-section">
+                <div class="dash-left-cards">
+                    <!-- Profile Card -->
+                    <div class="dash-card">
+                        <div class="dash-profile-avatar">${founderData?.founderImage || 'U'}</div>
+                        <div class="dash-card-title">${founderData?.founderUsername || 'Username'}</div>
+                        <div class="dash-card-subtitle">${founderData?.userId || 'USER_ID'}</div>
+                        <button class="dash-card-btn">View Profile</button>
                     </div>
-                    <h3 style="margin-bottom: 5px; font-size: 1.2rem;">${founderData?.founderUsername || 'Username'}</h3>
-                    <p style="color: #888; font-size: 0.85rem; margin-bottom: 20px;">${founderData?.userId || 'USER_ID'}</p>
-                    <button onclick="alert('Profile feature coming soon!')" style="width: 100%; padding: 10px; background: #333; border: none; border-radius: 8px; color: #fff; font-weight: 600; cursor: pointer; transition: background 0.3s;" onmouseover="this.style.background='#444'" onmouseout="this.style.background='#333'">View Profile</button>
-                </div>
 
-                <!-- Startup Box -->
-                <div style="background: #1a1a1a; border: 1px solid #333; border-radius: 15px; padding: 30px; text-align: center;">
-                    ${startupData ? `
-                        <img src="${startupData.logo || ''}" alt="Startup Logo" style="width: 80px; height: 80px; margin: 0 auto 15px; border-radius: 50%; object-fit: cover; background: #333;" onerror="this.style.display='none'">
-                        <h3 style="margin-bottom: 5px; font-size: 1.2rem;">${startupData.startupName || 'My Startup'}</h3>
-                        <p style="color: #888; font-size: 0.85rem; margin-bottom: 20px;">${generateStartupId(startupData.startupName)}</p>
-                    ` : `
-                        <div style="width: 80px; height: 80px; margin: 0 auto 15px; border-radius: 50%; background: #333; display: flex; align-items: center; justify-content: center;">
-                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2">
-                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                                <polyline points="9 22 9 12 15 12 15 22"/>
+                    <!-- Startup Card -->
+                    <div class="dash-card">
+                        <div class="dash-startup-logo">
+                            ${startupData?.logo ? `<img src="${startupData.logo}" alt="Startup Logo">` : `
+                            <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                                <path d="M2 17l10 5 10-5"></path>
+                                <path d="M2 12l10 5 10-5"></path>
+                            </svg>
+                            `}
+                        </div>
+                        <div class="dash-card-title">${startupData?.startupName || 'My Startup'}</div>
+                        <div class="dash-card-subtitle">${generateStartupId(startupData?.startupName || 'Startup')}</div>
+                        <button class="dash-card-btn">View Startup</button>
+                    </div>
+
+                    <!-- Availability Card -->
+                    <div class="dash-card">
+                        <div class="dash-availability-indicator">
+                            <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3">
+                                <polyline points="20 6 9 17 4 12"></polyline>
                             </svg>
                         </div>
-                        <h3 style="margin-bottom: 5px; font-size: 1.2rem;">No Startup</h3>
-                        <p style="color: #888; font-size: 0.85rem; margin-bottom: 20px;">Create your startup profile</p>
-                    `}
-                    <button onclick="alert('Startup profile feature coming soon!')" style="width: 100%; padding: 10px; background: #333; border: none; border-radius: 8px; color: #fff; font-weight: 600; cursor: pointer; transition: background 0.3s;" onmouseover="this.style.background='#444'" onmouseout="this.style.background='#333'">View Startup</button>
-                </div>
+                        <div class="dash-card-title">Founder Availability</div>
+                        <button class="dash-card-btn">Set Availability</button>
+                        <p class="dash-card-description">Control when you're available. Your vests won't be visible on days you're unavailable.</p>
+                    </div>
 
-                <!-- Availability Box -->
-                <div style="background: #1a1a1a; border: 1px solid #333; border-radius: 15px; padding: 30px; text-align: center;">
-                    <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" style="margin: 0 auto 15px;">
-                        <circle cx="12" cy="12" r="10"/>
-                        <polyline points="12 6 12 12 16 14"/>
-                    </svg>
-                    <h3 style="margin-bottom: 5px; font-size: 1.2rem;">Founder Availability</h3>
-                    <p style="color: #888; font-size: 0.85rem; margin-bottom: 5px;">Currently: <span style="color: #10b981; font-weight: 600;">Available</span></p>
-                    <p style="color: #666; font-size: 0.75rem; margin-bottom: 20px; line-height: 1.4;">Set when you're unavailable - your vests won't be online on those days</p>
-                    <button onclick="alert('Availability settings coming soon!')" style="width: 100%; padding: 10px; background: #333; border: none; border-radius: 8px; color: #fff; font-weight: 600; cursor: pointer; transition: background 0.3s;" onmouseover="this.style.background='#444'" onmouseout="this.style.background='#333'">Set Availability</button>
-                </div>
-
-                <!-- Inbox Box -->
-                <div style="background: #1a1a1a; border: 1px solid #333; border-radius: 15px; padding: 20px; overflow: hidden;">
-                    <h3 style="margin-bottom: 15px; font-size: 1.2rem; display: flex; align-items: center; gap: 10px;">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff006e" stroke-width="2">
-                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                            <polyline points="22,6 12,13 2,6"/>
-                        </svg>
-                        Inbox
-                    </h3>
-                    <div style="max-height: 180px; overflow-y: auto;">
-                        <div style="padding: 12px; background: #222; border-radius: 8px; margin-bottom: 10px; cursor: pointer; transition: background 0.3s;" onmouseover="this.style.background='#2a2a2a'" onmouseout="this.style.background='#222'">
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                                <span style="font-weight: 600; font-size: 0.9rem;">No messages yet</span>
-                                <span style="font-size: 0.75rem; color: #888;">Just now</span>
-                            </div>
-                            <p style="font-size: 0.85rem; color: #888;">Your inbox is empty. Connect with investors!</p>
+                    <!-- Inbox Card -->
+                    <div class="dash-card dash-inbox-card">
+                        <div class="dash-card-title" style="margin-bottom: 1.5rem;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-right: 0.5rem;">
+                                <path d="M22 12h-6l-2 3h-4l-2-3H2"></path>
+                                <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>
+                            </svg>
+                            Inbox
+                        </div>
+                        <div class="dash-inbox-message">
+                            <strong>Welcome to ScaleVest!</strong><br>
+                            <small style="color: #888;">Start connecting with investors today.</small>
+                        </div>
+                        <div class="dash-inbox-message">
+                            <strong>Complete your profile</strong><br>
+                            <small style="color: #888;">Add more details to attract investors.</small>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- 3 Banners Section -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; margin-bottom: 40px;">
-                <!-- Banner 1: Founder Emergence -->
-                <div style="background: linear-gradient(135deg, #ff006e20, #8338ec20); border: 1px solid #ff006e40; border-radius: 15px; padding: 25px; position: relative; overflow: hidden;">
-                    <div style="position: absolute; top: -20px; right: -20px; width: 100px; height: 100px; background: radial-gradient(circle, #ff006e30, transparent); border-radius: 50%;"></div>
-                    <h3 style="font-size: 1.3rem; margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ff006e" stroke-width="2">
-                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            <!-- Right Section -->
+            <div class="dash-right-section">
+                <div class="dash-welcome-section">
+                    <h1 class="dash-welcome-text">
+                        Welcome, ${founderData?.founderUsername || 'Founder'}!
+                        <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-left: 0.5rem;">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
                         </svg>
-                        Start Founder Emergence
-                    </h3>
-                    <p style="color: #ccc; font-size: 0.9rem; margin-bottom: 15px; line-height: 1.5;">Reach out to more and more interested investors</p>
-                    <a href="#" style="display: inline-block; padding: 10px 20px; background: linear-gradient(135deg, #ff006e, #8338ec); color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600; transition: transform 0.3s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">Check Out Founder Emergence</a>
-                    <p style="color: #888; font-size: 0.8rem; margin-top: 10px;">Help get your startup funded soon!</p>
+                    </h1>
+                    <p class="dash-welcome-subtext">Let's make today count and connect with potential investors</p>
                 </div>
 
-                <!-- Banner 2: Auto Replies -->
-                <div style="background: linear-gradient(135deg, #3a86ff20, #10b98120); border: 1px solid #3a86ff40; border-radius: 15px; padding: 25px; position: relative; overflow: hidden;">
-                    <div style="position: absolute; top: -20px; right: -20px; width: 100px; height: 100px; background: radial-gradient(circle, #3a86ff30, transparent); border-radius: 50%;"></div>
-                    <h3 style="font-size: 1.3rem; margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3a86ff" stroke-width="2">
-                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                            <path d="M8 10h.01M12 10h.01M16 10h.01"/>
-                        </svg>
-                        Set Up Auto Replies
-                    </h3>
-                    <p style="color: #ccc; font-size: 0.9rem; margin-bottom: 15px; line-height: 1.5;">Set up auto first reply to greet your investors</p>
-                    <a href="#" style="display: inline-block; padding: 10px 20px; background: linear-gradient(135deg, #3a86ff, #10b981); color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600; transition: transform 0.3s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">Configure Auto Replies</a>
-                    <p style="color: #888; font-size: 0.8rem; margin-top: 10px;">Never miss an investor inquiry!</p>
-                </div>
-
-                <!-- Banner 3: Active Vests -->
-                <div style="background: linear-gradient(135deg, #8338ec20, #ff006e20); border: 1px solid #8338ec40; border-radius: 15px; padding: 25px; position: relative; overflow: hidden;">
-                    <div style="position: absolute; top: -20px; right: -20px; width: 100px; height: 100px; background: radial-gradient(circle, #8338ec30, transparent); border-radius: 50%;"></div>
-                    <h3 style="font-size: 1.3rem; margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#8338ec" stroke-width="2">
-                            <path d="M12 2L2 7L12 12L22 7L12 2Z"/>
-                            <path d="M2 17L12 22L22 17"/>
-                            <path d="M2 12L12 17L22 12"/>
-                        </svg>
-                        Active Vests
-                    </h3>
-                    <div style="display: flex; gap: 15px; margin-bottom: 15px;">
-                        <button onclick="filterVests('active')" style="flex: 1; padding: 8px; background: #333; border: none; border-radius: 8px; color: #fff; font-weight: 600; cursor: pointer; transition: all 0.3s;" onmouseover="this.style.background='#444'" onmouseout="this.style.background='#333'">Active (${activeCount})</button>
-                        <button onclick="filterVests('draft')" style="flex: 1; padding: 8px; background: #333; border: none; border-radius: 8px; color: #fff; font-weight: 600; cursor: pointer; transition: all 0.3s;" onmouseover="this.style.background='#444'" onmouseout="this.style.background='#333'">Draft (${draftCount})</button>
+                <!-- Banners Section -->
+                <div class="dash-banners-section">
+                    <!-- Founder Emergence Banner -->
+                    <div class="dash-banner">
+                        <div class="dash-banner-content">
+                            <h3>
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-right: 0.5rem;">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <polyline points="12 6 12 12 16 14"></polyline>
+                                </svg>
+                               Start Founder Emergence
+                            </h3>
+                            <p>Reach out to more interested investors and expand your network. Launch your Founder Emergence campaign to help get your startup funded faster and connect with the right people.</p>
+                        </div>
+                        <div class="dash-banner-icon">
+                            <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2z"></path>
+                            </svg>
+                        </div>
                     </div>
-                    <a href="#vest_step1" style="display: inline-block; padding: 10px 20px; background: linear-gradient(135deg, #8338ec, #ff006e); color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600; transition: transform 0.3s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">Create New Vest</a>
-                    <p style="color: #888; font-size: 0.8rem; margin-top: 10px;">Manage your funding campaigns</p>
+
+                    <!-- Auto Replies Banner -->
+                    <div class="dash-banner">
+                        <div class="dash-banner-content">
+                            <h3>
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-right: 0.5rem;">
+                                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                                </svg>
+                                Setup Auto Reply for Investors
+                            </h3>
+                            <p>Configure automatic first responses to greet your investors professionally. Make a great first impression and ensure no investor inquiry goes unnoticed with smart auto-replies.</p>
+                        </div>
+                        <div class="dash-banner-icon">
+                            <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                <path d="M8 10h8"></path>
+                                <path d="M8 14h4"></path>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Active Vests Banner -->
+                    <div class="dash-banner">
+                        <div class="dash-banner-content">
+                            <div class="dash-vests-header">
+                                <h3>
+                                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-right: 0.5rem;">
+                                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                    </svg>
+                                    Active Vests
+                                </h3>
+                                <div class="dash-vests-tabs">
+                                    <div class="dash-vest-tab active" onclick="filterVests('active')">Active (${activeCount})</div>
+                                    <div class="dash-vest-tab" onclick="filterVests('draft')">Draft (${draftCount})</div>
+                                </div>
+                            </div>
+                            <p>Manage your active and draft vests to connect with the right investors. Track your outreach campaigns and optimize your investor engagement strategy.</p>
+                        </div>
+                        <div class="dash-banner-icon">
+                            <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="9" y1="9" x2="15" y2="9"></line>
+                                <line x1="9" y1="15" x2="15" y2="15"></line>
+                            </svg>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
+
+        <!-- Footer -->
+        <footer class="dash-footer">
+            <div class="dash-footer-content">
+                <div class="dash-footer-logo">
+                    <div class="dash-footer-logo-text">ScaleVest</div>
+                    <div class="dash-footer-company">UnioraX Private Limited</div>
+                </div>
+                <div class="dash-footer-links">
+                    <a href="#" class="dash-footer-link">About</a>
+                    <a href="#" class="dash-footer-link">Contact</a>
+                    <a href="#" class="dash-footer-link">Privacy</a>
+                    <a href="#" class="dash-footer-link">Terms</a>
+                </div>
+            </div>
+        </footer>
     `;
     
     const container = document.getElementById('dashboardContainer');
     container.innerHTML = dashboardHTML;
     container.style.display = 'block';
     
-    // Add dropdown interactions
+    // Add dropdown interaction after DOM is loaded
     setTimeout(() => {
-        document.getElementById('scaleElevateBtn').addEventListener('click', (e) => {
-            e.preventDefault();
-            const dropdown = document.getElementById('scaleDropdown');
-            dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
-        });
-        
-        document.getElementById('profileDropdownBtn').addEventListener('click', () => {
-            const dropdown = document.getElementById('profileDropdown');
-            dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
-        });
-        
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('#scaleElevateBtn') && !e.target.closest('#scaleDropdown')) {
-                document.getElementById('scaleDropdown').style.display = 'none';
+        window.toggleDashProfileDropdown = function() {
+            const dropdown = document.getElementById('dashProfileDropdown');
+            if (dropdown) {
+                dropdown.classList.toggle('show');
             }
-            if (!e.target.closest('#profileDropdownBtn') && !e.target.closest('#profileDropdown')) {
-                document.getElementById('profileDropdown').style.display = 'none';
+        };
+        
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.dash-profile-dropdown')) {
+                const dropdown = document.getElementById('dashProfileDropdown');
+                if (dropdown) dropdown.classList.remove('show');
             }
         });
     }, 100);
 }
 
 function generateUserId(username) {
-    const hash = username.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    return 'SV' + hash.toString(36).toUpperCase().slice(0, 8);
+    if (!username) return 'USER_' + Math.floor(Math.random() * 9000 + 1000);
+    
+    // Clean username - take first 6 chars, convert to uppercase
+    const cleanName = username.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 6);
+    
+    // Generate unique number (timestamp-based + random)
+    const uniqueNum = Date.now().toString().slice(-3) + Math.floor(Math.random() * 90 + 10);
+    
+    return `${cleanName}_${uniqueNum}`;
 }
 
 function generateStartupId(startupName) {
-    if (!startupName) return 'STARTUP_ID';
-    const hash = startupName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    return 'ST' + hash.toString(36).toUpperCase().slice(0, 8);
+    if (!startupName) return 'STARTUP_' + Math.floor(Math.random() * 9000 + 1000);
+    
+    // Clean startup name - take first 6 chars, convert to uppercase
+    const cleanName = startupName.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 6);
+    
+    // Generate unique number (timestamp-based + random)
+    const uniqueNum = Date.now().toString().slice(-3) + Math.floor(Math.random() * 90 + 10);
+    
+    return `${cleanName}_${uniqueNum}`;
 }
 
 window.filterVests = function(type) {
