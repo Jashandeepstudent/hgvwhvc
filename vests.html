@@ -956,9 +956,17 @@ function showVestForm() {
 
 function showDashboard() {
     document.querySelector('.vest-container').style.display = 'none';
-    if (!document.getElementById('dashboardContainer')) {
-        createDashboard();
+    
+    let container = document.getElementById('dashboardContainer');
+    if (!container) {
+        // Create container if it doesn't exist
+        container = document.createElement('div');
+        container.id = 'dashboardContainer';
+        container.style.display = 'none';
+        document.body.appendChild(container);
     }
+    
+    createDashboard();
 }
 async function createDashboard() {
     // Change page title
