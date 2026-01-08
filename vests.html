@@ -1719,82 +1719,109 @@ async function createDashboard() {
 
 
         <!-- Top Navigation -->
-        <nav class="dash-top-nav">
-            <div class="dash-logo">ScaleVest</div>
-            <div class="dash-nav-links">
-                <a href="#founder_dashboard" class="dash-nav-link">Dashboard</a>
-                <a href="#" class="dash-nav-link">My Startup</a>
-                <a href="#" class="dash-nav-link">Analytics</a>
-                <div class="dash-dropdown">
-                    <span class="dash-nav-link" onclick="event.stopPropagation()">Scale and Elevate ▾</span>
-                    <div class="dash-dropdown-content">
-                        <a href="#" class="dash-dropdown-item">Founder Emergence</a>
-                        <a href="#" class="dash-dropdown-item">Referrals</a>
-                        <a href="#" class="dash-dropdown-item">Contacts</a>
-                        <a href="#" class="dash-dropdown-item">My Trials</a>
-                    </div>
+<nav class="top-nav">
+    <div class="logo">ScaleVest</div>
+
+    <div class="nav-links">
+        <a href="#founder_dashboard" class="nav-link">Dashboard</a>
+        <a href="#" class="nav-link">My Startup</a>
+        <a href="#" class="nav-link">Analytics</a>
+
+        <div class="dropdown">
+            <span class="nav-link" onclick="event.stopPropagation()">Scale and Elevate ▾</span>
+            <div class="dropdown-content">
+                <a href="#" class="dropdown-item">Founder Emergence</a>
+                <a href="#" class="dropdown-item">Referrals</a>
+                <a href="#" class="dropdown-item">Contacts</a>
+                <a href="#" class="dropdown-item">My Trials</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="top-nav-right">
+        <div class="icon-btn" title="Notifications">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+        </div>
+
+        <div class="icon-btn" title="Messages">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5
+                         a2 2 0 0 1 2-2h14
+                         a2 2 0 0 1 2 2z"></path>
+            </svg>
+        </div>
+
+        <div class="profile-dropdown">
+            <div class="icon-btn" onclick="toggleDashProfileDropdown()" id="dashProfileIcon">
+                <div style="font-size:1.2rem;font-weight:600;">
+                    ${founderData?.founderImage || 'U'}
                 </div>
             </div>
-            <div class="dash-top-nav-right">
-                <div class="dash-icon-btn" title="Notifications">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                    </svg>
+
+            <div class="profile-dropdown-content" id="dashProfileDropdown">
+                <div class="profile-info">
+                    <div class="profile-username">${founderData?.founderUsername || 'Username'}</div>
+                    <div class="profile-userid">${founderData?.userId || 'USER_ID'}</div>
                 </div>
-                <div class="dash-icon-btn" title="Messages">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                    </svg>
-                </div>
-                <div class="dash-profile-dropdown">
-                    <div class="dash-icon-btn" onclick="toggleDashProfileDropdown()" id="dashProfileIcon">
-                        <div style="font-size: 1.2rem; font-weight: 600;">${founderData?.founderImage || 'U'}</div>
-                    </div>
-                    <div class="dash-profile-dropdown-content" id="dashProfileDropdown">
-                        <div class="dash-profile-info">
-                            <div class="dash-profile-username">${founderData?.founderUsername || 'Username'}</div>
-                            <div class="dash-profile-userid">${founderData?.userId || 'USER_ID'}</div>
-                        </div>
-                        <button class="dash-switch-btn">Switch to Browse</button>
-                        <div class="dash-profile-section">
-                            <a href="#" class="dash-profile-link">Refer a Friend</a>
-                            <a href="#" class="dash-profile-link">Profile</a>
-                            <a href="#" class="dash-profile-link" onclick="auth.signOut(); return false;">Log Out</a>
-                        </div>
-                    </div>
+
+                <button class="switch-btn">Switch to Browse</button>
+
+                <div class="profile-section">
+                    <a href="#" class="profile-link">Refer a Friend</a>
+                    <a href="#" class="profile-link">Profile</a>
+                    <a href="#" class="profile-link" onclick="auth.signOut(); return false;">Log Out</a>
                 </div>
             </div>
-        </nav>
+        </div>
+    </div>
+</nav>
 
-        <!-- Main Content -->
-        <div class="dash-container">
-            <!-- Left Section -->
-            <div class="dash-left-section">
-                <div class="dash-left-cards">
-                    <!-- Profile Card -->
-                    <div class="dash-card">
-                        <div class="dash-profile-avatar">${founderData?.founderImage || 'U'}</div>
-                        <div class="dash-card-title">${founderData?.founderUsername || 'Username'}</div>
-                        <div class="dash-card-subtitle">${founderData?.userId || 'USER_ID'}</div>
-                        <button class="dash-card-btn">View Profile</button>
-                    </div>
+<!-- Main Content -->
+<div class="container">
 
-                    <!-- Startup Card -->
-                    <div class="dash-card">
-                        <div class="dash-startup-logo">
-                            ${startupData?.logo ? `<img src="${startupData.logo}" alt="Startup Logo">` : `
-                            <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                                <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
-                                <path d="M2 17l10 5 10-5"></path>
-                                <path d="M2 12l10 5 10-5"></path>
-                            </svg>
-                            `}
-                        </div>
-                        <div class="dash-card-title">${startupData?.startupName || 'My Startup'}</div>
-                        <div class="dash-card-subtitle">${generateStartupId(startupData?.startupName || 'Startup')}</div>
-                        <button class="dash-card-btn">View Startup</button>
-                    </div>
+    <!-- Left Section -->
+    <div class="left-section">
+        <div class="left-cards">
+
+            <!-- Profile Card -->
+            <div class="card">
+                <div class="profile-avatar">${founderData?.founderImage || 'U'}</div>
+                <div class="card-title">${founderData?.founderUsername || 'Username'}</div>
+                <div class="card-subtitle">${founderData?.userId || 'USER_ID'}</div>
+                <button class="card-btn">View Profile</button>
+            </div>
+
+            <!-- Startup Card -->
+            <div class="card">
+                <div class="startup-logo">
+                    ${startupData?.logo
+                        ? `<img src="${startupData.logo}" alt="Startup Logo">`
+                        : `
+                        <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                            <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                            <path d="M2 17l10 5 10-5"></path>
+                            <path d="M2 12l10 5 10-5"></path>
+                        </svg>
+                        `}
+                </div>
+
+                <div class="card-title">${startupData?.startupName || 'My Startup'}</div>
+                <div class="card-subtitle">
+                    ${generateStartupId(startupData?.startupName || 'Startup')}
+                </div>
+
+                <button class="card-btn">View Startup</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
 
                     <!-- Availability Card -->
                     <div class="dash-card">
