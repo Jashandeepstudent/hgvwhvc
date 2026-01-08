@@ -2189,13 +2189,7 @@ if (logoFile && !uploadedFiles.startupLogo) {
         if (e.target.files[0]) document.getElementById('transactionProofName').textContent = '✓ ' + e.target.files[0].name;
     });
 
-window.addEventListener('load', () => {
-    if (window.location.hash === '#founder_dashboard') {
-        // Logic to show your dashboard container and hide others
-        document.querySelector('.vest-container').style.display = 'block';
-        showStep(1); // Function to initialize to the first step
-    }
-});
+
 </script>
 <!-- FOUNDER DASHBOARD -->
 <div id="dashboardContainer" style="display: none;"></div>
