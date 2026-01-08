@@ -3038,54 +3038,87 @@ function editTitle() {
             });
     }
 }
+// --- Fixed editAbout ---
 function editAbout() {
-const newAbout = prompt('Tell us about yourself:');
-if (newAbout && currentUser) {
-const founderRef = ref(db, founderProfile/${currentUser.uid});
-set(founderRef, { aboutMe: newAbout }, { merge: true })
-.then(() => {
-alert('About Me updated!');
-createEditProfilePage();
-});
-}
-}async function addEducation() {
-const degree = prompt('Enter degree (e.g., B.Tech in Computer Science):');
-if (!degree) return;const university = prompt('Enter university/school name:');
-if (!university) return;const year = prompt('Enter graduation year:');
-if (!year) return;if (currentUser) {
-    const founderRef = ref(db, `founderProfile/${currentUser.uid}`);
-    const snap = await get(founderRef);
-    const data = snap.val() || {};
-    const education = data.education || [];    education.push({ degree, university, year });    await set(founderRef, { education }, { merge: true });
-    alert('Education added!');
-    createEditProfilePage();
-}
-}async function addWork() {
-const company = prompt('Where did you work?');
-if (!company) return;const title = prompt('What was your job title?');
-if (!title) return;const stillWorking = confirm('Are you still working there?');let endDate = null;
-if (!stillWorking) {
-    endDate = prompt('When did you leave? (e.g., Dec 2023)');
-}if (currentUser) {
-    const founderRef = ref(db, `founderProfile/${currentUser.uid}`);
-    await set(founderRef, { 
-        workExperience: { company, title, stillWorking, endDate }
-    }, { merge: true });    alert('Work experience added!');
-    createEditProfilePage();
-}
-}function addVideo() {
-alert('Video upload feature coming soon! You can add a video URL for now.');
-const videoUrl = prompt('Enter video URL:');
-if (videoUrl && currentUser) {
-const founderRef = ref(db, founderProfile/${currentUser.uid});
-set(founderRef, { introVideo: videoUrl }, { merge: true })
-.then(() => {
-alert('Video added!');
-createEditProfilePage();
-});
-}
+    const newAbout = prompt('Tell us about yourself:');
+    if (newAbout && currentUser) {
+        // FIXED: Added backticks
+        const founderRef = ref(db, `founderProfile/${currentUser.uid}`);
+        set(founderRef, { aboutMe: newAbout }, { merge: true })
+            .then(() => {
+                alert('About Me updated!');
+                createEditProfilePage();
+            })
+            .catch(err => console.error("Update failed:", err));
+    }
 }
 
+// --- Fixed addEducation ---
+async function addEducation() {
+    const degree = prompt('Enter degree (e.g., B.Tech in Computer Science):');
+    if (!degree) return;
+    const university = prompt('Enter university/school name:');
+    if (!university) return;
+    const year = prompt('Enter graduation year:');
+    if (!year) return;
+
+    if (currentUser) {
+        const founderRef = ref(db, `founderProfile/${currentUser.uid}`);
+        try {
+            const snap = await get(founderRef);
+            const data = snap.val() || {};
+            const education = data.education || [];
+            education.push({ degree, university, year });
+            await set(founderRef, { education }, { merge: true });
+            alert('Education added!');
+            createEditProfilePage();
+        } catch (err) {
+            console.error("Error adding education:", err);
+        }
+    }
+}
+
+// --- Fixed addWork ---
+async function addWork() {
+    const company = prompt('Where did you work?');
+    if (!company) return;
+    const title = prompt('What was your job title?');
+    if (!title) return;
+    const stillWorking = confirm('Are you still working there?');
+    let endDate = null;
+    if (!stillWorking) {
+        endDate = prompt('When did you leave? (e.g., Dec 2023)');
+    }
+
+    if (currentUser) {
+        const founderRef = ref(db, `founderProfile/${currentUser.uid}`);
+        try {
+            await set(founderRef, { 
+                workExperience: { company, title, stillWorking, endDate }
+            }, { merge: true });
+            alert('Work experience added!');
+            createEditProfilePage();
+        } catch (err) {
+            console.error("Error adding work:", err);
+        }
+    }
+}
+
+// --- Fixed addVideo ---
+function addVideo() {
+    alert('Video upload feature coming soon! You can add a video URL for now.');
+    const videoUrl = prompt('Enter video URL:');
+    if (videoUrl && currentUser) {
+        // FIXED: Added backticks
+        const founderRef = ref(db, `founderProfile/${currentUser.uid}`);
+        set(founderRef, { introVideo: videoUrl }, { merge: true })
+            .then(() => {
+                alert('Video added!');
+                createEditProfilePage();
+            })
+            .catch(err => console.error("Error adding video:", err));
+    }
+}
 
 
 
