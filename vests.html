@@ -909,18 +909,23 @@ function loadFromLocalStorage() {
         transactionProof: null
     };
 
-    // 1. Authentication State Observer
+// 1. Authentication State Observer
 onAuthStateChanged(auth, (user) => {
     if (user) {
         currentUser = user;
         isInitialLoad = false;
         console.log("User verified:", user.uid);
         
-        // Check hash and show appropriate view
-        const hash = window.location.hash.slice(1);
-        if (!hash || hash === 'founder_dashboard') {
-            window.location.hash = 'founder_dashboard';
-        }
+        // Check hash and show appropriate view after user is set
+        setTimeout(() => {
+            const hash = window.location.hash.slice(1);
+            if (!hash || hash === 'founder_dashboard') {
+                window.location.hash = 'founder_dashboard';
+                handleHashChange();
+            } else {
+                handleHashChange();
+            }
+        }, 100);
     } else {
         if (!isInitialLoad) {
             window.location.href = 'login2.html';
@@ -934,9 +939,18 @@ onAuthStateChanged(auth, (user) => {
 });
 // Handle hash navigation
 window.addEventListener('hashchange', handleHashChange);
-window.addEventListener('load', handleHashChange);
+window.addEventListener('load', () => {
+    // Wait for auth to initialize
+    setTimeout(handleHashChange, 300);
+});
 
 function handleHashChange() {
+    // Don't do anything if user isn't authenticated yet
+    if (!currentUser) {
+        console.log("Waiting for authentication...");
+        return;
+    }
+    
     const hash = window.location.hash.slice(1); // Remove #
     
     if (hash === 'founder_dashboard') {
@@ -954,6 +968,7 @@ function handleHashChange() {
         window.location.hash = 'founder_dashboard';
     }
 }
+
 function showVestForm() {
     document.title = "Create Your Vest | ScaleVest"; 
     document.querySelector('.vest-container').style.display = 'block';
