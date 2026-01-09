@@ -2623,11 +2623,11 @@ async function showEditProfile() {
             }
             
 .edit-icon-btn {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: transparent;
-    border: 1px solid #666;
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;  
+    background: #1a1a1a;
+    border: 1px solid #555;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2636,15 +2636,15 @@ async function showEditProfile() {
 }
 
 .edit-icon-btn svg {
-    width: 12px;
-    height: 12px;
+    width: 14px;
+    height: 14px;
     stroke: #fff;
 }
 
 .edit-icon-btn:hover {
     background: #fff;
     border-color: #fff;
-    transform: scale(1.15);
+    transform: scale(1.1);
 }
 
 .edit-icon-btn:hover svg {
@@ -3183,59 +3183,59 @@ async function showEditProfile() {
     </div>
 </div>
                 
-                <!-- Sidebar -->
-                <div class="profile-sidebar">
-                    <!-- Quick Links -->
-                    <div class="quick-links-card">
-                        <h3 class="section-title">Quick Links</h3>
-                        <button class="quick-link-btn" onclick="window.location.hash='founder_dashboard'">
-                            📊 Dashboard
-                        </button>
-                        <button class="quick-link-btn" onclick="window.location.hash='vest_step1'">
-                            🚀 Create Vest
-                        </button>
-                        <button class="quick-link-btn">
-                            💼 My Vests
-                        </button>
-                        <button class="quick-link-btn">
-                            📈 Analytics
-                        </button>
-                    </div>
-                    
-                    <!-- Profile Progress -->
-                    <div class="progress-card">
-                        <h3 class="section-title">Profile Completion</h3>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: ${completionPercent}%"></div>
-                        </div>
-                        <div class="progress-text">${completionPercent}%</div>
-                        <p style="color: #888; font-size: 0.9rem; text-align: center; margin-top: 1rem;">
-                            Complete your profile to attract more investors
-                        </p>
-                    </div>
-                    
-                    <!-- Co-Founders -->
-                    ${founderData?.coFounders?.length > 0 ? `
-                    <div class="profile-card">
-                        <h3 class="section-title">Co-Founders</h3>
-                        ${founderData.coFounders.map(coFounder => `
-                            <div class="cofounder-item">
-                                <div class="cofounder-name">${coFounder.name}</div>
-                                <div class="cofounder-desc">${coFounder.description || 'No description'}</div>
-                            </div>
-                        `).join('')}
-                        <button class="add-item-btn" onclick="addCoFounder()">+ Add Co-Founder</button>
-                    </div>
-                    ` : `
-                    <div class="profile-card">
-                        <h3 class="section-title">Co-Founders</h3>
-                        <div class="empty-state" style="padding: 1.5rem;">
-                            <p style="color: #666; margin-bottom: 1rem;">No co-founders added</p>
-                            <button class="add-item-btn" onclick="addCoFounder()">+ Add Co-Founder</button>
-                        </div>
-                    </div>
-                    `}
-                </div>
+               <!-- Sidebar -->
+<div class="profile-sidebar">
+    <!-- Quick Links - NOW AT TOP -->
+    <div class="quick-links-card">
+        <h3 class="section-title">Quick Links</h3>
+        <button class="quick-link-btn" onclick="window.location.hash='founder_dashboard'">
+            📊 Dashboard
+        </button>
+        <button class="quick-link-btn" onclick="window.location.hash='vest_step1'">
+            🚀 Create Vest
+        </button>
+        <button class="quick-link-btn">
+            💼 My Vests
+        </button>
+        <button class="quick-link-btn">
+            📈 Analytics
+        </button>
+    </div>
+    
+    <!-- Profile Progress - NOW SECOND -->
+    <div class="progress-card">
+        <h3 class="section-title">Profile Completion</h3>
+        <div class="progress-bar">
+            <div class="progress-fill" style="width: ${completionPercent}%"></div>
+        </div>
+        <div class="progress-text">${completionPercent}%</div>
+        <p style="color: #888; font-size: 0.9rem; text-align: center; margin-top: 1rem;">
+            Complete your profile to attract more investors
+        </p>
+    </div>
+    
+    <!-- Co-Founders - NOW THIRD -->
+    ${founderData?.coFounders?.length > 0 ? `
+    <div class="profile-card">
+        <h3 class="section-title">Co-Founders</h3>
+        ${founderData.coFounders.map(coFounder => `
+            <div class="cofounder-item">
+                <div class="cofounder-name">${coFounder.name}</div>
+                <div class="cofounder-desc">${coFounder.description || 'No description'}</div>
+            </div>
+        `).join('')}
+        <button class="add-item-btn" onclick="addCoFounder()">+ Add Co-Founder</button>
+    </div>
+    ` : `
+    <div class="profile-card">
+        <h3 class="section-title">Co-Founders</h3>
+        <div class="empty-state" style="padding: 1.5rem;">
+            <p style="color: #666; margin-bottom: 1rem;">No co-founders added</p>
+            <button class="add-item-btn" onclick="addCoFounder()">+ Add Co-Founder</button>
+        </div>
+    </div>
+    `}
+</div>
             </div>
         </div>
     `;
@@ -3766,7 +3766,7 @@ window.previousStep = function() {
             fundingOptions: fundingOptions,
             founderName: document.getElementById('founderName').value || '',
             createdAt: new Date().toISOString(),
-            userId: currentUser.uid
+            userId: cachedFounderData.userId
         };
     }
 
