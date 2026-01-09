@@ -1073,18 +1073,20 @@ let cachedStartupData = null;
                 cachedFounderData = founderSnapshot.val();
                 
                 // If old profile doesn't have userId, generate and save it
-                if (!cachedFounderData.userId) {
-                    const username = cachedFounderData.founderUsername 
-                        || (cachedFounderData.firstName ? `${cachedFounderData.firstName} ${cachedFounderData.lastName || ''}`.trim() : '')
-                        || cachedFounderData.email?.split('@')[0] 
-                        || 'User';
-                    
-                    cachedFounderData.userId = generateUserId(username);
-                    
-                    // Save updated profile with userId
-                    await update(ref(db, `founderProfile/${user.uid}`), cachedFounderData);
-                    console.log('✅ Generated userId for existing profile:', cachedFounderData.userId);
-                }
+// If old profile doesn't have userId, generate and save it ONCE
+if (!cachedFounderData.userId) {
+    const username = cachedFounderData.founderUsername 
+        || (cachedFounderData.firstName ? `${cachedFounderData.firstName} ${cachedFounderData.lastName || ''}`.trim() : '')
+        || cachedFounderData.email?.split('@')[0] 
+        || 'User';
+    
+    // IMPORTANT: Generate userId ONCE and NEVER change it
+    cachedFounderData.userId = generateUserId(username);
+    
+    // Save updated profile with userId
+    await update(ref(db, `founderProfile/${currentUser.uid}`), { userId: cachedFounderData.userId });
+    console.log('✅ Generated userId ONCE:', cachedFounderData.userId);
+}
                 
                 console.log('✅ Loaded existing founder profile:', cachedFounderData);
             }
@@ -2297,11 +2299,11 @@ document.addEventListener('click', (e) => {
 function generateUserId(username) {
     if (!username) return 'USER_' + Math.floor(Math.random() * 9000 + 1000);
     
-    // Clean username - take first 6 chars, convert to uppercase
-    const cleanName = username.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 6);
+    // Clean username - take first word only, max 10 chars
+    const cleanName = username.split(' ')[0].replace(/[^a-zA-Z0-9]/g, '').toLowerCase().slice(0, 10);
     
-    // Generate unique number (timestamp-based + random)
-    const uniqueNum = Date.now().toString().slice(-3) + Math.floor(Math.random() * 90 + 10);
+    // Generate unique number (3 random digits)
+    const uniqueNum = Math.floor(Math.random() * 900 + 100);
     
     return `${cleanName}_${uniqueNum}`;
 }
@@ -2620,18 +2622,34 @@ async function showEditProfile() {
                 font-weight: 700;
             }
             
-            .edit-icon-btn {
-                width: 32px;
-                height: 32px;
-                border-radius: 50%;
-                background: #1a1a1a;
-                border: 1px solid #333;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                cursor: pointer;
-                transition: all 0.3s;
-            }
+.edit-icon-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: transparent;
+    border: 1px solid #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.edit-icon-btn svg {
+    width: 12px;
+    height: 12px;
+    stroke: #fff;
+}
+
+.edit-icon-btn:hover {
+    background: #fff;
+    border-color: #fff;
+    transform: scale(1.15);
+}
+
+.edit-icon-btn:hover svg {
+    stroke: #000;
+}
             
             .edit-icon-btn:hover {
                 background: #fff;
@@ -2798,6 +2816,149 @@ async function showEditProfile() {
     margin-bottom: 0.5rem;
 }
 
+/* ===== MODAL STYLES ===== */
+.edit-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.edit-modal.show {
+    opacity: 1;
+}
+
+.edit-modal-content {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+    animation: modalSlideIn 0.3s;
+}
+
+@keyframes modalSlideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.edit-modal-header {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.edit-modal-header h3 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 2rem;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.3s;
+}
+
+.modal-close:hover {
+    background: #333;
+    transform: rotate(90deg);
+}
+
+.edit-modal-body {
+    padding: 2rem;
+}
+
+.edit-modal-body input,
+.edit-modal-body textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: #0a0a0a;
+    border: 2px solid #333;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 1rem;
+    transition: all 0.3s;
+}
+
+.edit-modal-body input:focus,
+.edit-modal-body textarea:focus {
+    outline: none;
+    border-color: #ff006e;
+    box-shadow: 0 0 0 3px rgba(255, 0, 110, 0.1);
+}
+
+.edit-modal-footer {
+    padding: 1.5rem 2rem;
+    border-top: 1px solid #333;
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
+.modal-btn-cancel,
+.modal-btn-save {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    border: none;
+}
+
+.modal-btn-cancel {
+    background: #333;
+    color: #fff;
+}
+
+.modal-btn-cancel:hover {
+    background: #444;
+}
+
+.modal-btn-save {
+    background: linear-gradient(135deg, #ff006e, #8338ec);
+    color: #fff;
+}
+
+.modal-btn-save:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(255, 0, 110, 0.3);
+}
+
+
+
+
+
+
+
 .exp-duration {
     color: #666;
     font-size: 0.85rem;
@@ -2844,7 +3005,24 @@ async function showEditProfile() {
                 overflow: hidden;
                 margin: 1rem 0;
             }
-            
+       .cofounder-item {
+    background: #000;
+    border: 1px solid #222;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.cofounder-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.cofounder-desc {
+    color: #aaa;
+    font-size: 0.9rem;
+}     
             .progress-fill {
                 height: 100%;
                 background: linear-gradient(90deg, #10b981, #3a86ff);
@@ -3005,107 +3183,286 @@ async function showEditProfile() {
     </div>
 </div>
                 
-                <!-- Sidebar -->
-                <div class="profile-sidebar">
-                    <!-- Quick Links -->
-                    <div class="quick-links-card">
-                        <h3 class="section-title">Quick Links</h3>
-                        <button class="quick-link-btn" onclick="window.location.hash='founder_dashboard'">
-                            📊 Dashboard
-                        </button>
-                        <button class="quick-link-btn" onclick="window.location.hash='vest_step1'">
-                            🚀 Create Vest
-                        </button>
-                        <button class="quick-link-btn">
-                            💼 My Vests
-                        </button>
-                        <button class="quick-link-btn">
-                            📈 Analytics
-                        </button>
-                    </div>
-                    
-                    <!-- Profile Progress -->
-                    <div class="progress-card">
-                        <h3 class="section-title">Profile Completion</h3>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: ${completionPercent}%"></div>
-                        </div>
-                        <div class="progress-text">${completionPercent}%</div>
-                        <p style="color: #888; font-size: 0.9rem; text-align: center; margin-top: 1rem;">
-                            Complete your profile to attract more investors
-                        </p>
-                    </div>
-                </div>
-            </div>
+<!-- Sidebar -->
+<div class="profile-sidebar">
+    <!-- Quick Links -->
+    <div class="quick-links-card">
+        <h3 class="section-title">Quick Links</h3>
+        <button class="quick-link-btn" onclick="window.location.hash='founder_dashboard'">
+            📊 Dashboard
+        </button>
+        <button class="quick-link-btn" onclick="window.location.hash='vest_step1'">
+            🚀 Create Vest
+        </button>
+        <button class="quick-link-btn">
+            💼 My Vests
+        </button>
+        <button class="quick-link-btn">
+            📈 Analytics
+        </button>
+    </div>
+    
+    <!-- Profile Progress -->
+    <div class="progress-card">
+        <h3 class="section-title">Profile Completion</h3>
+        <div class="progress-bar">
+            <div class="progress-fill" style="width: ${completionPercent}%"></div>
         </div>
-    `;
-}
+        <div class="progress-text">${completionPercent}%</div>
+        <p style="color: #888; font-size: 0.9rem; text-align: center; margin-top: 1rem;">
+            Complete your profile to attract more investors
+        </p>
+    </div>
+    
+    <!-- Co-Founders -->
+    ${founderData?.coFounders?.length > 0 ? `
+    <div class="profile-card">
+        <h3 class="section-title">Co-Founders</h3>
+        ${founderData.coFounders.map(coFounder => `
+            <div class="cofounder-item">
+                <div class="cofounder-name">${coFounder.name}</div>
+                <div class="cofounder-desc">${coFounder.description || 'No description'}</div>
+            </div>
+        `).join('')}
+        <button class="add-item-btn" onclick="addCoFounder()">+ Add Co-Founder</button>
+    </div>
+    ` : `
+    <div class="profile-card">
+        <h3 class="section-title">Co-Founders</h3>
+        <div class="empty-state" style="padding: 1.5rem;">
+            <p style="color: #666; margin-bottom: 1rem;">No co-founders added</p>
+            <button class="add-item-btn" onclick="addCoFounder()">+ Add Co-Founder</button>
+        </div>
+    </div>
+    `}
+</div>
 
 
 // ============================================
 // EDIT PROFILE FUNCTIONS - ALL WORKING
 // ============================================
 
-window.editUsername = async function() {
-    const currentUsername = cachedFounderData?.founderUsername || '';
-    const newUsername = prompt('Enter new username:', currentUsername);
+// Create modal HTML
+function createEditModal(title, currentValue, placeholder, isTextarea = false) {
+    const modal = document.createElement('div');
+    modal.className = 'edit-modal';
+    modal.innerHTML = `
+        <div class="edit-modal-content">
+            <div class="edit-modal-header">
+                <h3>${title}</h3>
+                <button class="modal-close" onclick="closeEditModal()">×</button>
+            </div>
+            <div class="edit-modal-body">
+                ${isTextarea 
+                    ? `<textarea id="editInput" placeholder="${placeholder}" rows="6">${currentValue}</textarea>`
+                    : `<input type="text" id="editInput" placeholder="${placeholder}" value="${currentValue}">`
+                }
+            </div>
+            <div class="edit-modal-footer">
+                <button class="modal-btn-cancel" onclick="closeEditModal()">Cancel</button>
+                <button class="modal-btn-save" onclick="saveEditModal()">Save Changes</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    setTimeout(() => modal.classList.add('show'), 10);
+    document.getElementById('editInput').focus();
+}
+
+window.closeEditModal = function() {
+    const modal = document.querySelector('.edit-modal');
+    if (modal) {
+        modal.classList.remove('show');
+        setTimeout(() => modal.remove(), 300);
+    }
+};
+
+let currentEditAction = null;
+
+window.editUsername = function() {
+    currentEditAction = async (newValue) => {
+        if (!newValue || newValue === cachedFounderData?.founderUsername) return;
+        
+        try {
+            const firstLetter = newValue.charAt(0).toUpperCase();
+            const updates = {
+                founderUsername: newValue,
+                founderImage: firstLetter
+                
+            };
+            
+            await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
+            cachedFounderData = { ...cachedFounderData, ...updates };
+            
+            alert('✅ Username updated successfully!');
+            showEditProfile();
+        } catch (error) {
+            console.error('Error updating username:', error);
+            alert('❌ Failed to update username');
+        }
+    };
     
-    if (!newUsername || newUsername === currentUsername) return;
+    createEditModal('Edit Username', cachedFounderData?.founderUsername || '', 'Enter your username');
+};    
+    createEditModal('Edit Username', cachedFounderData?.founderUsername || '', 'Enter your username');
+};
+
+window.editTitle = function() {
+    currentEditAction = async (newValue) => {
+        if (newValue === cachedFounderData?.title) return;
+        
+        try {
+            const updates = { title: newValue };
+            await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
+            cachedFounderData = { ...cachedFounderData, ...updates };
+            
+            alert('✅ Title updated successfully!');
+            showEditProfile();
+        } catch (error) {
+            console.error('Error updating title:', error);
+            alert('❌ Failed to update title');
+        }
+    };
+    
+    createEditModal('Edit Title', cachedFounderData?.title || '', 'e.g., CEO & Founder');
+};
+window.addCoFounder = function() {
+    const modal = document.createElement('div');
+    modal.className = 'edit-modal';
+    modal.innerHTML = `
+        <div class="edit-modal-content">
+            <div class="edit-modal-header">
+                <h3>Add Co-Founder</h3>
+                <button class="modal-close" onclick="closeEditModal()">×</button>
+            </div>
+            <div class="edit-modal-body">
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Co-Founder Name</label>
+                    <input type="text" id="cofounderName" placeholder="Enter name" style="width: 100%; padding: 0.75rem; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; color: #fff;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Description (Optional)</label>
+                    <textarea id="cofounderDesc" placeholder="e.g., CTO, 10 years in tech..." rows="3" style="width: 100%; padding: 0.75rem; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; color: #fff;"></textarea>
+                </div>
+            </div>
+            <div class="edit-modal-footer">
+                <button class="modal-btn-cancel" onclick="closeEditModal()">Cancel</button>
+                <button class="modal-btn-save" onclick="saveCoFounder()">Add Co-Founder</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    setTimeout(() => modal.classList.add('show'), 10);
+};
+
+window.saveCoFounder = async function() {
+    const name = document.getElementById('cofounderName').value.trim();
+    const description = document.getElementById('cofounderDesc').value.trim();
+    
+    if (!name) {
+        alert('❌ Name is required');
+        return;
+    }
     
     try {
-        const firstLetter = newUsername.charAt(0).toUpperCase();
+        const coFounders = cachedFounderData?.coFounders || [];
+        coFounders.push({ name, description });
+        
+        const updates = { coFounders };
+        await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
+        cachedFounderData = { ...cachedFounderData, ...updates };
+        
+        closeEditModal();
+        alert('✅ Co-Founder added successfully!');
+        showEditProfile();
+    } catch (error) {
+        console.error('Error adding co-founder:', error);
+        alert('❌ Failed to add co-founder');
+    }
+};
+window.editAbout = function() {
+    currentEditAction = async (newValue) => {
+        if (newValue === cachedFounderData?.about) return;
+        
+        try {
+            const updates = { about: newValue };
+            await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
+            cachedFounderData = { ...cachedFounderData, ...updates };
+            
+            alert('✅ About section updated successfully!');
+            showEditProfile();
+        } catch (error) {
+            console.error('Error updating about:', error);
+            alert('❌ Failed to update about section');
+        }
+    };
+    
+    createEditModal('About Yourself', cachedFounderData?.about || '', 'Tell investors about yourself...', true);
+};
+
+window.editStartup = function() {
+    const modal = document.createElement('div');
+    modal.className = 'edit-modal';
+    modal.innerHTML = `
+        <div class="edit-modal-content">
+            <div class="edit-modal-header">
+                <h3>Edit Startup Details</h3>
+                <button class="modal-close" onclick="closeEditModal()">×</button>
+            </div>
+            <div class="edit-modal-body">
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Startup Name</label>
+                    <input type="text" id="startupNameInput" placeholder="Enter startup name" value="${cachedStartupData?.startupName || ''}" style="width: 100%; padding: 0.75rem; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; color: #fff;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Description</label>
+                    <textarea id="startupDescInput" placeholder="Describe your startup..." rows="4" style="width: 100%; padding: 0.75rem; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; color: #fff;">${cachedStartupData?.description || ''}</textarea>
+                </div>
+            </div>
+            <div class="edit-modal-footer">
+                <button class="modal-btn-cancel" onclick="closeEditModal()">Cancel</button>
+                <button class="modal-btn-save" onclick="saveStartupEdit()">Save Changes</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    setTimeout(() => modal.classList.add('show'), 10);
+};
+
+window.saveStartupEdit = async function() {
+    const newName = document.getElementById('startupNameInput').value;
+    const newDesc = document.getElementById('startupDescInput').value;
+    
+    if (!newName) {
+        alert('❌ Startup name is required');
+        return;
+    }
+    
+    try {
         const updates = {
-            founderUsername: newUsername,
-            founderImage: firstLetter
+            startupName: newName,
+            description: newDesc,
+            startupId: cachedStartupData?.startupId || generateStartupId(newName)
         };
         
-        await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
-        cachedFounderData = { ...cachedFounderData, ...updates };
+        await update(ref(db, `startupProfile/${currentUser.uid}`), updates);
+        cachedStartupData = { ...cachedStartupData, ...updates };
         
-        alert('✅ Username updated successfully!');
-        showEditProfile(); // Refresh the page
+        closeEditModal();
+        alert('✅ Startup info updated successfully!');
+        showEditProfile();
     } catch (error) {
-        console.error('Error updating username:', error);
-        alert('❌ Failed to update username');
+        console.error('Error updating startup:', error);
+        alert('❌ Failed to update startup');
     }
 };
 
-window.editTitle = async function() {
-    const currentTitle = cachedFounderData?.title || '';
-    const newTitle = prompt('Enter your title/role:', currentTitle);
-    
-    if (newTitle === null || newTitle === currentTitle) return;
-    
-    try {
-        const updates = { title: newTitle };
-        await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
-        cachedFounderData = { ...cachedFounderData, ...updates };
-        
-        alert('✅ Title updated successfully!');
-        showEditProfile();
-    } catch (error) {
-        console.error('Error updating title:', error);
-        alert('❌ Failed to update title');
+window.saveEditModal = function() {
+    const value = document.getElementById('editInput').value.trim();
+    if (currentEditAction) {
+        currentEditAction(value);
     }
-};
-
-window.editAbout = async function() {
-    const currentAbout = cachedFounderData?.about || '';
-    const newAbout = prompt('Tell investors about yourself:', currentAbout);
-    
-    if (newAbout === null || newAbout === currentAbout) return;
-    
-    try {
-        const updates = { about: newAbout };
-        await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
-        cachedFounderData = { ...cachedFounderData, ...updates };
-        
-        alert('✅ About section updated successfully!');
-        showEditProfile();
-    } catch (error) {
-        console.error('Error updating about:', error);
-        alert('❌ Failed to update about section');
-    }
+    closeEditModal();
 };
 
 window.uploadVideo = async function() {
@@ -3141,23 +3498,58 @@ window.uploadVideo = async function() {
     input.click();
 };
 
-window.addEducation = async function() {
-    const school = prompt('School/University name:');
-    if (!school) return;
+window.addEducation = function() {
+    const modal = document.createElement('div');
+    modal.className = 'edit-modal';
+    modal.innerHTML = `
+        <div class="edit-modal-content">
+            <div class="edit-modal-header">
+                <h3>Add Education</h3>
+                <button class="modal-close" onclick="closeEditModal()">×</button>
+            </div>
+            <div class="edit-modal-body">
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">School/University</label>
+                    <input type="text" id="eduSchool" placeholder="e.g., Stanford University" style="width: 100%; padding: 0.75rem; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; color: #fff;">
+                </div>
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Degree/Course</label>
+                    <input type="text" id="eduDegree" placeholder="e.g., B.Tech Computer Science" style="width: 100%; padding: 0.75rem; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; color: #fff;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Year</label>
+                    <input type="text" id="eduYear" placeholder="e.g., 2018-2022" style="width: 100%; padding: 0.75rem; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; color: #fff;">
+                </div>
+            </div>
+            <div class="edit-modal-footer">
+                <button class="modal-btn-cancel" onclick="closeEditModal()">Cancel</button>
+                <button class="modal-btn-save" onclick="saveEducation()">Add Education</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    setTimeout(() => modal.classList.add('show'), 10);
+};
+
+window.saveEducation = async function() {
+    const school = document.getElementById('eduSchool').value.trim();
+    const degree = document.getElementById('eduDegree').value.trim();
+    const year = document.getElementById('eduYear').value.trim();
     
-    const degree = prompt('Degree/Course:');
-    if (!degree) return;
-    
-    const year = prompt('Year (e.g., 2020 or 2018-2022):');
+    if (!school || !degree) {
+        alert('❌ School and degree are required');
+        return;
+    }
     
     try {
         const education = cachedFounderData?.education || [];
-        education.push({ school, degree, year: year || '' });
+        education.push({ school, degree, year });
         
         const updates = { education };
         await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
         cachedFounderData = { ...cachedFounderData, ...updates };
         
+        closeEditModal();
         alert('✅ Education added successfully!');
         showEditProfile();
     } catch (error) {
@@ -3166,52 +3558,63 @@ window.addEducation = async function() {
     }
 };
 
-window.addWorkExperience = async function() {
-    const company = prompt('Company name:');
-    if (!company) return;
+window.addWorkExperience = function() {
+    const modal = document.createElement('div');
+    modal.className = 'edit-modal';
+    modal.innerHTML = `
+        <div class="edit-modal-content">
+            <div class="edit-modal-header">
+                <h3>Add Work Experience</h3>
+                <button class="modal-close" onclick="closeEditModal()">×</button>
+            </div>
+            <div class="edit-modal-body">
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Company Name</label>
+                    <input type="text" id="workCompany" placeholder="e.g., Google" style="width: 100%; padding: 0.75rem; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; color: #fff;">
+                </div>
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Position/Role</label>
+                    <input type="text" id="workPosition" placeholder="e.g., Software Engineer" style="width: 100%; padding: 0.75rem; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; color: #fff;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Duration</label>
+                    <input type="text" id="workDuration" placeholder="e.g., 2020-2023" style="width: 100%; padding: 0.75rem; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; color: #fff;">
+                </div>
+            </div>
+            <div class="edit-modal-footer">
+                <button class="modal-btn-cancel" onclick="closeEditModal()">Cancel</button>
+                <button class="modal-btn-save" onclick="saveWorkExperience()">Add Experience</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    setTimeout(() => modal.classList.add('show'), 10);
+};
+
+window.saveWorkExperience = async function() {
+    const company = document.getElementById('workCompany').value.trim();
+    const position = document.getElementById('workPosition').value.trim();
+    const duration = document.getElementById('workDuration').value.trim();
     
-    const position = prompt('Position/Role:');
-    if (!position) return;
-    
-    const duration = prompt('Duration (e.g., 2020-2022 or 2 years):');
+    if (!company || !position) {
+        alert('❌ Company and position are required');
+        return;
+    }
     
     try {
         const workExperience = cachedFounderData?.workExperience || [];
-        workExperience.push({ company, position, duration: duration || '' });
+        workExperience.push({ company, position, duration });
         
         const updates = { workExperience };
         await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
         cachedFounderData = { ...cachedFounderData, ...updates };
         
+        closeEditModal();
         alert('✅ Work experience added successfully!');
         showEditProfile();
     } catch (error) {
         console.error('Error adding work experience:', error);
         alert('❌ Failed to add work experience');
-    }
-};
-
-window.editStartup = async function() {
-    const newName = prompt('Startup name:', cachedStartupData?.startupName || '');
-    if (!newName || newName === cachedStartupData?.startupName) return;
-    
-    const newDesc = prompt('Startup description:', cachedStartupData?.description || '');
-    
-    try {
-        const updates = {
-            startupName: newName,
-            description: newDesc || '',
-            startupId: cachedStartupData?.startupId || generateStartupId(newName)
-        };
-        
-        await update(ref(db, `startupProfile/${currentUser.uid}`), updates);
-        cachedStartupData = { ...cachedStartupData, ...updates };
-        
-        alert('✅ Startup info updated successfully!');
-        showEditProfile();
-    } catch (error) {
-        console.error('Error updating startup:', error);
-        alert('❌ Failed to update startup');
     }
 };
 function generateStartupId(startupName) {
