@@ -1074,18 +1074,18 @@ let cachedStartupData = null;
                 
                 // If old profile doesn't have userId, generate and save it
 // If old profile doesn't have userId, generate and save it ONCE
+// If old profile doesn't have userId, generate and save it ONCE
 if (!cachedFounderData.userId) {
-    const username = cachedFounderData.founderUsername 
-        || (cachedFounderData.firstName ? `${cachedFounderData.firstName} ${cachedFounderData.lastName || ''}`.trim() : '')
-        || cachedFounderData.email?.split('@')[0] 
-        || 'User';
+    // Generate PERMANENT userId based on Firebase UID (never changes)
+    const timestamp = Date.now().toString().slice(-4);
+    const randomNum = Math.floor(Math.random() * 900 + 100);
+    const permanentUserId = `USER_${timestamp}${randomNum}`;
     
-    // IMPORTANT: Generate userId ONCE and NEVER change it
-    cachedFounderData.userId = generateUserId(username);
+    cachedFounderData.userId = permanentUserId;
     
-    // Save updated profile with userId
-    await update(ref(db, `founderProfile/${currentUser.uid}`), { userId: cachedFounderData.userId });
-    console.log('✅ Generated userId ONCE:', cachedFounderData.userId);
+    // Save updated profile with PERMANENT userId
+    await update(ref(db, `founderProfile/${currentUser.uid}`), { userId: permanentUserId });
+    console.log('✅ Generated PERMANENT userId:', permanentUserId);
 }
                 
                 console.log('✅ Loaded existing founder profile:', cachedFounderData);
@@ -1211,24 +1211,29 @@ async function saveStartupProfile(vestData) {
     
     const startupProfileRef = ref(db, `startupProfile/${currentUser.uid}`);
     
+    // Check if startupProfile already exists
+    const existingProfile = await get(startupProfileRef);
+    
     const startupData = {
         startupName: vestData.startupName,
-        startupId: generateStartupId(vestData.startupName),
         logo: vestData.startupLogoUrl,
         description: vestData.startupDescription,
         stage: vestData.startupStage,
         category: vestData.category,
         founderId: currentUser.uid,
-        // Optional: Remove createdAt from here so it doesn't overwrite the original join date
         updatedAt: new Date().toISOString()
     };
     
+    // Only generate startupId if it doesn't exist (PERMANENT)
+    if (!existingProfile.exists() || !existingProfile.val()?.startupId) {
+        startupData.startupId = generateStartupId();
+        startupData.createdAt = new Date().toISOString();
+    }
     
     await update(startupProfileRef, startupData); 
     
     return startupData;
 }
-
     // ========================================
     // SECTION 4: UPDATE createDashboard FUNCTION
     // ========================================
@@ -2296,16 +2301,11 @@ document.addEventListener('click', (e) => {
         });
     }
 });
-function generateUserId(username) {
-    if (!username) return 'USER_' + Math.floor(Math.random() * 9000 + 1000);
-    
-    // Clean username - take first word only, max 10 chars
-    const cleanName = username.split(' ')[0].replace(/[^a-zA-Z0-9]/g, '').toLowerCase().slice(0, 10);
-    
-    // Generate unique number (3 random digits)
-    const uniqueNum = Math.floor(Math.random() * 900 + 100);
-    
-    return `${cleanName}_${uniqueNum}`;
+function generateUserId(baseString) {
+    // Generate PERMANENT userId that NEVER changes
+    const timestamp = Date.now().toString().slice(-4);
+    const randomNum = Math.floor(Math.random() * 900 + 100);
+    return `USER_${timestamp}${randomNum}`;
 }
 async function showEditProfile() {
     document.title = "Edit Profile | ScaleVest";
@@ -3546,7 +3546,7 @@ window.editUsername = function() {
             const updates = {
                 founderUsername: newValue,
                 founderImage: firstLetter
-                
+                // DO NOT UPDATE userId - it stays permanent
             };
             
             await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
@@ -3561,8 +3561,7 @@ window.editUsername = function() {
     };
     
     createEditModal('Edit Username', cachedFounderData?.founderUsername || '', 'Enter your username');
-};    
-
+};
 window.editTitle = function() {
     currentEditAction = async (newValue) => {
         if (newValue === cachedFounderData?.title) return;
@@ -3717,7 +3716,12 @@ window.editProfilePhoto = async function() {
     
     input.click();
 };
-
+function generateStartupId() {
+    // Generate PERMANENT startupId that NEVER changes
+    const timestamp = Date.now().toString().slice(-5);
+    const randomNum = Math.floor(Math.random() * 9000 + 1000);
+    return `STARTUP_${timestamp}${randomNum}`;
+}
 // Edit Location
 window.editLocation = function() {
     const currentLocation = cachedStartupData?.location || { country: '', state: '', city: '' };
@@ -3873,8 +3877,8 @@ window.saveStartupEdit = async function() {
     try {
         const updates = {
             startupName: newName,
-            description: newDesc,
-            startupId: cachedStartupData?.startupId || generateStartupId(newName)
+            description: newDesc
+            // DO NOT UPDATE startupId - it stays permanent
         };
         
         await update(ref(db, `startupProfile/${currentUser.uid}`), updates);
@@ -3888,7 +3892,6 @@ window.saveStartupEdit = async function() {
         alert('❌ Failed to update startup');
     }
 };
-
 window.saveEditModal = function() {
     const value = document.getElementById('editInput').value.trim();
     if (currentEditAction) {
