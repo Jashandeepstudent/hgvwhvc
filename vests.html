@@ -1311,7 +1311,7 @@ function loadFromLocalStorage() {
 let cachedFounderData = null;
 let cachedStartupData = null;
 
-// --- MOVE THIS BLOCK TO THE GLOBAL SCOPE (Top of script) ---
+
 
 window.nextStep = function() {
     // Validate current step before moving
@@ -1322,22 +1322,28 @@ window.nextStep = function() {
         saveToLocalStorage();
         window.location.hash = `vest_step${currentStep}`;
         updateStepDisplay();
-        
-        // FIX: Add delay and force window.displaySummary
-        if (currentStep === 6) {
-            setTimeout(() => {
-                if (typeof window.displaySummary === 'function') {
-                    window.displaySummary();
-                } else {
-                    console.error("displaySummary missing");
-                }
-            }, 100); 
-        }
-        
         window.scrollTo(0, 0);
+
+        // FIX: Force update summary when hitting step 6
+        if (currentStep === 6) {
+            // Wait for the DOM to update
+            requestAnimationFrame(() => {
+                const summaryDiv = document.getElementById('summary');
+                if (summaryDiv) {
+                     if (typeof window.displaySummary === 'function') {
+                        console.log("Triggering Summary Display...");
+                        window.displaySummary();
+                     } else {
+                        console.error("displaySummary function not found!");
+                        summaryDiv.innerHTML = "<p style='color:red'>Error: Summary function missing.</p>";
+                     }
+                } else {
+                    console.error("Summary container div not found in DOM");
+                }
+            });
+        }
     }
 };
-
 window.previousStep = function() {
     if (currentStep > 1) {
         currentStep--;
