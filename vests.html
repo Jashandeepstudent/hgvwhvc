@@ -2108,7 +2108,7 @@ max-width: 1100px;
             </div>
 
             <div class="card-title">${startupData?.startupName || 'My Startup'}</div>
-            <div class="card-subtitle">${startupData?.startupId || 'Create your first vest'}</div>
+            <div class="card-subtitle">${startupData?.startupId || ''}</div>
             <button class="card-btn">View Startup</button>
         </div>
 
@@ -3296,8 +3296,8 @@ async function showEditProfile() {
                                 <div class="info-content" style="flex: 1;">
                                     <strong>Languages:</strong>
                                     <div class="language-tags">
-                                        ${founderData.languages?.length > 0 
-                                            ? founderData.languages.map(lang => `
+${founderData.languages && Array.isArray(founderData.languages) && founderData.languages.length > 0 
+    ? founderData.languages.map(lang => `
                                                 <span class="language-tag">
                                                     ${lang.name}
                                                     <span class="language-level">${lang.level}</span>
