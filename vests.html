@@ -968,14 +968,14 @@ function createNavBar() {
                 </button>
             </div>
             <div style="color: #888; font-size: 0.9rem; display: flex; flex-wrap: wrap; gap: 0.5rem;">
-                ${founderData?.languages?.length > 0 
-                    ? founderData.languages.map(lang => `
-                        <span style="background: #1a1a1a; padding: 0.25rem 0.75rem; border-radius: 6px; border: 1px solid #333;">
-                            ${lang.name} (${lang.proficiency})
-                        </span>
-                    `).join('')
-                    : '<span style="color: #666;">No languages added</span>'
-                }
+${Array.isArray(founderData?.languages) && founderData.languages.length > 0
+    ? founderData.languages.map(lang => `
+        <span style="background: #1a1a1a; padding: 0.25rem 0.75rem; border-radius: 6px; border: 1px solid #333;">
+            ${lang.name} (${lang.proficiency})
+        </span>
+    `).join('')
+    : '<span style="color: #666;">No languages added</span>'
+}
             </div>
         </div>
     </div>
