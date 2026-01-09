@@ -2335,6 +2335,215 @@ async function showEditProfile() {
     
     container.innerHTML = `
         <style>
+        .top-nav {
+            background: #0a0a0a;
+            padding: 1.2rem 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #222;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #fff;
+            cursor: pointer;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2.5rem;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+            position: relative;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #fff;
+            transition: width 0.3s;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .dropdown {
+            position: relative;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: #1a1a1a;
+            min-width: 220px;
+            border-radius: 12px;
+            margin-top: 1rem;
+            box-shadow: 0 10px 40px rgba(255, 255, 255, 0.1);
+            border: 1px solid #333;
+            overflow: hidden;
+            z-index: 1000;
+        }
+
+        .dropdown-content.show {
+            display: block !important;
+            animation: fadeInDropdown 0.3s;
+        }
+
+        @keyframes fadeInDropdown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .dropdown-item {
+            padding: 1rem 1.5rem;
+            color: #fff;
+            text-decoration: none;
+            display: block;
+            transition: all 0.3s;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+        }
+
+        .dropdown-item:hover {
+            background: #222;
+            border-left-color: #fff;
+            padding-left: 2rem;
+        }
+
+        .top-nav-right {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .icon-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #1a1a1a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            border: 1px solid #222;
+        }
+
+        .icon-btn:hover {
+            background: #fff;
+            border-color: #fff;
+            transform: translateY(-3px) scale(1.1);
+            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.2);
+        }
+
+        .icon-btn:hover svg {
+            stroke: #000;
+        }
+
+        .profile-dropdown {
+            position: relative;
+        }
+
+        .profile-dropdown-content {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: #1a1a1a;
+            min-width: 300px;
+            border-radius: 12px;
+            margin-top: 1rem;
+            box-shadow: 0 10px 40px rgba(255, 255, 255, 0.1);
+            border: 1px solid #333;
+            padding: 1rem;
+            z-index: 1000;
+        }
+
+        .profile-dropdown-content.show {
+            display: block;
+            animation: fadeInDropdown 0.3s;
+        }
+
+        .profile-info {
+            padding: 1rem;
+            border-bottom: 1px solid #333;
+            margin-bottom: 1rem;
+        }
+
+        .profile-username {
+            font-weight: 600;
+            font-size: 1.2rem;
+        }
+
+        .profile-userid {
+            color: #888;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+
+        .switch-btn {
+            background: #fff;
+            color: #000;
+            border: none;
+            padding: 0.9rem;
+            width: 100%;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+        }
+
+        .switch-btn:hover {
+            background: #ddd;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.3);
+        }
+
+        .profile-section {
+            padding: 0.5rem 0;
+        }
+
+        .profile-link {
+            padding: 0.9rem 1rem;
+            display: block;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .profile-link:hover {
+            background: #222;
+            padding-left: 1.5rem;
+        }
             .edit-profile-container {
                 max-width: 1400px;
                 margin: 0 auto;
@@ -2569,7 +2778,30 @@ async function showEditProfile() {
                 border-color: #fff;
                 background: #222;
             }
-            
+            .experience-item {
+    background: #000;
+    border: 1px solid #222;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.exp-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.exp-subtitle {
+    color: #aaa;
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+}
+
+.exp-duration {
+    color: #666;
+    font-size: 0.85rem;
+}
             .quick-links-card {
                 background: #0a0a0a;
                 border: 1px solid #222;
@@ -2722,35 +2954,56 @@ async function showEditProfile() {
                         </div>
                     </div>
                     
-                    <!-- Education & Work Experience -->
-                    <div class="dual-section">
-                        <!-- Education -->
-                        <div class="profile-card">
-                            <h3 class="section-title">Education</h3>
-                            <div class="empty-state">
-                                <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" style="margin-bottom: 1rem;">
-                                    <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
-                                    <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
-                                </svg>
-                                <p>No education added yet</p>
-                                <button class="add-item-btn" onclick="addEducation()">+ Add Education</button>
-                            </div>
-                        </div>
-                        
-                        <!-- Work Experience -->
-                        <div class="profile-card">
-                            <h3 class="section-title">Past Work</h3>
-                            <div class="empty-state">
-                                <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" style="margin-bottom: 1rem;">
-                                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-                                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-                                </svg>
-                                <p>No past work yet</p>
-                                <button class="add-item-btn" onclick="addWorkExperience()">+ Add Experience</button>
-                            </div>
-                        </div>
-                    </div>
+                  <!-- Education & Work Experience -->
+<div class="dual-section">
+    <!-- Education -->
+    <div class="profile-card">
+        <h3 class="section-title">Education</h3>
+        ${founderData?.education?.length > 0 ? `
+            ${founderData.education.map(edu => `
+                <div class="experience-item">
+                    <div class="exp-title">${edu.degree}</div>
+                    <div class="exp-subtitle">${edu.school}</div>
+                    <div class="exp-duration">${edu.year}</div>
                 </div>
+            `).join('')}
+            <button class="add-item-btn" onclick="addEducation()">+ Add More</button>
+        ` : `
+            <div class="empty-state">
+                <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" style="margin-bottom: 1rem;">
+                    <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+                    <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+                </svg>
+                <p>No education added yet</p>
+                <button class="add-item-btn" onclick="addEducation()">+ Add Education</button>
+            </div>
+        `}
+    </div>
+    
+    <!-- Work Experience -->
+    <div class="profile-card">
+        <h3 class="section-title">Past Work</h3>
+        ${founderData?.workExperience?.length > 0 ? `
+            ${founderData.workExperience.map(work => `
+                <div class="experience-item">
+                    <div class="exp-title">${work.position}</div>
+                    <div class="exp-subtitle">${work.company}</div>
+                    <div class="exp-duration">${work.duration}</div>
+                </div>
+            `).join('')}
+            <button class="add-item-btn" onclick="addWorkExperience()">+ Add More</button>
+        ` : `
+            <div class="empty-state">
+                <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" style="margin-bottom: 1rem;">
+                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                </svg>
+                <p>No past work yet</p>
+                <button class="add-item-btn" onclick="addWorkExperience()">+ Add Experience</button>
+            </div>
+        `}
+    </div>
+</div>
                 
                 <!-- Sidebar -->
                 <div class="profile-sidebar">
@@ -2789,14 +3042,178 @@ async function showEditProfile() {
 }
 
 
-// Edit functions (placeholders for now)
-window.editUsername = () => alert('Edit username feature coming soon!');
-window.editTitle = () => alert('Edit title feature coming soon!');
-window.editAbout = () => alert('Edit about feature coming soon!');
-window.editStartup = () => alert('Edit startup feature coming soon!');
-window.uploadVideo = () => alert('Video upload feature coming soon!');
-window.addEducation = () => alert('Add education feature coming soon!');
-window.addWorkExperience = () => alert('Add work experience feature coming soon!');
+// ============================================
+// EDIT PROFILE FUNCTIONS - ALL WORKING
+// ============================================
+
+window.editUsername = async function() {
+    const currentUsername = cachedFounderData?.founderUsername || '';
+    const newUsername = prompt('Enter new username:', currentUsername);
+    
+    if (!newUsername || newUsername === currentUsername) return;
+    
+    try {
+        const firstLetter = newUsername.charAt(0).toUpperCase();
+        const updates = {
+            founderUsername: newUsername,
+            founderImage: firstLetter
+        };
+        
+        await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
+        cachedFounderData = { ...cachedFounderData, ...updates };
+        
+        alert('✅ Username updated successfully!');
+        showEditProfile(); // Refresh the page
+    } catch (error) {
+        console.error('Error updating username:', error);
+        alert('❌ Failed to update username');
+    }
+};
+
+window.editTitle = async function() {
+    const currentTitle = cachedFounderData?.title || '';
+    const newTitle = prompt('Enter your title/role:', currentTitle);
+    
+    if (newTitle === null || newTitle === currentTitle) return;
+    
+    try {
+        const updates = { title: newTitle };
+        await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
+        cachedFounderData = { ...cachedFounderData, ...updates };
+        
+        alert('✅ Title updated successfully!');
+        showEditProfile();
+    } catch (error) {
+        console.error('Error updating title:', error);
+        alert('❌ Failed to update title');
+    }
+};
+
+window.editAbout = async function() {
+    const currentAbout = cachedFounderData?.about || '';
+    const newAbout = prompt('Tell investors about yourself:', currentAbout);
+    
+    if (newAbout === null || newAbout === currentAbout) return;
+    
+    try {
+        const updates = { about: newAbout };
+        await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
+        cachedFounderData = { ...cachedFounderData, ...updates };
+        
+        alert('✅ About section updated successfully!');
+        showEditProfile();
+    } catch (error) {
+        console.error('Error updating about:', error);
+        alert('❌ Failed to update about section');
+    }
+};
+
+window.uploadVideo = async function() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'video/*';
+    
+    input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        if (file.size > 50 * 1024 * 1024) {
+            alert('❌ Video must be under 50MB');
+            return;
+        }
+        
+        try {
+            alert('⏳ Uploading video...');
+            const videoUrl = await uploadFileToStorage(file, 'intro-videos');
+            
+            const updates = { introVideo: videoUrl };
+            await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
+            cachedFounderData = { ...cachedFounderData, ...updates };
+            
+            alert('✅ Video uploaded successfully!');
+            showEditProfile();
+        } catch (error) {
+            console.error('Error uploading video:', error);
+            alert('❌ Failed to upload video');
+        }
+    };
+    
+    input.click();
+};
+
+window.addEducation = async function() {
+    const school = prompt('School/University name:');
+    if (!school) return;
+    
+    const degree = prompt('Degree/Course:');
+    if (!degree) return;
+    
+    const year = prompt('Year (e.g., 2020 or 2018-2022):');
+    
+    try {
+        const education = cachedFounderData?.education || [];
+        education.push({ school, degree, year: year || '' });
+        
+        const updates = { education };
+        await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
+        cachedFounderData = { ...cachedFounderData, ...updates };
+        
+        alert('✅ Education added successfully!');
+        showEditProfile();
+    } catch (error) {
+        console.error('Error adding education:', error);
+        alert('❌ Failed to add education');
+    }
+};
+
+window.addWorkExperience = async function() {
+    const company = prompt('Company name:');
+    if (!company) return;
+    
+    const position = prompt('Position/Role:');
+    if (!position) return;
+    
+    const duration = prompt('Duration (e.g., 2020-2022 or 2 years):');
+    
+    try {
+        const workExperience = cachedFounderData?.workExperience || [];
+        workExperience.push({ company, position, duration: duration || '' });
+        
+        const updates = { workExperience };
+        await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
+        cachedFounderData = { ...cachedFounderData, ...updates };
+        
+        alert('✅ Work experience added successfully!');
+        showEditProfile();
+    } catch (error) {
+        console.error('Error adding work experience:', error);
+        alert('❌ Failed to add work experience');
+    }
+};
+
+window.editStartup = async function() {
+    const newName = prompt('Startup name:', cachedStartupData?.startupName || '');
+    if (!newName || newName === cachedStartupData?.startupName) return;
+    
+    const newDesc = prompt('Startup description:', cachedStartupData?.description || '');
+    
+    try {
+        const updates = {
+            startupName: newName,
+            description: newDesc || '',
+            startupId: cachedStartupData?.startupId || generateStartupId(newName)
+        };
+        
+        await update(ref(db, `startupProfile/${currentUser.uid}`), updates);
+        cachedStartupData = { ...cachedStartupData, ...updates };
+        
+        alert('✅ Startup info updated successfully!');
+        showEditProfile();
+    } catch (error) {
+        console.error('Error updating startup:', error);
+        alert('❌ Failed to update startup');
+    }
+};
 function generateStartupId(startupName) {
     if (!startupName) return 'STARTUP_' + Math.floor(Math.random() * 9000 + 1000);
     
