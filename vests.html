@@ -4746,7 +4746,27 @@ async function showEditStartup() {
             cachedStartupData = startupData;
         }
     }
+const startupFields = [
+        startupData.startupName,
+        startupData.logo,
+        startupData.hookPitch,
+        startupData.description,        // Short description
+        startupData.companyDescription, // Long description
+        startupData.stage,
+        startupData.yearEstablished,
+        startupData.category,
+        startupData.monetization,
+        startupData.revenue,            // Number checks
+        startupData.userCount,
+        startupData.valuation,
+        startupData.location?.country,
+        startupData.introVideo,
+        startupData.team && startupData.team.length > 0
+    ];
 
+    // Filter valid fields (checks for not null, not undefined, not empty string)
+    const filledStartup = startupFields.filter(f => f !== null && f !== undefined && f !== '').length;
+    const startupPercent = Math.round((filledStartup / startupFields.length) * 100);
     // --- GENERATE TEAM LIST HTML ---
     const teamListHTML = (startupData.team && startupData.team.length > 0) 
         ? startupData.team.map(member => `
@@ -5690,7 +5710,16 @@ button.upload-btn,
                 </div> 
                 <div class="profile-sidebar">
 
-                    
+                    <div class="progress-card" style="margin-top: 2rem;">
+                        <h3 class="section-title">Startup Profile Progress</h3>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${startupPercent}%"></div>
+                        </div>
+                        <div class="progress-text">${startupPercent}%</div>
+                        <p style="color: #888; font-size: 0.9rem; text-align: center; margin-top: 1rem;">
+                            A complete startup profile attracts 3x more investors
+                        </p>
+                    </div>
                     <div class="quick-links-card">
                         <h3 class="section-title">Quick Actions</h3>
                         
