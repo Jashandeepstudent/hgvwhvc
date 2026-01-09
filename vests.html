@@ -6465,57 +6465,23 @@ window.closeFullScreenPDF = function() {
 
 
 window.displaySummary = function() {
-    console.log("Generating Summary...");
     const summaryContainer = document.getElementById('summary');
     if (!summaryContainer) return;
 
-    try {
-        // Call the global collector
-        const data = window.collectVestData();
-        
-        if (!data) {
-            summaryContainer.innerHTML = "<p style='color:red'>Error: Could not retrieve data.</p>";
-            return;
-        }
-
-        // Format Numbers Safely
-        const ask = parseInt(data.MainVest.fundAsk.replace(/,/g, '') || 0).toLocaleString();
-        const equity = data.MainVest.equityWilling;
-        const cCount = data.FounderPresence.cofounders.length;
-
-        // Generate HTML
-        summaryContainer.innerHTML = `
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; text-align: left;">
-                <div style="background: #111; padding: 20px; border-radius: 10px; border: 1px solid #333;">
-                    <p style="color:#888; font-size:0.85rem; margin-bottom:5px;">Vest Hook</p>
-                    <p style="color:#fff; font-weight:700; font-size:1.1rem;">${data.MainVest.vestHook || 'Not defined'}</p>
-                </div>
-                <div style="background: #111; padding: 20px; border-radius: 10px; border: 1px solid #333;">
-                    <p style="color:#888; font-size:0.85rem; margin-bottom:5px;">Startup Name</p>
-                    <p style="color:#fff; font-weight:700; font-size:1.1rem;">${data.StartupDetails.startupName || 'Not defined'}</p>
-                </div>
-                <div style="background: #111; padding: 20px; border-radius: 10px; border: 1px solid #333;">
-                    <p style="color:#888; font-size:0.85rem; margin-bottom:5px;">Fund Ask</p>
-                    <p style="color:#10b981; font-weight:700; font-size:1.4rem;">$${ask}</p>
-                </div>
-                <div style="background: #111; padding: 20px; border-radius: 10px; border: 1px solid #333;">
-                    <p style="color:#888; font-size:0.85rem; margin-bottom:5px;">Equity Offering</p>
-                    <p style="color:#ff006e; font-weight:700; font-size:1.4rem;">${equity}%</p>
-                </div>
-            </div>
-            
-            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #222;">
-                <h4 style="color: #fff; margin-bottom: 10px;">Founder Team</h4>
-                <p style="color: #ccc;">
-                    <span style="color: #fff; font-weight: 600;">${data.FounderPresence.founderName}</span>
-                    ${cCount > 0 ? ` + ${cCount} Co-founder(s)` : ' (Solo Founder)'}
-                </p>
-            </div>
-        `;
-    } catch (err) {
-        console.error("Summary Error:", err);
-        summaryContainer.innerHTML = `<p style='color:red'>Error loading summary: ${err.message}</p>`;
-    }
+    // Just show a happy emoji and ready status
+    summaryContainer.innerHTML = `
+        <div style="text-align: center; padding: 10px;">
+            <div style="font-size: 5rem; margin-bottom: 1rem; animation: bounce 2s infinite;">🎉</div>
+            <h3 style="color: #fff; margin-bottom: 10px; font-size: 1.5rem;">You are all set!</h3>
+            <p style="color: #888;">Your vest is ready to be launched to investors.</p>
+        </div>
+        <style>
+            @keyframes bounce {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-10px); }
+            }
+        </style>
+    `;
 };
 </script>
 <!-- FOUNDER DASHBOARD -->
