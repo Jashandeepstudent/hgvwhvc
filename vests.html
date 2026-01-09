@@ -1336,7 +1336,126 @@ window.previousStep = function() {
         window.scrollTo(0, 0);
     }
 };
+// ======================================================
+// GLOBAL ACTIONS 
+// ======================================================
 
+// 1. CO-FOUNDER TOGGLE
+window.toggleCofounderInputs = function(show) {
+    const inputs = document.getElementById('cofounderInputs');
+    if (show) {
+        inputs.classList.add('show');
+    } else {
+        inputs.classList.remove('show');
+    }
+};
+
+// 2. GENERATE FIELDS
+window.generateCofounderFields = function() {
+    const countInput = document.getElementById('cofounderCount');
+    const container = document.getElementById('cofounderFields');
+    if (!countInput || !container) return;
+
+    const count = parseInt(countInput.value) || 0;
+    container.innerHTML = '';
+    
+    for (let i = 1; i <= count; i++) {
+        const div = document.createElement('div');
+        div.className = 'cofounder-item';
+        div.innerHTML = `
+            <h4 style="margin-bottom: 15px; color: #fff;">Co-Founder ${i}</h4>
+            <div class="form-group">
+                <label>Name</label>
+                <input type="text" id="cofounder${i}Name" placeholder="Full name" style="background:#050505; border:1px solid #333; color:#fff; width:100%; padding:10px; border-radius:8px;">
+            </div>
+            <div class="form-group">
+                <label>Past Work</label>
+                <textarea id="cofounder${i}Work" placeholder="Experience..." style="background:#050505; border:1px solid #333; color:#fff; width:100%; padding:10px; border-radius:8px;"></textarea>
+            </div>
+        `;
+        container.appendChild(div);
+    }
+};
+
+// 3. SAVE AS DRAFT (Global)
+window.saveAsDraft = async function() {
+    const btn = event.target.closest('button'); // Get button safely
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '⏳ Saving...';
+    btn.disabled = true;
+
+    try {
+        // Ensure processAllFiles exists or skip
+        if (typeof processAllFiles === 'function') await processAllFiles();
+        
+        // Use window.collectVestData to be safe
+        const vestData = window.collectVestData(); 
+        if (!vestData) throw new Error("Could not collect data");
+        
+        vestData.status = 'draft';
+        vestData.lastUpdated = new Date().toISOString();
+
+        // Save to Firebase
+        await set(ref(db, `Vests/${currentUser.uid}/Vest1`), vestData);
+        
+        // Update profile stats
+        await update(ref(db, `founderProfile/${currentUser.uid}`), { draftVestsCount: 1 });
+        
+        btn.innerHTML = '✅ Saved!';
+        setTimeout(() => { 
+            btn.innerHTML = originalText; 
+            btn.disabled = false;
+            // Optional: window.location.hash = 'founder_dashboard'; 
+        }, 1500);
+        
+    } catch (error) {
+        console.error('Save error:', error);
+        btn.innerHTML = '❌ Error';
+        btn.disabled = false;
+        alert('Save failed: ' + error.message);
+    }
+};
+
+// 4. LAUNCH VEST (Global)
+window.launchVest = async function() {
+    const btn = event.target.closest('button');
+    btn.innerHTML = '⏳ Launching...';
+    btn.disabled = true;
+
+    try {
+        if (typeof processAllFiles === 'function') await processAllFiles();
+        
+        const vestData = window.collectVestData();
+        if (!vestData) throw new Error("Data collection failed");
+        
+        vestData.status = 'live';
+        vestData.launchedAt = new Date().toISOString();
+
+        await set(ref(db, `Vests/${currentUser.uid}/Vest1`), vestData);
+        
+        // Update profile
+        await update(ref(db, `founderProfile/${currentUser.uid}`), { 
+            activeVestsCount: 1,
+            lastLaunchedVest: new Date().toISOString()
+        });
+        
+        // Update Startup Profile if needed
+        if (typeof saveStartupProfile === 'function' && vestData.StartupDetails.startupName) {
+            await saveStartupProfile(vestData);
+        }
+        
+        // Animation
+        document.querySelector('.step-content.active').style.display = 'none';
+        document.getElementById('celebration').classList.add('active');
+        
+    } catch (error) {
+        console.error('Launch error:', error);
+        btn.innerHTML = '❌ Error';
+        btn.disabled = false;
+        alert('Launch failed. Please try again.');
+    }
+};
+// ======================================================
 // Simple validation helper
 function validateStep(step) {
     const activeStep = document.querySelector(`.step-content[data-step="${step}"]`);
@@ -4896,127 +5015,9 @@ if (demoFile && !uploadedFiles.demoVideo) {
         userId: uid,
     };
 };
-// ==========================================
-//  CO-FOUNDER 
-// ==========================================
-
-// 1. Co-founder Toggle Logic
-window.toggleCofounderInputs = function(show) {
-    const inputs = document.getElementById('cofounderInputs');
-    if (show) {
-        inputs.classList.add('show');
-    } else {
-        inputs.classList.remove('show');
-    }
-};
-
-// 2. Generate Co-founder Fields
-window.generateCofounderFields = function() {
-    const count = parseInt(document.getElementById('cofounderCount').value) || 0;
-    const container = document.getElementById('cofounderFields');
-    container.innerHTML = '';
-    
-    for (let i = 1; i <= count; i++) {
-        const cofounderDiv = document.createElement('div');
-        cofounderDiv.className = 'cofounder-item';
-        cofounderDiv.innerHTML = `
-            <h4 style="margin-bottom: 15px; color: #fff;">Co-Founder ${i}</h4>
-            <div class="form-group">
-                <label>Name</label>
-                <input type="text" id="cofounder${i}Name" placeholder="Full name">
-            </div>
-            <div class="form-group">
-                <label>Past Work</label>
-                <textarea id="cofounder${i}Work" placeholder="Experience and background..."></textarea>
-            </div>
-        `;
-        container.appendChild(cofounderDiv);
-    }
-};
-
 
 // ==========================================
-  window.saveAsDraft = async function() {
-    const btn = event.currentTarget;
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '⏳ Saving...';
-    btn.disabled = true;
-
-    try {
-        await processAllFiles(); // Upload any files first
-        
-        const vestData = collectVestData();
-        if (!vestData) return;
-        
-        vestData.status = 'draft';
-        vestData.lastUpdated = new Date().toISOString();
-
-        // Save to /Vests/{userId}/Vest1
-        const vestRef = ref(db, `Vests/${currentUser.uid}/Vest1`);
-        await set(vestRef, vestData);
-        
-        // Update draft count in founderProfile
-        const founderRef = ref(db, `founderProfile/${currentUser.uid}`);
-        await update(founderRef, { 
-            draftVestsCount: 1 // You can increment if supporting multiple drafts
-        });
-        
-        btn.innerHTML = '✅ Saved!';
-        setTimeout(() => { 
-            btn.innerHTML = originalText; 
-            btn.disabled = false;
-            window.location.hash = 'founder_dashboard'; // Redirect to dashboard
-        }, 1500);
-        
-    } catch (error) {
-        console.error('Save error:', error);
-        btn.innerHTML = '❌ Error';
-        btn.disabled = false;
-    }
-};
-
- window.launchVest = async function() {
-    const btn = event.currentTarget;
-    btn.innerHTML = '⏳ Launching...';
-    btn.disabled = true;
-
-    try {
-        await processAllFiles(); 
-        
-        const vestData = collectVestData();
-        if (!vestData) return;
-        
-        vestData.status = 'live';
-        vestData.launchedAt = new Date().toISOString();
-
-        // Save to /Vests/{userId}/Vest1
-        const vestRef = ref(db, `Vests/${currentUser.uid}/Vest1`);
-        await set(vestRef, vestData);
-        
-        // Update active vest count in founderProfile
-        const founderRef = ref(db, `founderProfile/${currentUser.uid}`);
-        await update(founderRef, { 
-            activeVestsCount: 1, // Increment if you want to support multiple active vests later
-            lastLaunchedVest: new Date().toISOString()
-        });
-        
-        // Also save startup profile
-        if (vestData.StartupDetails.startupName) {
-            await saveStartupProfile(vestData);
-        }
-        
-        // Show celebration
-        document.querySelector('.step-content.active').style.display = 'none';
-        document.getElementById('celebration').classList.add('active');
-        
-    } catch (error) {
-        console.error('Launch error:', error);
-        btn.innerHTML = '❌ Error';
-        btn.disabled = false;
-        alert('Failed to launch vest. Please try again.');
-    }
-};
-    function displaySummary() {
+     function displaySummary() {
     const data = collectVestData();
     if (!data) return;
     
