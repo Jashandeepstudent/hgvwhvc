@@ -1146,6 +1146,8 @@ let cachedStartupData = null;
         showDashboard();
     } else if (hash === 'edit_founderprofile') {
         showEditProfile();
+} else if (hash === 'edit_startup') {
+    showEditStartup();
     } else if (hash.startsWith('vest_step')) {
         const stepNum = parseInt(hash.replace('vest_step', ''));
         if (stepNum >= 1 && stepNum <= 5) {
@@ -2128,7 +2130,7 @@ max-width: 1100px;
 
             <div class="card-title">${startupData?.startupName || 'My Startup'}</div>
             <div class="card-subtitle">${startupData?.startupId || ''}</div>
-            <button class="card-btn">View Startup</button>
+            <button class="card-btn" onclick="window.location.hash='edit_startup'">View Startup</button>
         </div>
 
 <div class="card">
@@ -4599,6 +4601,662 @@ window.toggleDropdown = function(id) {
     // Toggle this dropdown
     dropdown.classList.toggle('show');
 };
+
+async function showEditStartup() {
+    document.title = "Edit Startup | ScaleVest";
+    document.querySelector('.vest-container').style.display = 'none';
+    
+    let container = document.getElementById('dashboardContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'dashboardContainer';
+        document.body.appendChild(container);
+    }
+    
+    container.style.display = 'block';
+    
+    // Fetch startup data
+    let startupData = cachedStartupData || {};
+    
+    if (!startupData || !startupData.startupName) {
+        const startupProfileRef = ref(db, `startupProfile/${currentUser.uid}`);
+        const startupSnap = await get(startupProfileRef);
+        if (startupSnap.exists()) {
+            startupData = startupSnap.val();
+            cachedStartupData = startupData;
+        }
+    }
+    
+    // Calculate profile completion
+    const fields = [
+        startupData.logo,
+        startupData.hookPitch,
+        startupData.pitchDeckUrl,
+        startupData.description,
+        startupData.location?.country,
+        startupData.yearEstablished,
+        startupData.category,
+        startupData.stage,
+        startupData.monetization,
+        startupData.revenue !== undefined,
+        startupData.userCount !== undefined,
+        startupData.valuation !== undefined,
+        startupData.companyDescription
+    ];
+    const filledFields = fields.filter(f => f && f !== '').length;
+    const completionPercent = Math.round((filledFields / fields.length) * 100);
+    
+    container.innerHTML = `
+        <style>
+        /* Reuse all edit-profile styles */
+        .edit-profile-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 3rem;
+            background: #000;
+            min-height: 100vh;
+        }
+        
+        .profile-grid {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .profile-main {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        
+        .profile-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        
+        .profile-card {
+            background: #0a0a0a;
+            border: 1px solid #222;
+            border-radius: 16px;
+            padding: 2.5rem;
+            transition: all 0.3s;
+        }
+        
+        .profile-card:hover {
+            border-color: #444;
+            box-shadow: 0 10px 40px rgba(255, 255, 255, 0.05);
+        }
+        
+        .startup-header-card {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+        
+        .startup-logo-large {
+            width: 120px;
+            height: 120px;
+            border-radius: 16px;
+            background: #1a1a1a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            position: relative;
+            cursor: pointer;
+            overflow: hidden;
+            border: 2px solid #333;
+        }
+        
+        .startup-logo-large img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .logo-edit-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+            gap: 0.5rem;
+        }
+        
+        .startup-logo-large:hover .logo-edit-overlay {
+            opacity: 1;
+        }
+        
+        .logo-edit-overlay svg {
+            width: 30px;
+            height: 30px;
+            stroke: #fff;
+        }
+        
+        .logo-edit-overlay span {
+            color: #fff;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .startup-header-info {
+            flex: 1;
+        }
+        
+        .startup-name-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .startup-name-large {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        
+        .startup-id {
+            color: #888;
+            font-size: 1rem;
+        }
+        
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: #000;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            border: 1px solid #222;
+        }
+        
+        .info-label {
+            color: #888;
+            font-size: 0.9rem;
+        }
+        
+        .info-value {
+            color: #fff;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .not-set {
+            color: #666;
+            font-style: italic;
+        }
+        
+        .edit-icon-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            background: #1a1a1a;
+            border: 1px solid #555;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            padding: 0;
+        }
+        
+        .edit-icon-btn svg {
+            width: 14px;
+            height: 14px;
+            stroke: #fff;
+        }
+        
+        .edit-icon-btn:hover {
+            background: #fff;
+            border-color: #fff;
+            transform: scale(1.05);
+        }
+        
+        .edit-icon-btn:hover svg {
+            stroke: #000;
+        }
+        
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #1a1a1a;
+            color: #fff;
+            border: 2px solid #333;
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-decoration: none;
+            margin-bottom: 1.5rem;
+        }
+        
+        .back-btn:hover {
+            background: #fff;
+            color: #000;
+            border-color: #fff;
+            transform: translateX(-5px);
+        }
+        
+        .pitch-box {
+            background: #000;
+            border: 1px solid #222;
+            border-radius: 12px;
+            padding: 2rem;
+            min-height: 100px;
+        }
+        
+        .pitch-text {
+            color: #aaa;
+            line-height: 1.8;
+            font-size: 1.1rem;
+        }
+        
+        .upload-section {
+            background: #000;
+            border: 2px dashed #333;
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            margin-top: 1rem;
+        }
+        
+        .upload-btn {
+            background: linear-gradient(135deg, #ff006e, #8338ec);
+            color: #fff;
+            border: none;
+            padding: 0.9rem 2rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.3s;
+            margin-top: 1rem;
+        }
+        
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(255, 0, 110, 0.3);
+        }
+        
+        .pdf-viewer {
+            width: 100%;
+            height: 400px;
+            border: 1px solid #333;
+            border-radius: 10px;
+            background: #000;
+            margin-top: 1rem;
+        }
+        
+        .progress-card {
+            background: #0a0a0a;
+            border: 1px solid #222;
+            border-radius: 16px;
+            padding: 2rem;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #1a1a1a;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #3a86ff);
+            transition: width 0.5s;
+        }
+        
+        .progress-text {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #10b981;
+        }
+        
+        .quick-links-card {
+            background: #0a0a0a;
+            border: 1px solid #222;
+            border-radius: 16px;
+            padding: 2rem;
+        }
+        
+        .quick-link-btn {
+            background: #1a1a1a;
+            color: #fff;
+            border: 1px solid #333;
+            padding: 1rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            width: 100%;
+            text-align: left;
+            margin-bottom: 0.75rem;
+        }
+        
+        .quick-link-btn:hover {
+            background: #222;
+            border-color: #fff;
+            transform: translateX(5px);
+        }
+        
+        .description-box {
+            background: #000;
+            border: 1px solid #222;
+            border-radius: 12px;
+            padding: 2rem;
+            min-height: 150px;
+            color: #aaa;
+            line-height: 1.8;
+        }
+        
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .photo-item {
+            width: 100%;
+            height: 150px;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #333;
+        }
+        
+        .photo-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        @media (max-width: 1024px) {
+            .profile-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .edit-profile-container {
+                padding: 2rem 1.5rem;
+            }
+        }
+        </style>
+        
+        ${createNavBar()}
+        
+        <div class="edit-profile-container">
+            <a href="#founder_dashboard" class="back-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                Back to Dashboard
+            </a>
+            
+            <h1 class="welcome-text" style="margin-bottom: 2rem;">Startup Profile</h1>
+            
+            <div class="profile-grid">
+                <!-- Main Column -->
+                <div class="profile-main">
+                    <!-- Startup Header Card -->
+                    <div class="profile-card startup-header-card">
+                        <div class="startup-logo-large" onclick="editStartupLogo()">
+                            ${startupData.logo 
+                                ? `<img src="${startupData.logo}" alt="Startup Logo">` 
+                                : `<svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2">
+                                    <path d="M12 2L2 7l10 5 10-5z"></path>
+                                    <path d="M2 17l10 5 10-5"></path>
+                                    <path d="M2 12l10 5 10-5"></path>
+                                   </svg>`}
+                            <div class="logo-edit-overlay">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                                    <circle cx="12" cy="13" r="4"></circle>
+                                </svg>
+                                <span>Edit Logo</span>
+                            </div>
+                        </div>
+                        <div class="startup-header-info">
+                            <div class="startup-name-row">
+                                <span class="startup-name-large">${startupData.startupName || 'Startup Name'}</span>
+                                <button class="edit-icon-btn" onclick="editStartupName()">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="startup-id">${startupData.startupId || 'STARTUP_ID'}</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Hook Pitch Card -->
+                    <div class="profile-card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                            <h3 class="section-title" style="margin: 0;">Hook Pitch</h3>
+                            <button class="edit-icon-btn" onclick="editHookPitch()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="pitch-box">
+                            <p class="pitch-text ${!startupData.hookPitch ? 'not-set' : ''}">
+                                ${startupData.hookPitch || 'Set your one-line hook pitch to grab investor attention...'}
+                            </p>
+                        </div>
+                        
+                        <!-- Pitch Deck Section -->
+                        <div style="margin-top: 2rem;">
+                            <h4 style="margin-bottom: 1rem; font-size: 1.1rem;">Pitch Deck</h4>
+                            ${startupData.pitchDeckUrl 
+                                ? `<div class="pdf-viewer">
+                                    <embed src="${startupData.pitchDeckUrl}" type="application/pdf" width="100%" height="100%">
+                                   </div>
+                                   <button class="upload-btn" onclick="uploadPitchDeck()" style="margin-top: 1rem;">
+                                       Update Pitch Deck
+                                   </button>`
+                                : `<div class="upload-section">
+                                    <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" style="margin-bottom: 1rem;">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="17 8 12 3 7 8"></polyline>
+                                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                                    </svg>
+                                    <p style="color: #666; margin-bottom: 1rem;">No pitch deck uploaded yet</p>
+                                    <button class="upload-btn" onclick="uploadPitchDeck()">
+                                        Upload Pitch Deck
+                                    </button>
+                                   </div>`}
+                        </div>
+                    </div>
+                    
+                    <!-- Startup Details Card -->
+                    <div class="profile-card">
+                        <h3 class="section-title">Startup Details</h3>
+                        
+                        <div class="description-box ${!startupData.description ? 'not-set' : ''}" style="margin-bottom: 1.5rem;">
+                            ${startupData.description || 'Add a detailed description of your startup...'}
+                        </div>
+                        <button class="edit-icon-btn" onclick="editStartupDescription()" style="margin-bottom: 2rem;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                        </button>
+                        
+                        <div class="info-row">
+                            <span class="info-label">Location</span>
+                            <span class="info-value ${!startupData.location?.country ? 'not-set' : ''}">
+                                ${startupData.location?.country 
+                                    ? `${startupData.location.city || ''}, ${startupData.location.state || ''}, ${startupData.location.country}`
+                                    : 'Not set'}
+                            </span>
+                        </div>
+                        
+                        <div class="info-row">
+                            <span class="info-label">Year Established</span>
+                            <span class="info-value ${!startupData.yearEstablished ? 'not-set' : ''}">
+                                ${startupData.yearEstablished || 'Not set'}
+                                ${startupData.yearEstablished ? '' : '<button class="edit-icon-btn" onclick="editYearEstablished()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>'}
+                            </span>
+                        </div>
+                        
+                        <div class="info-row">
+                            <span class="info-label">Category</span>
+                            <span class="info-value">
+                                ${startupData.category || 'Not set'}
+                            </span>
+                        </div>
+                        
+                        <div class="info-row">
+                            <span class="info-label">Stage</span>
+                            <span class="info-value">
+                                ${startupData.stage || 'Not set'}
+                                <button class="edit-icon-btn" onclick="editStage()">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                    </svg>
+                                </button>
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <!-- Status Card -->
+                    <div class="profile-card">
+                        <h3 class="section-title">Status & Metrics</h3>
+                        
+                        <div class="info-row">
+                            <span class="info-label">Monetization Idea</span>
+                            <span class="info-value ${!startupData.monetization ? 'not-set' : ''}">
+                                ${startupData.monetization || 'Not set'}
+                                <button class="edit-icon-btn" onclick="editMonetization()">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                    </svg>
+                                </button>
+                            </span>
+                        </div>
+                        
+                        <div class="info-row">
+                            <span class="info-label">Revenue</span>
+                            <span class="info-value ${startupData.revenue === undefined ? 'not-set' : ''}">
+                                ${startupData.revenue !== undefined ? `$${startupData.revenue.toLocaleString()}` : 'Not set'}
+                                <button class="edit-icon-btn" onclick="editRevenue()">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                    </svg>
+                                </button>
+                            </span>
+                        </div>
+                        
+                        <div class="info-row">
+                            <span class="info-label">User Count</span>
+                            <span class="info-value ${startupData.userCount === undefined ? 'not-set' : ''}">
+                                ${startupData.userCount !== undefined ? startupData.userCount.toLocaleString() : 'Not set'}
+                                <button class="edit-icon-btn" onclick="editUserCount()">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                    </svg>
+                                </button>
+                            </span>
+                        </div>
+                        
+                        <div class="info-row">
+                            <span class="info-label">Valuation</span>
+                            <span class="info-value ${startupData.valuation === undefined ? 'not-set' : ''}">
+                                ${startupData.valuation !== undefined ? `$${startupData.valuation.toLocaleString()}` : 'Not set'}
+                                <button class="edit-icon-btn" onclick="editValuation()">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                    </svg>
+                                </button>
+                            </span>
+                        </div>
+                        
+                        <div class="info-row">
+                            <span class="info-label">Company Description</span>
+                            <span class="info-value ${!startupData.companyDescription ? 'not-set' : ''}">
+                                ${startupData.companyDescription || 'Not set'}
+                                <button class="edit-icon-btn" onclick="editCompanyDescription()">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                    </svg>
+                                </button>
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <!-- Traction Photos Card (Optional) -->
+                    <div class="profile-card">
+                        <h3 class="section-title">Interest Tracking Photos (Optional)</h3>
+                        <p style="color: #888; margin-bottom: 1.5rem; font-size: 0.95rem;">
+                            Upload screenshots of transactions, user growth, or any proof of traction
+                        </p>
+                        
+                        ${startupData.tractionPhotos?.length > 0 
+                            ? `<div class="photo-grid">
+                                ${startupData.tractionPhotos.map(url => `
+                                    <div class="photo-item">
+                                        <img src="${url}" alt="Traction Photo">
+                                    </div>
+                                `).join('')}
+                               </div>`
+                            : `<div class="upload-section">
+                                <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" style="margin-bottom: 1rem;">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                    <polyline points="21 15 16 10 5 21"></polyline>
+                                </svg>
+                                <p style="color: #666;">No traction photos uploaded</p>
+                               </div>`}
+                        
+                        <button class="upload-btn" onclick="uploadTractionPhotos()">
+                            ${startupData.tractionPhotos?.length > 0 ? 'Add More Photos' : 'Upload Photos'}
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Sidebar -->
+                <div class="profile-sidebar">
+                    <!-- Profile Progress -->
+                    <div class="progress-card">
+                        <h3 class="section-title">Profile Completion</h3>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${completionPercent}%"></div>
+                        </div>
+                        <div class="progress-text">${completionPercent}%</div>
+                        <p style="color: #888; font-size: 0.9rem; text-align: center; margin-top: 1rem;">
+                            Complete your profile to attract more investors
+                        </p>
+                    </div>
+                    
+
+
 </script>
 <!-- FOUNDER DASHBOARD -->
 <div id="dashboardContainer" style="display: none;"></div>
