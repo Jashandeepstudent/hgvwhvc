@@ -543,7 +543,135 @@ button {
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
+/* ============================================ */
+/* COMPLETION POPUP STYLES */
+/* ============================================ */
 
+.completion-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.4s ease;
+}
+
+.completion-popup.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.completion-popup-content {
+    position: relative;
+    background: #0a0a0a;
+    border: 1px solid #333;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 550px;
+    box-shadow: 0 25px 60px rgba(255, 255, 255, 0.1);
+    transform: scale(0.9) translateY(20px);
+    transition: transform 0.4s ease;
+}
+
+.completion-popup.show .completion-popup-content {
+    transform: scale(1) translateY(0);
+}
+
+.popup-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: transparent;
+    border: none;
+    color: #888;
+    font-size: 2.5rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: all 0.2s;
+    z-index: 10;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.popup-close:hover {
+    color: #fff;
+    transform: scale(1.1) rotate(90deg);
+}
+
+.popup-btn-draft,
+.popup-btn-launch {
+    flex: 1;
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.popup-btn-draft {
+    background: #1a1a1a;
+    color: #fff;
+    border: 2px solid #333;
+}
+
+.popup-btn-draft:hover {
+    background: #222;
+    border-color: #fff;
+    transform: translateY(-2px);
+}
+
+.popup-btn-launch {
+    background: linear-gradient(135deg, #10b981, #3a86ff);
+    color: #fff;
+}
+
+.popup-btn-launch:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4);
+}
+
+/* Bounce In Animation */
+@keyframes bounceIn {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .completion-popup-content {
+        width: 95%;
+        max-width: none;
+    }
+    
+    .popup-btn-draft,
+    .popup-btn-launch {
+        padding: 0.9rem 1.5rem;
+        font-size: 0.95rem;
+    }
+}
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
@@ -1105,15 +1233,81 @@ button {
         <textarea id="founderWork" placeholder="Describe your relevant experience and achievements..."></textarea>
     </div>
 
-    <div class="buttons">
-        <button class="btn-back" onclick="previousStep()">Back</button>
-        <button class="btn-draft" onclick="saveAsDraft()">Save as Draft</button>
-        <button class="btn-next" onclick="nextStep()">Next Step</button>
-    </div>
 </div>
 <!-- ========== STEP 5 ENDS HERE ========== -->
 
-<!-- ========== STEP 6 STARTS HERE (SEPARATE) ========== -->
+<!-- Success Completion Popup -->
+<div class="completion-popup" id="completionPopup">
+    <div class="completion-popup-content">
+        <!-- Close Button -->
+        <button class="popup-close" onclick="closeCompletionPopup()">×</button>
+        
+        <!-- Success Animation -->
+        <div style="text-align: center; padding: 2rem;">
+            <div style="font-size: 5rem; margin-bottom: 1.5rem; animation: bounceIn 1s ease;">🎉</div>
+            
+            <h2 style="font-size: 2rem; font-weight: 800; color: #fff; margin-bottom: 1rem;">
+                Successfully Completed!
+            </h2>
+            
+            <p style="color: #888; font-size: 1.1rem; margin-bottom: 2rem;">
+                Your vest is ready to be launched to investors
+            </p>
+            
+            <!-- Completion Checklist -->
+            <div style="background: #000; border: 1px solid #222; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; text-align: left;">
+                <h3 style="color: #fff; margin-bottom: 1rem; text-align: center; font-size: 1.1rem;">✅ All Sections Complete</h3>
+                
+                <div style="display: flex; align-items: center; gap: 1rem; padding: 0.6rem; margin-bottom: 0.5rem;">
+                    <div style="width: 24px; height: 24px; background: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <span style="color: #fff; font-weight: bold; font-size: 0.8rem;">✓</span>
+                    </div>
+                    <span style="color: #aaa; font-size: 0.95rem;">Vest Hook & Problem-Solution</span>
+                </div>
+                
+                <div style="display: flex; align-items: center; gap: 1rem; padding: 0.6rem; margin-bottom: 0.5rem;">
+                    <div style="width: 24px; height: 24px; background: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <span style="color: #fff; font-weight: bold; font-size: 0.8rem;">✓</span>
+                    </div>
+                    <span style="color: #aaa; font-size: 0.95rem;">Startup Details</span>
+                </div>
+                
+                <div style="display: flex; align-items: center; gap: 1rem; padding: 0.6rem; margin-bottom: 0.5rem;">
+                    <div style="width: 24px; height: 24px; background: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <span style="color: #fff; font-weight: bold; font-size: 0.8rem;">✓</span>
+                    </div>
+                    <span style="color: #aaa; font-size: 0.95rem;">Startup Audit</span>
+                </div>
+                
+                <div style="display: flex; align-items: center; gap: 1rem; padding: 0.6rem; margin-bottom: 0.5rem;">
+                    <div style="width: 24px; height: 24px; background: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <span style="color: #fff; font-weight: bold; font-size: 0.8rem;">✓</span>
+                    </div>
+                    <span style="color: #aaa; font-size: 0.95rem;">Roadmap & Vision</span>
+                </div>
+                
+                <div style="display: flex; align-items: center; gap: 1rem; padding: 0.6rem;">
+                    <div style="width: 24px; height: 24px; background: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <span style="color: #fff; font-weight: bold; font-size: 0.8rem;">✓</span>
+                    </div>
+                    <span style="color: #aaa; font-size: 0.95rem;">Founder Presence</span>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button class="popup-btn-draft" onclick="saveAsDraft()">
+                    💾 Save as Draft
+                </button>
+                <button class="popup-btn-launch" onclick="launchVest()">
+                    🚀 Launch Vest
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Step 6: Launch -->
 <div class="step-content" data-step="6" id="vest_step6">
     <div style="text-align: center; padding: 3rem 2rem;">
         <!-- Success Icon -->
@@ -1176,9 +1370,8 @@ button {
         <button class="btn-launch" onclick="launchVest()">🚀 Launch Vest</button>
     </div>
 </div>
-<!-- ========== STEP 6 ENDS HERE ========== -->
 
-<!-- Bounce Animation for Emoji -->
+<!-- Add bounce animation -->
 <style>
     @keyframes bounce {
         0%, 100% { transform: translateY(0); }
@@ -1186,7 +1379,7 @@ button {
     }
 </style>
 
-<!-- Celebration (appears after launching) -->
+<!-- Celebration -->
 <div class="celebration" id="celebration">
     <svg style="width: 120px; height: 120px; margin-bottom: 30px;" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
         <circle cx="12" cy="12" r="10"></circle>
@@ -1198,6 +1391,7 @@ button {
     <p>Your vest is now live and visible to investors</p>
     <a href="#founder_dashboard" class="dashboard-btn">Go to Dashboard</a>
 </div>
+
    <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import { getDatabase, ref, set, push, get } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
@@ -1469,9 +1663,45 @@ window.saveAsDraft = async function() {
         alert('Save failed: ' + error.message);
     }
 };
+// ============================================
+// COMPLETION POPUP FUNCTIONS
+// ============================================
 
-// 4. LAUNCH VEST (Global)
+window.showCompletionPopup = function() {
+    const popup = document.getElementById('completionPopup');
+    if (popup) {
+        popup.classList.add('show');
+        
+        // Play a subtle sound effect (optional)
+        // You can add audio here if you want
+    }
+};
+
+window.closeCompletionPopup = function() {
+    const popup = document.getElementById('completionPopup');
+    if (popup) {
+        popup.classList.remove('show');
+    }
+};
+
+// Close popup when clicking outside
+document.addEventListener('click', (e) => {
+    const popup = document.getElementById('completionPopup');
+    if (popup && e.target === popup) {
+        closeCompletionPopup();
+    }
+});
+
+// Close popup on ESC key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        closeCompletionPopup();
+    }
+});
 window.launchVest = async function() {
+    // Close completion popup if open
+    closeCompletionPopup();
+    
     const btn = event.target.closest('button');
     btn.innerHTML = '⏳ Launching...';
     btn.disabled = true;
@@ -1498,9 +1728,10 @@ window.launchVest = async function() {
             await saveStartupProfile(vestData);
         }
         
-        // Animation
-        document.querySelector('.step-content.active').style.display = 'none';
+        // Hide vest form and show celebration
+        document.querySelector('.vest-container').style.display = 'none';
         document.getElementById('celebration').classList.add('active');
+        document.getElementById('celebration').style.display = 'block';
         
     } catch (error) {
         console.error('Launch error:', error);
