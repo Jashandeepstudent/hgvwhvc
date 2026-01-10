@@ -4236,20 +4236,20 @@ const completionPercent = Math.round((filledFields / fields.length) * 100);
 // EDIT PROFILE FUNCTIONS - ALL WORKING
 // ============================================
 const modal = document.getElementById("availabilityModal");
-const btn = document.getElementById("openModal");
+const btn = document.querySelector(".card-btn"); // Your trigger button
 const closeBtn = document.querySelector(".close-btn");
 
-// 1. Open popup when clicking "Set Availability"
+// SHOW the modal when clicked
 btn.onclick = function() {
   modal.style.display = "block";
 }
 
-// 2. Close popup when clicking (X)
+// HIDE the modal when clicking (X)
 closeBtn.onclick = function() {
   modal.style.display = "none";
 }
 
-// 3. Close popup if clicking outside the box
+// HIDE the modal if they click outside the white box
 window.onclick = function(event) {
   if (event.target == modal) {
     modal.style.display = "none";
