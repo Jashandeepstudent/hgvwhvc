@@ -3214,8 +3214,8 @@ window.saveApplication = async function(appId, isDraft) {
     }
 };
 const clickAction = app.status === 'incomplete' 
-    ? `window.renderApplicationForm('${id}', '${app.appName || "Draft"}')` 
-    : `window.location.hash='view_application_${id}'`;
+    ? `window.renderApplicationForm('${appId}', '${app.appName || "Draft"}')` 
+    : `window.location.hash='view_application_${appId}'`;
 
 const statusPill = app.status === 'incomplete'
     ? `<div class="doc-badge" style="background:#ffb703;">DRAFT</div>`
