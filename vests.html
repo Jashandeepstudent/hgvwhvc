@@ -2879,37 +2879,48 @@ window.confirmApplicationName = async function() {
         return;
     }
 
-    // Close Modal
-    document.getElementById('appNameModal').remove();
+    // 1. Remove the popup
+    const modal = document.getElementById('appNameModal');
+    if (modal) modal.remove();
 
-    // Show High-End Processing UI
+    // 2. Show Loading Screen
     const container = document.getElementById('dashboardContainer');
     container.innerHTML = `
-        <div class="loading-screen" style="background:#fff; color:#000;">
+        <div class="loading-screen" style="background:#fff; color:#000; display:flex; flex-direction:column; align-items:center; justify-content:center;">
             <div class="spinner" style="border-top-color:#000;"></div>
             <p style="color:#000; letter-spacing:4px; font-weight:900; margin-top:30px;">AUTHENTICATING DOCUMENT</p>
         </div>
     `;
 
     try {
+        // 3. Database Operations
         const profileRef = ref(db, `founderProfile/${currentUser.uid}`);
         const snap = await get(profileRef);
-        const currentCount = (snap.val()?.applicationsCount || 0) + 1;
+        
+        const currentCount = (snap.exists() && snap.val().applicationsCount) 
+            ? parseInt(snap.val().applicationsCount) 
+            : 0;
 
         const newAppRef = push(ref(db, `Applications/${currentUser.uid}`));
         const appId = newAppRef.key;
 
-        await update(profileRef, { applicationsCount: currentCount });
+        // Update count and create the new app node simultaneously
+        await update(ref(db), {
+            [`founderProfile/${currentUser.uid}/applicationsCount`]: currentCount + 1,
+            [`Applications/${currentUser.uid}/${appId}/appName`]: appName,
+            [`Applications/${currentUser.uid}/${appId}/status`]: 'draft'
+        });
         
-        // Short delay for effect
+        // 4. Success: Move to the Form
         setTimeout(() => {
             window.renderApplicationForm(appId, appName);
-        }, 1200);
+        }, 800);
         
     } catch (error) {
-        console.error(error);
-        alert("Permission Error. Update your Firebase Rules.");
-        window.location.hash = 'applications';
+        console.error("STUCK ERROR:", error);
+        // 5. Emergency fallback if database fails
+        alert("Failed to initialize: " + error.message);
+        window.showApplicationsList(); // Send them back to the list
     }
 };
 // --- 3. INPUT FORM: THE WHITE PAPER INPUT INTERFACE ---
