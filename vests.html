@@ -670,12 +670,12 @@
        <div class="form-card">
     
     <div class="step-content active" data-step="1" id="vest_step1">
-        <h2>Main Vest Information</h2>
-        <p style="color: #888; margin-bottom: 25px;">Define the core of your proposition.</p>
+        <h2>Vest Hook & Problem-Solution</h2>
+        <p style="color: #888; margin-bottom: 25px;">Start with a compelling hook and define the problem you're solving.</p>
 
         <div class="form-group">
             <label>Vest Hook <span class="required">*</span> <span id="hookCount" style="color:#888; font-size:0.8rem; float:right;">0/15 words</span></label>
-            <input type="text" id="vestHook" placeholder="Catchy one-liner (Max 15 words)" oninput="checkWordCount(this, 15, 'hookCount')" required>
+            <input type="text" id="vestHook" placeholder="e.g., AI-powered recruiting platform reducing hiring time by 70%" oninput="checkWordCount(this, 15, 'hookCount')" required>
         </div>
 
         <div class="form-group">
@@ -685,7 +685,7 @@
 
         <div class="form-group">
             <label>The Problem (Current State) <span class="required">*</span></label>
-            <textarea id="vestProblem" placeholder="What is the burning problem you are solving?" style="height: 120px; border-radius: 0; border: 2px solid #333;"></textarea>
+            <textarea id="vestProblem" placeholder="What problem exists in the market?" style="height: 120px; border-radius: 0; border: 2px solid #333;"></textarea>
         </div>
 
         <div class="form-group">
@@ -694,13 +694,13 @@
         </div>
 
         <div class="form-group">
-            <label>Why You? <span class="required">*</span></label>
-            <textarea id="vestAdvantage" placeholder="Why are you the best for this?" style="height: 120px; border-radius: 0; border: 2px solid #333;"></textarea>
+            <label>Why You're Best For This <span class="required">*</span></label>
+            <textarea id="vestAdvantage" placeholder="What makes you uniquely qualified to solve this problem?"></textarea>" style="height: 120px; border-radius: 0; border: 2px solid #333;"></textarea>
         </div>
 
         <div style="display: flex; gap: 20px;">
             <div class="form-group" style="flex:1;">
-                <label>Equity Offered (%)</label>
+                <label>Equity Willing to Give (%)</label>
                 <input type="number" id="vestEquity" placeholder="e.g. 5">
             </div>
             <div class="form-group" style="flex:1;">
@@ -721,35 +721,62 @@
 
         <div class="form-group">
             <label>Startup Name</label>
-            <input type="text" id="stName" placeholder="Enter Name">
+            <input type="text" id="stName" placeholder="Enter your startup name">
         </div>
 
         <div class="form-group">
             <label>Detailed Description</label>
-            <textarea id="stDesc" placeholder="Full startup description..." style="height: 100px;"></textarea>
+            <textarea id="stDesc" placeholder="Describe what your startup does..." style="height: 100px;"></textarea>
         </div>
 
         <div class="form-group">
             <label>Category</label>
             <select id="stCategory">
-                <option value="">Select Category</option>
-                <option value="Fintech">Fintech</option>
-                <option value="Edtech">Edtech</option>
-                <option value="Healthtech">Healthtech</option>
-                <option value="SaaS">SaaS</option>
-                <option value="E-commerce">E-commerce</option>
-                <option value="AI/ML">AI/ML</option>
-            </select>
+                 <option value="AgTech">AgTech (Agriculture Technology)</option>
+                            <option value="AdTech">AdTech (Advertising Technology)</option>
+                            <option value="AI/ML">AI/ML (Artificial Intelligence & Machine Learning)</option>
+                            <option value="Aerospace">Aerospace (Space exploration and satellites)</option>
+                            <option value="AutoTech">AutoTech (Automotive and autonomous driving)</option>
+                            <option value="BioTech">BioTech (Biology-based innovation)</option>
+                            <option value="Blockchain">Blockchain (Decentralized ledgers and crypto)</option>
+                            <option value="B2B SaaS">B2B SaaS (Business-to-Business Software)</option>
+                            <option value="CleanTech">CleanTech (Environmentally friendly tech)</option>
+                            <option value="Cybersecurity">Cybersecurity (Data protection and safety)</option>
+                            <option value="ClimateTech">ClimateTech (Addressing global warming)</option>
+                            <option value="EdTech">EdTech (Education and online learning)</option>
+                            <option value="E-commerce">E-commerce (Online retail)</option>
+                            <option value="FinTech">FinTech (Financial services)</option>
+                            <option value="FoodTech">FoodTech (Food production and delivery)</option>
+                            <option value="GameTech">GameTech (Video games and engines)</option>
+                            <option value="HealthTech">HealthTech (Hospital and medical systems)</option>
+                            <option value="InsurTech">InsurTech (Insurance innovation)</option>
+                            <option value="IoT">IoT (Internet of Things/connected devices)</option>
+                            <option value="LegalTech">LegalTech (Automating law services)</option>
+                            <option value="Logistics">Logistics (Supply chain and shipping)</option>
+                            <option value="MarTech">MarTech (Marketing automation)</option>
+                            <option value="MedTech">MedTech (Medical devices and hardware)</option>
+                            <option value="PropTech">PropTech (Property and Real Estate)</option>
+                            <option value="SaaS">SaaS (Software as a Service)</option>
+                            <option value="SpaceTech">SpaceTech (Rocketry and satellite data)</option>
+                            <option value="TravelTech">TravelTech (Booking and tourism)</option>
+                            <option value="VR/AR">VR/AR (Virtual and Augmented Reality)</option>
+                            <option value="Web3">Web3 (Decentralized internet)</option>
+                            <option value="Other">Other</option>
+                        </select>
+
         </div>
 
         <div class="form-group">
             <label>Stage</label>
             <select id="stStage">
                 <option value="">Select Stage</option>
-                <option value="Idea">Idea Phase</option>
-                <option value="MVP">MVP / Prototype</option>
-                <option value="Early Revenue">Early Revenue</option>
-                <option value="Growth">Growth / Scale</option>
+                            <option value="Idea">Idea</option>
+                            <option value="Building">Building</option>
+                            <option value="MVP">MVP</option>
+                            <option value="pre-seed">Pre-Seed</option>
+                            <option value="seed">Seed</option>
+                            <option value="Growing">Growing</option>
+                            <option value="Scale">Scale</option>
             </select>
         </div>
 
@@ -831,7 +858,7 @@
         </div>
 
         <div class="form-group">
-            <label>3 Year Vision</label>
+            <label>Your next 3 Year Vision</label>
             <textarea id="roadVision" placeholder="Where do you see your startup in 3 years?" style="height: 100px;"></textarea>
         </div>
 
@@ -978,8 +1005,8 @@ function createNavBar() {
             <div class="logo" onclick="window.location.hash='founder_dashboard'" style="cursor: pointer;">ScaleVest</div>
             <div class="nav-links">
                 <a href="#founder_dashboard" class="nav-link">Dashboard</a>
-                <a href="#" class="nav-link">My Startup</a>
-                <a href="#" class="nav-link">Analytics</a>
+              <a href="/edit-startup" class="nav-link">My Startup</a>
+               <a href="/edit-startup" class="nav-link">My Startup</a>
                 <div class="dropdown">
                     <span class="nav-link" onclick="toggleDropdown('scaleDropdown')">Scale and Elevate ▾</span>
                     <div class="dropdown-content" id="scaleDropdown">
@@ -2527,7 +2554,7 @@ max-width: 1100px;
 
     <div class="nav-links">
         <a href="#founder_dashboard" class="nav-link">Dashboard</a>
-        <a href="#" class="nav-link">My Startup</a>
+     <a href="/edit-startup" class="nav-link">My Startup</a>
         <a href="#" class="nav-link">Analytics</a>
 
 <div class="dropdown">
