@@ -1178,6 +1178,167 @@ const vidInput = document.getElementById('newDemoVideo');
 if(vidInput) vidInput.addEventListener('change', (e) => {
     if (e.target.files[0]) document.getElementById('newDemoVideoName').textContent = '✓ ' + e.target.files[0].name;
 });
+
+ async function uploadFileToStorage(file, folder) {
+        if (!file || !currentUser) return null;
+        const fileName = `${folder}/${currentUser.uid}/${Date.now()}_${file.name}`;
+        const fileRef = storageRef(storage, fileName);
+        try {
+            await uploadBytes(fileRef, file);
+            return await getDownloadURL(fileRef);
+        } catch (error) {
+            console.error('Upload error:', error);
+            return null;
+        }
+    }
+
+    async function processAllFiles() {
+        const logoFile = document.getElementById('startupLogo').files[0];
+        const pitchFile = document.getElementById('pitchDeck').files[0];
+        const transFile = document.getElementById('transactionProof').files[0];
+
+        if (logoFile && !uploadedFiles.startupLogo) {
+            uploadedFiles.startupLogo = await uploadFileToStorage(logoFile, 'startup-logos');
+        }
+        if (pitchFile && !uploadedFiles.pitchDeck) {
+            uploadedFiles.pitchDeck = await uploadFileToStorage(pitchFile, 'pitch-decks');
+        }
+        if (transFile && !uploadedFiles.transactionProof) {
+            uploadedFiles.transactionProof = await uploadFileToStorage(transFile, 'transactions');
+        }
+    }
+
+    // 5. Data Collection & Saving
+function collectNewVestData(deckUrl, videoUrl) {
+    return {
+        MainVest: {
+            hook: document.getElementById('vestHook').value || '',
+            description: document.getElementById('vestDesc').value || '',
+            problem: document.getElementById('vestProblem').value || '',
+            solution: document.getElementById('vestSolution').value || '',
+            advantage: document.getElementById('vestAdvantage').value || '',
+            equityOffered: document.getElementById('vestEquity').value || '',
+            fundAsk: document.getElementById('vestAsk').value || ''
+        },
+        StartupDetails: {
+            name: document.getElementById('stName').value || '',
+            description: document.getElementById('stDesc').value || '',
+            category: document.getElementById('stCategory').value || '',
+            stage: document.getElementById('stStage').value || '',
+            revenue: document.getElementById('stRevenue').value || '',
+            valuation: document.getElementById('stValuation').value || '',
+            pitchDeckUrl: deckUrl || ''
+        },
+        Audit: {
+            scalability: document.getElementById('auditScale').value || '',
+            marketShare: document.getElementById('auditMarket').value || '',
+            competitors: document.getElementById('auditCompetitors').value || '',
+            differentiation: document.getElementById('auditDifferent').value || '',
+            monetization: document.getElementById('auditMoney').value || ''
+        },
+        Roadmap: {
+            fundUsage: document.getElementById('roadFundUsage').value || '',
+            yearGoal: document.getElementById('roadYearGoal').value || '',
+            threeYearVision: document.getElementById('roadVision').value || '',
+            strategy: document.getElementById('roadStrategy').value || ''
+        },
+        FounderPresence: {
+            founderName: document.getElementById('fpName').value || '',
+            coFounders: document.getElementById('fpCoFounders').value || '',
+            responsibilities: document.getElementById('fpWork').value || '',
+            demoVideoUrl: videoUrl || ''
+        },
+        createdAt: new Date().toISOString(),
+        userId: currentUser.uid
+    };
+}
+
+// 3. File Upload Helper for New Flow
+async function processNewFiles() {
+    const deckFile = document.getElementById('newPitchDeck')?.files[0];
+    const videoFile = document.getElementById('newDemoVideo')?.files[0];
+    
+    let deckUrl = '';
+    let videoUrl = '';
+
+    if (deckFile) deckUrl = await uploadFileToStorage(deckFile, 'pitch-decks');
+    if (videoFile) videoUrl = await uploadFileToStorage(videoFile, 'demo-videos');
+
+    return { deckUrl, videoUrl };
+}
+
+// 4. Save Draft Function (New Structure)
+window.saveNewVestAsDraft = async function() {
+    if (!currentUser) return;
+    const btn = event.currentTarget;
+    btn.innerHTML = 'Saving...';
+    
+    try {
+        const { deckUrl, videoUrl } = await processNewFiles();
+        const vestData = collectNewVestData(deckUrl, videoUrl);
+        vestData.status = 'draft'; // Mark as draft
+
+        // Save to Firebase under Vests/UID/VestID
+        const vestRef = ref(db, `Vests/${currentUser.uid}`);
+        await push(vestRef, vestData);
+
+        // Redirect to Dashboard
+        alert("Draft Saved!");
+        window.location.hash = 'founder_dashboard';
+    } catch (error) {
+        console.error("Draft Save Error", error);
+        alert("Error saving draft.");
+    } finally {
+        btn.innerHTML = 'Save Draft';
+    }
+};
+
+// 5. Launch Vest Function (New Structure + Profile Update)
+window.launchNewVest = async function() {
+    if (!currentUser) return;
+    const btn = event.currentTarget;
+    btn.innerHTML = 'Launching...';
+    btn.disabled = true;
+
+    try {
+        // 1. Upload Files
+        const { deckUrl, videoUrl } = await processNewFiles();
+
+        // 2. Collect Data
+        const vestData = collectNewVestData(deckUrl, videoUrl);
+        vestData.status = 'active'; // Mark as active
+
+        // 3. Save to Vests Node
+        const vestRef = ref(db, `Vests/${currentUser.uid}`);
+        await push(vestRef, vestData);
+
+        // 4. Update Founder Profile (Active Vests Count)
+        const profileRef = ref(db, `founderProfile/${currentUser.uid}`);
+        const snapshot = await get(profileRef);
+        let currentCount = 0;
+        
+        if (snapshot.exists()) {
+            const data = snapshot.val();
+            // Handle case where activeVestscount might not exist yet
+            currentCount = data.activeVestsCount ? parseInt(data.activeVestsCount) : 0;
+        }
+
+        await update(profileRef, {
+            activeVestsCount: currentCount + 1
+        });
+
+        // 5. Redirect to Dashboard
+        alert("Vest Launched Successfully!");
+        window.location.hash = 'founder_dashboard';
+
+    } catch (error) {
+        console.error("Launch Error", error);
+        alert("Error launching vest.");
+        btn.innerHTML = 'Launch Vest';
+        btn.disabled = false;
+    }
+};
+
    onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
@@ -4529,166 +4690,7 @@ window.addEventListener('load', () => {
 
 
     // 4. File Upload Logic
-    async function uploadFileToStorage(file, folder) {
-        if (!file || !currentUser) return null;
-        const fileName = `${folder}/${currentUser.uid}/${Date.now()}_${file.name}`;
-        const fileRef = storageRef(storage, fileName);
-        try {
-            await uploadBytes(fileRef, file);
-            return await getDownloadURL(fileRef);
-        } catch (error) {
-            console.error('Upload error:', error);
-            return null;
-        }
-    }
-
-    async function processAllFiles() {
-        const logoFile = document.getElementById('startupLogo').files[0];
-        const pitchFile = document.getElementById('pitchDeck').files[0];
-        const transFile = document.getElementById('transactionProof').files[0];
-
-        if (logoFile && !uploadedFiles.startupLogo) {
-            uploadedFiles.startupLogo = await uploadFileToStorage(logoFile, 'startup-logos');
-        }
-        if (pitchFile && !uploadedFiles.pitchDeck) {
-            uploadedFiles.pitchDeck = await uploadFileToStorage(pitchFile, 'pitch-decks');
-        }
-        if (transFile && !uploadedFiles.transactionProof) {
-            uploadedFiles.transactionProof = await uploadFileToStorage(transFile, 'transactions');
-        }
-    }
-
-    // 5. Data Collection & Saving
-function collectNewVestData(deckUrl, videoUrl) {
-    return {
-        MainVest: {
-            hook: document.getElementById('vestHook').value || '',
-            description: document.getElementById('vestDesc').value || '',
-            problem: document.getElementById('vestProblem').value || '',
-            solution: document.getElementById('vestSolution').value || '',
-            advantage: document.getElementById('vestAdvantage').value || '',
-            equityOffered: document.getElementById('vestEquity').value || '',
-            fundAsk: document.getElementById('vestAsk').value || ''
-        },
-        StartupDetails: {
-            name: document.getElementById('stName').value || '',
-            description: document.getElementById('stDesc').value || '',
-            category: document.getElementById('stCategory').value || '',
-            stage: document.getElementById('stStage').value || '',
-            revenue: document.getElementById('stRevenue').value || '',
-            valuation: document.getElementById('stValuation').value || '',
-            pitchDeckUrl: deckUrl || ''
-        },
-        Audit: {
-            scalability: document.getElementById('auditScale').value || '',
-            marketShare: document.getElementById('auditMarket').value || '',
-            competitors: document.getElementById('auditCompetitors').value || '',
-            differentiation: document.getElementById('auditDifferent').value || '',
-            monetization: document.getElementById('auditMoney').value || ''
-        },
-        Roadmap: {
-            fundUsage: document.getElementById('roadFundUsage').value || '',
-            yearGoal: document.getElementById('roadYearGoal').value || '',
-            threeYearVision: document.getElementById('roadVision').value || '',
-            strategy: document.getElementById('roadStrategy').value || ''
-        },
-        FounderPresence: {
-            founderName: document.getElementById('fpName').value || '',
-            coFounders: document.getElementById('fpCoFounders').value || '',
-            responsibilities: document.getElementById('fpWork').value || '',
-            demoVideoUrl: videoUrl || ''
-        },
-        createdAt: new Date().toISOString(),
-        userId: currentUser.uid
-    };
-}
-
-// 3. File Upload Helper for New Flow
-async function processNewFiles() {
-    const deckFile = document.getElementById('newPitchDeck')?.files[0];
-    const videoFile = document.getElementById('newDemoVideo')?.files[0];
-    
-    let deckUrl = '';
-    let videoUrl = '';
-
-    if (deckFile) deckUrl = await uploadFileToStorage(deckFile, 'pitch-decks');
-    if (videoFile) videoUrl = await uploadFileToStorage(videoFile, 'demo-videos');
-
-    return { deckUrl, videoUrl };
-}
-
-// 4. Save Draft Function (New Structure)
-window.saveNewVestAsDraft = async function() {
-    if (!currentUser) return;
-    const btn = event.currentTarget;
-    btn.innerHTML = 'Saving...';
-    
-    try {
-        const { deckUrl, videoUrl } = await processNewFiles();
-        const vestData = collectNewVestData(deckUrl, videoUrl);
-        vestData.status = 'draft'; // Mark as draft
-
-        // Save to Firebase under Vests/UID/VestID
-        const vestRef = ref(db, `Vests/${currentUser.uid}`);
-        await push(vestRef, vestData);
-
-        // Redirect to Dashboard
-        alert("Draft Saved!");
-        window.location.hash = 'founder_dashboard';
-    } catch (error) {
-        console.error("Draft Save Error", error);
-        alert("Error saving draft.");
-    } finally {
-        btn.innerHTML = 'Save Draft';
-    }
-};
-
-// 5. Launch Vest Function (New Structure + Profile Update)
-window.launchNewVest = async function() {
-    if (!currentUser) return;
-    const btn = event.currentTarget;
-    btn.innerHTML = 'Launching...';
-    btn.disabled = true;
-
-    try {
-        // 1. Upload Files
-        const { deckUrl, videoUrl } = await processNewFiles();
-
-        // 2. Collect Data
-        const vestData = collectNewVestData(deckUrl, videoUrl);
-        vestData.status = 'active'; // Mark as active
-
-        // 3. Save to Vests Node
-        const vestRef = ref(db, `Vests/${currentUser.uid}`);
-        await push(vestRef, vestData);
-
-        // 4. Update Founder Profile (Active Vests Count)
-        const profileRef = ref(db, `founderProfile/${currentUser.uid}`);
-        const snapshot = await get(profileRef);
-        let currentCount = 0;
-        
-        if (snapshot.exists()) {
-            const data = snapshot.val();
-            // Handle case where activeVestscount might not exist yet
-            currentCount = data.activeVestsCount ? parseInt(data.activeVestsCount) : 0;
-        }
-
-        await update(profileRef, {
-            activeVestsCount: currentCount + 1
-        });
-
-        // 5. Redirect to Dashboard
-        alert("Vest Launched Successfully!");
-        window.location.hash = 'founder_dashboard';
-
-    } catch (error) {
-        console.error("Launch Error", error);
-        alert("Error launching vest.");
-        btn.innerHTML = 'Launch Vest';
-        btn.disabled = false;
-    }
-};
-    function displaySummary() {
+       function displaySummary() {
         const data = collectVestData();
         if (!data) return;
         document.getElementById('summary').innerHTML = `
