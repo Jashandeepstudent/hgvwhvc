@@ -1111,8 +1111,9 @@ button {
         <button class="btn-next" onclick="nextStep()">Next Step</button>
     </div>
 </div>
+<!-- ========== STEP 5 ENDS HERE ========== -->
 
-<!-- Step 6: Launch -->
+<!-- ========== STEP 6 STARTS HERE (SEPARATE) ========== -->
 <div class="step-content" data-step="6" id="vest_step6">
     <div style="text-align: center; padding: 3rem 2rem;">
         <!-- Success Icon -->
@@ -1175,8 +1176,9 @@ button {
         <button class="btn-launch" onclick="launchVest()">🚀 Launch Vest</button>
     </div>
 </div>
+<!-- ========== STEP 6 ENDS HERE ========== -->
 
-<!-- Add bounce animation -->
+<!-- Bounce Animation for Emoji -->
 <style>
     @keyframes bounce {
         0%, 100% { transform: translateY(0); }
@@ -1184,7 +1186,7 @@ button {
     }
 </style>
 
-<!-- Celebration -->
+<!-- Celebration (appears after launching) -->
 <div class="celebration" id="celebration">
     <svg style="width: 120px; height: 120px; margin-bottom: 30px;" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
         <circle cx="12" cy="12" r="10"></circle>
@@ -1196,7 +1198,6 @@ button {
     <p>Your vest is now live and visible to investors</p>
     <a href="#founder_dashboard" class="dashboard-btn">Go to Dashboard</a>
 </div>
-
    <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import { getDatabase, ref, set, push, get } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
