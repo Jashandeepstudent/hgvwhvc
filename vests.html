@@ -2848,6 +2848,22 @@ max-width: 1100px;
     container.innerHTML = dashboardHTML;
     container.style.display = 'block';
     
+const modal = document.getElementById("availabilityModal");
+    const openBtn = container.querySelector("#openModal"); // Find the button inside the new HTML
+    const closeBtn = document.querySelector(".close-btn");
+
+    if (openBtn) {
+        openBtn.onclick = function() {
+            modal.style.display = "block";
+        }
+    }
+
+    if (closeBtn) {
+        closeBtn.onclick = function() {
+            modal.style.display = "none";
+        }
+    }
+
     // Add dropdown interaction after DOM is loaded
     setTimeout(() => {
         window.toggleDashProfileDropdown = function() {
@@ -4235,26 +4251,7 @@ const completionPercent = Math.round((filledFields / fields.length) * 100);
 // ============================================
 // EDIT PROFILE FUNCTIONS - ALL WORKING
 // ============================================
-const modal = document.getElementById("availabilityModal");
-const btn = document.querySelector(".card-btn"); // Your trigger button
-const closeBtn = document.querySelector(".close-btn");
 
-// SHOW the modal when clicked
-btn.onclick = function() {
-  modal.style.display = "block";
-}
-
-// HIDE the modal when clicking (X)
-closeBtn.onclick = function() {
-  modal.style.display = "none";
-}
-
-// HIDE the modal if they click outside the white box
-window.onclick = function(event) {
-  if (event.target == modal) {
-    modal.style.display = "none";
-  }
-}
 
 // 4. Handle Save
 document.getElementById("saveAvailability").onclick = function() {
