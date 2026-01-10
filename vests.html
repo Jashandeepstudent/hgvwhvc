@@ -1741,19 +1741,7 @@ window.collectNewVestData = function(deckUrl, videoUrl) {
         userId: currentUser ? currentUser.uid : 'anonymous'
     };
 };
-// 3. File Upload Helper for New Flow
-async function processNewFiles() {
-    const deckFile = document.getElementById('newPitchDeck')?.files[0];
-    const videoFile = document.getElementById('newDemoVideo')?.files[0];
-    
-    let deckUrl = '';
-    let videoUrl = '';
 
-    if (deckFile) deckUrl = await uploadFileToStorage(deckFile, 'pitch-decks');
-    if (videoFile) videoUrl = await uploadFileToStorage(videoFile, 'demo-videos');
-
-    return { deckUrl, videoUrl };
-}
 
 // 4. Save Draft Function (New Structure)
 window.saveNewVestAsDraft = async function() {
