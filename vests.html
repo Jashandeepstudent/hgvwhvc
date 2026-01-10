@@ -2016,7 +2016,7 @@ async function showManageVests() {
     const draftVests = Object.values(vestsData).filter(v => v.status === 'draft');
 
     container.innerHTML = `
-        ${createNavBar()}
+        
         <div class="manage-vests-page">
             <div class="header-row">
                 <a href="#founder_dashboard" class="back-to-dash">
@@ -3408,29 +3408,27 @@ max-width: 1100px;
 
     </div>
 
-    <!-- ACTIVE VESTS -->
-   <div class="banner" onclick="window.location.hash='manage_vests'" style="cursor: pointer;">
-    </div>
-        <div class="banner-content">
-            <h3>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
-                     stroke="white" stroke-width="2"
-                     style="vertical-align:middle;margin-right:.5rem;">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                </svg>
-                Manage Vests
-            </h3>
-            <p>Manage your investor outreach campaigns.</p>
-        </div>
-
-        <div class="banner-icon">
-            <svg width="60" height="60" viewBox="0 0 24 24" fill="none"
-                 stroke="white" stroke-width="2">
-                <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+<div class="banner" onclick="window.location.hash='manage_vests'" style="cursor: pointer;">
+    <div class="banner-content">
+        <h3>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                 stroke="white" stroke-width="2"
+                 style="vertical-align:middle;margin-right:.5rem;">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
             </svg>
-        </div>
+            Manage Vests
+        </h3>
+        <p>Manage your investor outreach campaigns.</p>
     </div>
+
+    <div class="banner-icon">
+        <svg width="60" height="60" viewBox="0 0 24 24" fill="none"
+             stroke="white" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+        </svg>
+    </div>
+</div>
 
 </div>
 
