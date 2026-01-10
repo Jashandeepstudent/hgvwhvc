@@ -243,7 +243,43 @@
     background: #888 !important;
     color: #fff !important;
 }
+.bundle-image-wrapper {
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+}
 
+.chest-img {
+    height: 100%;
+    width: auto;
+    /* This filter turns black SVGs to white */
+    filter: invert(100%) brightness(200%);
+    transition: transform 0.3s ease;
+}
+
+.bundle-card:hover .chest-img {
+    transform: scale(1.1);
+}
+
+/* Premium Black & White Button */
+.buy-btn-premium {
+    background: #fff;
+    color: #000;
+    border: 1px solid #fff;
+    padding: 14px;
+    border-radius: 8px;
+    font-weight: 800;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: 0.3s;
+}
+
+.buy-btn-premium:hover {
+    background: #000;
+    color: #fff;
+}
 /* Token Shop Specific */
 .token-amount { color: #fff !important; font-size: 2.5rem !important; }
 .token-cost { color: #888 !important; border-top: 1px solid #222; padding-top: 15px; }
@@ -2200,37 +2236,51 @@ window.showFounderEmergence = async function() {
 window.showScaleShop = async function() {
     const tokens = await getLiveTokens();
     const container = document.getElementById('dashboardContainer');
+    document.title = "Scale Shop | ScaleVest";
+
     container.innerHTML = `
-      
-        <div class="emergence-page">
+           <div class="emergence-page shop-bw">
             ${getShopHeaderHTML(tokens, 'scale')}
+            
             <div class="emergence-header">
                 <h1>Scale Shop</h1>
-                <p>Redeem your tokens for outreach plans.</p>
+                <p>Redeem your Scale Tokens to boost your outreach without spending cash.</p>
             </div>
-            <div class="emergence-grid">
-                <div class="emergence-card">
-                    <h2>Tiny</h2>
-                    <p class="plan-desc">Free outreach to 3 investors.</p>
-                    <div class="token-cost">100 Tokens</div>
-                    <button class="buy-btn" onclick="window.handleTokenRedeem(100, 'Tiny')">Redeem</button>
-                </div>
-                <div class="emergence-card featured" style="border-color:#fff !important;">
-                    <h2>Small</h2>
-                    <p class="plan-desc">Free outreach to 6 investors.</p>
-                    <div class="token-cost">200 Tokens</div>
-                    <button class="buy-btn" onclick="window.handleTokenRedeem(200, 'Small')">Redeem</button>
-                </div>
-                <div class="emergence-card">
-                    <h2>Medium</h2>
-                    <p class="plan-desc">Free outreach to 10 investors.</p>
-                    <div class="token-cost">320 Tokens</div>
-                    <button class="buy-btn" onclick="window.handleTokenRedeem(320, 'Medium')">Redeem</button>
-                </div>
-            </div>
-        </div>`;
-};
 
+            <div class="emergence-grid">
+                <div class="emergence-card bundle-card">
+                    <div class="bundle-image-wrapper">
+                        <img src="token1.svg" alt="Tiny Token" class="chest-img">
+                    </div>
+                    <h2 class="plan-title">Emergence: Tiny</h2>
+                    <p class="plan-desc">The FREE entry point. Send your application to <strong>3 interested investors</strong>.</p>
+                    <div class="token-cost">100 Tokens</div>
+                    <button class="buy-btn-premium" onclick="window.handleTokenRedeem(100, 'Tiny')">Redeem Tiny</button>
+                </div>
+
+                <div class="emergence-card bundle-card featured">
+                    <div class="bundle-image-wrapper">
+                        <img src="token2.svg" alt="Small Token" class="chest-img">
+                    </div>
+                    <h2 class="plan-title">Emergence: Small</h2>
+                    <p class="plan-desc">Our most helpful free plan. Take your funding application to <strong>6 interested investors</strong>.</p>
+                    <div class="token-cost">200 Tokens</div>
+                    <button class="buy-btn-premium" onclick="window.handleTokenRedeem(200, 'Small')">Redeem Small</button>
+                </div>
+
+                <div class="emergence-card bundle-card">
+                    <div class="bundle-image-wrapper">
+                        <img src="token3.svg" alt="Medium Token" class="chest-img">
+                    </div>
+                    <h2 class="plan-title">Emergence: Medium</h2>
+                    <p class="plan-desc">Strategic boost. Take your funding application to <strong>10 interested investors</strong>.</p>
+                    <div class="token-cost">320 Tokens</div>
+                    <button class="buy-btn-premium" onclick="window.handleTokenRedeem(320, 'Medium')">Redeem Medium</button>
+                </div>
+            </div>
+        </div>
+    `;
+};
 // 3. TOKEN SHOP (BUY SCALE TOKENS)
 window.showTokenShop = async function() {
     const tokens = await getLiveTokens();
