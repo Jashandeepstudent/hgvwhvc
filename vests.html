@@ -3217,9 +3217,14 @@ window.selectVestForApp = function(id, hook) {
 
 window.submitApplication = async function(appId) {
     const vestId = document.getElementById('selectedVestId').value;
+    const submitBtn = event.currentTarget; // The button clicked
+
     if(!vestId) return alert("Please attach a vest before completing!");
 
-    // Gather the data
+    // 1. Visual Feedback (Prevent double-clicks)
+    submitBtn.disabled = true;
+    submitBtn.innerText = "Processing...";
+
     const data = {
         appHook: document.getElementById('appHook').value,
         startingContent: document.getElementById('appStarting').value,
@@ -3232,20 +3237,27 @@ window.submitApplication = async function(appId) {
     };
 
     try {
-        // 1. Perform the save in the background
+        // 2. Save to Firebase
         await set(ref(db, `Applications/${currentUser.uid}/${appId}`), data);
         
-        // 2. IMMEDIATE REDIRECT (No loading screen)
-        window.location.hash = 'founder_dashboard';
+        // 3. CLEAR THE FORM IMMEDIATELY
+        // This ensures the old form is gone before the new list renders
+        const container = document.getElementById('dashboardContainer');
+        container.innerHTML = ''; 
+
+        // 4. REDIRECT
+        window.location.hash = 'applications';
         
-        // 3. Trigger the success popup on the list page
+        // 5. SUCCESS TOAST
         if (window.showSuccessToast) {
             window.showSuccessToast("Application Processed Successfully!");
         }
         
     } catch (error) {
         console.error("Save Error:", error);
-        alert("Failed to save application. Please check your connection.");
+        submitBtn.disabled = false;
+        submitBtn.innerText = "Complete & Process Application";
+        alert("Failed to save. Check connection.");
     }
 };
 // --- 6. REVIEW: THE "MEGA OP" FINAL DOCUMENT PAGE ---
