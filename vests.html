@@ -3041,54 +3041,34 @@ window.submitApplication = async function(appId) {
 
 // --- 6. REVIEW: THE "MEGA OP" FINAL DOCUMENT PAGE ---
 window.renderFullApplicationPage = async function(appId) {
+    const container = document.getElementById('dashboardContainer');
+    container.style.display = 'block'; // Ensure visibility
+    
+    // Fetch Data
     const snap = await get(ref(db, `Applications/${currentUser.uid}/${appId}`));
     const app = snap.val();
-    if(!app) return alert("Application not found.");
-    
+    if(!app) {
+        alert("Application not found");
+        window.location.hash = 'applications';
+        return;
+    }
+
     const vestSnap = await get(ref(db, `Vests/${currentUser.uid}/${app.vestId}`));
     const vest = vestSnap.val();
 
-    document.getElementById('dashboardContainer').innerHTML = `
-        <div class="full-app-page" style="background:#f0f2f5; min-height:100vh; padding:60px 20px; color:#000;">
-             <div class="white-paper-card" style="max-width:850px; margin:0 auto; font-family:'Times New Roman', Times, serif; padding:80px; background:#fff; box-shadow:0 10px 50px rgba(0,0,0,0.1); border-radius:2px;">
-                <p style="text-align:right; font-size:11px; color:#999; font-family:sans-serif; letter-spacing:1px;">DOCUMENT REVIEW ID: ${appId.toUpperCase()}</p>
-                
-                <h1 style="font-size:42px; border-left:5px solid #000; padding-left:25px; margin-top:40px; line-height:1.2; font-weight:bold;">${app.appHook}</h1>
-                
-                <div style="margin-top:60px; line-height:1.8; font-size:20px; text-align:justify; color:#333;">
-                    <p style="margin-bottom:30px;">${app.startingContent}</p>
-                    <p style="margin-bottom:30px;">${app.mainContent}</p>
-                    <p style="margin-bottom:50px;">${app.endingContent}</p>
-                </div>
-
-                <div style="margin-top:80px;">
-                    <p style="font-size:14px; color:#888; margin:0;">Respectfully Submitted,</p>
-                    <h2 style="font-size:28px; margin:5px 0 0 0; font-family:sans-serif; font-weight:700;">${app.founderName}</h2>
-                </div>
-
-                <div style="margin-top:80px; background:#000; color:#fff; padding:40px; border-radius:4px;">
-                    <p style="font-family:sans-serif; font-size:10px; letter-spacing:2px; color:#888; margin-bottom:15px; text-transform:uppercase;">Linked Startup Authority</p>
-                    <h3 style="font-size:24px; margin-bottom:10px; color:#fff;">${vest?.MainVest?.hook || 'Startup Vest'}</h3>
-                    <p style="font-size:15px; color:#aaa; margin-bottom:25px;">${vest?.MainVest?.description?.substring(0, 150)}...</p>
-                    <div style="display:flex; justify-content:space-between; margin-top:20px; font-family:sans-serif; font-weight:bold; border-top:1px solid #333; padding-top:20px;">
-                        <span>INVESTMENT ASK: $${vest?.MainVest?.fundAsk || '0'}</span>
-                        <span>EQUITY OFFER: ${vest?.MainVest?.equityOffered || '0'}%</span>
-                    </div>
-                </div>
-
-                <div style="text-align:center; margin-top:100px; opacity:0.5; border-top:1px solid #f0f0f0; padding-top:20px;">
-                    <p style="font-family:sans-serif; font-size:13px; color:#000;">
-                        <strong>ScaleVest</strong> | UnioraX Private Limited
-                    </p>
-                </div>
-             </div>
-             <div style="text-align:center; margin-top:30px;">
-                <button class="buy-btn-premium" style="width:200px;" onclick="window.location.hash='applications'">Back to Applications</button>
+    // Render White Sheet
+    container.innerHTML = `
+        <div class="full-app-view" style="color:#000; padding: 40px 20px;">
+             <div class="white-paper-card" style="background:#fff; max-width:800px; margin:0 auto; padding:60px; border:1px solid #ddd;">
+                <h1 style="color:#000;">${app.appHook}</h1>
+                <p style="color:#333; font-size:1.1rem; line-height:1.6;">${app.mainContent}</p>
+                <hr style="margin:30px 0; opacity:0.1;">
+                <p><strong>Founder:</strong> ${app.founderName}</p>
+                <button class="buy-btn-premium" onclick="window.location.hash='applications'" style="background:#000; color:#fff; width:200px; margin-top:20px;">Back to List</button>
              </div>
         </div>
     `;
 };
-
 // --- 7. HELPER: WORD LIMITER ---
 window.limitWords = function(element, limit) {
     const words = element.value.trim().split(/\s+/).filter(w => w.length > 0);
@@ -3202,7 +3182,7 @@ function handleHashChange() {
     const currentId = cachedFounderData.userId;
     const firebaseUid = currentUser.uid;
 
-    // 2. CHECK: Is ID missing OR is it just the default Firebase UID?
+    // 2. CHECK: Custom ID Gatekeeper
     if (!currentId || currentId === firebaseUid) {
         document.getElementById('loadingScreen').classList.add('hidden'); 
         document.querySelector('.vest-container').style.display = 'none';
@@ -3212,37 +3192,55 @@ function handleHashChange() {
         return; 
     }
 
-    // 3. If we have a custom ID, proceed as normal
     const hash = window.location.hash.slice(1);
-    
-    // Hide everything first
-    document.querySelector('.vest-container').style.display = 'none';
-    const dashContainer = document.getElementById('dashboardContainer');
-    if (dashContainer) dashContainer.style.display = 'none';
+    const container = document.getElementById('dashboardContainer');
+    const vestStepContainer = document.querySelector('.vest-container');
 
-    // Show the section based on Hash
-    if (hash === 'founder_dashboard') {
+    // 3. RESET UI STATE (Crucial Fix)
+    // Always hide the "Create Vest" multi-step form when navigating away
+    if (vestStepContainer) vestStepContainer.style.display = 'none';
+    // Ensure dashboard container is visible for all dynamic pages
+    if (container) {
+        container.style.display = 'block';
+        container.innerHTML = ''; // Clear previous view to prevent "ghosting"
+    }
+
+    // 4. ROUTING LOGIC
+    if (hash === 'founder_dashboard' || hash === '') {
+        document.body.style.background = "linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)"; // Black
         showDashboard();
     } else if (hash === 'edit_founderprofile') {
+        document.body.style.background = "#000";
         showEditProfile();
     } else if (hash === 'founder_emergence') {
+        document.body.style.background = "#000";
         showFounderEmergence();
     } else if (hash === 'manage_vests') {
+        document.body.style.background = "#000";
         showManageVests();
     } else if (hash === 'applications') {
-        window.showApplicationsList(); // GLOBAL CALL
-    } else if (hash.startsWith('view_application_')) {
+        document.body.style.background = "#000";
+        window.showApplicationsList(); 
+    } 
+    // --- VIEW APPLICATION FIX ---
+    else if (hash.startsWith('view_application_')) {
         const appId = hash.replace('view_application_', '');
-        window.renderFullApplicationPage(appId); // GLOBAL CALL
-    } else if (hash === 'edit_startup') {
+        // Force background to light grey for the professional sheet
+        document.body.style.background = "#f4f4f4"; 
+        window.renderFullApplicationPage(appId);
+    } 
+    // ----------------------------
+    else if (hash === 'edit_startup') {
+        document.body.style.background = "#000";
         showEditStartup();
     } else if (hash.startsWith('vest_step')) {
+        if (vestStepContainer) vestStepContainer.style.display = 'block';
+        if (container) container.style.display = 'none';
+        
         const stepNum = parseInt(hash.replace('vest_step', ''));
-        if (stepNum >= 1 && stepNum <= 6) {
-            currentStep = stepNum;
-            updateStepDisplay();
-            showVestForm();
-        }
+        currentStep = stepNum;
+        updateStepDisplay();
+        showVestForm();
     } else {
         window.location.hash = 'founder_dashboard';
     }
