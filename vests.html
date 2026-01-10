@@ -321,22 +321,31 @@
     transform: scale(1.1);
 }
 
-/* Premium Black & White Button */
 .buy-btn-premium {
     background: #fff;
     color: #000;
     border: 1px solid #fff;
-    padding: 14px;
-    border-radius: 8px;
+    /* Reduced padding: 10px top/bottom, 24px left/right */
+    padding: 10px 24px; 
+    border-radius: 6px;
     font-weight: 800;
+    font-size: 0.85rem; /* Slightly smaller font for premium look */
     cursor: pointer;
     text-transform: uppercase;
-    transition: 0.3s;
+    transition: all 0.3s ease;
+    
+    /* Crucial changes for size control */
+    display: inline-block; 
+    width: auto; 
+    min-width: 140px; /* Ensures a consistent button base */
+    margin: 0 auto;  /* Centers it if the parent is a flex column */
 }
 
 .buy-btn-premium:hover {
     background: #000;
     color: #fff;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
 }
 /* Token Shop Specific */
 .token-amount { color: #fff !important; font-size: 2.5rem !important; }
