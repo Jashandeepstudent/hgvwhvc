@@ -1205,7 +1205,23 @@
     0%, 100% { transform: translateX(-3px) rotate(-5deg); }
     50% { transform: translateX(3px) rotate(5deg); }
 }
+/* Special Modal Style for App Creation */
+#appNameModal .edit-modal-content {
+    background: #000;
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
+}
 
+#newAppNameInput:focus {
+    border-color: #fff !important;
+    outline: none;
+}
+
+.loading-screen p {
+    font-weight: 800;
+    font-size: 0.9rem;
+    color: #fff;
+    text-transform: uppercase;
+}
 #tokenCountDisplay {
     font-weight: 800;
     font-size: 1.1rem;
@@ -2669,25 +2685,68 @@ window.showApplicationsList = async function() {
 };
 
 // --- 2. INITIALIZATION: NAME THE APPLICATION ---
-window.promptNewApplication = async function() {
-    const appName = prompt("Enter a name for this funding application (e.g. Seed Round Phase 1):");
-    if (!appName) return;
-
-    // Increment count in founderProfile
-    const profileRef = ref(db, `founderProfile/${currentUser.uid}`);
-    const snap = await get(profileRef);
-    const currentCount = (snap.val()?.applicationsCount || 0) + 1;
-
-    // Push new entry to get a unique App ID
-    const newAppRef = push(ref(db, `Applications/${currentUser.uid}`));
-    const appId = newAppRef.key;
-
-    await update(profileRef, { applicationsCount: currentCount });
+window.promptNewApplication = function() {
+    // Create the modal overlay
+    const modal = document.createElement('div');
+    modal.className = 'edit-modal show';
+    modal.id = 'appNameModal';
     
-    // Move to the form
-    window.renderApplicationForm(appId, appName);
+    modal.innerHTML = `
+        <div class="edit-modal-content" style="border: 1px solid #fff;">
+            <div class="edit-modal-header">
+                <h3>🚀 New Funding Application</h3>
+                <button class="modal-close" onclick="this.parentElement.parentElement.parentElement.remove()">×</button>
+            </div>
+            <div class="edit-modal-body">
+                <label style="color:#fff; margin-bottom:15px; display:block;">Give your application a professional name:</label>
+                <input type="text" id="newAppNameInput" placeholder="e.g. Seed Round - Q1 Pitch" 
+                       style="background:#000; border:1px solid #444; color:#fff; padding:15px;">
+                <p style="font-size:0.75rem; color:#666; margin-top:10px;">This name helps you identify the outreach campaign in your dashboard.</p>
+            </div>
+            <div class="edit-modal-footer">
+                <button class="buy-btn-premium" onclick="window.confirmApplicationName()">Initialize Application</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    document.getElementById('newAppNameInput').focus();
 };
 
+// --- CONFIRMATION LOGIC ---
+window.confirmApplicationName = async function() {
+    const appName = document.getElementById('newAppNameInput').value.trim();
+    if (!appName) return alert("Please enter a name for your application.");
+
+    // Remove modal
+    document.getElementById('appNameModal').remove();
+
+    // Show processing state
+    document.getElementById('dashboardContainer').innerHTML = `
+        <div class="loading-screen">
+            <div class="spinner"></div>
+            <p style="margin-top:20px; letter-spacing:2px;">CREATING SECURE NODE...</p>
+        </div>`;
+
+    try {
+        // 1. Update Application Count in founderProfile
+        const profileRef = ref(db, `founderProfile/${currentUser.uid}`);
+        const snap = await get(profileRef);
+        const currentCount = (snap.val()?.applicationsCount || 0) + 1;
+        await update(profileRef, { applicationsCount: currentCount });
+
+        // 2. Create entry in Applications node
+        const newAppRef = push(ref(db, `Applications/${currentUser.uid}`));
+        const appId = newAppRef.key;
+
+        // 3. Open the White Paper Form
+        window.renderApplicationForm(appId, appName);
+        
+    } catch (error) {
+        console.error("Error initializing app:", error);
+        alert("Permission Denied. Please check your Firebase Database Rules.");
+        window.location.hash = 'founder_dashboard';
+    }
+};
 // --- 3. INPUT FORM: THE WHITE PAPER INPUT INTERFACE ---
 window.renderApplicationForm = async function(appId, appName) {
     const container = document.getElementById('dashboardContainer');
