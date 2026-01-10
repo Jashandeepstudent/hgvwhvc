@@ -3213,9 +3213,6 @@ window.saveApplication = async function(appId, isDraft) {
         alert("Critical Save Error. Check rules.");
     }
 };
-const clickAction = app.status === 'incomplete' 
-    ? `window.renderApplicationForm('${appId}', '${app.appName || "Draft"}')` 
-    : `window.location.hash='view_application_${appId}'`;
 
 const statusPill = app.status === 'incomplete'
     ? `<div class="doc-badge" style="background:#ffb703;">DRAFT</div>`
