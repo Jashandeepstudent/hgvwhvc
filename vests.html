@@ -1324,18 +1324,32 @@
 
 .startup-label { font-weight: 700; color: #fff; font-size: 0.85rem; }
 .equity-tag { color: #ff006e; font-weight: 700; font-size: 0.85rem; }
+/* Center the loading state globally */
+.loading-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: fixed; /* Absolute to the screen */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+/* Spinner animation */
 .spinner {
-    width: 50px;
-    height: 50px;
-    border: 4px solid #333;
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(255, 255, 255, 0.1);
     border-top: 4px solid #fff;
     border-radius: 50%;
     animation: spin 1s linear infinite;
+    margin-bottom: 15px;
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    to { transform: rotate(360deg); }
 }
         .btn-draft:hover {
             background: #444;
@@ -2966,7 +2980,9 @@ window.showApplicationsList = async function() {
     const container = document.getElementById('dashboardContainer');
     document.querySelector('.vest-container').style.display = 'none';
     container.style.display = 'block';
-    document.body.style.background = "linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)";
+    
+    // Show a centered loader while fetching
+    container.innerHTML = `<div class="loading-box"><div class="spinner"></div><p>Fetching Applications...</p></div>`;
 
     const appRef = ref(db, `Applications/${currentUser.uid}`);
     const snapshot = await get(appRef);
@@ -2975,11 +2991,7 @@ window.showApplicationsList = async function() {
     container.innerHTML = `
         <div class="manage-vests-page">
             <div class="header-row">
-                <a href="#founder_dashboard" class="back-to-dash">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M19 12H5M12 19l-7-7 7-7"/>
-                    </svg> Dashboard
-                </a>
+                <a href="#founder_dashboard" class="back-to-dash">Dashboard</a>
                 <h1>My Funding Applications</h1>
             </div>
             
@@ -2992,43 +3004,83 @@ window.showApplicationsList = async function() {
                             : `window.location.hash='view_application_${id}'`;
 
                         return `
-                        <div class="vest-gig-card application-doc-card" onclick="${clickAction}">
-                            <div class="app-screenshot-preview">
-                                <div class="mini-white-sheet">
-                                    <div class="mini-line header"></div>
-                                    <div class="mini-title-box">${app.appHook ? app.appHook.substring(0, 20) + '...' : 'Untitled'}</div>
-                                    <div class="mini-body-content">
-                                        <div class="mini-line"></div>
-                                        <div class="mini-line"></div>
-                                        <div class="mini-line short"></div>
-                                    </div>
-                                    ${!isDraft ? `<div class="mini-black-card"></div>` : ''}
-                                </div>
-                                <div class="status-pill-overlay ${isDraft ? 'pill-draft' : 'pill-completed'}">
-                                    ${isDraft ? 'DRAFT' : 'COMPLETED'}
-                                </div>
+                        <div class="vest-gig-card application-doc-card">
+                            <div class="delete-app-wrapper" onclick="event.stopPropagation(); window.deleteApplication('${id}')" style="position:absolute; top:10px; right:10px; z-index:100; background:rgba(255,0,0,0.1); padding:8px; border-radius:50%; cursor:pointer;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ff4d4d" stroke-width="2">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                </svg>
                             </div>
+                            
+                            <div onclick="${clickAction}">
+                                <div class="app-screenshot-preview">
+                                    <div class="mini-white-sheet">
+                                        <div class="mini-title-box">${app.appName || 'Document'}</div>
+                                    </div>
+                                    <div class="status-pill-overlay ${isDraft ? 'pill-draft' : 'pill-completed'}">
+                                        ${isDraft ? 'DRAFT' : 'COMPLETED'}
+                                    </div>
+                                </div>
 
-                            <div class="vest-card-content">
-                                <h3 class="vest-hook-text">${app.appHook || 'New Funding Proposal'}</h3>
-                                <div class="vest-card-footer">
-                                    <span class="startup-label">${app.founderName || 'Founder'}</span>
-                                    <span class="doc-date">${new Date(app.updatedAt || Date.now()).toLocaleDateString()}</span>
+                                <div class="vest-card-content">
+                                    <h3 class="vest-hook-text">${app.appHook || 'New Funding Proposal'}</h3>
+                                    <div class="vest-card-footer">
+                                        <span class="startup-label">${app.founderName || 'Founder'}</span>
+                                        <span class="doc-date">${new Date(app.updatedAt).toLocaleDateString()}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         `;
-                    }).join('') : `
-                    <div class="empty-state" style="grid-column: 1/-1; padding:100px; text-align:center;">
-                        <p style="color:#666;">No applications yet.</p>
-                    </div>
-                `}
+                    }).join('') : `<p>No applications found.</p>`}
             </div>
             <div style="text-align:center; margin-top:40px;">
-                <button class="buy-btn-premium" style="width:auto; padding: 12px 40px;" onclick="window.promptNewApplication()">+ Create New Application</button>
+                <button class="buy-btn-premium" onclick="window.promptNewApplication()">+ Create New Application</button>
             </div>
         </div>
     `;
+};
+
+
+window.deleteApplication = async function(appId) {
+    if (!confirm("Are you sure you want to delete this application? This cannot be undone.")) return;
+
+    try {
+        // 1. Show centered loading state while deleting
+        const container = document.getElementById('dashboardContainer');
+        container.innerHTML = `
+            <div class="loading-box">
+                <div class="spinner"></div>
+                <p>Removing Document...</p>
+            </div>`;
+
+        // 2. References
+        const appPath = `Applications/${currentUser.uid}/${appId}`;
+        const profilePath = `founderProfile/${currentUser.uid}/applicationsCount`;
+
+        // 3. Get current count to decrement it
+        const profileRef = ref(db, `founderProfile/${currentUser.uid}`);
+        const snap = await get(profileRef);
+        const currentCount = snap.exists() ? (snap.val().applicationsCount || 0) : 0;
+        const newCount = Math.max(0, currentCount - 1); // Ensure it doesn't go below 0
+
+        // 4. Atomic Update (Delete App + Decrease Count)
+        await update(ref(db), {
+            [appPath]: null,
+            [profilePath]: newCount
+        });
+
+        // 5. Success UI
+        if (window.showSuccessToast) window.showSuccessToast("Application Deleted Permanently");
+        
+        // 6. Refresh the list
+        window.showApplicationsList();
+
+    } catch (error) {
+        console.error("Delete Error:", error);
+        alert("Failed to delete application. Check your connection.");
+        window.showApplicationsList(); // Return to list if failed
+    }
 };
 window.promptNewApplication = function() {
     // Create the modal overlay
