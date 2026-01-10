@@ -1707,12 +1707,14 @@ document.addEventListener('keydown', (e) => {
     }
 });
 window.launchVest = async function() {
+    console.log('🚀 Launch initiated...');
+    
     // Close completion popup if open
     closeCompletionPopup();
     
     const btn = event?.target?.closest('button');
     if (!btn) {
-        console.error('Button not found');
+        alert('❌ Button not found');
         return;
     }
     
@@ -1721,31 +1723,42 @@ window.launchVest = async function() {
     btn.disabled = true;
 
     try {
-        // Process files (safely handles missing inputs)
+        // Step 1: Process files
+        console.log('📁 Processing files...');
         await processAllFiles();
         
-        // Collect vest data
+        // Step 2: Collect vest data
+        console.log('📊 Collecting vest data...');
         const vestData = window.collectVestData();
         if (!vestData) throw new Error("Data collection failed");
+        
+        console.log('Vest data collected:', vestData);
         
         vestData.status = 'live';
         vestData.launchedAt = new Date().toISOString();
 
-        // Save to Firebase
+        // Step 3: Save to Firebase
+        console.log('💾 Saving to Firebase...');
         await set(ref(db, `Vests/${currentUser.uid}/Vest1`), vestData);
+        console.log('✅ Vest saved to Firebase');
         
-        // Update profile stats
+        // Step 4: Update founder profile stats
+        console.log('👤 Updating founder profile...');
         await update(ref(db, `founderProfile/${currentUser.uid}`), { 
             activeVestsCount: 1,
             lastLaunchedVest: new Date().toISOString()
         });
+        console.log('✅ Founder profile updated');
         
-        // Update Startup Profile if startup name exists
+        // Step 5: Update Startup Profile (only if startup name exists)
         if (vestData.StartupDetails?.startupName) {
+            console.log('🏢 Saving startup profile...');
             await saveStartupProfile(vestData);
+            console.log('✅ Startup profile saved');
         }
         
-        // Hide popup and vest form, show celebration
+        // Step 6: Show celebration
+        console.log('🎉 Showing celebration...');
         closeCompletionPopup();
         document.querySelector('.vest-container').style.display = 'none';
         
@@ -1753,24 +1766,24 @@ window.launchVest = async function() {
         celebration.classList.add('active');
         celebration.style.display = 'block';
         
-        // Scroll to top to see celebration
         window.scrollTo(0, 0);
+        console.log('✅ LAUNCH SUCCESSFUL!');
         
     } catch (error) {
-        console.error('Launch error:', error);
+        console.error('❌ Launch error:', error);
+        console.error('Error stack:', error.stack);
+        
         btn.innerHTML = '❌ Launch Failed';
         btn.disabled = false;
         
-        // Show user-friendly error
-        alert(`❌ Launch failed: ${error.message}\n\nPlease check the console for details and try again.`);
+        alert(`❌ Launch failed!\n\nError: ${error.message}\n\nCheck console (F12) for details.`);
         
-        // Re-enable button after 2 seconds
         setTimeout(() => {
             btn.innerHTML = originalText;
             btn.disabled = false;
         }, 2000);
     }
-};// ======================================================
+};
 // Simple validation helper
 function validateStep(step) {
     const activeStep = document.querySelector(`.step-content[data-step="${step}"]`);
@@ -2001,34 +2014,45 @@ document.getElementById('demoVideo')?.addEventListener('change', function(e) {
     // ========================================
     
 async function saveStartupProfile(vestData) {
-    if (!currentUser) return;
-    
-    const startupProfileRef = ref(db, `startupProfile/${currentUser.uid}`);
-    
-    // Check if startupProfile already exists
-    const existingProfile = await get(startupProfileRef);
-    
-    const startupData = {
-        startupName: vestData.startupName,
-        logo: vestData.startupLogoUrl,
-        description: vestData.startupDescription,
-        stage: vestData.startupStage,
-        category: vestData.category,
-        founderId: currentUser.uid,
-        updatedAt: new Date().toISOString()
-    };
-    
-    // Only generate startupId if it doesn't exist (PERMANENT)
-    if (!existingProfile.exists() || !existingProfile.val()?.startupId) {
-        startupData.startupId = generateStartupId();
-        startupData.createdAt = new Date().toISOString();
+    if (!currentUser) {
+        console.error('No current user');
+        return;
     }
     
-    await update(startupProfileRef, startupData); 
-    
-    return startupData;
-}
-    // ========================================
+    try {
+        const startupProfileRef = ref(db, `startupProfile/${currentUser.uid}`);
+        
+        // Check if startupProfile already exists
+        const existingProfile = await get(startupProfileRef);
+        
+        const startupData = {
+            startupName: vestData.StartupDetails?.startupName || '',
+            description: vestData.StartupDetails?.startupDescription || '',
+            stage: vestData.StartupDetails?.startupStage || '',
+            category: vestData.StartupDetails?.category || '',
+            revenue: vestData.StartupDetails?.currentRevenue || 0,
+            valuation: vestData.StartupDetails?.valuation || 0,
+            pitchDeckUrl: vestData.StartupDetails?.pitchDeckUrl || '',
+            founderId: currentUser.uid,
+            updatedAt: new Date().toISOString()
+        };
+        
+        // Only generate startupId if it doesn't exist (PERMANENT)
+        if (!existingProfile.exists() || !existingProfile.val()?.startupId) {
+            startupData.startupId = generateStartupId(startupData.startupName);
+            startupData.createdAt = new Date().toISOString();
+        }
+        
+        await update(startupProfileRef, startupData);
+        
+        console.log('✅ Startup profile saved:', startupData);
+        return startupData;
+        
+    } catch (error) {
+        console.error('Error saving startup profile:', error);
+        throw error; // Re-throw so launchVest can catch it
+    }
+}    // ========================================
     // SECTION 4: UPDATE createDashboard FUNCTION
     // ========================================
     
@@ -5275,7 +5299,7 @@ function updateStepDisplay() {
  }
 
     // 5. Data Collection & Saving
-  window.collectVestData = function() {
+ window.collectVestData = function() {
     // 1. Get User ID (Safety Fallback)
     const uid = currentUser ? currentUser.uid : (cachedFounderData?.userId || 'GUEST');
 
