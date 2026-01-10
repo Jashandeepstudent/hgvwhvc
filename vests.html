@@ -2998,6 +2998,8 @@ window.showApplicationsList = async function() {
     const container = document.getElementById('dashboardContainer');
     document.querySelector('.vest-container').style.display = 'none';
     container.style.display = 'block';
+    
+    // Force black background for dashboard list
     document.body.style.background = "linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)";
 
     const appRef = ref(db, `Applications/${currentUser.uid}`);
@@ -3005,6 +3007,7 @@ window.showApplicationsList = async function() {
     const apps = snapshot.val() || {};
 
     container.innerHTML = `
+        ${createNavBar()}
         <div class="manage-vests-page">
             <div class="header-row">
                 <a href="#founder_dashboard" class="back-to-dash">
@@ -3015,20 +3018,27 @@ window.showApplicationsList = async function() {
                 <h1>My Funding Applications</h1>
             </div>
             
-            <div class="vest-cards-grid">
+            <div class="vest-cards-grid" id="appsGrid">
                 ${Object.entries(apps).length > 0 ? 
                     Object.entries(apps).map(([id, app]) => {
+                        
+                        // --- CONSTANTS MOVED INSIDE THE LOOP (FIXES THE ERROR) ---
                         const isDraft = app.status === 'incomplete';
+                        
                         const clickAction = isDraft 
                             ? `window.renderApplicationForm('${id}', '${app.appName || "Draft"}')` 
                             : `window.location.hash='view_application_${id}'`;
+
+                        const statusPill = isDraft
+                            ? `<div class="status-pill-overlay pill-draft">DRAFT</div>`
+                            : `<div class="status-pill-overlay pill-completed">COMPLETED</div>`;
 
                         return `
                         <div class="vest-gig-card application-doc-card" onclick="${clickAction}">
                             <div class="app-screenshot-preview">
                                 <div class="mini-white-sheet">
                                     <div class="mini-line header"></div>
-                                    <div class="mini-title-box">${app.appHook ? app.appHook.substring(0, 20) + '...' : 'Untitled'}</div>
+                                    <div class="mini-title-box">${app.appHook ? app.appHook.substring(0, 25) + '...' : 'UNTITLED DOCUMENT'}</div>
                                     <div class="mini-body-content">
                                         <div class="mini-line"></div>
                                         <div class="mini-line"></div>
@@ -3036,23 +3046,21 @@ window.showApplicationsList = async function() {
                                     </div>
                                     ${!isDraft ? `<div class="mini-black-card"></div>` : ''}
                                 </div>
-                                <div class="status-pill-overlay ${isDraft ? 'pill-draft' : 'pill-completed'}">
-                                    ${isDraft ? 'DRAFT' : 'COMPLETED'}
-                                </div>
+                                ${statusPill}
                             </div>
 
                             <div class="vest-card-content">
                                 <h3 class="vest-hook-text">${app.appHook || 'New Funding Proposal'}</h3>
                                 <div class="vest-card-footer">
                                     <span class="startup-label">${app.founderName || 'Founder'}</span>
-                                    <span class="doc-date">${new Date(app.updatedAt || Date.now()).toLocaleDateString()}</span>
+                                    <span class="doc-date">ID: ${id.substring(0,6).toUpperCase()}</span>
                                 </div>
                             </div>
                         </div>
                         `;
                     }).join('') : `
                     <div class="empty-state" style="grid-column: 1/-1; padding:100px; text-align:center;">
-                        <p style="color:#666;">No applications yet.</p>
+                        <p style="color:#666;">No applications created. Click below to start.</p>
                     </div>
                 `}
             </div>
@@ -3062,6 +3070,7 @@ window.showApplicationsList = async function() {
         </div>
     `;
 };
+
 // --- 2. INITIALIZATION: NAME THE APPLICATION ---
 window.promptNewApplication = function() {
     const modal = document.createElement('div');
