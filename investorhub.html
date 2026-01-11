@@ -1111,37 +1111,40 @@ window.launchAngelProfile = async function() {
     if (!currentUserUID) return alert("Session expired.");
     
     const launchBtn = document.getElementById('launchBtn');
+    // Select the parent container of the button to hide it later
+    const actionContainer = launchBtn.parentElement; 
+
     launchBtn.disabled = true;
     launchBtn.innerText = "LAUNCHING...";
 
     try {
-        // 1. Fetch existing data from investorProfiles
         const oldRef = ref(database, `investorProfiles/${currentUserUID}`);
         const snapshot = await get(oldRef);
 
         if (snapshot.exists()) {
             const userData = snapshot.val();
 
-            // 2. Prepare New Data Node
             const angelData = {
-                ...userData,              // Copy all existing fields
-                status: "Live",           // Add new status
+                ...userData,
+                status: "Live", // Setting status to Live
                 launchedAt: new Date().toISOString(),
                 lastUpdated: new Date().toISOString()
             };
 
-            // 3. Save to new node: angleProfiles
-            await update(ref(database, `angleProfiles/${currentUserUID}`), angelData);
+            // ✅ Corrected path to "angelProfiles"
+            await update(ref(database, `angelProfiles/${currentUserUID}`), angelData);
 
             alert("CONGRATULATIONS! Your Angel Profile is now LIVE.");
-            launchBtn.innerText = "PROFILE LIVE";
-            launchBtn.style.background = "#3b82f6"; // Change to blue to show success
+            
+            // ✅ Hide the button/action area since it's now Live
+            actionContainer.innerHTML = `<div style="color: #10b981; font-weight: bold; padding: 10px; border: 1px solid #10b981; border-radius: 8px;">✓ PROFILE LIVE</div>`;
+            
         } else {
             alert("Error: Profile data not found.");
         }
     } catch (error) {
         console.error("Migration Error:", error);
-        alert("Launch failed. Check your database rules.");
+        alert("Launch failed.");
     } finally {
         launchBtn.disabled = false;
     }
