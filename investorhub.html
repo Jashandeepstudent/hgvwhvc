@@ -844,6 +844,7 @@
     import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+    // Firebase Configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
@@ -856,6 +857,7 @@ const firebaseConfig = {
   measurementId: "G-QD3TWBZHR0"
 };
 
+    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
     const auth = getAuth(app);
@@ -868,50 +870,58 @@ const firebaseConfig = {
             currentUserUID = user.uid;
             loadUserProfile(user.uid);
         } else {
-            // No user? Kick them out
+            // No user? Redirect to login
             window.location.href = "login3.html";
         }
     });
 
     // 2. LOAD DATA & CHECK FOR USER ID
     async function loadUserProfile(uid) {
-        const userRef = ref(database, 'investorProfiles/' + uid);
-        const snapshot = await get(userRef);
+        try {
+            const userRef = ref(database, 'investorProfiles/' + uid);
+            const snapshot = await get(userRef);
 
-        if (snapshot.exists()) {
-            const data = snapshot.val();
+            if (snapshot.exists()) {
+                const data = snapshot.val();
 
-            // A. Update Sidebar UI
-            document.getElementById('profileName').innerText = data.fullName || "Investor";
-            document.getElementById('profileNetWorth').innerText = data.netWorth ? `$${data.netWorth}` : "-";
-            
-            // Handle Photo
-            const avatarDiv = document.getElementById('profileAvatar');
-            if (data.photoURL) {
-                avatarDiv.innerHTML = `<img src="${data.photoURL}" alt="Profile">`;
-            } else {
-                // Initials fallback
-                const initials = (data.fullName || "U").charAt(0).toUpperCase();
-                avatarDiv.innerHTML = `<span>${initials}</span>`;
+                // A. Update Sidebar UI
+                document.getElementById('profileName').innerText = data.fullName || "Investor";
+                document.getElementById('profileNetWorth').innerText = data.netWorth ? `$${data.netWorth}` : "-";
+                
+                // Handle Photo
+                const avatarDiv = document.getElementById('profileAvatar');
+                if (data.photoURL) {
+                    avatarDiv.innerHTML = `<img src="${data.photoURL}" alt="Profile" style="width:100%; height:100%; border-radius:50%;">`;
+                } else {
+                    const initials = (data.fullName || "U").charAt(0).toUpperCase();
+                    avatarDiv.innerHTML = `<span>${initials}</span>`;
+                }
+
+                // B. CHECK: Does UserID exist?
+                if (data.userID) {
+                    document.getElementById('profileId').innerText = data.userID;
+                } else {
+                    // Show Modal if ID is missing
+                    document.getElementById('userIdModal').style.display = "flex";
+                }
             }
-
-            // B. CHECK: Does UserID exist?
-            if (data.userID) {
-                // Yes: Show it
-                document.getElementById('profileId').innerText = data.userID;
-            } else {
-                // No: Show the Modal forcing them to create one
-                document.getElementById('userIdModal').style.display = "flex";
-            }
+        } catch (error) {
+            console.error("Error loading profile:", error);
         }
     }
 
-    // 3. SAVE THE NEW USER ID (Triggered by Modal Button)
+    // 3. SAVE THE NEW USER ID
     window.saveUserID = async function() {
-        const newId = document.getElementById('newUserIdInput').value.trim().toUpperCase();
+        const inputElement = document.getElementById('newUserIdInput');
+        const newId = inputElement.value.trim().toUpperCase();
 
         if (newId.length < 3) {
             alert("ID must be at least 3 characters.");
+            return;
+        }
+
+        if (!currentUserUID) {
+            alert("User not authenticated.");
             return;
         }
 
@@ -927,8 +937,8 @@ const firebaseConfig = {
             alert("Identity Verified. Welcome.");
 
         } catch (error) {
-            console.error(error);
-            alert("Error saving ID.");
+            console.error("Error saving ID:", error);
+            alert("Error saving ID. Check your database rules.");
         }
     };
 </script>
