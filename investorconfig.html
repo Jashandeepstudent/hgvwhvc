@@ -3,221 +3,246 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Investor Config | ScaleVest</title>
+    <title>Investor Terminal | ScaleVest 2026</title>
     <style>
         :root {
             --bg-black: #050505;
-            --surface: rgba(10, 10, 11, 0.9);
+            --surface: rgba(10, 10, 11, 0.85);
             --accent-blue: #007bff;
             --accent-green: #00ffaa;
             --text-main: #ffffff;
             --text-dim: #94a3b8;
-            --border: rgba(255, 255, 255, 0.1);
-            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            --border: rgba(255, 255, 255, 0.08);
+            --transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background: var(--bg-black);
             color: var(--text-main);
             overflow-x: hidden;
+            line-height: 1.6;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
         }
 
-        /* Ambient Background */
-        .bg-glow {
+        /* Ambient Cinematic BG */
+        .glow-bg {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle at 10% 10%, rgba(0, 123, 255, 0.15), transparent),
-                        radial-gradient(circle at 90% 90%, rgba(0, 255, 170, 0.1), transparent);
+            background: radial-gradient(circle at 10% 10%, rgba(0, 123, 255, 0.1), transparent),
+                        radial-gradient(circle at 90% 90%, rgba(0, 255, 170, 0.08), transparent);
             z-index: -1;
         }
 
         /* --- WELCOME SCREEN --- */
         #welcomeScreen {
             text-align: center;
+            animation: fadeIn 1.2s ease forwards;
             max-width: 600px;
-            animation: fadeIn 1s ease forwards;
         }
 
         .gradient-text {
             background: linear-gradient(to right, var(--accent-blue), var(--accent-green));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            font-weight: 900;
         }
 
-        h1 { font-size: 3.5rem; letter-spacing: -2px; margin-bottom: 1rem; }
-        p { color: var(--text-dim); font-size: 1.2rem; margin-bottom: 2rem; }
+        h1 { font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 900; letter-spacing: -3px; margin-bottom: 1rem; }
+        .welcome-p { font-size: 1.3rem; color: var(--text-dim); margin-bottom: 2.5rem; }
 
-        /* --- CONFIG FORM --- */
-        #configForm {
+        /* --- FORM CONTAINER (TERMINAL STYLE) --- */
+        #formContainer {
             display: none;
             width: 90%;
-            max-width: 800px;
+            max-width: 900px;
             background: var(--surface);
-            backdrop-filter: blur(20px);
-            padding: 3rem;
-            border-radius: 40px;
+            backdrop-filter: blur(40px);
             border: 1px solid var(--border);
+            border-radius: 40px;
+            padding: 3rem;
             margin: 2rem 0;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            box-shadow: 0 40px 100px rgba(0,0,0,0.8);
         }
+
+        .terminal-header { margin-bottom: 2.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; }
+        .terminal-header h2 { font-size: 2rem; font-weight: 900; letter-spacing: -1px; }
 
         .form-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
+            gap: 25px;
         }
 
-        .input-group { margin-bottom: 20px; }
         .full-width { grid-column: span 2; }
 
-        label { display: block; margin-bottom: 8px; font-weight: 700; color: var(--accent-green); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
-        
+        .input-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 800;
+            color: var(--accent-green);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+        }
+
         input, select {
             width: 100%;
-            padding: 15px;
-            background: rgba(255,255,255,0.05);
+            padding: 18px;
+            background: rgba(255,255,255,0.03);
             border: 1px solid var(--border);
-            border-radius: 12px;
-            color: white;
+            border-radius: 15px;
+            color: #fff;
             font-size: 1rem;
             transition: var(--transition);
         }
 
-        input:focus { border-color: var(--accent-blue); outline: none; background: rgba(255,255,255,0.1); }
+        input:focus { border-color: var(--accent-blue); outline: none; background: rgba(255,255,255,0.07); }
 
-        /* --- CATEGORY MULTI-SELECT --- */
-        .category-container {
+        /* --- CATEGORY MULTI-SELECT CHIPS --- */
+        .category-grid {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 12px;
             margin-top: 10px;
         }
 
         .cat-chip {
-            padding: 8px 16px;
+            padding: 10px 20px;
             background: rgba(255,255,255,0.05);
             border: 1px solid var(--border);
-            border-radius: 50px;
+            border-radius: 100px;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            font-weight: 600;
             transition: var(--transition);
         }
 
+        .cat-chip:hover { border-color: var(--accent-blue); }
         .cat-chip.selected {
             background: var(--accent-blue);
+            color: white;
             border-color: var(--accent-blue);
-            box-shadow: 0 0 15px rgba(0, 123, 255, 0.4);
+            box-shadow: 0 0 20px rgba(0, 123, 255, 0.4);
         }
 
-        /* --- PROFILE PHOTO --- */
+        /* --- PHOTO UPLOAD --- */
         .photo-upload {
-            text-align: center;
-            padding: 20px;
+            position: relative;
+            width: 150px;
+            height: 150px;
             border: 2px dashed var(--border);
-            border-radius: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
+            margin: 0 auto 20px;
             transition: var(--transition);
+            overflow: hidden;
         }
 
-        .photo-upload:hover { border-color: var(--accent-green); background: rgba(0,255,170,0.05); }
-        #avatarPreview { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-top: 10px; display: none; margin-left: auto; margin-right: auto; border: 2px solid var(--accent-green); }
+        .photo-upload:hover { border-color: var(--accent-green); background: rgba(0, 255, 170, 0.05); }
+        #avatarPreview { width: 100%; height: 100%; object-fit: cover; display: none; }
+        .photo-upload span { font-size: 0.7rem; text-align: center; color: var(--text-dim); }
 
         /* --- BUTTONS --- */
-        .btn-main {
-            padding: 1.2rem 3rem;
+        .btn-action {
+            padding: 1.2rem 3.5rem;
             border-radius: 100px;
             border: none;
-            background: linear-gradient(135deg, var(--accent-blue), var(--accent-green));
-            color: black;
             font-weight: 900;
             text-transform: uppercase;
             cursor: pointer;
             transition: var(--transition);
+            font-size: 1.1rem;
+        }
+
+        .btn-start { background: transparent; border: 1px solid var(--accent-blue); color: #fff; }
+        .btn-start:hover { background: var(--accent-blue); box-shadow: 0 0 30px var(--accent-blue); }
+
+        .btn-complete {
+            background: linear-gradient(to right, var(--accent-blue), var(--accent-green));
+            color: black;
             width: 100%;
-            margin-top: 1rem;
+            margin-top: 2rem;
         }
 
-        .btn-main:hover { transform: scale(1.02); box-shadow: 0 10px 30px rgba(0, 255, 170, 0.3); }
+        .btn-complete:hover { transform: scale(1.02); box-shadow: 0 0 40px rgba(0, 255, 170, 0.3); }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        
-        @media (max-width: 700px) {
-            .form-grid { grid-template-columns: 1fr; }
-            .full-width { grid-column: span 1; }
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+        @media (max-width: 750px) { .form-grid { grid-template-columns: 1fr; } .full-width { grid-column: span 1; } }
     </style>
 </head>
 <body>
 
-    <div class="bg-glow"></div>
+    <div class="glow-bg"></div>
 
     <div id="welcomeScreen">
         <h1>Welcome to <span class="gradient-text">Investor Side</span></h1>
-        <p>Let's finalize your deployment configuration to start connecting with verified startups.</p>
-        <button class="btn-main" onclick="showForm()">Get Started</button>
+        <p class="welcome-p">Initialize your private command center and set your investment thesis.</p>
+        <button class="btn-action btn-start" onclick="showForm()">Get Started</button>
     </div>
 
-    <div id="configForm">
-        <h2 style="margin-bottom: 2rem; letter-spacing: -1px;">Configuration <span class="gradient-text">Terminal</span></h2>
-        
-        <div class="form-grid">
-            <div class="input-group">
-                <label>Full Name</label>
-                <input type="text" id="fullName" placeholder="Fetching...">
-            </div>
-            <div class="input-group">
-                <label>Age</label>
-                <input type="number" id="age" placeholder="0">
-            </div>
-            <div class="input-group full-width">
-                <label>Investor Type</label>
-                <input type="text" id="investorType" readonly style="color: var(--text-dim);">
+    <div id="formContainer">
+        <div class="terminal-header">
+            <h2>Investor <span class="gradient-text">Profile Config</span></h2>
+        </div>
+
+        <form id="investorForm">
+            <div class="photo-upload" onclick="document.getElementById('photoInput').click()">
+                <span id="uploadText">Click to Upload Avatar</span>
+                <img id="avatarPreview">
+                <input type="file" id="photoInput" hidden accept="image/*" onchange="previewAvatar(event)">
             </div>
 
-            <div class="input-group">
-                <label>Total Net Worth ($)</label>
-                <input type="text" id="netWorth" placeholder="e.g. 5M">
-            </div>
-            <div class="input-group">
-                <label>Min Investment ($)</label>
-                <input type="number" id="minInv" placeholder="10000">
-            </div>
-            <div class="input-group">
-                <label>Max Investment ($)</label>
-                <input type="number" id="maxInv" placeholder="500000">
-            </div>
+            <div class="form-grid">
+                <div class="input-group">
+                    <label>Full Name</label>
+                    <input type="text" id="fullName" placeholder="Loading...">
+                </div>
+                <div class="input-group">
+                    <label>Age</label>
+                    <input type="number" id="age">
+                </div>
+                <div class="input-group full-width">
+                    <label>Investor Type</label>
+                    <input type="text" id="investorType" readonly style="opacity: 0.6; cursor: not-allowed;">
+                </div>
 
-            <div class="input-group">
-                <label>Investor Avatar</label>
-                <div class="photo-upload" onclick="document.getElementById('photoInput').click()">
-                    <span>Click to Upload Photo</span>
-                    <input type="file" id="photoInput" hidden accept="image/*" onchange="previewImage(event)">
-                    <img id="avatarPreview">
+                <div class="input-group">
+                    <label>Total Net Worth ($)</label>
+                    <input type="number" id="netWorth" placeholder="e.g. 1000000">
+                </div>
+                <div class="input-group">
+                    <label>Min Investment per Deal ($)</label>
+                    <input type="number" id="minInvestment" placeholder="e.g. 10000">
+                </div>
+                <div class="input-group full-width">
+                    <label>Maximum Investment Capacity ($)</label>
+                    <input type="number" id="maxInvestment" placeholder="e.g. 500000">
+                </div>
+
+                <div class="input-group full-width">
+                    <label>Target Startup Categories (Select multiple)</label>
+                    <div class="category-grid" id="categoryGrid">
+                        </div>
                 </div>
             </div>
 
-            <div class="input-group full-width">
-                <label>Preferred Startup Categories (Select Multiple)</label>
-                <div class="category-container" id="categoryGrid">
-                    </div>
-            </div>
-        </div>
-
-        <button class="btn-main" onclick="completeConfig()">Complete Setup</button>
+            <button type="submit" class="btn-action btn-complete">Deploy Profile</button>
+        </form>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getDatabase, ref, set, get, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
@@ -226,86 +251,97 @@
             projectId: "scalevest-163a0",
             storageBucket: "scalevest-163a0.firebasestorage.app",
             messagingSenderId: "938358950124",
-            appId: "1:938358950124:web:043506aeaacea2a96bfdc9"
+            appId: "1:938358950124:web:043506aeaacea2a96bfdc9",
+            measurementId: "G-QD3TWBZHR0"
         };
 
         const app = initializeApp(firebaseConfig);
-        const database = getDatabase(app);
         const auth = getAuth(app);
+        const database = getDatabase(app);
 
         const categories = ["AgTech", "AdTech", "AI/ML", "Aerospace", "AutoTech", "BioTech", "Blockchain", "B2B SaaS", "CleanTech", "Cybersecurity", "ClimateTech", "EdTech", "E-commerce", "FinTech", "FoodTech", "GameTech", "HealthTech", "InsurTech", "IoT", "LegalTech", "Logistics", "MarTech", "MedTech", "PropTech", "SaaS", "SpaceTech", "TravelTech", "VR/AR", "Web3"];
         let selectedCategories = [];
-        let userUID = null;
+        let currentUID = null;
 
-        // --- AUTH & DATA FETCHING ---
+        // --- FETCH PRE-FILLED DATA ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                userUID = user.uid;
-                const snapshot = await get(ref(database, `investorProfiles/${user.uid}`));
+                currentUID = user.uid;
+                const userRef = ref(database, `investorProfiles/${user.uid}`);
+                const snapshot = await get(userRef);
                 if (snapshot.exists()) {
                     const data = snapshot.val();
-                    document.getElementById('fullName').value = data.fullName || "";
-                    document.getElementById('age').value = data.age || "";
-                    document.getElementById('investorType').value = data.investorType || "Not Specified";
+                    document.getElementById('fullName').value = data.fullName || '';
+                    document.getElementById('age').value = data.age || '';
+                    document.getElementById('investorType').value = data.investorType || '';
                 }
             } else {
-                window.location.href = "login3.html";
+                window.location.href = 'login3.html';
             }
         });
 
-        // --- UI FUNCTIONS ---
+        // --- UI LOGIC ---
         window.showForm = () => {
             document.getElementById('welcomeScreen').style.display = 'none';
-            document.getElementById('configForm').style.display = 'block';
-            renderCategories();
+            document.getElementById('formContainer').style.display = 'block';
+            initCategories();
         };
 
-        function renderCategories() {
+        function initCategories() {
             const grid = document.getElementById('categoryGrid');
             categories.forEach(cat => {
                 const chip = document.createElement('div');
                 chip.className = 'cat-chip';
                 chip.innerText = cat;
-                chip.onclick = () => toggleCategory(cat, chip);
+                chip.onclick = () => {
+                    chip.classList.toggle('selected');
+                    if(selectedCategories.includes(cat)) {
+                        selectedCategories = selectedCategories.filter(i => i !== cat);
+                    } else {
+                        selectedCategories.push(cat);
+                    }
+                };
                 grid.appendChild(chip);
             });
         }
 
-        function toggleCategory(cat, el) {
-            if (selectedCategories.includes(cat)) {
-                selectedCategories = selectedCategories.filter(c => c !== cat);
-                el.classList.remove('selected');
-            } else {
-                selectedCategories.push(cat);
-                el.classList.add('selected');
+        window.previewAvatar = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    document.getElementById('avatarPreview').src = event.target.result;
+                    document.getElementById('avatarPreview').style.display = 'block';
+                    document.getElementById('uploadText').style.display = 'none';
+                };
+                reader.readAsDataURL(file);
             }
-        }
-
-        window.previewImage = (event) => {
-            const preview = document.getElementById('avatarPreview');
-            preview.src = URL.createObjectURL(event.target.files[0]);
-            preview.style.display = 'block';
         };
 
-        // --- SAVE DATA ---
-        window.completeConfig = async () => {
-            const updateData = {
+        // --- SAVE DATA & REDIRECT ---
+        document.getElementById('investorForm').onsubmit = async (e) => {
+            e.preventDefault();
+            if (selectedCategories.length === 0) {
+                alert("Please select at least one preferred category.");
+                return;
+            }
+
+            const profileData = {
                 fullName: document.getElementById('fullName').value,
                 age: document.getElementById('age').value,
                 netWorth: document.getElementById('netWorth').value,
-                minInvestment: document.getElementById('minInv').value,
-                maxInvestment: document.getElementById('maxInv').value,
+                minInvestment: document.getElementById('minInvestment').value,
+                maxInvestment: document.getElementById('maxInvestment').value,
                 preferredCategories: selectedCategories,
-                configComplete: true,
-                lastUpdated: Date.now()
+                setupComplete: true,
+                updatedAt: Date.now()
             };
 
             try {
-                await update(ref(database, `investorProfiles/${userUID}`), updateData);
-                alert("Profile Successfully Deployed!");
-                window.location.href = "investorhub.html";
-            } catch (error) {
-                alert("Error saving profile: " + error.message);
+                await update(ref(database, `investorProfiles/${currentUID}`), profileData);
+                window.location.href = 'investorhub.html';
+            } catch (err) {
+                alert("Error saving profile: " + err.message);
             }
         };
     </script>
