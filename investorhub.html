@@ -518,6 +518,36 @@
             font-weight: 700;
             color: #10b981;
         }
+
+.logo {
+    display: flex;         /* Allows image and text to sit side-by-side */
+    align-items: center;   /* Centers them vertically */
+    gap: 12px;             /* Space between the image and the text */
+    font-size: 2rem;
+    font-weight: 700;
+    color: #10b981;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.3s;
+    text-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+}
+
+.nav-logo-img {
+    height: 40px;          /* Adjust this height to match your text size */
+    width: auto;           /* Keeps the logo proportions correct */
+    object-fit: contain;
+    filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.3)); /* Optional: gives logo a glow */
+}
+
+/* Ensure the logo doesn't shrink on small screens */
+@media (max-width: 480px) {
+    .nav-logo-img {
+        height: 30px;
+    }
+    .logo {
+        font-size: 1.5rem;
+    }
+}
 /* === PROFILE CARD TEXT VISIBILITY BOOST === */
 
 /* User ID */
@@ -735,8 +765,12 @@
     </div>
 </div>
     <!-- Top Navigation -->
-    <nav class="top-nav">
-        <div class="logo">ScaleVest</div>
+<nav class="top-nav">
+    <div class="logo">
+        <img src="ScaleVestLogo.png" alt="ScaleVest Logo" class="nav-logo-img">
+        <span>ScaleVest</span>
+    </div>
+    </nav>
 
         <div class="nav-links">
             <a href="#dashboard" class="nav-link">Dashboard</a>
