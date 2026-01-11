@@ -595,7 +595,31 @@
             padding: 3rem;
             margin-top: 4rem;
         }
+/* Enhanced Avatar Styles */
+.profile-avatar {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #10b981, #3b82f6);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin: 0 auto 1.5rem;
+    box-shadow: 0 5px 20px rgba(16, 185, 129, 0.4);
+    overflow: hidden; /* CRITICAL: Clips the image to the circle */
+    position: relative;
+    border: 2px solid rgba(16, 185, 129, 0.5);
+}
 
+.profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* CRITICAL: Prevents image stretching */
+    display: block;
+}
         .footer-content {
             max-width: 1800px;
             margin: 0 auto;
@@ -942,33 +966,42 @@ onAuthStateChanged(auth, async (user) => {
     await loadUserProfile(user.uid);
 });
 
-/* ✅ LOAD PROFILE (IMAGE INCLUDED) */
 async function loadUserProfile(uid) {
     try {
         const snapshot = await get(ref(database, "investorProfiles/" + uid));
         if (!snapshot.exists()) return;
 
         const data = snapshot.val();
-
-        document.getElementById("profileName").innerText = data.fullName || "Investor";
-        document.getElementById("profileNetWorth").innerText =
-            data.netWorth ? `$${data.netWorth}` : "-";
-
         const avatar = document.getElementById("profileAvatar");
+        const initials = (data.fullName || "U")[0].toUpperCase();
 
-        if (data.photoURL && data.photoURL.startsWith("https")) {
-            avatar.innerHTML = `
-                <img 
-                    src="${data.photoURL}" 
-                    alt="Profile"
-                    style="width:100%;height:100%;border-radius:50%;object-fit:cover;"
-                    onerror="this.remove()"
-                >
-            `;
+        // Update Text Info
+        document.getElementById("profileName").innerText = data.fullName || "Investor";
+        document.getElementById("profileNetWorth").innerText = data.netWorth ? `$${data.netWorth}` : "-";
+
+        // --- AVATAR LOGIC ---
+        if (data.photoURL && data.photoURL.length > 10) {
+            // Create the image element
+            const img = document.createElement('img');
+            img.src = data.photoURL;
+            img.alt = "Investor Profile";
+            
+            // If the image loads successfully, clear the div and add it
+            img.onload = function() {
+                avatar.innerHTML = ""; 
+                avatar.appendChild(img);
+            };
+
+            // If the image fails (404 or bad URL), show initials instead
+            img.onerror = function() {
+                avatar.innerHTML = `<span>${initials}</span>`;
+            };
         } else {
-            avatar.innerHTML = `<span>${(data.fullName || "U")[0]}</span>`;
+            // No URL found in database? Show initials
+            avatar.innerHTML = `<span>${initials}</span>`;
         }
 
+        // --- USER ID LOGIC ---
         if (data.userID) {
             document.getElementById("profileId").innerText = data.userID;
         } else {
@@ -979,7 +1012,6 @@ async function loadUserProfile(uid) {
         console.error("Profile load failed:", err);
     }
 }
-
 /* ✅ SAVE USER ID */
 window.saveUserID = async function () {
     const newId = document.getElementById("newUserIdInput").value.trim().toUpperCase();
