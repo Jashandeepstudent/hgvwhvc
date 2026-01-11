@@ -487,52 +487,7 @@
     border-radius: 2px;
 }
 .mini-line.header { width: 30%; background: #ddd; height: 5px; margin-bottom: 10px; }
-/* --- NEW CREATE BUTTON STYLE --- */
-.create-vest-btn {
-    background: linear-gradient(135deg, #ff006e, #8338ec);
-    color: #fff;
-    border: none;
-    padding: 10px 20px; /* Compact padding */
-    border-radius: 8px;
-    font-weight: 700;
-    font-size: 0.9rem;
-    cursor: pointer;
-    display: inline-flex; /* Prevents stretching */
-    align-items: center;
-    gap: 8px;
-    transition: all 0.2s ease;
-    white-space: nowrap; /* Keeps text on one line */
-    box-shadow: 0 4px 15px rgba(255, 0, 110, 0.3);
-}
 
-.create-vest-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(255, 0, 110, 0.5);
-}
-
-/* --- ENSURE LOADING SCREEN IS CENTERED --- */
-#loadingScreen {
-    display: flex !important; /* Force flex to center content */
-    align-items: center;
-    justify-content: center;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: #0a0a0a; /* distinct background */
-    z-index: 999999;
-}
-
-/* Spinner for the transition */
-.center-spinner {
-    width: 50px;
-    height: 50px;
-    border: 5px solid rgba(255,255,255,0.1);
-    border-top: 5px solid #ff006e; /* ScaleVest Pink */
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
 .mini-title-box {
     font-size: 6px;
     font-weight: 900;
@@ -1654,45 +1609,7 @@
     margin-bottom: 0.25rem;
     display: flex; align-items: center; gap: 8px;
 }
-/* --- 1. FORCE LOADING SCREEN CENTERING --- */
-#loadingScreen {
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: #0a0a0a;
-    z-index: 999999;
-}
 
-/* --- 2. COMPACT CREATE BUTTON --- */
-.create-vest-btn {
-    background: linear-gradient(135deg, #ff006e, #8338ec);
-    color: #fff;
-    border: none;
-    /* Small, tight padding */
-    padding: 8px 16px !important; 
-    border-radius: 8px;
-    font-weight: 700;
-    font-size: 0.85rem;
-    cursor: pointer;
-    /* Inline-flex prevents stretching */
-    display: inline-flex !important; 
-    align-items: center;
-    gap: 8px;
-    width: auto !important; /* Forces it to fit content */
-    flex: none !important; /* Prevents flexbox growing */
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 15px rgba(255, 0, 110, 0.3);
-}
-
-.create-vest-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(255, 0, 110, 0.5);
-}
 .pdf-filesize {
     font-size: 0.85rem; color: #888;
 }
@@ -2902,14 +2819,11 @@ window.showTokenShop = async function() {
         </div>
     `;
 };
-window.showManageVests = async function() {
+async function showManageVests() {
     document.title = "Manage Your Vests | ScaleVest";
     const container = document.getElementById('dashboardContainer');
     container.style.display = 'block';
-    
-    // Hide other containers to prevent overlap
-    const vestContainer = document.querySelector('.vest-container');
-    if(vestContainer) vestContainer.style.display = 'none';
+    document.querySelector('.vest-container').style.display = 'none';
 
     // 1. Fetch real data from Firebase
     const vestsRef = ref(db, `Vests/${currentUser.uid}`);
@@ -2921,23 +2835,14 @@ window.showManageVests = async function() {
     const draftVests = Object.values(vestsData).filter(v => v.status === 'draft');
 
     container.innerHTML = `
+        
         <div class="manage-vests-page">
-            <div class="header-row" style="display:flex; justify-content:space-between; align-items:center;">
-                <div style="display:flex; align-items:center; gap:20px;">
-                    <a href="#founder_dashboard" class="back-to-dash">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                        Back to Dashboard
-                    </a>
-                    <h1 style="margin:0; font-size: 2rem;">Manage Your Vests</h1>
-                </div>
-
-                <button onclick="initiateVestCreation()" class="create-vest-btn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                        <line x1="12" y1="5" x2="12" y2="19"></line>
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
-                    Create New Vest
-                </button>
+            <div class="header-row">
+                <a href="#founder_dashboard" class="back-to-dash">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                    Back to Dashboard
+                </a>
+                <h1>Manage Your Vests</h1>
             </div>
 
             <div class="vest-stats-grid">
@@ -2976,28 +2881,27 @@ window.showManageVests = async function() {
         </div>
     `;
 }
-window.initiateVestCreation = function() {
-    // 1. Show Loading Screen (Centered via CSS above)
-    const loader = document.getElementById('loadingScreen');
-    loader.classList.remove('hidden');
 
-    // 2. Clear old data (Optional but recommended)
-    if(window.clearFormStorage) {
-        window.clearFormStorage();
+
+// Buy Tokens Logic
+window.addTokensToDB = async function(amount) {
+    if (!currentUser) return;
+    try {
+        const currentTokens = await getLiveTokens();
+        const newTotal = currentTokens + amount;
+        
+        await update(ref(db, `founderProfile/${currentUser.uid}`), {
+            scaleTokens: newTotal
+        });
+        
+        alert(`✅ Success! Added ${amount} tokens. New balance: ${newTotal}`);
+        showScaleShop(); // Take user to use their new tokens
+    } catch (e) {
+        console.error(e);
+        alert("Transaction failed. Check connection.");
     }
-
-    // 3. Navigate after small delay to show animation
-    setTimeout(() => {
-        // Reset step counter
-        if(typeof currentStep !== 'undefined') currentStep = 1;
-        
-        // Change URL Hash -> Triggers routing -> Hides Loader
-        window.location.hash = 'vest_step1';
-        
-        // Force scroll to top
-        window.scrollTo(0, 0);
-    }, 600);
 };
+
 // Use Tokens Logic
 window.handleTokenRedeem = async function(cost, planName) {
     const currentTokens = await getLiveTokens();
