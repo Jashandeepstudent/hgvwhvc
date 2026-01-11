@@ -114,6 +114,166 @@
     box-shadow: 0 8px 20px rgba(255, 255, 255, 0.15);
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
+/* ===============================
+   APP CARD DELETE (LUXURY FIX)
+================================ */
+.delete-app-wrapper {
+    opacity: 1 !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+
+    background: #ffffff !important;
+    color: #000000 !important;
+
+    border: 1px solid rgba(0,0,0,0.15) !important;
+    border-radius: 10px;
+
+    padding: 6px 10px;
+
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    transition: all 0.25s ease;
+}
+
+.delete-app-wrapper:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+}
+
+/* ===============================
+   FORM HEADER BUTTON ROW
+================================ */
+.form-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+}
+
+/* Back / Save (Luxury Neutral) */
+.btn-back-save {
+    background: #ffffff;
+    color: #000000;
+
+    border: 1px solid rgba(0,0,0,0.2);
+    border-radius: 10px;
+
+    padding: 10px 18px;
+    font-weight: 700;
+    font-size: 0.85rem;
+
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    cursor: pointer;
+    transition: all 0.25s ease;
+
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.btn-back-save:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.22);
+}
+
+/* ===============================
+   FORM FOOTER ACTIONS
+================================ */
+.form-actions-footer {
+    display: flex;
+    gap: 16px;
+    margin-top: 32px;
+
+    padding-top: 22px;
+    border-top: 1px solid rgba(0,0,0,0.08);
+}
+
+/* Save Draft (White / Subtle) */
+.btn-save-draft {
+    flex: 1;
+
+    background: #ffffff;
+    color: #000000;
+
+    border: 1px solid rgba(0,0,0,0.15);
+    border-radius: 12px;
+
+    padding: 14px;
+
+    font-weight: 800;
+    font-size: 0.8rem;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+
+    cursor: pointer;
+    transition: all 0.25s ease;
+
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.btn-save-draft:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.22);
+}
+
+/* Submit Application (Primary Luxury) */
+.btn-submit-app {
+    flex: 2;
+
+    background: #000000;
+    color: #ffffff;
+
+    border: none;
+    border-radius: 12px;
+
+    padding: 14px;
+
+    font-weight: 900;
+    font-size: 0.8rem;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+
+    cursor: pointer;
+    transition: all 0.25s ease;
+
+    box-shadow: 0 8px 25px rgba(0,0,0,0.35);
+}
+
+.btn-submit-app:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 40px rgba(0,0,0,0.5);
+}
+
+/* ===============================
+   STATUS PILLS (LUXURY MONO)
+================================ */
+.status-pill-overlay {
+    padding: 6px 14px;
+    border-radius: 999px;
+
+    font-size: 0.7rem;
+    font-weight: 900;
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+
+    background: #ffffff;
+    color: #000000;
+
+    border: 1px solid rgba(0,0,0,0.2);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Draft = subtle outline */
+.status-pill-overlay.pill-draft {
+    opacity: 0.8;
+    border-style: dashed;
+}
+
+/* Completed = confident solid */
+.status-pill-overlay.pill-completed {
+    border-color: rgba(0,0,0,0.35);
+}
 
 /* Hover effect */
 .btn-create-white:hover {
@@ -3259,7 +3419,6 @@ function getShopHeaderHTML(tokenCount, activeTab) {
 
 
 
-// --- 1. LIST VIEW: SHOW ALL APPLICATIONS ---
 window.showApplicationsList = async function() {
     const container = document.getElementById('dashboardContainer');
     document.querySelector('.vest-container').style.display = 'none';
@@ -3275,31 +3434,40 @@ window.showApplicationsList = async function() {
     container.innerHTML = `
         <div class="manage-vests-page">
             <div class="header-row">
-                <a href="#founder_dashboard" class="back-to-dash">Dashboard</a>
+                <a href="#founder_dashboard" class="back-to-dash">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                    Dashboard
+                </a>
                 <h1>My Funding Applications</h1>
             </div>
             
             <div class="vest-cards-grid">
                 ${Object.entries(apps).length > 0 ? 
                     Object.entries(apps).map(([id, app]) => {
+                        // Check if status is incomplete (Draft)
                         const isDraft = app.status === 'incomplete';
+                        
+                        // Logic: Drafts open the Editor, Completed opens the Viewer
                         const clickAction = isDraft 
                             ? `window.renderApplicationForm('${id}', '${app.appName || "Draft"}')` 
                             : `window.location.hash='view_application_${id}'`;
 
                         return `
                         <div class="vest-gig-card application-doc-card">
-                            <div class="delete-app-wrapper" onclick="event.stopPropagation(); window.deleteApplication('${id}')" style="position:absolute; top:10px; right:10px; z-index:100; background:rgba(255,0,0,0.1); padding:8px; border-radius:50%; cursor:pointer;">
+                            <div class="delete-app-wrapper" onclick="event.stopPropagation(); window.deleteApplication('${id}')" style="position:absolute; top:10px; right:10px; z-index:100; cursor:pointer;">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ff4d4d" stroke-width="2">
                                     <polyline points="3 6 5 6 21 6"></polyline>
                                     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                                 </svg>
                             </div>
                             
-                            <div onclick="${clickAction}">
+                            <div onclick="${clickAction}" style="cursor:pointer;">
                                 <div class="app-screenshot-preview">
                                     <div class="mini-white-sheet">
                                         <div class="mini-title-box">${app.appName || 'Document'}</div>
+                                        <div class="mini-line header"></div>
+                                        <div class="mini-line"></div>
+                                        <div class="mini-line"></div>
                                     </div>
                                     <div class="status-pill-overlay ${isDraft ? 'pill-draft' : 'pill-completed'}">
                                         ${isDraft ? 'DRAFT' : 'COMPLETED'}
@@ -3316,7 +3484,7 @@ window.showApplicationsList = async function() {
                             </div>
                         </div>
                         `;
-                    }).join('') : `<p>No applications found.</p>`}
+                    }).join('') : `<p style="color:#666; text-align:center; width:100%;">No applications found.</p>`}
             </div>
             <div style="text-align:center; margin-top:40px;">
                 <button class="buy-btn-premium" onclick="window.promptNewApplication()">+ Create New Application</button>
@@ -3324,7 +3492,6 @@ window.showApplicationsList = async function() {
         </div>
     `;
 };
-
 
 window.deleteApplication = async function(appId) {
     if (!confirm("Are you sure you want to delete this application? This cannot be undone.")) return;
@@ -3478,56 +3645,120 @@ window.showSuccessToast = function(message) {
     }, 3500);
 };
 
-window.renderApplicationForm = async function(appId, appName) {
+window.showApplicationsList = async function() {
     const container = document.getElementById('dashboardContainer');
+    document.querySelector('.vest-container').style.display = 'none';
+    container.style.display = 'block';
+    
+    // Show a centered loader while fetching
+    container.innerHTML = `<div class="loading-box"><div class="spinner"></div><p>Fetching Applications...</p></div>`;
+
+    const appRef = ref(db, `Applications/${currentUser.uid}`);
+    const snapshot = await get(appRef);
+    const apps = snapshot.val() || {};
+
     container.innerHTML = `
-        <div class="app-form-overlay" style="background:#f4f4f4; min-height:100vh; padding: 50px 20px; color:#000;">
-            <div class="white-paper-form" style="background:#fff; max-width:700px; margin:0 auto; padding:40px; border-radius:4px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
-                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding-bottom:15px; margin-bottom:30px;">
-                    <h2 style="margin:0;">${appName}</h2>
-                    <span style="color:#999; font-size:12px;"></span>
-                </div>
+        <div class="manage-vests-page">
+            <div class="header-row">
+                <a href="#founder_dashboard" class="back-to-dash">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                    Dashboard
+                </a>
+                <h1>My Funding Applications</h1>
+            </div>
+            
+            <div class="vest-cards-grid">
+                ${Object.entries(apps).length > 0 ? 
+                    Object.entries(apps).map(([id, app]) => {
+                        // Check if status is incomplete (Draft)
+                        const isDraft = app.status === 'incomplete';
+                        
+                        // Logic: Drafts open the Editor, Completed opens the Viewer
+                        const clickAction = isDraft 
+                            ? `window.renderApplicationForm('${id}', '${app.appName || "Draft"}')` 
+                            : `window.location.hash='view_application_${id}'`;
 
-                <div class="form-group-white">
-                    <label>Application Hook Line (Catchy Header)</label>
-                    <input type="text" id="appHook" placeholder="First line that catches investor eyes..." oninput="window.limitWords(this, 50)">
-                </div>
+                        return `
+                        <div class="vest-gig-card application-doc-card">
+                            <div class="delete-app-wrapper" onclick="event.stopPropagation(); window.deleteApplication('${id}')" style="position:absolute; top:10px; right:10px; z-index:100; cursor:pointer;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ff4d4d" stroke-width="2">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                </svg>
+                            </div>
+                            
+                            <div onclick="${clickAction}" style="cursor:pointer;">
+                                <div class="app-screenshot-preview">
+                                    <div class="mini-white-sheet">
+                                        <div class="mini-title-box">${app.appName || 'Document'}</div>
+                                        <div class="mini-line header"></div>
+                                        <div class="mini-line"></div>
+                                        <div class="mini-line"></div>
+                                    </div>
+                                    <div class="status-pill-overlay ${isDraft ? 'pill-draft' : 'pill-completed'}">
+                                        ${isDraft ? 'DRAFT' : 'COMPLETED'}
+                                    </div>
+                                </div>
 
-                <div class="form-group-white">
-                    <label>Starting Content (The Hook)</label>
-                    <textarea id="appStarting" placeholder="Brief intro..." oninput="window.limitWords(this, 50)"></textarea>
-                </div>
-
-                <div class="form-group-white">
-                    <label>Main Proportion (The Core Details)</label>
-                    <textarea id="appMain" style="height:150px;" placeholder="The main proposal content..." oninput="window.limitWords(this, 50)"></textarea>
-                </div>
-
-                <div class="form-group-white">
-                    <label>Ending Hooks (Call to Action)</label>
-                    <textarea id="appEnding" placeholder="How should they reach back?..." oninput="window.limitWords(this, 50)"></textarea>
-                </div>
-
-                <div class="form-group-white">
-                    <label>Founder Name</label>
-                    <input type="text" id="appFounderName" value="${cachedFounderData?.founderUsername || ''}">
-                </div>
-
-                <div class="form-group-white">
-                    <label>Link Startup Vest</label>
-                    <button class="attach-btn" onclick="window.openVestPicker()" style="width:100%; border-style:dashed;">+ Choose a Vest to Attach</button>
-                    <div id="attachedVestName" style="margin-top:10px; font-weight:bold; color:#10b981;"></div>
-                    <input type="hidden" id="selectedVestId">
-                </div>
-
-                <button class="buy-btn-premium" style="background:#000; color:#fff; width:100%; border:none; margin-top:20px;" onclick="window.submitApplication('${appId}')">Complete & Process Application</button>
-                
-                <div class="app-footer" style="text-align:center; margin-top:50px; border-top:1px solid #eee; padding-top:20px; opacity:0.6;">
-                    <p style="font-size:12px; color:#000;"><strong>ScaleVest</strong> | UnioraX Private Limited</p>
-                </div>
+                                <div class="vest-card-content">
+                                    <h3 class="vest-hook-text">${app.appHook || 'New Funding Proposal'}</h3>
+                                    <div class="vest-card-footer">
+                                        <span class="startup-label">${app.founderName || 'Founder'}</span>
+                                        <span class="doc-date">${new Date(app.updatedAt).toLocaleDateString()}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        `;
+                    }).join('') : `<p style="color:#666; text-align:center; width:100%;">No applications found.</p>`}
+            </div>
+            <div style="text-align:center; margin-top:40px;">
+                <button class="buy-btn-premium" onclick="window.promptNewApplication()">+ Create New Application</button>
             </div>
         </div>
     `;
+};
+
+window.saveApplicationDraft = async function(appId, isBackAction) {
+    const submitBtn = event.currentTarget;
+    const originalText = submitBtn.innerText;
+    submitBtn.innerText = "Saving...";
+
+    // 1. Collect Data
+    const data = {
+        appName: document.querySelector('h2').innerText, // Keep original title
+        appHook: document.getElementById('appHook').value,
+        startingContent: document.getElementById('appStarting').value,
+        mainContent: document.getElementById('appMain').value,
+        endingContent: document.getElementById('appEnding').value,
+        founderName: document.getElementById('appFounderName').value,
+        vestId: document.getElementById('selectedVestId').value,
+        status: 'incomplete', // Explicitly mark as Draft
+        updatedAt: Date.now()
+    };
+
+    try {
+        // 2. Update Firebase
+        await update(ref(db, `Applications/${currentUser.uid}/${appId}`), data);
+
+        // 3. Handle Navigation
+        if (isBackAction) {
+            // If Back button was clicked, go to list
+            if (window.showSuccessToast) window.showSuccessToast("Draft Saved Automatically");
+            window.location.hash = 'applications';
+            window.showApplicationsList(); // Force refresh
+        } else {
+            // If Save Draft button was clicked, just notify
+            if (window.showSuccessToast) window.showSuccessToast("Draft Saved Successfully");
+            submitBtn.innerText = "Draft Saved ✓";
+            setTimeout(() => { submitBtn.innerText = originalText; }, 2000);
+        }
+
+    } catch (error) {
+        console.error("Draft Save Error:", error);
+        alert("Error saving draft.");
+        submitBtn.innerText = originalText;
+    }
 };
 // --- 4. ATTACHMENT: PICKER POPUP ---
 window.openVestPicker = async function() {
@@ -3567,11 +3798,14 @@ window.submitApplication = async function(appId) {
     const vestId = document.getElementById('selectedVestId').value;
     const submitBtn = event.currentTarget; 
 
+    // Basic Validation
     if(!vestId) return alert("Please attach a vest before completing!");
+    if(!document.getElementById('appHook').value) return alert("Please add a Hook Line.");
 
     submitBtn.disabled = true;
     submitBtn.innerText = "Processing...";
 
+    // 1. Collect Data
     const data = {
         appHook: document.getElementById('appHook').value,
         startingContent: document.getElementById('appStarting').value,
@@ -3579,39 +3813,39 @@ window.submitApplication = async function(appId) {
         endingContent: document.getElementById('appEnding').value,
         founderName: document.getElementById('appFounderName').value,
         vestId: vestId,
-        status: 'ready',
+        status: 'completed', // MARK AS COMPLETED
         updatedAt: Date.now()
     };
 
     try {
-        // 1. Save to Firebase
-        await set(ref(db, `Applications/${currentUser.uid}/${appId}`), data);
+        // 2. Save to Firebase
+        await update(ref(db, `Applications/${currentUser.uid}/${appId}`), data);
         
-        // 2. Clear the screen immediately
+        // 3. Clear the screen immediately to avoid double clicks
         const container = document.getElementById('dashboardContainer');
-        container.innerHTML = '<div style="text-align:center; padding:50px;"><div class="spinner"></div><p>Redirecting...</p></div>';
+        container.innerHTML = '<div style="text-align:center; padding:50px;"><div class="spinner"></div><p>Application Submitted!</p></div>';
 
-        // 3. FORCE THE HASH UPDATE
+        // 4. Redirect
         window.location.hash = 'applications';
 
-        // 4. CRITICAL FIX: Manually trigger the list view 
-        // This ensures that even if the 'hashchange' listener is slow, the UI loads.
+        // 5. Force UI Refresh
         if (window.showApplicationsList) {
             await window.showApplicationsList();
         }
         
-        // 5. SUCCESS TOAST
+        // 6. Success Toast
         if (window.showSuccessToast) {
-            window.showSuccessToast("Application Processed Successfully!");
+            window.showSuccessToast("Application Completed & Processed!");
         }
         
     } catch (error) {
         console.error("Save Error:", error);
         submitBtn.disabled = false;
-        submitBtn.innerText = "Complete & Process Application";
+        submitBtn.innerText = "Submit Application";
         alert("Failed to save. Check connection.");
     }
 };
+
 // --- 6. REVIEW: THE "MEGA OP" FINAL DOCUMENT PAGE ---
 window.renderFullApplicationPage = async function(appId) {
     const container = document.getElementById('dashboardContainer');
