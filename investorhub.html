@@ -979,22 +979,7 @@
             }
         });
 <script>
-function toggleDropdown(id) {
-    document.getElementById(id).classList.toggle('show');
-}
 
-function toggleProfileDropdown() {
-    document.getElementById('profileDropdown').classList.toggle('show');
-}
-
-document.addEventListener('click', (e) => {
-    if (!e.target.closest('.dropdown')) {
-        document.querySelectorAll('.dropdown-content').forEach(dd => dd.classList.remove('show'));
-    }
-    if (!e.target.closest('.profile-dropdown')) {
-        document.getElementById('profileDropdown')?.classList.remove('show');
-    }
-});
 </script>
 
 <script type="module">
@@ -1059,7 +1044,15 @@ onAuthStateChanged(auth, async (user) => {
         setTimeout(() => document.getElementById("loadingScreen").style.display = "none", 2000);
     }
 });
+window.toggleDropdown = function(id) {
+    const dropdown = document.getElementById(id);
+    if (dropdown) dropdown.classList.toggle('show');
+};
 
+window.toggleProfileDropdown = function() {
+    const dropdown = document.getElementById('profileDropdown');
+    if (dropdown) dropdown.classList.toggle('show');
+};
 async function loadUserProfile(uid) {
     const avatarDiv = document.getElementById("profileAvatar");
     
