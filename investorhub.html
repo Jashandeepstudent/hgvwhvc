@@ -1133,9 +1133,18 @@ async function loadUserProfile(uid) {
             const initials = fullName.charAt(0).toUpperCase();
 
             // 1. Update Text
-            document.getElementById("profileName").innerText = fullName;
+document.getElementById("profileName").innerText = data.fullName || "Investor";
             document.getElementById("profileNetWorth").innerText = data.netWorth ? `$${data.netWorth}` : "$0.00";
-            if (data.userID) document.getElementById("profileId").innerText = data.userID;
+            document.getElementById("profileId").innerText = data.userID || "ID Pending";
+            
+            // 2. Pre-fill Edit Modal Inputs (Crucial for the Edit Terminal)
+            if(document.getElementById('editNetWorth')) {
+                document.getElementById('editNetWorth').value = data.netWorth || "";
+                document.getElementById('editMinInv').value = data.minInvestment || "";
+                document.getElementById('editMaxInv').value = data.maxInvestment || "";
+                // Note: Using 'preferredCategories' to match your DB
+                document.getElementById('editPreferred').value = data.preferredCategories || "";
+            }
 
 const firstName = fullName.split(' ')[0]; 
 document.getElementById("navProfileName").innerText = fullName;
@@ -1243,11 +1252,13 @@ window.enterEditMode = async () => {
     // Pre-fill hidden modal inputs
     document.getElementById('editFullName').value = data.fullName || "";
     document.getElementById('editUserID').value = data.userID || "";
-    document.getElementById('editNetWorth').value = data.netWorth || "";
-    document.getElementById('editMinInv').value = data.minInvestment || "";
-    document.getElementById('editMaxInv').value = data.maxInvestment || "";
-    document.getElementById('editPreferred').value = data.preferredStartups || "";
-};
+if(document.getElementById('editNetWorth')) {
+                document.getElementById('editNetWorth').value = data.netWorth || "";
+                document.getElementById('editMinInv').value = data.minInvestment || "";
+                document.getElementById('editMaxInv').value = data.maxInvestment || "";
+                // Note: Using 'preferredCategories' to match your DB
+                document.getElementById('editPreferred').value = data.preferredCategories || "";
+            };
 
 // --- 2. MODAL CONTROLS ---
 window.openEditIdentity = () => document.getElementById('editIdentityModal').style.display = 'flex';
@@ -1275,6 +1286,78 @@ document.getElementById('photoUploadInput').addEventListener('change', async (e)
         status.innerText = "❌ Upload Failed";
     }
 });
+
+window.updateProfileSection = async (type) => {
+    if (!currentUserUID) return alert("Session expired. Please log in again.");
+    
+    // Disable buttons to prevent double-submissions
+    const saveBtn = type === 'identity' ? document.getElementById('saveIdentityBtn') : document.querySelector('.modal-btn');
+    if (saveBtn) saveBtn.disabled = true;
+
+    let updates = {};
+
+    if (type === 'identity') {
+        const name = document.getElementById('editFullName').value;
+        const uID = document.getElementById('editUserID').value.trim().toUpperCase();
+
+        if (!name || !uID) {
+            alert("Name and Investor ID are required.");
+            if (saveBtn) saveBtn.disabled = false;
+            return;
+        }
+
+        updates = {
+            fullName: name,
+            userID: uID,
+            lastUpdated: new Date().toISOString()
+        };
+
+        // If a new photo was uploaded to Storage, add it to the update object
+        if (uploadedPhotoURL) {
+            updates.photoURL = uploadedPhotoURL;
+        }
+
+    } else if (type === 'investment') {
+        const nw = document.getElementById('editNetWorth').value;
+        const minI = document.getElementById('editMinInv').value;
+        const maxI = document.getElementById('editMaxInv').value;
+        const cats = document.getElementById('editPreferred').value;
+
+        updates = {
+            netWorth: nw,
+            minInvestment: minI,
+            maxInvestment: maxI,
+            preferredCategories: cats, // Matches your specific DB key
+            lastUpdated: new Date().toISOString()
+        };
+    }
+
+    try {
+        // Multi-path Update Logic
+        // We update the primary investor profile and the secondary angel profile simultaneously
+        const paths = [
+            `investorProfiles/${currentUserUID}`,
+            `angelProfiles/${currentUserUID}`
+        ];
+
+        for (const path of paths) {
+            // Check if the node exists before updating to avoid creating empty nodes
+            const snapshot = await get(ref(database, path));
+            if (snapshot.exists() || path.includes('investorProfiles')) {
+                await update(ref(database, path), updates);
+            }
+        }
+
+        alert("Database Sync Complete!");
+        location.reload(); // Refresh UI with new data
+
+    } catch (e) {
+        console.error("Firebase Update Error:", e);
+        alert("Update failed: " + e.message);
+    } finally {
+        if (saveBtn) saveBtn.disabled = false;
+    }
+};
 window.launchAngelProfile = async function() {
     if (!currentUserUID) return alert("Session expired.");
     
