@@ -787,7 +787,7 @@
         </div>
 
         <input type="text" id="editFullName" placeholder="Full Name">
-        <input type="text" id="editUserID" placeholder="Investor ID" maxlength="15">
+      
         
         <button class="modal-btn" id="saveIdentityBtn" onclick="updateProfileSection('identity')">UPDATE IDENTITY</button>
         <button class="modal-btn" style="background:transparent; margin-top:10px;" onclick="closeModal('editIdentityModal')">CANCEL</button>
@@ -1228,7 +1228,7 @@ window.enterEditMode = async () => {
                     </div>
                 </div>
                 <div class="stat-row"><span class="stat-label">Name</span><span class="stat-val">${data.fullName || '---'}</span></div>
-                <div class="stat-row"><span class="stat-label">Handle</span><span class="stat-val">${data.userID || '---'}</span></div>
+                <div class="stat-row"><span class="stat-label">UserIdn><span class="stat-val">${data.userID || '---'}</span></div>
             </div>
 
             <div class="card">
@@ -1238,7 +1238,13 @@ window.enterEditMode = async () => {
                 </div>
                 <div class="stat-row"><span class="stat-label">Net Worth</span><span class="stat-val">$${data.netWorth || '0'}</span></div>
                 <div class="stat-row"><span class="stat-label">Min/Max</span><span class="stat-val">$${data.minInvestment || '0'} - $${data.maxInvestment || '0'}</span></div>
-                <div class="stat-row"><span class="stat-label">Sector</span><span class="stat-val">${data.preferredStartups || 'None'}</span></div>
+// Inside the FINANCIALS card template in enterEditMode
+<div class="stat-row">
+    <span class="stat-label">Preferred Startups</span>
+    <span class="stat-val" id="terminalSectorDisplay">
+        ${data.preferredCategories || 'None'}
+    </span>
+</div>
             </div>
 
             <div class="card" style="display:flex; flex-direction:column; justify-content:center; align-items:center; border: 1px solid #38bdf8;">
