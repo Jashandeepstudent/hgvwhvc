@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Investor Config | ScaleVest</title>
+    <style>
+        :root {
+            --bg-black: #050505;
+            --surface: rgba(10, 10, 11, 0.9);
+            --accent-blue: #007bff;
+            --accent-green: #00ffaa;
+            --text-main: #ffffff;
+            --text-dim: #94a3b8;
+            --border: rgba(255, 255, 255, 0.1);
+            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-black);
+            color: var(--text-main);
+            overflow-x: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Ambient Background */
+        .bg-glow {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 10% 10%, rgba(0, 123, 255, 0.15), transparent),
+                        radial-gradient(circle at 90% 90%, rgba(0, 255, 170, 0.1), transparent);
+            z-index: -1;
+        }
+
+        /* --- WELCOME SCREEN --- */
+        #welcomeScreen {
+            text-align: center;
+            max-width: 600px;
+            animation: fadeIn 1s ease forwards;
+        }
+
+        .gradient-text {
+            background: linear-gradient(to right, var(--accent-blue), var(--accent-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 900;
+        }
+
+        h1 { font-size: 3.5rem; letter-spacing: -2px; margin-bottom: 1rem; }
+        p { color: var(--text-dim); font-size: 1.2rem; margin-bottom: 2rem; }
+
+        /* --- CONFIG FORM --- */
+        #configForm {
+            display: none;
+            width: 90%;
+            max-width: 800px;
+            background: var(--surface);
+            backdrop-filter: blur(20px);
+            padding: 3rem;
+            border-radius: 40px;
+            border: 1px solid var(--border);
+            margin: 2rem 0;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .input-group { margin-bottom: 20px; }
+        .full-width { grid-column: span 2; }
+
+        label { display: block; margin-bottom: 8px; font-weight: 700; color: var(--accent-green); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
+        
+        input, select {
+            width: 100%;
+            padding: 15px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        input:focus { border-color: var(--accent-blue); outline: none; background: rgba(255,255,255,0.1); }
+
+        /* --- CATEGORY MULTI-SELECT --- */
+        .category-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .cat-chip {
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: var(--transition);
+        }
+
+        .cat-chip.selected {
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 15px rgba(0, 123, 255, 0.4);
+        }
+
+        /* --- PROFILE PHOTO --- */
+        .photo-upload {
+            text-align: center;
+            padding: 20px;
+            border: 2px dashed var(--border);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .photo-upload:hover { border-color: var(--accent-green); background: rgba(0,255,170,0.05); }
+        #avatarPreview { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-top: 10px; display: none; margin-left: auto; margin-right: auto; border: 2px solid var(--accent-green); }
+
+        /* --- BUTTONS --- */
+        .btn-main {
+            padding: 1.2rem 3rem;
+            border-radius: 100px;
+            border: none;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-green));
+            color: black;
+            font-weight: 900;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: var(--transition);
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .btn-main:hover { transform: scale(1.02); box-shadow: 0 10px 30px rgba(0, 255, 170, 0.3); }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        @media (max-width: 700px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .full-width { grid-column: span 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-glow"></div>
+
+    <div id="welcomeScreen">
+        <h1>Welcome to <span class="gradient-text">Investor Side</span></h1>
+        <p>Let's finalize your deployment configuration to start connecting with verified startups.</p>
+        <button class="btn-main" onclick="showForm()">Get Started</button>
+    </div>
+
+    <div id="configForm">
+        <h2 style="margin-bottom: 2rem; letter-spacing: -1px;">Configuration <span class="gradient-text">Terminal</span></h2>
+        
+        <div class="form-grid">
+            <div class="input-group">
+                <label>Full Name</label>
+                <input type="text" id="fullName" placeholder="Fetching...">
+            </div>
+            <div class="input-group">
+                <label>Age</label>
+                <input type="number" id="age" placeholder="0">
+            </div>
+            <div class="input-group full-width">
+                <label>Investor Type</label>
+                <input type="text" id="investorType" readonly style="color: var(--text-dim);">
+            </div>
+
+            <div class="input-group">
+                <label>Total Net Worth ($)</label>
+                <input type="text" id="netWorth" placeholder="e.g. 5M">
+            </div>
+            <div class="input-group">
+                <label>Min Investment ($)</label>
+                <input type="number" id="minInv" placeholder="10000">
+            </div>
+            <div class="input-group">
+                <label>Max Investment ($)</label>
+                <input type="number" id="maxInv" placeholder="500000">
+            </div>
+
+            <div class="input-group">
+                <label>Investor Avatar</label>
+                <div class="photo-upload" onclick="document.getElementById('photoInput').click()">
+                    <span>Click to Upload Photo</span>
+                    <input type="file" id="photoInput" hidden accept="image/*" onchange="previewImage(event)">
+                    <img id="avatarPreview">
+                </div>
+            </div>
+
+            <div class="input-group full-width">
+                <label>Preferred Startup Categories (Select Multiple)</label>
+                <div class="category-container" id="categoryGrid">
+                    </div>
+            </div>
+        </div>
+
+        <button class="btn-main" onclick="completeConfig()">Complete Setup</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
+            authDomain: "scalevest-163a0.firebaseapp.com",
+            databaseURL: "https://scalevest-163a0-default-rtdb.firebaseio.com",
+            projectId: "scalevest-163a0",
+            storageBucket: "scalevest-163a0.firebasestorage.app",
+            messagingSenderId: "938358950124",
+            appId: "1:938358950124:web:043506aeaacea2a96bfdc9"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        const auth = getAuth(app);
+
+        const categories = ["AgTech", "AdTech", "AI/ML", "Aerospace", "AutoTech", "BioTech", "Blockchain", "B2B SaaS", "CleanTech", "Cybersecurity", "ClimateTech", "EdTech", "E-commerce", "FinTech", "FoodTech", "GameTech", "HealthTech", "InsurTech", "IoT", "LegalTech", "Logistics", "MarTech", "MedTech", "PropTech", "SaaS", "SpaceTech", "TravelTech", "VR/AR", "Web3"];
+        let selectedCategories = [];
+        let userUID = null;
+
+        // --- AUTH & DATA FETCHING ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                userUID = user.uid;
+                const snapshot = await get(ref(database, `investorProfiles/${user.uid}`));
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    document.getElementById('fullName').value = data.fullName || "";
+                    document.getElementById('age').value = data.age || "";
+                    document.getElementById('investorType').value = data.investorType || "Not Specified";
+                }
+            } else {
+                window.location.href = "login3.html";
+            }
+        });
+
+        // --- UI FUNCTIONS ---
+        window.showForm = () => {
+            document.getElementById('welcomeScreen').style.display = 'none';
+            document.getElementById('configForm').style.display = 'block';
+            renderCategories();
+        };
+
+        function renderCategories() {
+            const grid = document.getElementById('categoryGrid');
+            categories.forEach(cat => {
+                const chip = document.createElement('div');
+                chip.className = 'cat-chip';
+                chip.innerText = cat;
+                chip.onclick = () => toggleCategory(cat, chip);
+                grid.appendChild(chip);
+            });
+        }
+
+        function toggleCategory(cat, el) {
+            if (selectedCategories.includes(cat)) {
+                selectedCategories = selectedCategories.filter(c => c !== cat);
+                el.classList.remove('selected');
+            } else {
+                selectedCategories.push(cat);
+                el.classList.add('selected');
+            }
+        }
+
+        window.previewImage = (event) => {
+            const preview = document.getElementById('avatarPreview');
+            preview.src = URL.createObjectURL(event.target.files[0]);
+            preview.style.display = 'block';
+        };
+
+        // --- SAVE DATA ---
+        window.completeConfig = async () => {
+            const updateData = {
+                fullName: document.getElementById('fullName').value,
+                age: document.getElementById('age').value,
+                netWorth: document.getElementById('netWorth').value,
+                minInvestment: document.getElementById('minInv').value,
+                maxInvestment: document.getElementById('maxInv').value,
+                preferredCategories: selectedCategories,
+                configComplete: true,
+                lastUpdated: Date.now()
+            };
+
+            try {
+                await update(ref(database, `investorProfiles/${userUID}`), updateData);
+                alert("Profile Successfully Deployed!");
+                window.location.href = "investorhub.html";
+            } catch (error) {
+                alert("Error saving profile: " + error.message);
+            }
+        };
+    </script>
+</body>
+</html>
