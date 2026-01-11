@@ -58,6 +58,135 @@
     font-size: 16px;
 }
 
+
+:root {
+    /* Core scaling */
+    --ui-radius: clamp(12px, 3vw, 18px);
+    --ui-padding: clamp(12px, 4vw, 20px);
+    --ui-gap: clamp(10px, 3vw, 18px);
+    --ui-font: clamp(14px, 3.8vw, 16px);
+}
+
+/* -------- RESET -------- */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    max-width: 100%;
+}
+
+html {
+    font-size: var(--ui-font);
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    margin: 0;
+    min-height: 100svh;
+    overflow-x: hidden;
+    background: #0b0b0b;
+    color: #fff;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+}
+
+/* -------- GLOBAL CONTAINER AUTO-CENTER -------- */
+section, main, .container, .wrapper {
+    width: 100%;
+    max-width: 1200px;
+    margin-inline: auto;
+    padding: var(--ui-padding);
+}
+
+/* -------- AUTO FIX FLEX & GRID -------- */
+.flex, .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ui-gap);
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--ui-gap);
+}
+
+/* -------- GLOBAL INPUT / SELECT / TEXTAREA -------- */
+input,
+select,
+textarea {
+    width: 100%;
+    min-height: 48px;
+    padding: 14px 16px;
+    font-size: 1rem;
+    border-radius: var(--ui-radius);
+    border: 1px solid rgba(255,255,255,0.15);
+    background: #111;
+    color: #fff;
+    outline: none;
+}
+
+/* Prevent mobile zoom */
+input, textarea, select {
+    font-size: 16px;
+}
+
+/* -------- BUTTON AUTO FIX -------- */
+button {
+    width: 100%;
+    min-height: 48px;
+    padding: 14px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: var(--ui-radius);
+    border: none;
+    cursor: pointer;
+}
+
+/* -------- CARD AUTO FIX -------- */
+.card, .box, .panel {
+    width: 100%;
+    border-radius: calc(var(--ui-radius) + 4px);
+    padding: var(--ui-padding);
+    background: rgba(255,255,255,0.04);
+    backdrop-filter: blur(14px);
+}
+
+/* -------- MODAL AUTO FIT -------- */
+.modal {
+    width: 100%;
+    max-width: min(92vw, 520px);
+    margin: auto;
+    border-radius: calc(var(--ui-radius) + 6px);
+}
+
+/* -------- IMAGES & MEDIA -------- */
+img, video, canvas {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--ui-radius);
+}
+
+/* -------- TABLE AUTO SCROLL -------- */
+table {
+    width: 100%;
+    display: block;
+    overflow-x: auto;
+    border-collapse: collapse;
+}
+
+/* -------- DESKTOP SCALE UP -------- */
+@media (min-width: 768px) {
+    .grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+    .grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
 #invType {
     width: 100%;
     padding: 16px 50px 16px 18px;
