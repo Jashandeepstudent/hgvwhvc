@@ -828,7 +828,7 @@
         <div class="right-section">
             <!-- Welcome Section -->
             <div class="welcome-section">
-                <h1 class="welcome-text">Welcome, John!</h1>
+               <h1 class="welcome-text" id="welcomeUser">Welcome!</h1>
                 <p class="welcome-subtext">Let's make today productive and achieve your goals</p>
             </div>
 
@@ -982,6 +982,13 @@ async function loadUserProfile(uid) {
             document.getElementById("profileNetWorth").innerText = data.netWorth ? `$${data.netWorth}` : "$0.00";
             if (data.userID) document.getElementById("profileId").innerText = data.userID;
 
+const firstName = fullName.split(' ')[0]; 
+
+        // ✅ UPDATE THE WELCOME TEXT
+        const welcomeHeader = document.getElementById("welcomeUser");
+        if (welcomeHeader) {
+            welcomeHeader.innerText = `Welcome, ${firstName}!`;
+        }
             // 2. Avatar Logic: Priority to photoURL
             if (data.photoURL && data.photoURL.trim() !== "") {
                 const tempImg = new Image();
