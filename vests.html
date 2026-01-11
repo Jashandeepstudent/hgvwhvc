@@ -1527,6 +1527,44 @@
             border: 2px solid #333;
             transition: all 0.3s ease;
         }
+/* ===============================
+   MINI BLACK BACK BUTTON (NEW)
+================================ */
+.editor-back-mini {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+
+    background: #000000;
+    color: #ffffff;
+
+    border: none;
+    border-radius: 7px;
+
+    padding: 6px 10px;
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+
+    cursor: pointer;
+
+    width: auto;
+    flex: 0 0 auto;
+    white-space: nowrap;
+
+    box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+    transition: all 0.2s ease;
+}
+
+.editor-back-mini:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(0,0,0,0.4);
+}
+
+.editor-back-mini svg {
+    flex-shrink: 0;
+}
 
         .checkbox-item:hover {
             border-color: #8338ec;
@@ -3695,16 +3733,19 @@ window.renderApplicationForm = async function(appId, appName) {
     container.innerHTML = `
         <div class="app-form-overlay" style="background:#f4f4f4; min-height:100vh; padding: 40px 20px; color:#000;">
             
-            <div class="app-editor-nav">
-                <button class="back-to-dash" 
-onclick="window.saveApplicationDraft('${appId}', true)">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M19 12H5M12 19l-7-7 7-7"/>
-                    </svg>
-                    Back & Save
-                </button>
-                <div class="draft-badge">Draft Mode</div>
-            </div>
+<div class="app-editor-nav">
+    <button class="editor-back-mini"
+        onclick="window.saveApplicationDraft('${appId}', true)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Back & Save
+    </button>
+
+    <div class="draft-badge">Draft Mode</div>
+</div>
+
 
             <div class="white-paper-form" style="background:#fff; max-width:800px; margin:0 auto; padding:60px; border-radius:4px; box-shadow: 0 20px 60px rgba(0,0,0,0.1);">
                 
