@@ -78,7 +78,19 @@
         #videoConferenceContainer {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 3000; display: none; flex-direction: column;
         }
-        #jitsiFrame { flex: 1; width: 100%; border: none; }
+        #jitsiFrame { flex: 1; width: 100%; border: none; position: relative; }
+        
+        /* MEETING LOADER */
+        #meetingLoader {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #111;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 3001; color: white;
+        }
+        .loader-spinner {
+            width: 60px; height: 60px; border: 4px solid #333; border-top: 4px solid #10b981;
+            border-radius: 50%; animation: spin 1s linear infinite;
+        }
+        .loader-text { margin-top: 20px; font-size: 1rem; color: #999; }
         
         .video-controls {
             height: 80px; background: #111; display: flex; align-items: center; justify-content: center; gap: 20px;
@@ -104,6 +116,7 @@
         .dot:nth-child(2) { animation-delay: -0.16s; }
         @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
         @keyframes popIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -133,7 +146,6 @@
     <div id="chatContainer">
         <div id="initialLoader" style="position: absolute; top:0; left:0; width:100%; height:100%; background:#f8f9fa; z-index:50; display:flex; flex-direction:column; align-items:center; justify-content:center;">
             <div style="width: 40px; height: 40px; border: 4px solid #ddd; border-top: 4px solid #10b981; border-radius: 50%; animation: spin 1s infinite linear;"></div>
-            <style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
             <div style="margin-top:10px; color:#888; font-size:0.9rem;">Syncing...</div>
         </div>
 
@@ -194,7 +206,12 @@
     </div>
 
     <div id="videoConferenceContainer">
-        <div id="jitsiFrame"></div>
+        <div id="jitsiFrame">
+            <div id="meetingLoader">
+                <div class="loader-spinner"></div>
+                <div class="loader-text">Connecting to meeting...</div>
+            </div>
+        </div>
         <div class="video-controls">
             <button class="control-btn" onclick="toggleAudio()" id="btnMic">🎤</button>
             <button class="control-btn" onclick="toggleVideo()" id="btnCam">📷</button>
@@ -235,6 +252,8 @@
         let userDisplayName = "User";
         let userAvatar = "";
         let typingTimeout = null;
+        let audioMuted = false;
+        let videoMuted = false;
 
         // AUTH
         onAuthStateChanged(auth, async (user) => {
@@ -242,22 +261,21 @@
                 currentUser = user;
                 if(!recipientUID) { window.location.href = "dashboard.html"; return; }
                 
-                await identifyUserRole(); // Determine if I am investor
+                await identifyUserRole();
                 initializeChat();
             } else {
                 window.location.href = "login3.html";
             }
         });
 
-        // 1. IDENTIFY ROLE & GET MY DETAILS (For Video Card)
+        // 1. IDENTIFY ROLE & GET MY DETAILS
         async function identifyUserRole() {
-            // Check Investor
             try {
                 const invSnap = await get(ref(db, `investorProfiles/${currentUser.uid}`));
                 if (invSnap.exists()) {
                     isInvestor = true;
                     document.getElementById('meetingBtn').style.display = 'flex';
-                    document.getElementById('btnEndAll').style.display = 'flex'; // Enable End Meeting btn
+                    document.getElementById('btnEndAll').style.display = 'flex';
                     const data = invSnap.val();
                     userDisplayName = data.fullName || "Investor";
                     userAvatar = data.photoURL || data.logo || "";
@@ -265,7 +283,6 @@
                 }
             } catch(e) {}
 
-            // Check Founder
             try {
                 const fndSnap = await get(ref(db, `founderProfile/${currentUser.uid}`));
                 if (fndSnap.exists()) {
@@ -280,7 +297,6 @@
             const participantIDs = [currentUser.uid, recipientUID].sort();
             chatRoomID = `chat_${participantIDs[0]}_${participantIDs[1]}`;
 
-            // Header Name Logic
             let chatTitle = "Chat";
             try {
                 const fSnap = await get(ref(db, `founderProfile/${recipientUID}`));
@@ -293,14 +309,12 @@
             document.getElementById('chatTitle').textContent = chatTitle;
             document.getElementById('initialLoader').style.display = 'none';
 
-            // Listen for Messages
             const messagesRef = ref(db, `Chats/${chatRoomID}`);
             onChildAdded(messagesRef, (snapshot) => {
                 const msg = snapshot.val();
                 if(msg.sender) renderMessage(msg);
             });
             
-             // 4. LISTEN FOR TYPING
             const typingRef = ref(db, `Chats/${chatRoomID}/typing/${recipientUID}`);
             onValue(typingRef, (snapshot) => {
                 const isTyping = snapshot.val();
@@ -326,21 +340,18 @@
             
             const time = new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             
-            // File Handling
             let contentHtml = "";
-             if (msg.fileType === 'image') {
-                contentHtml = `<img src="${msg.fileUrl}" class="chat-image" onclick="window.open('${msg.fileUrl}')">`;
+            if (msg.fileType === 'image') {
+                contentHtml = `<img src="${msg.fileUrl}" style="max-width:100%; border-radius:8px; cursor:pointer;" onclick="window.open('${msg.fileUrl}')">`;
             } else if (msg.fileType === 'video') {
-                contentHtml = `<video src="${msg.fileUrl}" class="chat-video" controls></video>`;
+                contentHtml = `<video src="${msg.fileUrl}" style="max-width:100%; border-radius:8px;" controls></video>`;
             } else if (msg.fileType === 'document') {
-                contentHtml = `<a href="${msg.fileUrl}" target="_blank" class="file-attachment">📄 ${msg.fileName || 'Document'}</a>`;
+                contentHtml = `<a href="${msg.fileUrl}" target="_blank" style="color:inherit; text-decoration:underline;">📄 ${msg.fileName || 'Document'}</a>`;
             }
 
-            // Text Message
             if (msg.text) {
                 contentHtml += `<div>${msg.text}</div>`;
             }
-            // Meeting Invite Card
             else if (msg.type === 'meeting') {
                 const isScheduled = msg.scheduledTime && msg.scheduledTime !== 'now';
                 const dateObj = isScheduled ? new Date(msg.scheduledTime) : new Date();
@@ -366,7 +377,6 @@
 
         // --- MEETING LOGIC ---
 
-        // 1. Open Setup Modal
         window.openMeetingModal = () => {
             document.getElementById('meetingSetupModal').style.display = 'flex';
         };
@@ -374,7 +384,6 @@
             document.getElementById('meetingSetupModal').style.display = 'none';
         };
 
-        // 2. Create Meeting (Send Invite)
         window.createMeeting = async () => {
             const title = document.getElementById('meetingTitle').value || "Quick Sync";
             const dateVal = document.getElementById('meetingDate').value;
@@ -383,12 +392,10 @@
             let scheduledTime = 'now';
             let meetingId = `meet_${Date.now()}_${Math.floor(Math.random()*1000)}`;
 
-            // Parse Schedule if set
             if (dateVal && timeVal) {
                 scheduledTime = new Date(`${dateVal}T${timeVal}`).getTime();
             }
 
-            // Send Invite Message
             await push(ref(db, `Chats/${chatRoomID}`), {
                 sender: currentUser.uid,
                 type: 'meeting',
@@ -402,13 +409,10 @@
             closeMeetingModal();
         };
 
-        // 3. Try Join (Check Time)
-        window.tryJoinMeeting = (meetingId, scheduledTime) => {
+        window.tryJoinMeeting = async (meetingId, scheduledTime) => {
             const now = Date.now();
 
-            // If scheduled in future (giving 5 min grace period)
             if (scheduledTime !== 'now' && now < (scheduledTime - 5 * 60 * 1000)) {
-                // Show Wait Screen
                 const dateObj = new Date(scheduledTime);
                 document.getElementById('waitDisplayTime').textContent = dateObj.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
                 document.getElementById('waitDisplayDate').textContent = dateObj.toLocaleDateString();
@@ -416,85 +420,121 @@
                 return;
             }
 
-            // Start Jitsi
-            loadJitsi(meetingId);
+            // Request permissions BEFORE showing interface
+            try {
+                await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+                loadJitsi(meetingId);
+            } catch (err) {
+                alert("Camera/Microphone access is required to join the meeting. Please enable permissions in your browser settings.");
+                console.error("Media permission error:", err);
+            }
         };
 
-        // 4. Load Jitsi Interface
         function loadJitsi(roomName) {
             document.getElementById('videoConferenceContainer').style.display = 'flex';
+            document.getElementById('meetingLoader').style.display = 'flex';
 
             const domain = "meet.jit.si";
             const options = {
-                roomName: "ScaleVest_" + roomName, // Unique room prefix
+                roomName: "ScaleVest_" + roomName,
                 width: "100%",
                 height: "100%",
                 parentNode: document.querySelector('#jitsiFrame'),
                 userInfo: {
                     displayName: userDisplayName,
-                    avatarURL: userAvatar // Shows logo/photo on video card
+                    avatarURL: userAvatar
                 },
                 configOverwrite: {
                     startWithAudioMuted: false,
                     startWithVideoMuted: false,
-                    prejoinPageEnabled: false, // Skip pre-join screen
+                    prejoinPageEnabled: false,
                     disableDeepLinking: true,
-                    toolbarButtons: [] // HIDE DEFAULT BUTTONS, use custom ones
+                    enableWelcomePage: false,
+                    enableClosePage: false,
+                    resolution: 720,
+                    constraints: {
+                        video: {
+                            height: { ideal: 720, max: 1080, min: 360 }
+                        }
+                    },
+                    p2p: { enabled: true },
+                    enableLayerSuspension: true,
+                    toolbarButtons: []
                 },
                 interfaceConfigOverwrite: {
                     SHOW_JITSI_WATERMARK: false,
                     SHOW_WATERMARK_FOR_GUESTS: false,
-                    TOOLBAR_ALWAYS_VISIBLE: false
+                    TOOLBAR_ALWAYS_VISIBLE: false,
+                    DISABLE_VIDEO_BACKGROUND: false,
+                    MOBILE_APP_PROMO: false
                 }
             };
 
             jitsiAPI = new JitsiMeetExternalAPI(domain, options);
             
-            // Handle Hangup Event from inside Jitsi
+            jitsiAPI.addEventListener('videoConferenceJoined', () => {
+                document.getElementById('meetingLoader').style.display = 'none';
+            });
+
             jitsiAPI.addEventListener('videoConferenceLeft', () => {
+                closeVideoInterface();
+            });
+
+            jitsiAPI.addEventListener('readyToClose', () => {
                 closeVideoInterface();
             });
         }
 
         // --- VIDEO CONTROLS ---
         window.toggleAudio = () => {
-            jitsiAPI.executeCommand('toggleAudio');
-            document.getElementById('btnMic').classList.toggle('active');
+            if(jitsiAPI) {
+                jitsiAPI.executeCommand('toggleAudio');
+                audioMuted = !audioMuted;
+                document.getElementById('btnMic').classList.toggle('active', audioMuted);
+            }
         };
 
         window.toggleVideo = () => {
-            jitsiAPI.executeCommand('toggleVideo');
-            document.getElementById('btnCam').classList.toggle('active');
+            if(jitsiAPI) {
+                jitsiAPI.executeCommand('toggleVideo');
+                videoMuted = !videoMuted;
+                document.getElementById('btnCam').classList.toggle('active', videoMuted);
+            }
         };
 
         window.leaveMeeting = () => {
-            if(jitsiAPI) jitsiAPI.dispose();
+            if(jitsiAPI) {
+                jitsiAPI.executeCommand('hangup');
+                jitsiAPI.dispose();
+            }
             closeVideoInterface();
         };
 
-        // Investor Only: Kick everyone
         window.endMeetingForAll = () => {
             if(!confirm("End meeting for everyone?")) return;
-            // Jitsi doesn't have a simple 'end for all' via API without auth, 
-            // but we can simulate it or just hang up ourselves.
-            // For this demo, we dispose.
-            if(jitsiAPI) jitsiAPI.dispose();
+            if(jitsiAPI) {
+                jitsiAPI.executeCommand('hangup');
+                jitsiAPI.dispose();
+            }
             closeVideoInterface();
-            
-            // Optionally update DB to say meeting ended
         };
 
         function closeVideoInterface() {
             document.getElementById('videoConferenceContainer').style.display = 'none';
-            document.querySelector('#jitsiFrame').innerHTML = ""; // Clear iframe
+            document.querySelector('#jitsiFrame').innerHTML = `
+                <div id="meetingLoader">
+                    <div class="loader-spinner"></div>
+                    <div class="loader-text">Connecting to meeting...</div>
+                </div>
+            `;
             jitsiAPI = null;
+            audioMuted = false;
+            videoMuted = false;
+            document.getElementById('btnMic').classList.remove('active');
+            document.getElementById('btnCam').classList.remove('active');
         }
 
-        // --- TEXT SEND LOGIC (Standard) ---
-        const input = document.getElementById('msgInput');
-        const sendBtn = document.getElementById('sendBtn');
-        
-        // --- FILE UPLOAD LOGIC ---
+        // --- FILE UPLOAD ---
         const fileInput = document.getElementById('fileInput');
         const attachBtn = document.getElementById('attachBtn');
 
@@ -539,19 +579,24 @@
                             recipient: recipientUID
                         });
 
-                        progressBar.style.width = '0%'; 
+                        progressBar.style.width = '0%';
+                        fileInput.value = '';
                     }
                 );
             } catch (error) {
                 console.error("Error", error);
+                progressBar.style.width = '0%';
             }
         });
+
+        // --- TEXT SEND ---
+        const input = document.getElementById('msgInput');
+        const sendBtn = document.getElementById('sendBtn');
 
         async function sendMessage() {
             const text = input.value.trim();
             if (!text || !chatRoomID) return;
 
-            // Bad Word Filter
             const badWords = ["abuse", "scam", "fraud", "kill", "idiot"];
             let cleanText = text;
             badWords.forEach(w => { cleanText = cleanText.replace(new RegExp(`\\b${w}\\b`,'gi'), '####'); });
@@ -566,7 +611,6 @@
             set(ref(db, `Chats/${chatRoomID}/typing/${currentUser.uid}`), false);
         }
         
-         // TYPING LOGIC
         input.addEventListener('input', () => {
             if (!chatRoomID) return;
             set(ref(db, `Chats/${chatRoomID}/typing/${currentUser.uid}`), true);
