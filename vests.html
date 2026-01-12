@@ -4319,9 +4319,15 @@ window.showInvestorChatList = async function() {
         Object.keys(allChats).forEach(roomKey => {
             // Check if I am a participant
             if (roomKey.includes(currentUser.uid)) {
-                const messages = Object.values(allChats[roomKey]);
                 
-                // SAFETY CHECK: Skip if no messages found
+                // Get all data in the room
+                const rawData = Object.values(allChats[roomKey]);
+
+                // FIX: Filter out the 'typing' node and ensure it's a real message
+                // A real message must have a 'sender' and 'timestamp'
+                const messages = rawData.filter(msg => msg.sender && msg.timestamp);
+                
+                // SAFETY CHECK: Skip if no actual messages found
                 if (messages.length === 0) return;
 
                 // Sort messages to find the last one
@@ -4331,9 +4337,9 @@ window.showInvestorChatList = async function() {
                 // Identify the Investor (The other ID)
                 const otherUid = roomKey.replace(currentUser.uid, '').replace('_', '');
                 
-                // FIX: Correctly determine message text
+                // Determine message text (Fallback if text is empty)
                 let displayMsg = "Media / Attachment";
-                if (lastMsg.text && lastMsg.text.trim() !== "") {
+                if (lastMsg.text && String(lastMsg.text).trim() !== "") {
                     displayMsg = lastMsg.text;
                 }
 
@@ -4372,10 +4378,11 @@ window.showInvestorChatList = async function() {
         await Promise.all(fetchPromises);
 
         // --- 3. SORT & RENDER ---
-        myChats.sort((a, b) => b.timestamp - a.timestamp);
+        myChats.sort((a, b) => b.timestamp - a.timestamp); // Sort chats by newest activity
 
         let listHtml = `
-                       <div class="chat-list-container">
+            
+            <div class="chat-list-container">
                 <div class="chat-header-row">
                     <div>
                         <h1 style="font-size:2rem; font-weight:800; margin:0; letter-spacing:-1px;">Investor Inbox</h1>
