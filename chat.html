@@ -358,12 +358,12 @@
                 const displayTime = isScheduled ? dateObj.toLocaleString() : "Happening Now";
 
                 contentHtml = `
-                    <div class="meeting-card" onclick="window.tryJoinMeeting('${msg.meetingId}', ${msg.scheduledTime === 'now' ? "'now'" : msg.scheduledTime})">
+                    <div class="meeting-card" onclick="event.stopPropagation(); window.tryJoinMeeting('${msg.meetingId}', ${msg.scheduledTime === 'now' ? "'now'" : msg.scheduledTime})">
                         <span style="font-size:2rem">📹</span>
                         <div style="flex:1">
                             <div style="font-weight:700; font-size:1rem;">${msg.title}</div>
                             <div style="font-size:0.85rem; opacity:0.8;">${displayTime}</div>
-                            <button class="join-btn">JOIN MEETING</button>
+                            <button class="join-btn" onclick="event.stopPropagation(); window.tryJoinMeeting('${msg.meetingId}', ${msg.scheduledTime === 'now' ? "'now'" : msg.scheduledTime})">JOIN MEETING</button>
                         </div>
                     </div>
                 `;
@@ -410,6 +410,7 @@
         };
 
         window.tryJoinMeeting = async (meetingId, scheduledTime) => {
+            console.log("Trying to join meeting:", meetingId, scheduledTime);
             const now = Date.now();
 
             if (scheduledTime !== 'now' && now < (scheduledTime - 5 * 60 * 1000)) {
@@ -420,19 +421,28 @@
                 return;
             }
 
-            // Request permissions BEFORE showing interface
+            // Show loading immediately
+            document.getElementById('videoConferenceContainer').style.display = 'flex';
+            document.getElementById('meetingLoader').style.display = 'flex';
+
+            // Request permissions
             try {
-                await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+                console.log("Permissions granted, loading Jitsi...");
+                
+                // Stop the test stream
+                stream.getTracks().forEach(track => track.stop());
+                
                 loadJitsi(meetingId);
             } catch (err) {
-                alert("Camera/Microphone access is required to join the meeting. Please enable permissions in your browser settings.");
                 console.error("Media permission error:", err);
+                document.getElementById('videoConferenceContainer').style.display = 'none';
+                alert("Camera/Microphone access is required to join the meeting. Please enable permissions in your browser settings.");
             }
         };
 
         function loadJitsi(roomName) {
-            document.getElementById('videoConferenceContainer').style.display = 'flex';
-            document.getElementById('meetingLoader').style.display = 'flex';
+            console.log("Loading Jitsi for room:", roomName);
 
             const domain = "meet.jit.si";
             const options = {
@@ -470,19 +480,38 @@
                 }
             };
 
-            jitsiAPI = new JitsiMeetExternalAPI(domain, options);
-            
-            jitsiAPI.addEventListener('videoConferenceJoined', () => {
-                document.getElementById('meetingLoader').style.display = 'none';
-            });
+            try {
+                jitsiAPI = new JitsiMeetExternalAPI(domain, options);
+                console.log("Jitsi API initialized");
+                
+                jitsiAPI.addEventListener('videoConferenceJoined', () => {
+                    console.log("Conference joined successfully");
+                    document.getElementById('meetingLoader').style.display = 'none';
+                });
 
-            jitsiAPI.addEventListener('videoConferenceLeft', () => {
-                closeVideoInterface();
-            });
+                jitsiAPI.addEventListener('videoConferenceLeft', () => {
+                    console.log("Conference left");
+                    closeVideoInterface();
+                });
 
-            jitsiAPI.addEventListener('readyToClose', () => {
+                jitsiAPI.addEventListener('readyToClose', () => {
+                    console.log("Ready to close");
+                    closeVideoInterface();
+                });
+
+                // Hide loader after 5 seconds as fallback
+                setTimeout(() => {
+                    if(document.getElementById('meetingLoader').style.display !== 'none') {
+                        console.log("Hiding loader (timeout)");
+                        document.getElementById('meetingLoader').style.display = 'none';
+                    }
+                }, 5000);
+
+            } catch (err) {
+                console.error("Jitsi initialization error:", err);
+                alert("Failed to start meeting. Please try again.");
                 closeVideoInterface();
-            });
+            }
         }
 
         // --- VIDEO CONTROLS ---
