@@ -388,45 +388,92 @@
     };
 
     function loadJitsi(roomName) {
-        const frame = document.querySelector('#jitsiFrame');
-        const loaderHTML = document.getElementById('meetingLoader').outerHTML;
-        frame.innerHTML = loaderHTML; // Reset frame content
+    console.log("Starting Jitsi session for room:", roomName);
 
-        const options = {
-            roomName: roomName,
-            width: "100%", height: "100%",
-            parentNode: frame,
-            userInfo: { displayName: userDisplayName, avatarURL: userAvatar },
-            configOverwrite: {
-                prejoinPageEnabled: false,
-                disableLobby: true,
-                enableUserRolesBasedOnToken: false,
-                startWithAudioMuted: false,
-                startWithVideoMuted: false,
-                toolbarButtons: [] // Use external controls
+    const frame = document.querySelector('#jitsiFrame');
+    // Ensure the frame is empty except for the loader
+    const loaderHTML = document.getElementById('meetingLoader').outerHTML;
+    frame.innerHTML = loaderHTML; 
+
+    const domain = "meet.jit.si";
+    const options = {
+        roomName: roomName,
+        width: "100%",
+        height: "100%",
+        parentNode: frame,
+        userInfo: { 
+            displayName: userDisplayName, 
+            avatarURL: userAvatar 
+        },
+        configOverwrite: {
+            // === MODERATOR & CONNECTION FIXES ===
+            prejoinPageEnabled: false,          // Skips the 'Join' button screen
+            disableLobby: true,                 // Disables the waiting room/knock feature
+            enableUserRolesBasedOnToken: false, // Don't wait for official Jitsi JWT moderator
+            disableRemoteMute: false,           // Allows muting others
+            
+            // Allow the first person (Investor) to be the de-facto moderator
+            remoteVideoMenu: {
+                disableKick: !isInvestor,       // Only Investor can kick
+                disableGrantModerator: true
             },
-            interfaceConfigOverwrite: { SHOW_JITSI_WATERMARK: false, MOBILE_APP_PROMO: false }
-        };
+            
+            // === MEETING PERMISSIONS ===
+            startWithAudioMuted: false,
+            startWithVideoMuted: false,
+            requireDisplayName: false,
+            
+            // === UI SETTINGS ===
+            disableDeepLinking: true,           // Prevents mobile app redirects
+            toolbarButtons: []                  // Keeps UI clean for your custom buttons
+        },
+        interfaceConfigOverwrite: {
+            SHOW_JITSI_WATERMARK: false,
+            SHOW_WATERMARK_FOR_GUESTS: false,
+            MOBILE_APP_PROMO: false,
+            DEFAULT_REMOTE_DISPLAY_NAME: 'Partner'
+        }
+    };
 
-        jitsiAPI = new JitsiMeetExternalAPI("meet.jit.si", options);
-        jitsiAPI.addEventListener('videoConferenceJoined', () => {
-            document.getElementById('meetingLoader').style.display = 'none';
-            if (isInvestor) jitsiAPI.executeCommand('password', 'SV_Secure');
-        });
-        jitsiAPI.addEventListener('videoConferenceLeft', closeVideoInterface);
-        jitsiAPI.addEventListener('readyToClose', closeVideoInterface);
-    }
+    // Initialize the API
+    jitsiAPI = new JitsiMeetExternalAPI(domain, options);
 
-    // --- VIDEO CONTROLS ---
-    window.toggleAudio = () => { if(jitsiAPI) { jitsiAPI.executeCommand('toggleAudio'); audioMuted = !audioMuted; document.getElementById('btnMic').classList.toggle('active', audioMuted); } };
-    window.toggleVideo = () => { if(jitsiAPI) { jitsiAPI.executeCommand('toggleVideo'); videoMuted = !videoMuted; document.getElementById('btnCam').classList.toggle('active', videoMuted); } };
-    window.leaveMeeting = () => { if(jitsiAPI) jitsiAPI.dispose(); closeVideoInterface(); };
-    window.endMeetingForAll = () => { if(confirm("End for all?")) { if(jitsiAPI) jitsiAPI.executeCommand('hangup'); closeVideoInterface(); } };
+    // Event Listeners
+    jitsiAPI.addEventListener('videoConferenceJoined', () => {
+        console.log("Local user joined the conference.");
+        document.getElementById('meetingLoader').style.display = 'none';
+        
+        // Investor sets the room password automatically to secure the line
+        if (isInvestor) {
+            console.log("Setting room password as Investor.");
+            jitsiAPI.executeCommand('password', 'SV_Secure_Line_2024');
+        }
+    });
 
-    function closeVideoInterface() {
-        document.getElementById('videoConferenceContainer').style.display = 'none';
-        jitsiAPI = null;
-    }
+    // Handle the case where the founder joins and needs to enter the password set by Investor
+    jitsiAPI.on('passwordRequired', () => {
+        console.log("Room is locked, applying auto-password.");
+        jitsiAPI.executeCommand('password', 'SV_Secure_Line_2024');
+    });
+
+    jitsiAPI.addEventListener('videoConferenceLeft', () => {
+        console.log("Conference left.");
+        closeVideoInterface();
+    });
+
+    jitsiAPI.addEventListener('readyToClose', () => {
+        console.log("Jitsi instance ready to dispose.");
+        closeVideoInterface();
+    });
+
+    // Fallback: If after 10 seconds it's still "loading", hide the loader anyway
+    setTimeout(() => {
+        const loader = document.getElementById('meetingLoader');
+        if (loader && loader.style.display !== 'none') {
+            loader.style.display = 'none';
+        }
+    }, 10000);
+}
 
     // --- FILE UPLOAD ---
     const fileInput = document.getElementById('fileInput');
