@@ -284,7 +284,7 @@
             let chatTitle = "Chat";
             try {
                 const fSnap = await get(ref(db, `founderProfile/${recipientUID}`));
-                if (fSnap.exists()) chatTitle = fSnap.val().founderUsername || "Founder";
+                if (fSnap.exists()) chatTitle = fSnap.val().firstName || "Founder";
                 else {
                     const iSnap = await get(ref(db, `investorProfiles/${recipientUID}`));
                     if (iSnap.exists()) chatTitle = iSnap.val().fullName || "Investor";
