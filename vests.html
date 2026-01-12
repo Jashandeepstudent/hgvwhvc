@@ -4135,6 +4135,140 @@ window.limitWords = function(element, limit) {
         alert(`Professional Guard: Maximum ${limit} words allowed per section.`);
     }
 };
+// --- 1. SHOW CHAT LIST SCREEN ---
+window.showInvestorChatList = async function() {
+    const container = document.getElementById('dashboardContainer');
+    container.style.display = 'block';
+    document.querySelector('.vest-container').style.display = 'none';
+
+    // Show Loader
+    container.innerHTML = `<div class="loading-box"><div class="spinner"></div><p style="color:#888;">Syncing with Investor Network...</p></div>`;
+
+    try {
+        const chatsRef = ref(db, 'Chats');
+        const snapshot = await get(chatsRef);
+        const allChats = snapshot.val() || {};
+        
+        let myChats = [];
+
+        // Filter chats that belong to current user
+        // Room Key Format is Alphabetical: uid1_uid2
+        Object.keys(allChats).forEach(roomKey => {
+            if (roomKey.includes(currentUser.uid)) {
+                const messages = Object.values(allChats[roomKey]);
+                const lastMsg = messages[messages.length - 1]; // Get latest
+                
+                // Identify the "Other" person (The Investor)
+                const otherUid = roomKey.replace(currentUser.uid, '').replace('_', '');
+                
+                myChats.push({
+                    roomKey: roomKey,
+                    otherUid: otherUid,
+                    lastMessage: lastMsg.text,
+                    timestamp: lastMsg.timestamp,
+                    isUnread: (lastMsg.sender !== currentUser.uid) // Simple unread logic
+                });
+            }
+        });
+
+        // Sort by newest first
+        myChats.sort((a, b) => b.timestamp - a.timestamp);
+
+        // Render HTML
+        let listHtml = `
+            ${createNavBar()} <div class="chat-list-container">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
+                    <h1 style="font-size:2rem; font-weight:800;">Investor Inbox</h1>
+                    <span style="color:#666;">${myChats.length} Conversations</span>
+                </div>
+        `;
+
+        if (myChats.length === 0) {
+            listHtml += `
+                <div class="empty-state" style="padding:4rem; border:1px dashed #333;">
+                    <p style="color:#666;">No messages yet. Launch a vest to start conversations!</p>
+                </div>
+            `;
+        } else {
+            // We need to fetch names for these UIDs. 
+            // For now, we render placeholders and update them async if needed, 
+            // or just use generic "Investor" to save reads.
+            
+            listHtml += myChats.map(chat => {
+                const date = new Date(chat.timestamp).toLocaleDateString();
+                const time = new Date(chat.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                
+                return `
+                <div class="chat-item" onclick="window.location.href='chat.html?recipient=${chat.otherUid}'">
+                    <div class="chat-avatar">INV</div>
+                    <div class="chat-info">
+                        <div class="chat-name">
+                            Investor 
+                            ${chat.isUnread ? '<span class="unread-pill">NEW MESSAGE</span>' : ''}
+                        </div>
+                        <div class="chat-preview">${chat.lastMessage}</div>
+                    </div>
+                    <div class="time-ago">
+                        <div>${time}</div>
+                        <div style="font-size:0.7rem; opacity:0.6;">${date}</div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        listHtml += `</div>`; // Close container
+        container.innerHTML = listHtml;
+
+        // Clear Badge when viewing list
+        updateNotificationBadge(0);
+
+    } catch (e) {
+        console.error("Chat Error", e);
+        container.innerHTML = `<p style="text-align:center; padding:2rem; color:red;">Error loading messages.</p>`;
+    }
+};
+
+// --- 2. GLOBAL NOTIFICATION LISTENER ---
+// Call this function inside your onAuthStateChanged, right after 'isInitialLoad = false;'
+function startNotificationListener() {
+    const chatsRef = ref(db, 'Chats');
+    
+    // Listen for changes in real-time
+    onValue(chatsRef, (snapshot) => {
+        if (!snapshot.exists()) return;
+        const allChats = snapshot.val();
+        let unreadCount = 0;
+
+        Object.keys(allChats).forEach(roomKey => {
+            if (roomKey.includes(currentUser.uid)) {
+                const messages = Object.values(allChats[roomKey]);
+                const lastMsg = messages[messages.length - 1];
+                
+                // If last message was NOT sent by me, count it as potential unread
+                // (In a real app, you'd check a 'read' status flag in DB)
+                if (lastMsg.sender !== currentUser.uid) {
+                    unreadCount++;
+                }
+            }
+        });
+
+        updateNotificationBadge(unreadCount);
+    });
+}
+
+function updateNotificationBadge(count) {
+    const bell = document.getElementById('navBellBadge');
+    const msg = document.getElementById('navMsgBadge');
+    
+    if (count > 0) {
+        if(bell) { bell.classList.add('active'); bell.innerText = ''; } // Just a dot
+        if(msg) { msg.classList.add('active'); msg.innerText = ''; }
+    } else {
+        if(bell) bell.classList.remove('active');
+        if(msg) msg.classList.remove('active');
+    }
+}
    onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
@@ -4297,10 +4431,16 @@ function handleHashChange() {
             document.body.style.background = "#000";
             showEditProfile();
         } 
-else if (hash === 'investor_chatlist') {
-        document.body.style.background = "#000";
-        showInvestorChatList();
-    }
+        else if (hash === 'investor_chatlist') {
+            document.body.style.background = "#000";
+          
+            if (typeof window.showInvestorChatList === 'function') {
+                window.showInvestorChatList(); 
+            } else {
+                console.error("Error: showInvestorChatList function not loaded yet.");
+                container.innerHTML = `<p style="text-align:center; padding:2rem; color:red;">Error: Chat module not loaded. Please refresh.</p>`;
+            }
+        }
         else if (hash === 'founder_emergence') {
             document.body.style.background = "#000";
             showFounderEmergence();
@@ -5439,6 +5579,8 @@ max-width: 1100px;
         </div>
         <div class="notif-badge" id="navBellBadge"></div>
     </div>
+
+
 
         <div class="profile-dropdown">
 <div class="icon-btn" onclick="toggleDashProfileDropdown()">
@@ -9263,140 +9405,7 @@ window.closeFullScreenPDF = function() {
         setTimeout(() => viewer.remove(), 300);
     }
 };
-// --- 1. SHOW CHAT LIST SCREEN ---
-window.showInvestorChatList = async function() {
-    const container = document.getElementById('dashboardContainer');
-    container.style.display = 'block';
-    document.querySelector('.vest-container').style.display = 'none';
 
-    // Show Loader
-    container.innerHTML = `<div class="loading-box"><div class="spinner"></div><p style="color:#888;">Syncing with Investor Network...</p></div>`;
-
-    try {
-        const chatsRef = ref(db, 'Chats');
-        const snapshot = await get(chatsRef);
-        const allChats = snapshot.val() || {};
-        
-        let myChats = [];
-
-        // Filter chats that belong to current user
-        // Room Key Format is Alphabetical: uid1_uid2
-        Object.keys(allChats).forEach(roomKey => {
-            if (roomKey.includes(currentUser.uid)) {
-                const messages = Object.values(allChats[roomKey]);
-                const lastMsg = messages[messages.length - 1]; // Get latest
-                
-                // Identify the "Other" person (The Investor)
-                const otherUid = roomKey.replace(currentUser.uid, '').replace('_', '');
-                
-                myChats.push({
-                    roomKey: roomKey,
-                    otherUid: otherUid,
-                    lastMessage: lastMsg.text,
-                    timestamp: lastMsg.timestamp,
-                    isUnread: (lastMsg.sender !== currentUser.uid) // Simple unread logic
-                });
-            }
-        });
-
-        // Sort by newest first
-        myChats.sort((a, b) => b.timestamp - a.timestamp);
-
-        // Render HTML
-        let listHtml = `
-            ${createNavBar()} <div class="chat-list-container">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
-                    <h1 style="font-size:2rem; font-weight:800;">Investor Inbox</h1>
-                    <span style="color:#666;">${myChats.length} Conversations</span>
-                </div>
-        `;
-
-        if (myChats.length === 0) {
-            listHtml += `
-                <div class="empty-state" style="padding:4rem; border:1px dashed #333;">
-                    <p style="color:#666;">No messages yet. Launch a vest to start conversations!</p>
-                </div>
-            `;
-        } else {
-            // We need to fetch names for these UIDs. 
-            // For now, we render placeholders and update them async if needed, 
-            // or just use generic "Investor" to save reads.
-            
-            listHtml += myChats.map(chat => {
-                const date = new Date(chat.timestamp).toLocaleDateString();
-                const time = new Date(chat.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                
-                return `
-                <div class="chat-item" onclick="window.location.href='chat.html?recipient=${chat.otherUid}'">
-                    <div class="chat-avatar">INV</div>
-                    <div class="chat-info">
-                        <div class="chat-name">
-                            Investor 
-                            ${chat.isUnread ? '<span class="unread-pill">NEW MESSAGE</span>' : ''}
-                        </div>
-                        <div class="chat-preview">${chat.lastMessage}</div>
-                    </div>
-                    <div class="time-ago">
-                        <div>${time}</div>
-                        <div style="font-size:0.7rem; opacity:0.6;">${date}</div>
-                    </div>
-                </div>
-                `;
-            }).join('');
-        }
-
-        listHtml += `</div>`; // Close container
-        container.innerHTML = listHtml;
-
-        // Clear Badge when viewing list
-        updateNotificationBadge(0);
-
-    } catch (e) {
-        console.error("Chat Error", e);
-        container.innerHTML = `<p style="text-align:center; padding:2rem; color:red;">Error loading messages.</p>`;
-    }
-};
-
-// --- 2. GLOBAL NOTIFICATION LISTENER ---
-// Call this function inside your onAuthStateChanged, right after 'isInitialLoad = false;'
-function startNotificationListener() {
-    const chatsRef = ref(db, 'Chats');
-    
-    // Listen for changes in real-time
-    onValue(chatsRef, (snapshot) => {
-        if (!snapshot.exists()) return;
-        const allChats = snapshot.val();
-        let unreadCount = 0;
-
-        Object.keys(allChats).forEach(roomKey => {
-            if (roomKey.includes(currentUser.uid)) {
-                const messages = Object.values(allChats[roomKey]);
-                const lastMsg = messages[messages.length - 1];
-                
-                // If last message was NOT sent by me, count it as potential unread
-                // (In a real app, you'd check a 'read' status flag in DB)
-                if (lastMsg.sender !== currentUser.uid) {
-                    unreadCount++;
-                }
-            }
-        });
-
-        updateNotificationBadge(unreadCount);
-    });
-}
-
-function updateNotificationBadge(count) {
-    const bell = document.getElementById('navBellBadge');
-    const msg = document.getElementById('navMsgBadge');
-    
-    if (count > 0) {
-        if(bell) { bell.classList.add('active'); bell.innerText = ''; } // Just a dot
-        if(msg) { msg.classList.add('active'); msg.innerText = ''; }
-    } else {
-        if(bell) bell.classList.remove('active');
-        if(msg) msg.classList.remove('active');
-    }
-}
 
 </script>
 <!-- FOUNDER DASHBOARD -->
