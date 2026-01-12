@@ -523,7 +523,7 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     const firebaseConfig = {
         apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
         authDomain: "scalevest-163a0.firebaseapp.com",
@@ -536,7 +536,16 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
+    const auth = getAuth(app);
 
+
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        loadVestData(); // Move the function call here
+    } else {
+        window.location.href = "login3.html";
+    }
+});
     // Get URL parameters
     const params = new URLSearchParams(window.location.search);
     const vestID = params.get('id');
