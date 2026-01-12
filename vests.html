@@ -151,7 +151,33 @@
     transition: all 0.2s;
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
+/* --- ONLINE STATUS INDICATOR --- */
+.status-indicator {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid #111; /* Matches background to cut out circle */
+    z-index: 5;
+}
 
+.status-online {
+    background-color: #10b981; /* Green */
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+}
+
+.status-offline {
+    background-color: #666; /* Gray */
+    border: 2px solid #111;
+}
+
+/* Fix chat preview text color */
+.chat-preview {
+    color: #888;
+    max-width: 85%; /* Prevent overlapping with time */
+}
 .btn-back-external:hover {
     transform: translateX(-5px);
     border-color: #000;
@@ -4305,9 +4331,11 @@ window.showInvestorChatList = async function() {
                 // Identify the Investor (The other ID)
                 const otherUid = roomKey.replace(currentUser.uid, '').replace('_', '');
                 
-                // SAFETY CHECK: Ensure lastMsg exists
-                const msgText = lastMsg.text || "Sent an attachment";
-                const msgTime = lastMsg.timestamp || Date.now();
+                // FIX: Correctly determine message text
+                let displayMsg = "Media / Attachment";
+                if (lastMsg.text && lastMsg.text.trim() !== "") {
+                    displayMsg = lastMsg.text;
+                }
 
                 if(otherUid) {
                     uniqueUserIds.add(otherUid);
@@ -4315,15 +4343,15 @@ window.showInvestorChatList = async function() {
                     myChats.push({
                         roomKey: roomKey,
                         otherUid: otherUid,
-                        lastMessage: msgText,
-                        timestamp: msgTime,
+                        lastMessage: displayMsg,
+                        timestamp: lastMsg.timestamp || Date.now(),
                         isUnread: (lastMsg.sender !== currentUser.uid)
                     });
                 }
             }
         });
 
-        // --- 2. FETCH INVESTOR PROFILES ---
+        // --- 2. FETCH INVESTOR PROFILES & STATUS ---
         const profileMap = {};
         const fetchPromises = Array.from(uniqueUserIds).map(async (uid) => {
             try {
@@ -4333,11 +4361,11 @@ window.showInvestorChatList = async function() {
                     profileMap[uid] = snap.val();
                 } else {
                     // Fallback to basic info
-                    profileMap[uid] = { fullName: "Investor", photoURL: null };
+                    profileMap[uid] = { fullName: "Investor", photoURL: null, status: 'offline' };
                 }
             } catch (err) {
                 console.warn(`Could not fetch profile for ${uid}`, err);
-                profileMap[uid] = { fullName: "Investor", photoURL: null };
+                profileMap[uid] = { fullName: "Investor", photoURL: null, status: 'offline' };
             }
         });
 
@@ -4347,8 +4375,7 @@ window.showInvestorChatList = async function() {
         myChats.sort((a, b) => b.timestamp - a.timestamp);
 
         let listHtml = `
-        
-            <div class="chat-list-container">
+                       <div class="chat-list-container">
                 <div class="chat-header-row">
                     <div>
                         <h1 style="font-size:2rem; font-weight:800; margin:0; letter-spacing:-1px;">Investor Inbox</h1>
@@ -4374,10 +4401,14 @@ window.showInvestorChatList = async function() {
             listHtml += myChats.map(chat => {
                 const profile = profileMap[chat.otherUid] || { fullName: 'Unknown Investor' };
                 
-                // Get Name (Prioritize fullName, fallback to generic)
+                // Get Name
                 const displayName = profile.fullName || profile.name || "Investor";
                 const displayPhoto = profile.photoURL || profile.logo; 
                 
+                // Status Logic (Checks for 'online' string or boolean true)
+                const isOnline = profile.status === 'online' || profile.isOnline === true;
+                const statusClass = isOnline ? 'status-online' : 'status-offline';
+
                 // Time Formatting
                 const msgDate = new Date(chat.timestamp);
                 const isToday = new Date().toDateString() === msgDate.toDateString();
@@ -4391,6 +4422,8 @@ window.showInvestorChatList = async function() {
                         ${displayPhoto 
                             ? `<img src="${displayPhoto}" alt="${displayName}" onerror="this.style.display='none'">` 
                             : displayName.charAt(0).toUpperCase()}
+                        
+                        <div class="status-indicator ${statusClass}"></div>
                     </div>
                     
                     <div class="chat-info">
