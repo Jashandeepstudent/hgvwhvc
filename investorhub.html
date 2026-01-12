@@ -1054,21 +1054,23 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+
 /* 🔐 Firebase config */
 const firebaseConfig = {
-  apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
-  authDomain: "scalevest-163a0.firebaseapp.com",
-  databaseURL: "https://scalevest-163a0-default-rtdb.firebaseio.com",
-  projectId: "scalevest-163a0",
-  storageBucket: "scalevest-163a0.firebasestorage.app",
-  messagingSenderId: "938358950124",
-  appId: "1:938358950124:web:043506aeaacea2a96bfdc9"
+    apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
+    authDomain: "scalevest-163a0.firebaseapp.com",
+    databaseURL: "https://scalevest-163a0-default-rtdb.firebaseio.com",
+    projectId: "scalevest-163a0",
+    storageBucket: "scalevest-163a0.firebasestorage.app",
+    messagingSenderId: "938358950124",
+    appId: "1:938358950124:web:043506aeaacea2a96bfdc9"
 };
 
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 const auth = getAuth(app);
 const storage = getStorage(app);
+
 let uploadedPhotoURL = "";
 let currentUserUID = null;
 
@@ -1083,342 +1085,183 @@ function updateProgress(percent, status) {
 /* ✅ AUTH LISTENER */
 onAuthStateChanged(auth, async (user) => {
     updateProgress(20, "Authenticating User...");
-    
     if (!user) {
         window.location.href = "login3.html";
         return;
     }
-
     try {
         currentUserUID = user.uid;
         updateProgress(50, "Fetching Investor Data...");
-        
-        // Wait for all data to load
         await loadUserProfile(user.uid);
-        
         updateProgress(100, "Terminal Ready");
-        
-        // Brief delay so the user sees the 100% state
         setTimeout(() => {
             const loader = document.getElementById("loadingScreen");
-            loader.style.opacity = "0";
-            setTimeout(() => loader.style.display = "none", 800);
+            if(loader) {
+                loader.style.opacity = "0";
+                setTimeout(() => loader.style.display = "none", 800);
+            }
         }, 500);
-
     } catch (err) {
         console.error("Boot Error:", err);
         updateProgress(100, "Error: Connection Failed");
-        // Hide anyway so the user isn't stuck forever
-        setTimeout(() => document.getElementById("loadingScreen").style.display = "none", 2000);
     }
 });
-window.toggleDropdown = function(id) {
-    const dropdown = document.getElementById(id);
-    if (dropdown) dropdown.classList.toggle('show');
-};
 
-window.toggleProfileDropdown = function() {
-    const dropdown = document.getElementById('profileDropdown');
-    if (dropdown) dropdown.classList.toggle('show');
-};
+/* ✅ UI CONTROLS */
+window.toggleDropdown = (id) => document.getElementById(id)?.classList.toggle('show');
+window.toggleProfileDropdown = () => document.getElementById('profileDropdown')?.classList.toggle('show');
+window.openEditIdentity = () => document.getElementById('editIdentityModal').style.display = 'flex';
+window.openEditInvestment = () => document.getElementById('editInvestmentModal').style.display = 'flex';
+window.closeModal = (id) => document.getElementById(id).style.display = 'none';
+
+/* ✅ LOAD PROFILE */
 async function loadUserProfile(uid) {
     const avatarDiv = document.getElementById("profileAvatar");
-    
     try {
         const snapshot = await get(ref(database, "investorProfiles/" + uid));
-        updateProgress(80, "Rendering Interface...");
         if (snapshot.exists()) {
             const data = snapshot.val();
             const fullName = data.fullName || "Investor";
             const initials = fullName.charAt(0).toUpperCase();
 
-            // 1. Update Text
-document.getElementById("profileName").innerText = data.fullName || "Investor";
+            document.getElementById("profileName").innerText = fullName;
             document.getElementById("profileNetWorth").innerText = data.netWorth ? `$${data.netWorth}` : "$0.00";
             document.getElementById("profileId").innerText = data.userID || "ID Pending";
-            
-            // 2. Pre-fill Edit Modal Inputs (Crucial for the Edit Terminal)
-            if(document.getElementById('editNetWorth')) {
-                document.getElementById('editNetWorth').value = data.netWorth || "";
-                document.getElementById('editMinInv').value = data.minInvestment || "";
-                document.getElementById('editMaxInv').value = data.maxInvestment || "";
-                // Note: Using 'preferredCategories' to match your DB
-                document.getElementById('editPreferred').value = data.preferredCategories || "";
-            }
-
-const firstName = fullName.split(' ')[0]; 
-document.getElementById("navProfileName").innerText = fullName;
+            document.getElementById("navProfileName").innerText = fullName;
             document.getElementById("navProfileId").innerText = data.userID || "ID Pending";
+            document.getElementById("welcomeUser").innerText = `Welcome, ${fullName.split(' ')[0]}!`;
 
-            // 2. Update Navigation Icon (Circular Photo or Initial)
-            const navIconBtn = document.querySelector(".profile-dropdown .icon-btn");
-            
-            if (data.photoURL && data.photoURL.trim() !== "") {
-                navIconBtn.innerHTML = `
-                    <img src="${data.photoURL}" 
-                         style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+            if (data.photoURL) {
+                avatarDiv.innerHTML = `<img src="${data.photoURL}" style="width:100%; height:100%; object-fit:cover;">`;
+                document.querySelector(".profile-dropdown .icon-btn").innerHTML = `<img src="${data.photoURL}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
             } else {
-                navIconBtn.innerHTML = `
-                    <div style="font-size:1.2rem; font-weight:600; color:#10b981;">${initials}</div>`;
-            }
-        // ✅ UPDATE THE WELCOME TEXT
-        const welcomeHeader = document.getElementById("welcomeUser");
-        if (welcomeHeader) {
-            welcomeHeader.innerText = `Welcome, ${firstName}!`;
-        }
-            // 2. Avatar Logic: Priority to photoURL
-            if (data.photoURL && data.photoURL.trim() !== "") {
-                const tempImg = new Image();
-                tempImg.src = data.photoURL;
-
-                // Only switch to image if it actually loads
-                tempImg.onload = () => {
-                    avatarDiv.innerHTML = `<img src="${data.photoURL}" style="width:100%; height:100%; object-fit:cover;">`;
-                };
-
-                // Fallback if URL is broken (404)
-                tempImg.onerror = () => {
-                    avatarDiv.innerHTML = `<span>${initials}</span>`;
-                };
-            } else {
-                // No URL in DB? Show Initials
                 avatarDiv.innerHTML = `<span>${initials}</span>`;
             }
-
-            // 3. Forced ID Check
-            if (!data.userID) {
-                document.getElementById("userIdModal").style.display = "flex";
-            }
+            if (!data.userID) document.getElementById("userIdModal").style.display = "flex";
         }
-    } catch (err) {
-        console.error("Firebase Load Error:", err);
-        avatarDiv.innerHTML = `<span>!</span>`;
-    }
+    } catch (err) { console.error("Load Error:", err); }
 }
 
-// --- 1. THE TRIGGER FUNCTION ---
+/* ✅ ENTER EDIT MODE */
 window.enterEditMode = async () => {
-    // Show Loading state
     updateProgress(50, "Opening Edit Terminal...");
     const rightSection = document.querySelector('.right-section');
-    
-    // Fetch current data to pre-fill the edit cards
     const snapshot = await get(ref(database, `investorProfiles/${currentUserUID}`));
     const data = snapshot.exists() ? snapshot.val() : {};
 
-    // Hide dashboard elements
     document.querySelector('.welcome-section').style.display = 'none';
     document.querySelectorAll('.banner').forEach(b => b.style.display = 'none');
 
-    // Render the 3-Card Edit Terminal
+    // 1. Render UI
     rightSection.innerHTML = `
         <h1 class="welcome-text">Profile Terminal</h1>
-        <p class="welcome-subtext">Update your investment identity and financial parameters</p>
-        
-        <div class="edit-profile-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px; margin-top: 30px;">
-            
+        <div class="edit-profile-grid">
             <div class="card">
-                <div class="card-title" style="display:flex; justify-content:space-between; align-items:center;">
+                <div class="card-title" style="display:flex; justify-content:space-between;">
                     Identity Setup
-                    <svg class="edit-pencil" onclick="openEditIdentity()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px; cursor:pointer;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                </div>
-                <div style="text-align:center; margin: 15px 0;">
-                    <div class="profile-avatar" style="width:70px; height:70px; margin: 0 auto;">
-                        <img src="${data.photoURL || ''}" id="miniPreview" style="width:100%; height:100%; object-fit:cover; border-radius:50%; ${data.photoURL ? '' : 'display:none'}">
-                    </div>
+                    <svg class="edit-pencil" onclick="openEditIdentity()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                 </div>
                 <div class="stat-row"><span class="stat-label">Name</span><span class="stat-val">${data.fullName || '---'}</span></div>
                 <div class="stat-row"><span class="stat-label">UserId</span><span class="stat-val">${data.userID || '---'}</span></div>
             </div>
-
             <div class="card">
-                <div class="card-title" style="display:flex; justify-content:space-between; align-items:center;">
+                <div class="card-title" style="display:flex; justify-content:space-between;">
                     Financial Profile
-                    <svg class="edit-pencil" onclick="openEditInvestment()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px; cursor:pointer;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    <svg class="edit-pencil" onclick="openEditInvestment()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                 </div>
                 <div class="stat-row"><span class="stat-label">Net Worth</span><span class="stat-val">$${data.netWorth || '0'}</span></div>
-                <div class="stat-row"><span class="stat-label">Min/Max</span><span class="stat-val">$${data.minInvestment || '0'} - $${data.maxInvestment || '0'}</span></div>
-
-<div class="stat-row">
-    <span class="stat-label">Preferred Startups</span>
-    <span class="stat-val" id="terminalSectorDisplay">
-        ${data.preferredCategories || 'None'}
-    </span>
-</div>
+                <div class="stat-row"><span class="stat-label">Sector</span><span class="stat-val">${data.preferredCategories || 'None'}</span></div>
             </div>
-
-            <div class="card" style="display:flex; flex-direction:column; justify-content:center; align-items:center; border: 1px solid #38bdf8;">
-                <div class="card-title">Terminal Exit</div>
-                <p class="progress-text" style="margin-bottom:20px;">All changes sync to Angel Profile instantly.</p>
-                <button class="card-btn" onclick="location.reload()" style="border-color:#38bdf8; color:#38bdf8;">EXIT TERMINAL</button>
+            <div class="card" style="border: 1px solid #38bdf8; text-align:center;">
+                <button class="card-btn" onclick="location.reload()">EXIT TERMINAL</button>
             </div>
         </div>
     `;
 
-    // Pre-fill hidden modal inputs
+    // 2. Pre-fill Inputs AFTER HTML exists
     document.getElementById('editFullName').value = data.fullName || "";
-    document.getElementById('editUserID').value = data.userID || "";
-if(document.getElementById('editNetWorth')) {
-                document.getElementById('editNetWorth').value = data.netWorth || "";
-                document.getElementById('editMinInv').value = data.minInvestment || "";
-                document.getElementById('editMaxInv').value = data.maxInvestment || "";
-                // Note: Using 'preferredCategories' to match your DB
-                document.getElementById('editPreferred').value = data.preferredCategories || "";
-            };
+    document.getElementById('editNetWorth').value = data.netWorth || "";
+    document.getElementById('editMinInv').value = data.minInvestment || "";
+    document.getElementById('editMaxInv').value = data.maxInvestment || "";
+    document.getElementById('editPreferred').value = data.preferredCategories || "";
+};
 
-// --- 2. MODAL CONTROLS ---
-window.openEditIdentity = () => document.getElementById('editIdentityModal').style.display = 'flex';
-window.openEditInvestment = () => document.getElementById('editInvestmentModal').style.display = 'flex';
-window.closeModal = (id) => document.getElementById(id).style.display = 'none';
-
-// --- 3. PHOTO UPLOAD LOGIC ---
+/* ✅ PHOTO UPLOAD */
 document.getElementById('photoUploadInput').addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    
     const status = document.getElementById('uploadStatus');
     status.innerText = "⏳ Uploading...";
-    
     try {
         const storageRef = sRef(storage, `investor-Photos/${currentUserUID}`);
         await uploadBytes(storageRef, file);
         uploadedPhotoURL = await getDownloadURL(storageRef);
-        
-        // Update Preview in Modal
-        document.getElementById('editPreviewAvatar').innerHTML = `<img src="${uploadedPhotoURL}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
-        status.innerText = "❌ Upload Failed";
+        status.innerText = "✅ Upload Successful! Click Update to Confirm.";
         status.style.color = "#10b981";
     } catch (err) {
-        status.innerText = "✅ Upload Successful Please Click Save to Confirm.";
+        console.error(err);
+        status.innerText = "❌ Upload Failed";
     }
 });
 
+/* ✅ UPDATE PROFILE */
 window.updateProfileSection = async (type) => {
-    if (!currentUserUID) return alert("Session expired. Please log in again.");
-    
-    // Disable buttons to prevent double-submissions
-    const saveBtn = type === 'identity' ? document.getElementById('saveIdentityBtn') : document.querySelector('.modal-btn');
-    if (saveBtn) saveBtn.disabled = true;
+    if (!currentUserUID) return;
+    const saveBtn = type === 'identity' ? document.getElementById('saveIdentityBtn') : event.target;
+    saveBtn.disabled = true;
 
     let updates = {};
-
     if (type === 'identity') {
         const name = document.getElementById('editFullName').value;
-        const uID = document.getElementById('editUserID').value.trim().toUpperCase();
-
-        if (!name || !uID) {
-            alert("Name and Investor ID are required.");
-            if (saveBtn) saveBtn.disabled = false;
-            return;
-        }
-
+        if (!name) return alert("Name is required");
+        updates = { fullName: name, lastUpdated: new Date().toISOString() };
+        if (uploadedPhotoURL) updates.photoURL = uploadedPhotoURL;
+    } else {
         updates = {
-            fullName: name,
-            userID: uID,
-            lastUpdated: new Date().toISOString()
-        };
-
-        // If a new photo was uploaded to Storage, add it to the update object
-        if (uploadedPhotoURL) {
-            updates.photoURL = uploadedPhotoURL;
-        }
-
-    } else if (type === 'investment') {
-        const nw = document.getElementById('editNetWorth').value;
-        const minI = document.getElementById('editMinInv').value;
-        const maxI = document.getElementById('editMaxInv').value;
-        const cats = document.getElementById('editPreferred').value;
-
-        updates = {
-            netWorth: nw,
-            minInvestment: minI,
-            maxInvestment: maxI,
-            preferredCategories: cats, // Matches your specific DB key
+            netWorth: document.getElementById('editNetWorth').value,
+            minInvestment: document.getElementById('editMinInv').value,
+            maxInvestment: document.getElementById('editMaxInv').value,
+            preferredCategories: document.getElementById('editPreferred').value,
             lastUpdated: new Date().toISOString()
         };
     }
 
     try {
-        // Multi-path Update Logic
-        // We update the primary investor profile and the secondary angel profile simultaneously
-        const paths = [
-            `investorProfiles/${currentUserUID}`,
-            `angelProfiles/${currentUserUID}`
-        ];
-
+        const paths = [`investorProfiles/${currentUserUID}`, `angelProfiles/${currentUserUID}`];
         for (const path of paths) {
-            // Check if the node exists before updating to avoid creating empty nodes
-            const snapshot = await get(ref(database, path));
-            if (snapshot.exists() || path.includes('investorProfiles')) {
+            const snap = await get(ref(database, path));
+            if (snap.exists() || path.includes('investorProfiles')) {
                 await update(ref(database, path), updates);
             }
         }
-
-        alert("Edit Complete!");
-        location.reload(); // Refresh UI with new data
-
-    } catch (e) {
-        console.error("Firebase Update Error:", e);
-        alert("Update failed: " + e.message);
-    } finally {
-        if (saveBtn) saveBtn.disabled = false;
-    }
+        alert("Sync Complete!");
+        location.reload();
+    } catch (e) { alert("Error: " + e.message); }
+    finally { saveBtn.disabled = false; }
 };
-window.launchAngelProfile = async function() {
-    if (!currentUserUID) return alert("Session expired.");
-    
+
+/* ✅ LAUNCH ANGEL */
+window.launchAngelProfile = async () => {
     const launchBtn = document.getElementById('launchBtn');
-    // Select the parent container of the button to hide it later
-    const actionContainer = launchBtn.parentElement; 
-
     launchBtn.disabled = true;
-    launchBtn.innerText = "LAUNCHING...";
-
     try {
-        const oldRef = ref(database, `investorProfiles/${currentUserUID}`);
-        const snapshot = await get(oldRef);
-
-        if (snapshot.exists()) {
-            const userData = snapshot.val();
-
-            const angelData = {
-                ...userData,
-                status: "Live", // Setting status to Live
-                launchedAt: new Date().toISOString(),
-                lastUpdated: new Date().toISOString()
-            };
-
-            // ✅ Corrected path to "angelProfiles"
+        const snap = await get(ref(database, `investorProfiles/${currentUserUID}`));
+        if (snap.exists()) {
+            const angelData = { ...snap.val(), status: "Live", launchedAt: new Date().toISOString() };
             await update(ref(database, `angelProfiles/${currentUserUID}`), angelData);
-
-            alert("CONGRATULATIONS! Your Angel Profile is now LIVE.");
-            
-            // ✅ Hide the button/action area since it's now Live
-            actionContainer.innerHTML = `<div style="color: #10b981; font-weight: bold; padding: 10px; border: 1px solid #10b981; border-radius: 8px;">✓ PROFILE LIVE</div>`;
-            
-        } else {
-            alert("Error: Profile data not found.");
+            alert("Your Angel Profile is LIVE!");
+            location.reload();
         }
-    } catch (error) {
-        console.error("Migration Error:", error);
-        alert("Launch failed.");
-    } finally {
-        launchBtn.disabled = false;
-    }
+    } catch (e) { console.error(e); launchBtn.disabled = false; }
 };
-/* ✅ SAVE USER ID */
-window.saveUserID = async function () {
+
+/* ✅ INITIALIZE ID */
+window.saveUserID = async () => {
     const newId = document.getElementById("newUserIdInput").value.trim().toUpperCase();
-    if (newId.length < 3) return alert("Minimum 3 characters");
-
-    await update(ref(database, "investorProfiles/" + currentUserUID), {
-        userID: newId
-    });
-
-    document.getElementById("profileId").innerText = newId;
-    document.getElementById("userIdModal").style.display = "none";
+    if (newId.length < 3) return alert("Min 3 characters");
+    await update(ref(database, `investorProfiles/${currentUserUID}`), { userID: newId });
+    location.reload();
 };
-}
 </script>
 
 
