@@ -523,7 +523,9 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+    /* 🔐 Firebase config */
     const firebaseConfig = {
         apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
         authDomain: "scalevest-163a0.firebaseapp.com",
@@ -538,197 +540,208 @@ import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/
     const db = getDatabase(app);
     const auth = getAuth(app);
 
-
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        loadVestData(); // Move the function call here
-    } else {
-        window.location.href = "login3.html";
-    }
-});
-/* --- MEDIA TERMINAL LOGIC --- */
-
-window.openPitchDeck = (url) => {
-    if (!url || url === "#") return alert("No Pitch Deck available for this vest.");
-    const viewport = document.getElementById('mediaViewport');
-    const terminal = document.getElementById('mediaTerminal');
-    const externalBtn = document.getElementById('externalOpenBtn');
-
-    // Use Google Docs Viewer to render PDFs/PPTs inside the iframe if they are direct links
-    const viewerUrl = url.endsWith('.pdf') 
-        ? `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true` 
-        : url;
-
-    viewport.innerHTML = `<iframe src="${viewerUrl}" style="width:100%; height:100%; border:none;"></iframe>`;
-    externalBtn.href = url;
-    terminal.classList.add('active');
-};
-
-window.openDemoVideo = (url) => {
-    if (!url || url === "#") return alert("No Demo Video available for this vest.");
-    const viewport = document.getElementById('mediaViewport');
-    const terminal = document.getElementById('mediaTerminal');
-    const externalBtn = document.getElementById('externalOpenBtn');
-
-    let videoHtml = "";
-    
-    // Check if it's a YouTube link
-    if (url.includes('youtube.com') || url.includes('youtu.be')) {
-        const videoId = url.split('v=')[1] || url.split('/').pop();
-        videoHtml = `<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1" style="width:100%; height:100%; border:none;" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
-    } else {
-        // Direct MP4 link
-        videoHtml = `<video src="${url}" controls autoplay style="width:100%; height:100%;"></video>`;
-    }
-
-    viewport.innerHTML = videoHtml;
-    externalBtn.href = url;
-    terminal.classList.add('active');
-};
-
-window.closeMediaTerminal = () => {
-    const viewport = document.getElementById('mediaViewport');
-    viewport.innerHTML = ""; // Stop video/audio playback
-    document.getElementById('mediaTerminal').classList.remove('active');
-};
-
-/* --- UPDATE YOUR loadVestData to use these functions --- */
-// Inside your loadVestData try block, find the link updates and replace them with these:
-
-// For Pitch Deck Link:
-const pitchLink = document.getElementById('pitchDeckLink');
-pitchLink.onclick = (e) => {
-    e.preventDefault();
-    openPitchDeck(details.pitchDeckUrl);
-};
-
-// For Demo Video Link:
-const videoLink = document.getElementById('demoVideoLink');
-videoLink.onclick = (e) => {
-    e.preventDefault();
-    openDemoVideo(founder.demoVideoUrl);
-};
     // Get URL parameters
     const params = new URLSearchParams(window.location.search);
     const vestID = params.get('id');
     const ownerUID = params.get('owner');
 
-    // Category switching
+    /* --- 1. LOCAL PROGRESS PERSISTENCE --- */
+    let viewedSections = new Set(['main']);
+    const storageKey = vestID ? `progress_${vestID}` : 'progress_default';
+
+    function initProgress() {
+        const saved = localStorage.getItem(storageKey);
+        if (saved) {
+            try {
+                viewedSections = new Set(JSON.parse(saved));
+            } catch (e) {
+                console.error("Error parsing progress storage", e);
+            }
+        }
+        updateProgressUI();
+    }
+
+    function updateProgressUI() {
+        const progress = (viewedSections.size / 5) * 100;
+        const bar = document.getElementById('progressBar');
+        const text = document.getElementById('progressText');
+        if (bar) bar.style.width = progress + '%';
+        if (text) text.textContent = Math.round(progress) + '%';
+        
+        // Save state locally
+        localStorage.setItem(storageKey, JSON.stringify(Array.from(viewedSections)));
+    }
+
+    /* --- 2. AUTH GUARD & INITIALIZATION --- */
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            initProgress();
+            loadVestData(); 
+        } else {
+            window.location.href = "login3.html";
+        }
+    });
+
+    /* --- 3. DATA LOADING --- */
+    async function loadVestData() {
+        if (!vestID || !ownerUID) {
+            alert('Invalid access parameters');
+            return;
+        }
+
+        try {
+            // Fetch main Vest data
+            const vestRef = ref(db, `Vests/${ownerUID}/${vestID}`);
+            const snapshot = await get(vestRef);
+
+            if (!snapshot.exists()) {
+                alert('Vest not found');
+                return;
+            }
+
+            const vestData = snapshot.val();
+            const main = vestData.MainVest || {};
+            const details = vestData.StartupDetails || {};
+            const audit = vestData.Audit || {};
+            const roadmap = vestData.Roadmap || {};
+            const founder = vestData.FounderPresence || {};
+
+            // Header Section
+            document.getElementById('hookTitle').textContent = main.hook || 'Investment Opportunity';
+            document.getElementById('description').textContent = main.description || 'Verified High-Growth Opportunity';
+
+            // Main Details Tab
+            document.getElementById('problem').textContent = main.problem || 'Not specified';
+            document.getElementById('solution').textContent = main.solution || 'Not specified';
+            document.getElementById('advantage').textContent = main.advantage || 'Not specified';
+            document.getElementById('fundAsk').textContent = '$' + (main.fundAsk ? Number(main.fundAsk).toLocaleString() : '0');
+            document.getElementById('equityOffered').textContent = main.equityOffered || '0%';
+
+            // Startup Details Tab
+            const startupName = details.startupName || details.name || 'Startup';
+            document.getElementById('startupName').textContent = startupName;
+            document.getElementById('modalStartupName').textContent = startupName;
+            document.getElementById('startupDescription').textContent = details.description || 'Analysis Terminal Active';
+            document.getElementById('stage').textContent = details.stage || 'N/A';
+            document.getElementById('category').textContent = details.category || 'N/A';
+            document.getElementById('revenue').textContent = main.annualRevenue || '---';
+            document.getElementById('valuation').textContent = main.valuation || 'TBD';
+            
+            // Set up Pitch Deck link
+            const pitchLink = document.getElementById('pitchDeckLink');
+            pitchLink.onclick = (e) => {
+                e.preventDefault();
+                window.openPitchDeck(details.pitchDeckUrl);
+            };
+
+            // Audit Tab
+            document.getElementById('scalability').textContent = audit.scalability || 'Not specified';
+            document.getElementById('marketShare').textContent = audit.marketShare || 'Not specified';
+            document.getElementById('competitors').textContent = audit.competitors || 'Not specified';
+            document.getElementById('monetization').textContent = audit.monetization || 'Not specified';
+            document.getElementById('differentiation').textContent = audit.differentiation || 'Not specified';
+
+            // Roadmap Tab
+            document.getElementById('fundedPlan').textContent = roadmap.fundedPlan || 'Not specified';
+            document.getElementById('fundUtilization').textContent = roadmap.fundUsage || 'Not specified';
+            document.getElementById('yearGoal').textContent = roadmap.yearGoal || 'Not specified';
+            document.getElementById('threeYearVision').textContent = roadmap.threeYearVision || 'Not specified';
+
+            // Founder Presence Tab
+            document.getElementById('founderName').textContent = founder.founderName || 'Founder';
+            document.getElementById('coFounders').textContent = founder.coFounders || 'Solo Founder';
+            document.getElementById('responsibilities').textContent = founder.responsibilities || 'Not specified';
+            
+            // Set up Demo Video link
+            const videoLink = document.getElementById('demoVideoLink');
+            videoLink.onclick = (e) => {
+                e.preventDefault();
+                window.openDemoVideo(founder.demoVideoUrl);
+            };
+
+            /* --- LOGO FETCH FROM startupProfile --- */
+            const logoRef = ref(db, `startupProfile/${ownerUID}`);
+            const logoSnap = await get(logoRef);
+            const logoContainer = document.getElementById('logoInitials');
+            
+            if (logoSnap.exists() && logoSnap.val().logo) {
+                logoContainer.innerHTML = `<img src="${logoSnap.val().logo}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+            } else {
+                const initials = startupName.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+                logoContainer.textContent = initials;
+            }
+
+        } catch (error) {
+            console.error('Error loading vest:', error);
+            alert('Security Error: Verify Database Rules or connection.');
+        }
+    }
+
+    /* --- 4. CATEGORY / TAB SWITCHING --- */
     const pills = document.querySelectorAll('.category-pill');
     const sections = document.querySelectorAll('.section');
-    let viewedSections = new Set(['main']);
 
     pills.forEach(pill => {
         pill.addEventListener('click', () => {
             const sectionName = pill.dataset.section;
+            
+            // Mark section as explored
             viewedSections.add(sectionName);
-            updateProgress();
+            updateProgressUI();
 
+            // Toggle UI classes
             pills.forEach(p => p.classList.remove('active'));
             pill.classList.add('active');
 
             sections.forEach(s => s.classList.remove('active'));
-            document.getElementById(sectionName).classList.add('active');
+            const targetSection = document.getElementById(sectionName);
+            if (targetSection) targetSection.classList.add('active');
         });
     });
 
-    function updateProgress() {
-        const progress = (viewedSections.size / 5) * 100;
-        document.getElementById('progressBar').style.width = progress + '%';
-        document.getElementById('progressText').textContent = Math.round(progress) + '%';
-    }
+    /* --- 5. MEDIA TERMINAL LOGIC --- */
+    window.openPitchDeck = (url) => {
+        if (!url || url === "" || url === "#") return alert("No Pitch Deck available for this vest.");
+        const viewport = document.getElementById('mediaViewport');
+        const terminal = document.getElementById('mediaTerminal');
+        const externalBtn = document.getElementById('externalOpenBtn');
 
-    // Load vest data
-   async function loadVestData() {
-    if (!vestID || !ownerUID) {
-        alert('Invalid vest ID');
-        return;
-    }
+        // Render PDF inside viewer
+        const viewerUrl = url.endsWith('.pdf') 
+            ? `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true` 
+            : url;
 
-    try {
-        // 1. Fetch main Vest data
-        const vestRef = ref(db, `Vests/${ownerUID}/${vestID}`);
-        const snapshot = await get(vestRef);
+        viewport.innerHTML = `<iframe src="${viewerUrl}" style="width:100%; height:100%; border:none;"></iframe>`;
+        externalBtn.href = url;
+        terminal.classList.add('active');
+    };
 
-        if (!snapshot.exists()) {
-            alert('Vest not found');
-            return;
-        }
+    window.openDemoVideo = (url) => {
+        if (!url || url === "" || url === "#") return alert("No Demo Video available.");
+        const viewport = document.getElementById('mediaViewport');
+        const terminal = document.getElementById('mediaTerminal');
+        const externalBtn = document.getElementById('externalOpenBtn');
 
-        const vestData = snapshot.val();
-        
-        // --- CORRECT PATH MAPPING ---
-        const main = vestData.MainVest || {};
-        const details = vestData.StartupDetails || {};
-        const audit = vestData.Audit || {};
-        const roadmap = vestData.Roadmap || {};
-        const founder = vestData.FounderPresence || {}; // Matches your FounderPresence node
-
-        // Header
-        document.getElementById('hookTitle').textContent = main.hook || 'Investment Opportunity';
-        document.getElementById('description').textContent = main.description || 'No description available';
-
-        // Main Details
-        document.getElementById('problem').textContent = main.problem || 'Not specified';
-        document.getElementById('solution').textContent = main.solution || 'Not specified';
-        document.getElementById('advantage').textContent = main.advantage || 'Not specified';
-        document.getElementById('fundAsk').textContent = '$' + (main.fundAsk || '0');
-        document.getElementById('equityOffered').textContent = (main.equityOffered || '0');
-
-        // Startup Details (Correcting keys to match common structures)
-        const startupName = details.startupName || details.name || 'Startup';
-        document.getElementById('startupName').textContent = startupName;
-        document.getElementById('modalStartupName').textContent = startupName;
-        document.getElementById('startupDescription').textContent = details.description || 'No description';
-        document.getElementById('stage').textContent = details.stage || 'N/A';
-        document.getElementById('category').textContent = details.category || 'N/A';
-        document.getElementById('revenue').textContent = main.annualRevenue || 'N/A';
-        document.getElementById('valuation').textContent = main.valuation || 'N/A';
-        document.getElementById('pitchDeckLink').href = details.pitchDeckUrl || '#';
-
-        // Audit
-        document.getElementById('scalability').textContent = audit.scalability || 'Not specified';
-        document.getElementById('marketShare').textContent = audit.marketShare || 'Not specified';
-        document.getElementById('competitors').textContent = audit.competitors || 'Not specified';
-        document.getElementById('monetization').textContent = audit.monetization || 'Not specified';
-        document.getElementById('differentiation').textContent = audit.differentiation || 'Not specified';
-
-        // Roadmap
-        document.getElementById('fundedPlan').textContent = roadmap.fundedPlan || 'Not specified';
-        document.getElementById('fundUtilization').textContent = roadmap.fundUsage || 'Not specified'; // Matches your 'fundUsage' key
-        document.getElementById('yearGoal').textContent = roadmap.yearGoal || 'Not specified';
-        document.getElementById('threeYearVision').textContent = roadmap.threeYearVision || 'Not specified';
-
-        // Founder
-        document.getElementById('founderName').textContent = founder.founderName || 'Not specified';
-        document.getElementById('coFounders').textContent = founder.coFounders || 'Not specified';
-        document.getElementById('responsibilities').textContent = founder.responsibilities || 'Not specified';
-        document.getElementById('demoVideoLink').href = founder.demoVideoUrl || '#';
-
-        // --- 2. FETCH STARTUP LOGO FROM startupProfile ---
-        // This looks under the owner's UID in the startupProfile node
-        const logoRef = ref(db, `startupProfile/${ownerUID}`);
-        const logoSnap = await get(logoRef);
-        
-        const logoContainer = document.getElementById('logoInitials');
-        if (logoSnap.exists() && logoSnap.val().logo) {
-            // If logo exists, replace initials with image
-            logoContainer.innerHTML = `<img src="${logoSnap.val().logo}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+        let videoHtml = "";
+        if (url.includes('youtube.com') || url.includes('youtu.be')) {
+            const videoId = url.split('v=')[1]?.split('&')[0] || url.split('/').pop();
+            videoHtml = `<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1" style="width:100%; height:100%; border:none;" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
         } else {
-            // Fallback to initials
-            const initials = startupName.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
-            logoContainer.textContent = initials;
+            videoHtml = `<video src="${url}" controls autoplay style="width:100%; height:100%; background:black;"></video>`;
         }
 
-    } catch (error) {
-        console.error('Error loading vest:', error);
-        alert('Failed to load vest data');
-    }
-}
+        viewport.innerHTML = videoHtml;
+        externalBtn.href = url;
+        terminal.classList.add('active');
+    };
 
-    loadVestData();
+    window.closeMediaTerminal = () => {
+        const viewport = document.getElementById('mediaViewport');
+        viewport.innerHTML = ""; // Kill playback immediately
+        document.getElementById('mediaTerminal').classList.remove('active');
+    };
 
-    // Modal functions
+    /* --- 6. FUNDING MODAL CONTROLS --- */
     document.getElementById('fundButton').addEventListener('click', () => {
         document.getElementById('fundModal').classList.add('active');
     });
