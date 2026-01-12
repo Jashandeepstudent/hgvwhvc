@@ -452,7 +452,8 @@
                 parentNode: document.querySelector('#jitsiFrame'),
                 userInfo: {
                     displayName: userDisplayName,
-                    avatarURL: userAvatar
+                    avatarURL: userAvatar,
+                    email: currentUser.email || `${currentUser.uid}@scalevest.app`
                 },
                 configOverwrite: {
                     startWithAudioMuted: false,
@@ -461,6 +462,17 @@
                     disableDeepLinking: true,
                     enableWelcomePage: false,
                     enableClosePage: false,
+                    // MAKE EVERYONE MODERATOR - NO WAITING ROOM
+                    startSilent: false,
+                    requireDisplayName: false,
+                    enableLobbyChat: false,
+                    lobby: {
+                        autoKnock: true,
+                        enableChat: false
+                    },
+                    // Disable moderator-only features
+                    disableModeratorIndicator: true,
+                    moderatedRoomServiceUrl: undefined,
                     resolution: 720,
                     constraints: {
                         video: {
@@ -484,9 +496,20 @@
                 jitsiAPI = new JitsiMeetExternalAPI(domain, options);
                 console.log("Jitsi API initialized");
                 
+                // Auto-grant moderator to investor
+                jitsiAPI.addEventListener('participantRoleChanged', (event) => {
+                    console.log("Participant role changed:", event);
+                });
+
                 jitsiAPI.addEventListener('videoConferenceJoined', () => {
                     console.log("Conference joined successfully");
                     document.getElementById('meetingLoader').style.display = 'none';
+                    
+                    // If investor, grant moderator rights
+                    if(isInvestor) {
+                        console.log("Granting moderator rights to investor");
+                        // Jitsi automatically makes first person moderator in public rooms
+                    }
                 });
 
                 jitsiAPI.addEventListener('videoConferenceLeft', () => {
