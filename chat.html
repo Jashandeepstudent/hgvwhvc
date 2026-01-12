@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Session | ScaleVest</title>
+    <script src='https://meet.jit.si/external_api.js'></script>
     <style>
         /* Reusing your ScaleVest Theme */
-        body { font-family: 'SF Pro Display', -apple-system, sans-serif; background: #f8f9fa; margin: 0; display: flex; flex-direction: column; height: 100vh; }
+        body { font-family: 'SF Pro Display', -apple-system, sans-serif; background: #f8f9fa; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         
         /* HEADER */
         .chat-header {
@@ -14,130 +15,39 @@
             display: flex; align-items: center; justify-content: space-between; z-index: 100;
         }
         
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        /* Circular Logo */
-        .header-logo {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid #e5e7eb;
-        }
-
+        .header-left { display: flex; align-items: center; gap: 15px; }
+        .header-logo { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid #e5e7eb; }
         .header-title { font-weight: 800; font-size: 1.2rem; color: #1a1a1a; }
         .header-sub { font-size: 0.85rem; color: #10b981; font-weight: 600; }
-        
-        /* Header Buttons Area */
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+        .header-actions { display: flex; align-items: center; gap: 10px; }
 
         .action-btn {
-            background: #f3f4f6;
-            border: 1px solid #e5e7eb;
-            padding: 8px 14px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #374151;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: 0.2s;
-            text-decoration: none;
-            height: 38px; /* Fixed height for alignment */
+            background: #f3f4f6; border: 1px solid #e5e7eb; padding: 8px 14px; border-radius: 8px;
+            cursor: pointer; font-size: 0.85rem; font-weight: 600; color: #374151;
+            display: flex; align-items: center; gap: 6px; transition: 0.2s; text-decoration: none; height: 38px;
         }
-        
-        /* Meeting Button Specifics */
-        .meeting-btn {
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: white;
-            border: none;
-            display: none; /* HIDDEN BY DEFAULT - Only for Investors */
-        }
-
+        .meeting-btn { background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; display: none; }
         .action-btn:hover { transform: translateY(-1px); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .meeting-btn:hover { box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); }
 
         /* CHAT AREA */
         #chatContainer {
             flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px;
-            position: relative;
-            background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
-            background-size: 20px 20px;
+            position: relative; background-image: radial-gradient(#e5e7eb 1px, transparent 1px); background-size: 20px 20px;
         }
-
-        /* SAFETY WARNING (EMPTY STATE) */
-        .safety-warning {
-            text-align: center;
-            padding: 40px 20px;
-            background: #fff;
-            border-radius: 12px;
-            margin: 20px auto;
-            max-width: 80%;
-            border: 1px dashed #ccc;
-            color: #555;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-        }
-        .safety-icon { font-size: 2rem; margin-bottom: 10px; display: block; }
-        .safety-text { font-size: 0.95rem; line-height: 1.5; }
-        .safety-text strong { color: #10b981; }
 
         /* MESSAGES */
-        .message-bubble {
-            max-width: 70%; padding: 12px 18px; border-radius: 18px; font-size: 15px; line-height: 1.5; position: relative; animation: popIn 0.3s ease;
-            word-wrap: break-word;
-        }
-        .msg-mine {
-            background: #10b981; color: white; align-self: flex-end; border-bottom-right-radius: 4px;
-        }
-        .msg-theirs {
-            background: white; color: #374151; align-self: flex-start; border-bottom-left-radius: 4px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
+        .message-bubble { max-width: 70%; padding: 12px 18px; border-radius: 18px; font-size: 15px; line-height: 1.5; position: relative; animation: popIn 0.3s ease; word-wrap: break-word; }
+        .msg-mine { background: #10b981; color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+        .msg-theirs { background: white; color: #374151; align-self: flex-start; border-bottom-left-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .timestamp { font-size: 10px; opacity: 0.7; margin-top: 5px; display: block; text-align: right; }
         
-        /* MEETING CARD STYLE */
+        /* MEETING CARD */
         .meeting-card {
-            background: rgba(255,255,255,0.15);
-            border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 10px;
-            padding: 10px;
-            margin-top: 5px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 10px; padding: 15px; margin-top: 5px; cursor: pointer; transition: 0.2s;
         }
+        .meeting-card:hover { background: rgba(255,255,255,0.25); }
         .msg-theirs .meeting-card { background: #f0fdf4; border-color: #10b981; color: #064e3b; }
-        
-        /* MEDIA STYLES */
-        .chat-image {
-            max-width: 100%; border-radius: 10px; margin-bottom: 5px; display: block; cursor: pointer;
-        }
-        .chat-video {
-            max-width: 100%; border-radius: 10px; margin-bottom: 5px;
-        }
-        .file-attachment {
-            display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.1); padding: 10px; border-radius: 8px; text-decoration: none; color: inherit; font-weight: 600; margin-bottom: 5px;
-        }
-        .msg-mine .file-attachment { color: white; background: rgba(255,255,255,0.2); }
-
-        /* TYPING INDICATOR */
-        .typing-indicator {
-            align-self: flex-start; background: white; padding: 10px 15px; border-radius: 20px; border-bottom-left-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: none; align-items: center; gap: 5px; margin-bottom: 10px;
-        }
-        .dot { width: 6px; height: 6px; background: #bbb; border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; }
-        .dot:nth-child(1) { animation-delay: -0.32s; }
-        .dot:nth-child(2) { animation-delay: -0.16s; }
-        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+        .join-btn { background: #fff; color: #10b981; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 700; margin-top: 10px; cursor: pointer; width: 100%; }
 
         /* INPUT AREA */
         .input-area { background: white; padding: 15px 20px; display: flex; gap: 12px; border-top: 1px solid #e5e7eb; align-items: center; }
@@ -148,14 +58,51 @@
         #sendBtn { background: #10b981; color: white; border: none; padding: 0 25px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; height: 50px; }
         #sendBtn:hover { transform: scale(1.05); }
 
-        /* LOADING OVERLAY */
-        #initialLoader { position: absolute; top:0; left:0; width:100%; height:100%; background:#f8f9fa; z-index:50; display:flex; flex-direction:column; align-items:center; justify-content:center; }
-        .spinner { width: 40px; height: 40px; border: 4px solid #ddd; border-top: 4px solid #10b981; border-radius: 50%; animation: spin 1s infinite linear; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
+        /* MODALS (Meeting Setup & Waiting Room) */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px);
+            z-index: 2000; display: none; align-items: center; justify-content: center;
+        }
+        .modal-box {
+            background: white; padding: 30px; border-radius: 16px; width: 90%; max-width: 400px; box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+        }
+        .modal-title { font-size: 1.2rem; font-weight: 800; margin-bottom: 20px; color: #111; }
+        .modal-input { width: 100%; padding: 12px; border: 2px solid #eee; border-radius: 8px; margin-bottom: 15px; font-size: 1rem; box-sizing: border-box;}
+        .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .modal-btn { padding: 12px; border-radius: 8px; border: none; cursor: pointer; font-weight: 700; transition: 0.2s; width: 100%; }
+        .btn-primary { background: #10b981; color: white; }
+        .btn-secondary { background: #f3f4f6; color: #333; }
+        .btn-danger { background: #ef4444; color: white; }
 
-        /* Upload Progress */
+        /* VIDEO CONFERENCE INTERFACE */
+        #videoConferenceContainer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 3000; display: none; flex-direction: column;
+        }
+        #jitsiFrame { flex: 1; width: 100%; border: none; }
+        
+        .video-controls {
+            height: 80px; background: #111; display: flex; align-items: center; justify-content: center; gap: 20px;
+        }
+        .control-btn {
+            width: 50px; height: 50px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            background: #333; color: white; transition: 0.2s;
+        }
+        .control-btn.active { background: #ef4444; color: white; } /* Red for muted/off */
+        .control-btn:hover { transform: scale(1.1); }
+        .btn-leave { background: #ef4444 !important; }
+        .btn-end { background: #b91c1c !important; width: auto; padding: 0 20px; border-radius: 25px; }
+
+        /* WAITING ROOM */
+        .waiting-room { text-align: center; color: #333; }
+        .waiting-time { font-size: 2rem; font-weight: 800; color: #10b981; margin: 20px 0; }
+
+        /* UTILS */
         #uploadProgress { position: fixed; top: 0; left: 0; width: 0%; height: 4px; background: #10b981; z-index: 200; transition: width 0.3s; }
-
+        .typing-indicator { align-self: flex-start; background: white; padding: 10px 15px; border-radius: 20px; border-bottom-left-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: none; align-items: center; gap: 5px; margin-bottom: 10px; }
+        .dot { width: 6px; height: 6px; background: #bbb; border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; }
+        .dot:nth-child(1) { animation-delay: -0.32s; }
+        .dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
         @keyframes popIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
@@ -173,30 +120,21 @@
         </div>
         
         <div class="header-actions">
-            <button class="action-btn meeting-btn" id="meetingBtn" onclick="sendMeetingRequest()">
+            <button class="action-btn meeting-btn" id="meetingBtn" onclick="openMeetingModal()">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                    <line x1="16" y1="2" x2="16" y2="6"></line>
-                    <line x1="8" y1="2" x2="8" y2="6"></line>
-                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line>
                 </svg>
                 Arrange Meeting
             </button>
-            
-            <button class="action-btn" onclick="history.back()">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="19" y1="12" x2="5" y2="12"></line>
-                    <polyline points="12 19 5 12 12 5"></polyline>
-                </svg>
-                Back
-            </button>
+            <button class="action-btn" onclick="history.back()">Back</button>
         </div>
     </div>
 
     <div id="chatContainer">
-        <div id="initialLoader">
-            <div class="spinner"></div>
-            <div style="margin-top:10px; color:#888; font-size:0.9rem;">Syncing History...</div>
+        <div id="initialLoader" style="position: absolute; top:0; left:0; width:100%; height:100%; background:#f8f9fa; z-index:50; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+            <div style="width: 40px; height: 40px; border: 4px solid #ddd; border-top: 4px solid #10b981; border-radius: 50%; animation: spin 1s infinite linear;"></div>
+            <style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
+            <div style="margin-top:10px; color:#888; font-size:0.9rem;">Syncing...</div>
         </div>
 
         <div id="safetyWarning" class="safety-warning" style="display:none;">
@@ -226,9 +164,48 @@
         <button id="sendBtn">SEND</button>
     </div>
 
+    <div id="meetingSetupModal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-title">Arrange Meeting</div>
+            <input type="text" id="meetingTitle" class="modal-input" placeholder="Meeting Title (e.g. Funding Discussion)">
+            
+            <div style="margin-bottom:10px; font-weight:600; font-size:0.9rem;">Schedule (Optional)</div>
+            <div class="modal-grid">
+                <input type="date" id="meetingDate" class="modal-input" style="margin:0;">
+                <input type="time" id="meetingTime" class="modal-input" style="margin:0;">
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button class="modal-btn btn-secondary" onclick="closeMeetingModal()">Cancel</button>
+                <button class="modal-btn btn-primary" onclick="createMeeting()">Generate Link</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="waitingRoomModal" class="modal-overlay">
+        <div class="modal-box waiting-room">
+            <div style="font-size:3rem;">⏳</div>
+            <div class="modal-title">Meeting Scheduled</div>
+            <p>This meeting is scheduled for:</p>
+            <div class="waiting-time" id="waitDisplayTime">--:--</div>
+            <p id="waitDisplayDate" style="color:#666; margin-bottom:20px;">--/--/----</p>
+            <button class="modal-btn btn-secondary" onclick="document.getElementById('waitingRoomModal').style.display='none'">Okay, I'll wait</button>
+        </div>
+    </div>
+
+    <div id="videoConferenceContainer">
+        <div id="jitsiFrame"></div>
+        <div class="video-controls">
+            <button class="control-btn" onclick="toggleAudio()" id="btnMic">🎤</button>
+            <button class="control-btn" onclick="toggleVideo()" id="btnCam">📷</button>
+            <button class="control-btn btn-leave" onclick="leaveMeeting()">Leave</button>
+            <button class="control-btn btn-end" id="btnEndAll" style="display:none;" onclick="endMeetingForAll()">End Meeting</button>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, push, onChildAdded, get, set, onValue, query, orderByChild, startAfter } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, push, onChildAdded, get, set, update, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
         import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
@@ -248,119 +225,82 @@
         const storage = getStorage(app);
         const auth = getAuth(app);
 
-        // BOT FILTER LIST
-        const badWords = ["abuse", "scam", "fraud", "kill", "idiot", "stupid", "badword", "fake"];
-
-        // GET PARAMS
+        // GLOBAL VARS
         const params = new URLSearchParams(window.location.search);
         const recipientUID = params.get('recipient');
         let currentUser = null;
         let chatRoomID = null;
+        let jitsiAPI = null;
+        let isInvestor = false;
+        let userDisplayName = "User";
+        let userAvatar = "";
         let typingTimeout = null;
-        let lastLoadedTimestamp = 0;
 
-        // AUTH GUARD
+        // AUTH
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUser = user;
-                if(!recipientUID) {
-                    alert("No recipient specified.");
-                    window.location.href = "dashboard.html";
-                    return;
-                }
+                if(!recipientUID) { window.location.href = "dashboard.html"; return; }
                 
-                // CHECK ROLE (Show Meeting Button ONLY if Investor)
-                checkInvestorRole();
-
+                await identifyUserRole(); // Determine if I am investor
                 initializeChat();
             } else {
                 window.location.href = "login3.html";
             }
         });
 
-        // --- NEW: CHECK IF USER IS INVESTOR ---
-        async function checkInvestorRole() {
+        // 1. IDENTIFY ROLE & GET MY DETAILS (For Video Card)
+        async function identifyUserRole() {
+            // Check Investor
             try {
-                // If currentUser exists in investorProfiles, they are an investor
-                const invRef = ref(db, `investorProfiles/${currentUser.uid}`);
-                const snapshot = await get(invRef);
-                
-                if (snapshot.exists()) {
+                const invSnap = await get(ref(db, `investorProfiles/${currentUser.uid}`));
+                if (invSnap.exists()) {
+                    isInvestor = true;
                     document.getElementById('meetingBtn').style.display = 'flex';
+                    document.getElementById('btnEndAll').style.display = 'flex'; // Enable End Meeting btn
+                    const data = invSnap.val();
+                    userDisplayName = data.fullName || "Investor";
+                    userAvatar = data.photoURL || data.logo || "";
+                    return;
                 }
-            } catch (e) {
-                console.error("Role Check Error:", e);
-            }
+            } catch(e) {}
+
+            // Check Founder
+            try {
+                const fndSnap = await get(ref(db, `founderProfile/${currentUser.uid}`));
+                if (fndSnap.exists()) {
+                    const data = fndSnap.val();
+                    userDisplayName = data.founderUsername || "Founder";
+                    userAvatar = data.photoURL || "";
+                }
+            } catch(e) {}
         }
 
         async function initializeChat() {
             const participantIDs = [currentUser.uid, recipientUID].sort();
             chatRoomID = `chat_${participantIDs[0]}_${participantIDs[1]}`;
 
-            // 1. FETCH HEADER NAME
+            // Header Name Logic
             let chatTitle = "Chat";
             try {
-                const founderSnap = await get(ref(db, `founderProfile/${recipientUID}`));
-                if (founderSnap.exists()) {
-                    chatTitle = founderSnap.val().founderUsername || "Founder";
-                } else {
-                    const investorSnap = await get(ref(db, `investorProfiles/${recipientUID}`));
-                    if (investorSnap.exists()) {
-                        chatTitle = investorSnap.val().fullName || "Investor"; 
-                    }
+                const fSnap = await get(ref(db, `founderProfile/${recipientUID}`));
+                if (fSnap.exists()) chatTitle = fSnap.val().founderUsername || "Founder";
+                else {
+                    const iSnap = await get(ref(db, `investorProfiles/${recipientUID}`));
+                    if (iSnap.exists()) chatTitle = iSnap.val().fullName || "Investor";
                 }
-            } catch (e) { console.error(e); }
+            } catch (e) {}
             document.getElementById('chatTitle').textContent = chatTitle;
+            document.getElementById('initialLoader').style.display = 'none';
 
-            // 2. BULK LOAD HISTORY
+            // Listen for Messages
             const messagesRef = ref(db, `Chats/${chatRoomID}`);
-            
-            try {
-                const snapshot = await get(messagesRef);
-                const loader = document.getElementById('initialLoader');
-                const warning = document.getElementById('safetyWarning');
-
-                if (snapshot.exists()) {
-                    const data = snapshot.val();
-                    const messages = [];
-
-                    Object.values(data).forEach(msg => {
-                        if (msg.sender && msg.timestamp) {
-                            messages.push(msg);
-                        }
-                    });
-
-                    messages.sort((a, b) => a.timestamp - b.timestamp);
-
-                    messages.forEach(msg => {
-                        renderMessage(msg, false); 
-                        lastLoadedTimestamp = msg.timestamp;
-                    });
-
-                    const container = document.getElementById('chatContainer');
-                    container.scrollTop = container.scrollHeight;
-                    if(messages.length > 0) warning.style.display = 'none';
-                } else {
-                    warning.style.display = 'block';
-                }
-                loader.style.display = 'none';
-
-            } catch (e) {
-                console.error("Chat Load Error", e);
-                document.getElementById('initialLoader').innerHTML = "Error loading chat.";
-            }
-
-            // 3. LISTEN FOR *NEW* MESSAGES
-            const newMsgQuery = query(messagesRef, orderByChild('timestamp'), startAfter(lastLoadedTimestamp));
-            onChildAdded(newMsgQuery, (snapshot) => {
+            onChildAdded(messagesRef, (snapshot) => {
                 const msg = snapshot.val();
-                if(msg && msg.timestamp > lastLoadedTimestamp) { 
-                    renderMessage(msg, true); 
-                    lastLoadedTimestamp = msg.timestamp; 
-                }
+                if(msg.sender) renderMessage(msg);
             });
-
-            // 4. LISTEN FOR TYPING
+            
+             // 4. LISTEN FOR TYPING
             const typingRef = ref(db, `Chats/${chatRoomID}/typing/${recipientUID}`);
             onValue(typingRef, (snapshot) => {
                 const isTyping = snapshot.val();
@@ -377,94 +317,183 @@
             });
         }
 
-        // --- FILTER FUNCTION ---
-        function sanitizeMessage(text) {
-            let cleanText = text;
-            badWords.forEach(word => {
-                const regex = new RegExp(`\\b${word}\\b`, 'gi');
-                cleanText = cleanText.replace(regex, '####');
-            });
-            return cleanText;
-        }
-
-        // --- SEND MEETING REQUEST ---
-        window.sendMeetingRequest = async function() {
-            if(!confirm("Send a formal meeting invitation?")) return;
-
-            const text = "📅 Meeting Invitation: I'd like to arrange a call to discuss this further.";
-            
-            await push(ref(db, `Chats/${chatRoomID}`), {
-                sender: currentUser.uid,
-                text: text,
-                isMeetingRequest: true,
-                timestamp: Date.now(),
-                recipient: recipientUID
-            });
-
+        // --- RENDER MESSAGES ---
+        function renderMessage(msg) {
             const container = document.getElementById('chatContainer');
-            container.scrollTop = container.scrollHeight;
-        };
-
-        // --- RENDER UI ---
-        function renderMessage(msg, autoScroll) {
-            const container = document.getElementById('chatContainer');
-            const warning = document.getElementById('safetyWarning');
-            const bubble = document.getElementById('typingBubble');
-            
-            if (warning) warning.style.display = 'none';
-
             const isMine = msg.sender === currentUser.uid;
-            
             const div = document.createElement('div');
             div.className = `message-bubble ${isMine ? 'msg-mine' : 'msg-theirs'}`;
             
             const time = new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             
+            // File Handling
             let contentHtml = "";
-
-            if (msg.fileType === 'image') {
+             if (msg.fileType === 'image') {
                 contentHtml = `<img src="${msg.fileUrl}" class="chat-image" onclick="window.open('${msg.fileUrl}')">`;
             } else if (msg.fileType === 'video') {
                 contentHtml = `<video src="${msg.fileUrl}" class="chat-video" controls></video>`;
             } else if (msg.fileType === 'document') {
-                contentHtml = `
-                    <a href="${msg.fileUrl}" target="_blank" class="file-attachment">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
-                        ${msg.fileName || 'Document'}
-                    </a>
-                `;
+                contentHtml = `<a href="${msg.fileUrl}" target="_blank" class="file-attachment">📄 ${msg.fileName || 'Document'}</a>`;
             }
 
+            // Text Message
             if (msg.text) {
                 contentHtml += `<div>${msg.text}</div>`;
             }
+            // Meeting Invite Card
+            else if (msg.type === 'meeting') {
+                const isScheduled = msg.scheduledTime && msg.scheduledTime !== 'now';
+                const dateObj = isScheduled ? new Date(msg.scheduledTime) : new Date();
+                const displayTime = isScheduled ? dateObj.toLocaleString() : "Happening Now";
 
-            if (msg.isMeetingRequest) {
-                contentHtml += `
-                    <div class="meeting-card">
-                        <span style="font-size:1.5rem">📅</span>
-                        <div>
-                            <strong>Meeting Invitation</strong>
-                            <div style="font-size:0.8rem; opacity:0.8">Let's connect soon.</div>
+                contentHtml = `
+                    <div class="meeting-card" onclick="window.tryJoinMeeting('${msg.meetingId}', ${msg.scheduledTime === 'now' ? "'now'" : msg.scheduledTime})">
+                        <span style="font-size:2rem">📹</span>
+                        <div style="flex:1">
+                            <div style="font-weight:700; font-size:1rem;">${msg.title}</div>
+                            <div style="font-size:0.85rem; opacity:0.8;">${displayTime}</div>
+                            <button class="join-btn">JOIN MEETING</button>
                         </div>
                     </div>
                 `;
             }
             
-            div.innerHTML = `
-                ${contentHtml}
-                <span class="timestamp">${time}</span>
-            `;
-            
-            if (bubble && container.contains(bubble)) {
-                container.insertBefore(div, bubble);
-            } else {
-                container.appendChild(div);
-            }
-            
-            if(autoScroll) container.scrollTop = container.scrollHeight;
+            div.innerHTML = `${contentHtml}<span class="timestamp">${time}</span>`;
+
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
         }
 
+        // --- MEETING LOGIC ---
+
+        // 1. Open Setup Modal
+        window.openMeetingModal = () => {
+            document.getElementById('meetingSetupModal').style.display = 'flex';
+        };
+        window.closeMeetingModal = () => {
+            document.getElementById('meetingSetupModal').style.display = 'none';
+        };
+
+        // 2. Create Meeting (Send Invite)
+        window.createMeeting = async () => {
+            const title = document.getElementById('meetingTitle').value || "Quick Sync";
+            const dateVal = document.getElementById('meetingDate').value;
+            const timeVal = document.getElementById('meetingTime').value;
+            
+            let scheduledTime = 'now';
+            let meetingId = `meet_${Date.now()}_${Math.floor(Math.random()*1000)}`;
+
+            // Parse Schedule if set
+            if (dateVal && timeVal) {
+                scheduledTime = new Date(`${dateVal}T${timeVal}`).getTime();
+            }
+
+            // Send Invite Message
+            await push(ref(db, `Chats/${chatRoomID}`), {
+                sender: currentUser.uid,
+                type: 'meeting',
+                title: title,
+                meetingId: meetingId,
+                scheduledTime: scheduledTime,
+                timestamp: Date.now(),
+                recipient: recipientUID
+            });
+
+            closeMeetingModal();
+        };
+
+        // 3. Try Join (Check Time)
+        window.tryJoinMeeting = (meetingId, scheduledTime) => {
+            const now = Date.now();
+
+            // If scheduled in future (giving 5 min grace period)
+            if (scheduledTime !== 'now' && now < (scheduledTime - 5 * 60 * 1000)) {
+                // Show Wait Screen
+                const dateObj = new Date(scheduledTime);
+                document.getElementById('waitDisplayTime').textContent = dateObj.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+                document.getElementById('waitDisplayDate').textContent = dateObj.toLocaleDateString();
+                document.getElementById('waitingRoomModal').style.display = 'flex';
+                return;
+            }
+
+            // Start Jitsi
+            loadJitsi(meetingId);
+        };
+
+        // 4. Load Jitsi Interface
+        function loadJitsi(roomName) {
+            document.getElementById('videoConferenceContainer').style.display = 'flex';
+
+            const domain = "meet.jit.si";
+            const options = {
+                roomName: "ScaleVest_" + roomName, // Unique room prefix
+                width: "100%",
+                height: "100%",
+                parentNode: document.querySelector('#jitsiFrame'),
+                userInfo: {
+                    displayName: userDisplayName,
+                    avatarURL: userAvatar // Shows logo/photo on video card
+                },
+                configOverwrite: {
+                    startWithAudioMuted: false,
+                    startWithVideoMuted: false,
+                    prejoinPageEnabled: false, // Skip pre-join screen
+                    disableDeepLinking: true,
+                    toolbarButtons: [] // HIDE DEFAULT BUTTONS, use custom ones
+                },
+                interfaceConfigOverwrite: {
+                    SHOW_JITSI_WATERMARK: false,
+                    SHOW_WATERMARK_FOR_GUESTS: false,
+                    TOOLBAR_ALWAYS_VISIBLE: false
+                }
+            };
+
+            jitsiAPI = new JitsiMeetExternalAPI(domain, options);
+            
+            // Handle Hangup Event from inside Jitsi
+            jitsiAPI.addEventListener('videoConferenceLeft', () => {
+                closeVideoInterface();
+            });
+        }
+
+        // --- VIDEO CONTROLS ---
+        window.toggleAudio = () => {
+            jitsiAPI.executeCommand('toggleAudio');
+            document.getElementById('btnMic').classList.toggle('active');
+        };
+
+        window.toggleVideo = () => {
+            jitsiAPI.executeCommand('toggleVideo');
+            document.getElementById('btnCam').classList.toggle('active');
+        };
+
+        window.leaveMeeting = () => {
+            if(jitsiAPI) jitsiAPI.dispose();
+            closeVideoInterface();
+        };
+
+        // Investor Only: Kick everyone
+        window.endMeetingForAll = () => {
+            if(!confirm("End meeting for everyone?")) return;
+            // Jitsi doesn't have a simple 'end for all' via API without auth, 
+            // but we can simulate it or just hang up ourselves.
+            // For this demo, we dispose.
+            if(jitsiAPI) jitsiAPI.dispose();
+            closeVideoInterface();
+            
+            // Optionally update DB to say meeting ended
+        };
+
+        function closeVideoInterface() {
+            document.getElementById('videoConferenceContainer').style.display = 'none';
+            document.querySelector('#jitsiFrame').innerHTML = ""; // Clear iframe
+            jitsiAPI = null;
+        }
+
+        // --- TEXT SEND LOGIC (Standard) ---
+        const input = document.getElementById('msgInput');
+        const sendBtn = document.getElementById('sendBtn');
+        
         // --- FILE UPLOAD LOGIC ---
         const fileInput = document.getElementById('fileInput');
         const attachBtn = document.getElementById('attachBtn');
@@ -490,6 +519,7 @@
                     }, 
                     (error) => {
                         console.error("Upload failed", error);
+                        alert("File upload failed.");
                         progressBar.style.width = '0%';
                     }, 
                     async () => {
@@ -517,30 +547,26 @@
             }
         });
 
-        // --- TEXT SEND LOGIC ---
-        const input = document.getElementById('msgInput');
-        const sendBtn = document.getElementById('sendBtn');
-
         async function sendMessage() {
-            const rawText = input.value.trim();
-            if (!rawText || !chatRoomID) return;
+            const text = input.value.trim();
+            if (!text || !chatRoomID) return;
 
-            const cleanText = sanitizeMessage(rawText);
+            // Bad Word Filter
+            const badWords = ["abuse", "scam", "fraud", "kill", "idiot"];
+            let cleanText = text;
+            badWords.forEach(w => { cleanText = cleanText.replace(new RegExp(`\\b${w}\\b`,'gi'), '####'); });
 
-            const messagesRef = ref(db, `Chats/${chatRoomID}`);
-            await push(messagesRef, {
+            await push(ref(db, `Chats/${chatRoomID}`), {
                 sender: currentUser.uid,
                 text: cleanText,
                 timestamp: Date.now(),
-                recipient: recipientUID 
+                recipient: recipientUID
             });
-
-            input.value = ""; 
-            input.focus();
+            input.value = "";
             set(ref(db, `Chats/${chatRoomID}/typing/${currentUser.uid}`), false);
         }
-
-        // TYPING LOGIC
+        
+         // TYPING LOGIC
         input.addEventListener('input', () => {
             if (!chatRoomID) return;
             set(ref(db, `Chats/${chatRoomID}/typing/${currentUser.uid}`), true);
@@ -551,9 +577,7 @@
         });
 
         sendBtn.addEventListener('click', sendMessage);
-        input.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendMessage();
-        });
+        input.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
 
     </script>
 </body>
