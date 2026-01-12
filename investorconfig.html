@@ -490,7 +490,7 @@
                 
                 // Upload Photo
                 if (window.selectedFile) {
-                    const imgRef = storageRef(storage, `investorPhotos/${currentUser.uid}/avatar_${Date.now()}`);
+                    const imgRef = storageRef(storage, `investor-Photos/${currentUser.uid}/avatar_${Date.now()}`);
                     await uploadBytes(imgRef, window.selectedFile);
                     photoURL = await getDownloadURL(imgRef);
                 }
