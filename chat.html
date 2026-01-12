@@ -43,11 +43,15 @@
         
         /* MEETING CARD */
         .meeting-card {
-            background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 10px; padding: 15px; margin-top: 5px; cursor: pointer; transition: 0.2s;
+            background: rgba(255,255,255,0.9); border: 1px solid rgba(0,0,0,0.1); border-radius: 12px; padding: 16px; margin-top: 5px;
+            display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
-        .meeting-card:hover { background: rgba(255,255,255,0.25); }
-        .msg-theirs .meeting-card { background: #f0fdf4; border-color: #10b981; color: #064e3b; }
-        .join-btn { background: #fff; color: #10b981; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 700; margin-top: 10px; cursor: pointer; width: 100%; }
+        .msg-theirs .meeting-card { background: #f0fdf4; border-color: #10b981; }
+        .join-btn { 
+            background: #10b981; color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 700; margin-top: 8px; cursor: pointer; width: 100%; transition: 0.2s;
+        }
+        .join-btn:hover { background: #059669; transform: scale(1.02); }
+        .join-btn:disabled { background: #ccc; cursor: not-allowed; transform: none; }
 
         /* INPUT AREA */
         .input-area { background: white; padding: 15px 20px; display: flex; gap: 12px; border-top: 1px solid #e5e7eb; align-items: center; }
@@ -58,7 +62,7 @@
         #sendBtn { background: #10b981; color: white; border: none; padding: 0 25px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; height: 50px; }
         #sendBtn:hover { transform: scale(1.05); }
 
-        /* MODALS (Meeting Setup & Waiting Room) */
+        /* MODALS */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px);
             z-index: 2000; display: none; align-items: center; justify-content: center;
@@ -92,10 +96,6 @@
         .btn-leave { background: #ef4444 !important; }
         .btn-end { background: #b91c1c !important; width: auto; padding: 0 20px; border-radius: 25px; }
 
-        /* WAITING ROOM */
-        .waiting-room { text-align: center; color: #333; }
-        .waiting-time { font-size: 2rem; font-weight: 800; color: #10b981; margin: 20px 0; }
-
         /* UTILS */
         #uploadProgress { position: fixed; top: 0; left: 0; width: 0%; height: 4px; background: #10b981; z-index: 200; transition: width 0.3s; }
         .typing-indicator { align-self: flex-start; background: white; padding: 10px 15px; border-radius: 20px; border-bottom-left-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: none; align-items: center; gap: 5px; margin-bottom: 10px; }
@@ -104,6 +104,12 @@
         .dot:nth-child(2) { animation-delay: -0.16s; }
         @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
         @keyframes popIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Media Styles */
+        .chat-image { max-width: 100%; border-radius: 10px; margin-bottom: 5px; cursor: pointer; }
+        .chat-video { max-width: 100%; border-radius: 10px; margin-bottom: 5px; }
+        .file-attachment { display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.1); padding: 10px; border-radius: 8px; text-decoration: none; color: inherit; font-weight: 600; margin-bottom: 5px; }
+        .msg-mine .file-attachment { color: white; background: rgba(255,255,255,0.2); }
     </style>
 </head>
 <body>
@@ -143,7 +149,7 @@
                 <strong>ScaleVest has your back.</strong><br>
                 Please do not open any suspicious links or share sensitive passwords.
                 <br><br>
-                <small style="color:#999">Messages are end-to-end encrypted.</small>
+              
             </div>
         </div>
 
@@ -183,11 +189,11 @@
     </div>
 
     <div id="waitingRoomModal" class="modal-overlay">
-        <div class="modal-box waiting-room">
+        <div class="modal-box" style="text-align:center;">
             <div style="font-size:3rem;">⏳</div>
             <div class="modal-title">Meeting Scheduled</div>
             <p>This meeting is scheduled for:</p>
-            <div class="waiting-time" id="waitDisplayTime">--:--</div>
+            <div style="font-size:2rem; font-weight:800; color:#10b981; margin:20px 0;" id="waitDisplayTime">--:--</div>
             <p id="waitDisplayDate" style="color:#666; margin-bottom:20px;">--/--/----</p>
             <button class="modal-btn btn-secondary" onclick="document.getElementById('waitingRoomModal').style.display='none'">Okay, I'll wait</button>
         </div>
@@ -235,6 +241,8 @@
         let userDisplayName = "User";
         let userAvatar = "";
         let typingTimeout = null;
+        let lastLoadedTimestamp = 0;
+        const badWords = ["abuse", "scam", "fraud", "kill", "idiot", "stupid", "badword", "fake"];
 
         // AUTH
         onAuthStateChanged(auth, async (user) => {
@@ -242,7 +250,7 @@
                 currentUser = user;
                 if(!recipientUID) { window.location.href = "dashboard.html"; return; }
                 
-                await identifyUserRole(); // Determine if I am investor
+                await identifyUserRole(); 
                 initializeChat();
             } else {
                 window.location.href = "login3.html";
@@ -270,7 +278,7 @@
                 const fndSnap = await get(ref(db, `founderProfile/${currentUser.uid}`));
                 if (fndSnap.exists()) {
                     const data = fndSnap.val();
-                    userDisplayName = data.founderUsername || "Founder";
+                    userDisplayName = data.fullName || data.founderUsername || "Founder"; // FIX: Prioritize Full Name
                     userAvatar = data.photoURL || "";
                 }
             } catch(e) {}
@@ -283,24 +291,66 @@
             // Header Name Logic
             let chatTitle = "Chat";
             try {
+                // Fetch Founder Profile First (Specifically looking for Full Name)
                 const fSnap = await get(ref(db, `founderProfile/${recipientUID}`));
-                if (fSnap.exists()) chatTitle = fSnap.val().founderUsername || "Founder";
-                else {
+                if (fSnap.exists()) {
+                    const d = fSnap.val();
+                    chatTitle = d.fullName || d.founderUsername || "Founder";
+                } else {
                     const iSnap = await get(ref(db, `investorProfiles/${recipientUID}`));
-                    if (iSnap.exists()) chatTitle = iSnap.val().fullName || "Investor";
+                    if (iSnap.exists()) {
+                        const d = iSnap.val();
+                        chatTitle = d.fullName || "Investor";
+                    }
                 }
             } catch (e) {}
             document.getElementById('chatTitle').textContent = chatTitle;
-            document.getElementById('initialLoader').style.display = 'none';
-
-            // Listen for Messages
-            const messagesRef = ref(db, `Chats/${chatRoomID}`);
-            onChildAdded(messagesRef, (snapshot) => {
-                const msg = snapshot.val();
-                if(msg.sender) renderMessage(msg);
-            });
             
-             // 4. LISTEN FOR TYPING
+            // 2. BULK LOAD HISTORY (Instant)
+            const messagesRef = ref(db, `Chats/${chatRoomID}`);
+            try {
+                const snapshot = await get(messagesRef);
+                const loader = document.getElementById('initialLoader');
+                const warning = document.getElementById('safetyWarning');
+
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    const messages = [];
+
+                    Object.values(data).forEach(msg => {
+                        if (msg.sender && msg.timestamp) messages.push(msg);
+                    });
+
+                    messages.sort((a, b) => a.timestamp - b.timestamp);
+
+                    messages.forEach(msg => {
+                        renderMessage(msg, false); 
+                        lastLoadedTimestamp = msg.timestamp;
+                    });
+
+                    const container = document.getElementById('chatContainer');
+                    container.scrollTop = container.scrollHeight;
+                    if(messages.length > 0) warning.style.display = 'none';
+                } else {
+                    warning.style.display = 'block';
+                }
+                loader.style.display = 'none';
+            } catch (e) {
+                console.error("Chat Load Error", e);
+                document.getElementById('initialLoader').style.display = 'none';
+            }
+
+            // 3. LISTEN FOR *NEW* MESSAGES
+            const newMsgQuery = query(messagesRef, orderByChild('timestamp'), startAfter(lastLoadedTimestamp));
+            onChildAdded(newMsgQuery, (snapshot) => {
+                const msg = snapshot.val();
+                if(msg && msg.timestamp > lastLoadedTimestamp) { 
+                    renderMessage(msg, true); 
+                    lastLoadedTimestamp = msg.timestamp; 
+                }
+            });
+
+            // 4. LISTEN FOR TYPING
             const typingRef = ref(db, `Chats/${chatRoomID}/typing/${recipientUID}`);
             onValue(typingRef, (snapshot) => {
                 const isTyping = snapshot.val();
@@ -318,8 +368,11 @@
         }
 
         // --- RENDER MESSAGES ---
-        function renderMessage(msg) {
+        function renderMessage(msg, autoScroll) {
             const container = document.getElementById('chatContainer');
+            const warning = document.getElementById('safetyWarning');
+            if (warning) warning.style.display = 'none';
+
             const isMine = msg.sender === currentUser.uid;
             const div = document.createElement('div');
             div.className = `message-bubble ${isMine ? 'msg-mine' : 'msg-theirs'}`;
@@ -328,7 +381,7 @@
             
             // File Handling
             let contentHtml = "";
-             if (msg.fileType === 'image') {
+            if (msg.fileType === 'image') {
                 contentHtml = `<img src="${msg.fileUrl}" class="chat-image" onclick="window.open('${msg.fileUrl}')">`;
             } else if (msg.fileType === 'video') {
                 contentHtml = `<video src="${msg.fileUrl}" class="chat-video" controls></video>`;
@@ -337,9 +390,8 @@
             }
 
             // Text Message
-            if (msg.text) {
-                contentHtml += `<div>${msg.text}</div>`;
-            }
+            if (msg.text) contentHtml += `<div>${msg.text}</div>`;
+            
             // Meeting Invite Card
             else if (msg.type === 'meeting') {
                 const isScheduled = msg.scheduledTime && msg.scheduledTime !== 'now';
@@ -352,16 +404,23 @@
                         <div style="flex:1">
                             <div style="font-weight:700; font-size:1rem;">${msg.title}</div>
                             <div style="font-size:0.85rem; opacity:0.8;">${displayTime}</div>
-                            <button class="join-btn">JOIN MEETING</button>
+                            <button class="join-btn" onclick="this.innerHTML='Joining...'">JOIN MEETING</button>
                         </div>
                     </div>
                 `;
             }
             
             div.innerHTML = `${contentHtml}<span class="timestamp">${time}</span>`;
-
-            container.appendChild(div);
-            container.scrollTop = container.scrollHeight;
+            
+            // Safe Insert Logic
+            const bubble = document.getElementById('typingBubble');
+            if (bubble && container.contains(bubble)) {
+                container.insertBefore(div, bubble);
+            } else {
+                container.appendChild(div);
+            }
+            
+            if(autoScroll) container.scrollTop = container.scrollHeight;
         }
 
         // --- MEETING LOGIC ---
@@ -431,15 +490,18 @@
                 height: "100%",
                 parentNode: document.querySelector('#jitsiFrame'),
                 userInfo: {
-                    displayName: userDisplayName,
-                    avatarURL: userAvatar // Shows logo/photo on video card
+                    displayName: userDisplayName, // Uses cached real name
+                    avatarURL: userAvatar // Uses cached photo
                 },
                 configOverwrite: {
                     startWithAudioMuted: false,
                     startWithVideoMuted: false,
-                    prejoinPageEnabled: false, // Skip pre-join screen
+                    prejoinPageEnabled: false, 
                     disableDeepLinking: true,
-                    toolbarButtons: [] // HIDE DEFAULT BUTTONS, use custom ones
+                    // Optimized settings to reduce lag
+                    resolution: 360, 
+                    constraints: { video: { height: { ideal: 360, max: 720 } } },
+                    toolbarButtons: [] // HIDE DEFAULT BUTTONS
                 },
                 interfaceConfigOverwrite: {
                     SHOW_JITSI_WATERMARK: false,
@@ -475,13 +537,8 @@
         // Investor Only: Kick everyone
         window.endMeetingForAll = () => {
             if(!confirm("End meeting for everyone?")) return;
-            // Jitsi doesn't have a simple 'end for all' via API without auth, 
-            // but we can simulate it or just hang up ourselves.
-            // For this demo, we dispose.
             if(jitsiAPI) jitsiAPI.dispose();
             closeVideoInterface();
-            
-            // Optionally update DB to say meeting ended
         };
 
         function closeVideoInterface() {
@@ -490,10 +547,6 @@
             jitsiAPI = null;
         }
 
-        // --- TEXT SEND LOGIC (Standard) ---
-        const input = document.getElementById('msgInput');
-        const sendBtn = document.getElementById('sendBtn');
-        
         // --- FILE UPLOAD LOGIC ---
         const fileInput = document.getElementById('fileInput');
         const attachBtn = document.getElementById('attachBtn');
@@ -547,26 +600,39 @@
             }
         });
 
-        async function sendMessage() {
-            const text = input.value.trim();
-            if (!text || !chatRoomID) return;
+        // --- TEXT SEND LOGIC ---
+        const input = document.getElementById('msgInput');
+        const sendBtn = document.getElementById('sendBtn');
 
-            // Bad Word Filter
-            const badWords = ["abuse", "scam", "fraud", "kill", "idiot"];
+        function sanitizeMessage(text) {
             let cleanText = text;
-            badWords.forEach(w => { cleanText = cleanText.replace(new RegExp(`\\b${w}\\b`,'gi'), '####'); });
+            badWords.forEach(word => {
+                const regex = new RegExp(`\\b${word}\\b`, 'gi');
+                cleanText = cleanText.replace(regex, '####');
+            });
+            return cleanText;
+        }
 
-            await push(ref(db, `Chats/${chatRoomID}`), {
+        async function sendMessage() {
+            const rawText = input.value.trim();
+            if (!rawText || !chatRoomID) return;
+
+            const cleanText = sanitizeMessage(rawText);
+
+            const messagesRef = ref(db, `Chats/${chatRoomID}`);
+            await push(messagesRef, {
                 sender: currentUser.uid,
                 text: cleanText,
                 timestamp: Date.now(),
-                recipient: recipientUID
+                recipient: recipientUID 
             });
-            input.value = "";
+
+            input.value = ""; 
+            input.focus();
             set(ref(db, `Chats/${chatRoomID}/typing/${currentUser.uid}`), false);
         }
-        
-         // TYPING LOGIC
+
+        // TYPING LOGIC
         input.addEventListener('input', () => {
             if (!chatRoomID) return;
             set(ref(db, `Chats/${chatRoomID}/typing/${currentUser.uid}`), true);
@@ -577,7 +643,9 @@
         });
 
         sendBtn.addEventListener('click', sendMessage);
-        input.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
 
     </script>
 </body>
