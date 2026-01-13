@@ -5518,16 +5518,28 @@ const chatsRef = ref(db, 'Chats');
         let latestMsg = null;
 
         Object.keys(allChats).forEach(roomKey => {
+            // Check if user is part of this chat room
             if (roomKey.includes(currentUser.uid)) {
-                const msgs = Object.values(allChats[roomKey]);
-                const last = msgs[msgs.length - 1];
-                if (!latestMsg || last.timestamp > latestMsg.timestamp) {
-                    latestMsg = last;
+                const roomData = allChats[roomKey];
+                
+                // Ensure roomData exists and is an object
+                if (roomData && typeof roomData === 'object') {
+                    const msgs = Object.values(roomData);
+                    
+                    // Check if there are actually messages in this room
+                    if (msgs.length > 0) {
+                        const last = msgs[msgs.length - 1];
+                        
+                        // Compare timestamps to find the absolute latest message
+                        if (last && (!latestMsg || (last.timestamp > latestMsg.timestamp))) {
+                            latestMsg = last;
+                        }
+                    }
                 }
             }
         });
 
-        if (latestMsg) {
+        if (latestMsg && latestMsg.text) {
             latestPreview.title = latestMsg.sender === currentUser.uid ? "You: " : "Investor: ";
             latestPreview.text = latestMsg.text.length > 50 
                 ? latestMsg.text.substring(0, 47) + "..." 
