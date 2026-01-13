@@ -338,13 +338,21 @@ async function getVideoSDKToken(roomId) {
                 screenShareEnabled: true,
                 chatEnabled: true,
                 whiteboardEnabled: false,
+                redirectOnLeave: returnUrl,
                 recordingEnabled: false,
                 brandingEnabled: false,
                 participantCanLeave: true,
                 poweredBy: false,
                 permissions: { askToJoin: false, toggleParticipantMic: true, toggleParticipantWebcam: true, removeParticipant: true, endMeeting: true, drawOnWhiteboard: false, toggleWhiteboard: false, toggleRecording: false },
                 joinScreen: { visible: false },
-                leftScreen: { actionButton: { label: "Return to Chat", href: "#" } },
+               leftScreen: { 
+            visible: true, 
+            actionButton: { 
+                label: "Return to Chat", 
+                href: returnUrl 
+            } 
+        },
+    };
                 notificationSoundEnabled: true,
                 debug: false,
                 maxResolution: "hd",
@@ -352,6 +360,20 @@ async function getVideoSDKToken(roomId) {
                 layout: { type: "GRID", priority: "PIN", gridSize: 3 }
             };
 
+             meeting.on("meeting-left", () => {
+    document.getElementById('videoConferenceContainer').style.display = 'none';
+    // The redirectOnLeave handled above will now take over
+});
+
+// Global listener for messages from the VideoSDK Iframe
+window.addEventListener("message", (event) => {
+    // VideoSDK sends various events via postMessage
+    if (event.data && event.data.type === "meeting-left") {
+        const urlParams = new URLSearchParams(window.location.search);
+        const recipient = urlParams.get('recipient');
+        window.location.href = `chat.html?recipient=${recipient}`;
+    }
+});
             meeting = new VideoSDKMeeting();
             meeting.init(config);
             document.getElementById('meetingLoader').style.display = 'none';
@@ -384,27 +406,14 @@ async function getVideoSDKToken(roomId) {
             closeVideoInterface();
         };
 
-function closeVideoInterface() {
-    // Hide the video UI
-    document.getElementById('videoConferenceContainer').style.display = 'none';
-    
-    // Reset internal state
-    meeting = null;
-    audioMuted = false;
-    videoMuted = false;
-    
-    // Reset UI buttons
-    document.getElementById('btnMic')?.classList.remove('active');
-    document.getElementById('btnCam')?.classList.remove('active');
-
-    // REDIRECT EVERYONE BACK TO CHAT
-    // We use the current URL parameters to ensure we stay in the same chat session
-    const urlParams = new URLSearchParams(window.location.search);
-    const recipient = urlParams.get('recipient');
-    
-    // This reloads the current page (chat.html) effectively "returning" them
-    window.location.href = `chat.html?recipient=${recipient}`;
-}
+        function closeVideoInterface() {
+            document.getElementById('videoConferenceContainer').style.display = 'none';
+            meeting = null;
+            audioMuted = false;
+            videoMuted = false;
+            document.getElementById('btnMic').classList.remove('active');
+            document.getElementById('btnCam').classList.remove('active');
+        }
 
         const fileInput = document.getElementById('fileInput');
         const attachBtn = document.getElementById('attachBtn');
@@ -447,7 +456,7 @@ sender: currentUser.uid, text: "", fileUrl: downloadURL, fileType: type, fileNam
             const text = input.value.trim();
             if (!text || !chatRoomID) return;
 
-            const badWords = ["abuse", "scam", "fraud", "kill", "idiot"];
+            const badWords = ["abuse", "sex", "fraud", "kill", "idiot"];
             let cleanText = text;
             badWords.forEach(w => { cleanText = cleanText.replace(new RegExp(`\\b${w}\\b`,'gi'), '####'); });
 
