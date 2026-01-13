@@ -5647,7 +5647,7 @@ async function saveStartupProfile(vestData) {
 async function createDashboard() {
     if (!currentUser) return;
 
-    // --- 1. FETCH LATEST INVESTOR MESSAGE FOR INBOX PREVIEW ---
+    // --- 1. FETCH LATEST INVESTOR MESSAGE ---
     let latestPreview = { 
         text: "Start connecting with investors today.", 
         title: "Welcome to ScaleVest!" 
@@ -5661,19 +5661,23 @@ async function createDashboard() {
             const allChats = chatSnap.val();
             let newestInvestorMsg = null;
 
+            // Iterate through all chat rooms
             Object.keys(allChats).forEach(roomKey => {
+                // Ensure the room belongs to the current user
                 if (roomKey.includes(currentUser.uid)) {
                     const roomData = allChats[roomKey];
+                    // Filter out non-message metadata and ensure timestamp exists
                     const msgs = Object.values(roomData).filter(m => m && typeof m === 'object' && m.timestamp);
                     
                     if (msgs.length > 0) {
-                        // Find the latest message in THIS room sent by an INVESTOR
+                        // FILTER: Find only messages NOT sent by the current user (Investor messages)
                         const investorMsgs = msgs.filter(m => m.sender !== currentUser.uid);
                         
                         if (investorMsgs.length > 0) {
+                            // Find the most recent message in this specific room
                             const lastInRoom = investorMsgs.reduce((prev, curr) => (prev.timestamp > curr.timestamp) ? prev : curr);
                             
-                            // Compare across all rooms to find the absolute latest
+                            // Compare across all rooms to find the absolute latest overall
                             if (!newestInvestorMsg || lastInRoom.timestamp > newestInvestorMsg.timestamp) {
                                 newestInvestorMsg = lastInRoom;
                             }
@@ -5682,16 +5686,18 @@ async function createDashboard() {
                 }
             });
 
-            if (newestInvestorMsg) {
-                latestPreview.title = "New Message from Investor:";
+            // Update the preview if an investor message was found
+            if (newestInvestorMsg && newestInvestorMsg.text) {
+                latestPreview.title = "Message from Investor";
+                // Truncate long messages to prevent card overflow
                 latestPreview.text = newestInvestorMsg.text.length > 45 
                     ? newestInvestorMsg.text.substring(0, 42) + "..." 
                     : newestInvestorMsg.text;
             }
         }
     } catch (e) {
-        console.error("Error fetching investor preview:", e);
-    }    
+        console.error("Error fetching inbox preview:", e);
+    }
     // Use cached data if available, otherwise fetch
     let founderData = cachedFounderData;
     let startupData = cachedStartupData;
@@ -6804,13 +6810,13 @@ max-width: 1100px;
         Inbox
     </div>
 
-    <div class="inbox-message" style="border-left: 3px solid #ff006e;">
-        <strong style="color: #fff;">${latestPreview.title}</strong><br>
-        <small style="color: #888; display: block; margin-top: 5px; line-height: 1.4;">
+    <div class="inbox-message" style="border-left: 3px solid #ff006e; padding: 12px; background: rgba(255, 255, 255, 0.03);">
+        <strong style="color: #fff; font-size: 0.9rem;">${latestPreview.title}</strong>
+        <p style="color: #888; font-size: 0.85rem; margin-top: 6px; line-height: 1.4; font-style: italic;">
             "${latestPreview.text}"
-        </small>
+        </p>
     </div>
-</div>              
+</div>
  </div>
             </div>
 
