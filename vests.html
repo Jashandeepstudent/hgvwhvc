@@ -5681,7 +5681,20 @@ max-width: 1100px;
             background: #444;
             border-radius: 10px;
         }
+.inbox-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
 
+.inbox-card:hover {
+    border-color: #ff006e !important; /* ScaleVest Pink */
+    transform: translateY(-5px);
+    background: #111 !important;
+}
+
+.inbox-card:active {
+    transform: scale(0.98);
+}
         .inbox-message {
             padding: 1rem;
             margin-bottom: 0.75rem;
@@ -5947,7 +5960,35 @@ max-width: 1100px;
     </p>
 </div>
 
-<div class="card inbox-card">
+// Add this inside createDashboard where the inbox-card is defined
+// First, let's fetch the most recent message for the preview
+const chatsRef = ref(db, 'Chats');
+const chatSnap = await get(chatsRef);
+let latestPreview = { text: "Start connecting with investors today.", title: "Welcome to ScaleVest!" };
+
+if (chatSnap.exists()) {
+    const allChats = chatSnap.val();
+    let latestMsg = null;
+
+    Object.keys(allChats).forEach(roomKey => {
+        if (roomKey.includes(currentUser.uid)) {
+            const msgs = Object.values(allChats[roomKey]);
+            const last = msgs[msgs.length - 1];
+            if (!latestMsg || last.timestamp > latestMsg.timestamp) {
+                latestMsg = last;
+            }
+        }
+    });
+
+    if (latestMsg) {
+        latestPreview.title = latestMsg.sender === currentUser.uid ? "You sent:" : "Investor sent:";
+        latestPreview.text = latestMsg.text.substring(0, 50) + (latestMsg.text.length > 50 ? "..." : "");
+    }
+}
+
+// Then update the HTML string for the card:
+const inboxCardHTML = `
+<div class="card inbox-card" onclick="window.location.hash='investor_chatlist'" style="cursor:pointer;">
     <div class="card-title">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
              stroke="currentColor" stroke-width="2"
@@ -5960,10 +6001,11 @@ max-width: 1100px;
     </div>
 
     <div class="inbox-message">
-        <strong>Welcome to ScaleVest!</strong><br>
-        <small>Start connecting with investors today.</small>
+        <strong>${latestPreview.title}</strong><br>
+        <small>${latestPreview.text}</small>
     </div>
 </div>
+`;
 
 
         </div>
