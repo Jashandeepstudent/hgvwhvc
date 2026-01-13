@@ -5661,11 +5661,10 @@ async function saveStartupProfile(vestData) {
 async function createDashboard() {
     if (!currentUser) return;
 
-    // --- 1. REAL-TIME INBOX LISTENER ---
+    // --- REAL-TIME INBOX LISTENER ---
     const chatsRef = ref(db, 'Chats');
     
-    // Use onValue for real-time updates without reloading
-    onValue(chatsRef, (snapshot) => {
+    onValue(chatsRef, async (snapshot) => {
         let latestPreview = { 
             text: "Start connecting with investors today.", 
             title: "Welcome to ScaleVest!",
@@ -5682,12 +5681,10 @@ async function createDashboard() {
                     const msgs = Object.values(roomData).filter(m => m && typeof m === 'object' && m.timestamp);
                     
                     if (msgs.length > 0) {
-                        // Find the absolute latest message sent by an INVESTOR (not you)
+                        // Find latest message NOT sent by you
                         const investorMsgs = msgs.filter(m => m.sender !== currentUser.uid);
-                        
                         if (investorMsgs.length > 0) {
                             const lastInRoom = investorMsgs.reduce((prev, curr) => (prev.timestamp > curr.timestamp) ? prev : curr);
-                            
                             if (!newestInvestorMsg || lastInRoom.timestamp > newestInvestorMsg.timestamp) {
                                 newestInvestorMsg = lastInRoom;
                             }
@@ -5697,27 +5694,26 @@ async function createDashboard() {
             });
 
             if (newestInvestorMsg) {
-                // If your database has a senderName field, use it; otherwise, use a generic tag
-                const senderDisplay = newestInvestorMsg.senderName || "Investor";
-                latestPreview.title = `${senderDisplay} sent you a message:`;
-                latestPreview.text = newestInvestorMsg.text.length > 45 
-                    ? newestInvestorMsg.text.substring(0, 42) + "..." 
-                    : newestInvestorMsg.text;
-                
-                // Calculate "Time Ago"
+                // --- NAME LOOKUP STEP ---
+                // We fetch the sender's actual username from their profile
+                const senderSnap = await get(ref(db, `founderProfile/${newestInvestorMsg.sender}`));
+                const senderName = senderSnap.exists() ? senderSnap.val().founderUsername : "An Investor";
+
+                latestPreview.title = `${senderName} has sent you a new message:`;
+                latestPreview.text = newestInvestorMsg.text;
                 latestPreview.timeAgo = timeSince(newestInvestorMsg.timestamp);
             }
         }
 
-        // Update the UI element directly if it exists
+        // --- UPDATE UI IMMEDIATELY ---
         const inboxElement = document.getElementById('inbox-preview-content');
         if (inboxElement) {
             inboxElement.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                    <strong style="color: #fff; font-size: 0.9rem;">${latestPreview.title}</strong>
-                    <span style="color: #ff006e; font-size: 0.7rem; font-weight: 800;">${latestPreview.timeAgo}</span>
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+                    <strong style="color: #fff; font-size: 0.9rem; line-height:1.2;">${latestPreview.title}</strong>
+                    <span style="color: #ff006e; font-size: 0.7rem; font-weight: 800; white-space:nowrap; margin-left:10px;">${latestPreview.timeAgo}</span>
                 </div>
-                <p style="color: #888; font-size: 0.85rem; margin-top: 6px; line-height: 1.4; font-style: italic;">
+                <p style="color: #888; font-size: 0.85rem; line-height: 1.4; font-style: italic;">
                     "${latestPreview.text}"
                 </p>
             `;
@@ -6825,18 +6821,15 @@ max-width: 1100px;
 
 <div class="card inbox-card" onclick="window.location.hash='investor_chatlist'" style="cursor:pointer;">
     <div class="card-title">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2"
-             style="vertical-align:middle;margin-right:.5rem;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M22 12h-6l-2 3h-4l-2-3H2"></path>
-            <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16
-                     a2 2 0 0 0 2-2v-6l-3.45-6.89"></path>
+            <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89"></path>
         </svg>
         Inbox
     </div>
 
     <div id="inbox-preview-content" class="inbox-message" style="border-left: 3px solid #ff006e; padding: 12px; background: rgba(255, 255, 255, 0.03);">
-        <p style="color:#666; font-style:italic;">Loading messages...</p>
+        <p style="color:#666; font-style:italic;">Syncing messages...</p>
     </div>
 </div>
  </div>
