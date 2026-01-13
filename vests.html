@@ -4558,6 +4558,649 @@ function updateNotificationBadge(count) {
         if(msg) msg.classList.remove('active');
     }
 }
+
+// Ensure this variable exists globally
+let currentEditAction = null;
+
+function createEditModal(title, val, ph, isArea, callback) {
+    currentEditAction = callback; 
+    const m = document.createElement('div');
+    m.className = 'edit-modal show'; // Triggers CSS transition
+    m.innerHTML = `
+        <div class="edit-modal-content">
+            <div class="edit-modal-header"><h3>${title}</h3><button class="modal-close" onclick="closeEditModal()">×</button></div>
+            <div class="edit-modal-body">
+                ${isArea ? `<textarea id="editInput" rows="5" placeholder="${ph}">${val}</textarea>` : `<input type="text" id="editInput" value="${val}" placeholder="${ph}">`}
+            </div>
+            <div class="edit-modal-footer">
+                <button class="modal-btn-cancel" onclick="closeEditModal()">Cancel</button>
+                <button class="modal-btn-save" onclick="saveEditModal()">Save</button>
+            </div>
+        </div>`;
+    document.body.appendChild(m);
+    setTimeout(() => document.getElementById('editInput').focus(), 100);
+}
+
+window.closeEditModal = function() {
+    const modal = document.querySelector('.edit-modal');
+    if (modal) modal.remove();
+};
+
+window.saveEditModal = function() {
+    const value = document.getElementById('editInput').value.trim();
+    if (currentEditAction) {
+        currentEditAction(value);
+    }
+};
+window.editUsername = function() {
+    currentEditAction = async (newValue) => {
+        if (!newValue || newValue === cachedFounderData?.founderUsername) return;
+        
+        try {
+            const firstLetter = newValue.charAt(0).toUpperCase();
+            const updates = {
+                founderUsername: newValue,
+                founderImage: firstLetter
+                // DO NOT UPDATE userId - it stays permanent
+            };
+            
+            await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
+            cachedFounderData = { ...cachedFounderData, ...updates };
+            
+            alert('✅ Username updated successfully!');
+            showEditProfile();
+        } catch (error) {
+            console.error('Error updating username:', error);
+            alert('❌ Failed to update username');
+        }
+    };
+    
+    createEditModal('Edit Username', cachedFounderData?.founderUsername || '', 'Enter your username');
+};
+window.editTitle = function() {
+    currentEditAction = async (newValue) => {
+        if (newValue === cachedFounderData?.title) return;
+        
+        try {
+            const updates = { title: newValue };
+            await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
+            cachedFounderData = { ...cachedFounderData, ...updates };
+            
+            alert('✅ Title updated successfully!');
+            showEditProfile();
+        } catch (error) {
+            console.error('Error updating title:', error);
+            alert('❌ Failed to update title');
+        }
+    };
+    
+    createEditModal('Edit Title', cachedFounderData?.title || '', 'e.g., CEO & Founder');
+};
+window.addCoFounder = function() {
+    const modal = document.createElement('div');
+    modal.className = 'edit-modal';
+    modal.innerHTML = `
+        <div class="edit-modal-content">
+            <div class="edit-modal-header">
+                <h3>Add Co-Founder</h3>
+                <button class="modal-close" onclick="closeEditModal()">×</button>
+            </div>
+            <div class="edit-modal-body">
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Co-Founder Name</label>
+                    <input type="text" id="cofounderName" placeholder="Enter name" style="width: 100%; padding: 0.75rem; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; color: #fff;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Description (Optional)</label>
+                    <textarea id="cofounderDesc" placeholder="e.g., CTO, 10 years in tech..." rows="3" style="width: 100%; padding: 0.75rem; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; color: #fff;"></textarea>
+                </div>
+            </div>
+            <div class="edit-modal-footer">
+                <button class="modal-btn-cancel" onclick="closeEditModal()">Cancel</button>
+                <button class="modal-btn-save" onclick="saveCoFounder()">Add Co-Founder</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    setTimeout(() => modal.classList.add('show'), 10);
+};
+
+window.saveCoFounder = async function() {
+    const name = document.getElementById('cofounderName').value.trim();
+    const description = document.getElementById('cofounderDesc').value.trim();
+    
+    if (!name) {
+        alert('❌ Name is required');
+        return;
+    }
+    
+    try {
+        const coFounders = cachedFounderData?.coFounders || {};
+        const newId = `founder_${Object.keys(coFounders).length}`;
+        coFounders[newId] = { name, description };
+        
+        const updates = { coFounders };
+        await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
+        cachedFounderData = { ...cachedFounderData, ...updates };
+        
+        closeEditModal();
+        alert('✅ Co-Founder added successfully!');
+        showEditProfile();
+    } catch (error) {
+        console.error('Error adding co-founder:', error);
+        alert('❌ Failed to add co-founder');
+    }
+};
+window.editAbout = function() {
+    currentEditAction = async (newValue) => {
+        if (newValue === cachedFounderData?.about) return;
+        
+        try {
+            const updates = { about: newValue };
+            await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
+            cachedFounderData = { ...cachedFounderData, ...updates };
+            
+            alert('✅ About section updated successfully!');
+            showEditProfile();
+        } catch (error) {
+            console.error('Error updating about:', error);
+            alert('❌ Failed to update about section');
+        }
+    };
+    
+    createEditModal('About Yourself', cachedFounderData?.about || '', 'Tell investors about yourself...', true);
+};
+
+window.editStartup = function() {
+    const modal = document.createElement('div');
+    modal.className = 'edit-modal';
+    modal.innerHTML = `
+        <div class="edit-modal-content">
+            <div class="edit-modal-header">
+                <h3>Edit Startup Details</h3>
+                <button class="modal-close" onclick="closeEditModal()">×</button>
+            </div>
+            <div class="edit-modal-body">
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Startup Name</label>
+                    <input type="text" id="startupNameInput" placeholder="Enter startup name" value="${cachedStartupData?.startupName || ''}" style="width: 100%; padding: 0.75rem; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; color: #fff;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Description</label>
+                    <textarea id="startupDescInput" placeholder="Describe your startup..." rows="4" style="width: 100%; padding: 0.75rem; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; color: #fff;">${cachedStartupData?.description || ''}</textarea>
+                </div>
+            </div>
+            <div class="edit-modal-footer">
+                <button class="modal-btn-cancel" onclick="closeEditModal()">Cancel</button>
+                <button class="modal-btn-save" onclick="saveStartupEdit()">Save Changes</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    setTimeout(() => modal.classList.add('show'), 10);
+};
+// Edit Profile Photo
+window.editProfilePhoto = async function() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    
+    input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        if (file.size > 10 * 1024 * 1024) {
+            alert('❌ Image must be under 10MB');
+            return;
+        }
+        
+        // Show uploading overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'upload-overlay';
+        overlay.innerHTML = `
+            <div class="upload-spinner"></div>
+            <div class="upload-text">Uploading Photo...</div>
+            <div class="upload-subtext">Please wait while we upload your photo</div>
+            <div class="upload-progress-bar">
+                <div class="upload-progress-fill" id="uploadProgressFill"></div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        
+        // Simulate progress animation
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            progress += Math.random() * 15;
+            if (progress > 90) progress = 90;
+            document.getElementById('uploadProgressFill').style.width = progress + '%';
+        }, 200);
+        
+        try {
+            const photoURL = await uploadFileToStorage(file, 'profile-photos');
+            
+            // Complete progress
+            clearInterval(progressInterval);
+            document.getElementById('uploadProgressFill').style.width = '100%';
+            
+            const updates = { photoURL };
+            await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
+            cachedFounderData = { ...cachedFounderData, ...updates };
+            
+            // Show success animation
+            overlay.innerHTML = `
+                <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" style="margin-bottom: 1rem;">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="16 8 10 14 8 12"></polyline>
+                </svg>
+                <div class="upload-text" style="color: #10b981;">Photo Uploaded!</div>
+                <div class="upload-subtext">Refreshing your profile...</div>
+            `;
+            
+            setTimeout(() => {
+                overlay.remove();
+                showEditProfile();
+            }, 1500);
+            
+        } catch (error) {
+            clearInterval(progressInterval);
+            console.error('Error uploading photo:', error);
+            
+            // Show error animation
+            overlay.innerHTML = `
+                <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="#ff006e" stroke-width="2" style="margin-bottom: 1rem;">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                </svg>
+                <div class="upload-text" style="color: #ff006e;">Upload Failed</div>
+                <div class="upload-subtext">Please try again</div>
+            `;
+            
+            setTimeout(() => overlay.remove(), 2000);
+        }
+    };
+    
+    input.click();
+};
+
+// Edit Location
+window.editLocation = function() {
+    const currentLocation = cachedStartupData?.location || { country: '', state: '', city: '' };
+    
+    const modal = document.createElement('div');
+    modal.className = 'edit-modal';
+    modal.innerHTML = `
+        <div class="edit-modal-content">
+            <div class="edit-modal-header">
+                <h3>Edit Location</h3>
+                <button class="modal-close" onclick="closeEditModal()">×</button>
+            </div>
+            <div class="edit-modal-body">
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Country</label>
+                    <input type="text" id="locationCountry" placeholder="e.g., United States" value="${currentLocation.country}" style="width: 100%; padding: 0.75rem; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; color: #fff;">
+                </div>
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">State/Province</label>
+                    <input type="text" id="locationState" placeholder="e.g., California" value="${currentLocation.state}" style="width: 100%; padding: 0.75rem; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; color: #fff;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">City</label>
+                    <input type="text" id="locationCity" placeholder="e.g., San Francisco" value="${currentLocation.city}" style="width: 100%; padding: 0.75rem; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; color: #fff;">
+                </div>
+            </div>
+            <div class="edit-modal-footer">
+                <button class="modal-btn-cancel" onclick="closeEditModal()">Cancel</button>
+                <button class="modal-btn-save" onclick="saveLocation()">Save Location</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    setTimeout(() => modal.classList.add('show'), 10);
+};
+
+window.saveLocation = async function() {
+    const country = document.getElementById('locationCountry').value.trim();
+    const state = document.getElementById('locationState').value.trim();
+    const city = document.getElementById('locationCity').value.trim();
+    
+    try {
+        const updates = {
+            location: { country, state, city }
+        };
+        
+        await update(ref(db, `startupProfile/${currentUser.uid}`), updates);
+        cachedStartupData = { ...cachedStartupData, ...updates };
+        
+        closeEditModal();
+        alert('✅ Location updated!');
+        showEditProfile();
+    } catch (error) {
+        console.error('Error updating location:', error);
+        alert('❌ Failed to update location');
+    }
+};
+
+// Add Language
+window.addLanguage = function() {
+    const modal = document.createElement('div');
+    modal.className = 'edit-modal';
+    modal.innerHTML = `
+        <div class="edit-modal-content">
+            <div class="edit-modal-header">
+                <h3>Add Language</h3>
+                <button class="modal-close" onclick="closeEditModal()">×</button>
+            </div>
+            <div class="edit-modal-body">
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Language</label>
+                    <input type="text" id="languageName" placeholder="e.g., English, Spanish, Hindi" style="width: 100%; padding: 0.75rem; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; color: #fff;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Proficiency Level</label>
+                    <select id="languageLevel" style="width: 100%; padding: 0.75rem; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; color: #fff;">
+                        <option value="Beginner">Beginner</option>
+                        <option value="Intermediate">Intermediate</option>
+                        <option value="Fluent">Fluent</option>
+                        <option value="Expert">Expert</option>
+                    </select>
+                </div>
+            </div>
+            <div class="edit-modal-footer">
+                <button class="modal-btn-cancel" onclick="closeEditModal()">Cancel</button>
+                <button class="modal-btn-save" onclick="saveLanguage()">Add Language</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    setTimeout(() => modal.classList.add('show'), 10);
+};
+
+window.saveLanguage = async function() {
+    const name = document.getElementById('languageName').value.trim();
+    const level = document.getElementById('languageLevel').value;
+    
+    if (!name) {
+        alert('❌ Language name is required');
+        return;
+    }
+    
+    try {
+        const languages = cachedFounderData?.languages || [];
+        
+        // Check if language already exists
+        if (languages.some(lang => lang.name.toLowerCase() === name.toLowerCase())) {
+            alert('❌ Language already added');
+            return;
+        }
+        
+        languages.push({ name, level });
+        
+        const updates = { languages };
+        await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
+        cachedFounderData = { ...cachedFounderData, ...updates };
+        
+        closeEditModal();
+        alert('✅ Language added!');
+        showEditProfile();
+    } catch (error) {
+        console.error('Error adding language:', error);
+        alert('❌ Failed to add language');
+    }
+};
+
+window.removeLanguage = async function(languageName) {
+    if (!confirm(`Remove ${languageName}?`)) return;
+    
+    try {
+        const languages = cachedFounderData?.languages?.filter(lang => lang.name !== languageName) || [];
+        
+        const updates = { languages };
+        await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
+        cachedFounderData = { ...cachedFounderData, ...updates };
+        
+        alert('✅ Language removed!');
+        showEditProfile();
+    } catch (error) {
+        console.error('Error removing language:', error);
+        alert('❌ Failed to remove language');
+    }
+};
+window.saveStartupEdit = async function() {
+    const newName = document.getElementById('startupNameInput').value;
+    const newDesc = document.getElementById('startupDescInput').value;
+    
+    if (!newName) {
+        alert('❌ Startup name is required');
+        return;
+    }
+    
+    try {
+        const updates = {
+            startupName: newName,
+            description: newDesc
+            // DO NOT UPDATE startupId - it stays permanent
+        };
+        
+        await update(ref(db, `startupProfile/${currentUser.uid}`), updates);
+        cachedStartupData = { ...cachedStartupData, ...updates };
+        
+        closeEditModal();
+        alert('✅ Startup info updated successfully!');
+        showEditProfile();
+    } catch (error) {
+        console.error('Error updating startup:', error);
+        alert('❌ Failed to update startup');
+    }
+};
+window.saveEditModal = function() {
+    const value = document.getElementById('editInput').value.trim();
+    if (currentEditAction) {
+        currentEditAction(value);
+    }
+    closeEditModal();
+};
+
+window.uploadVideo = async function() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'video/*';
+    
+    input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        if (file.size > 50 * 1024 * 1024) {
+            alert('❌ Video must be under 50MB');
+            return;
+        }
+        
+        // Show uploading overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'upload-overlay';
+        overlay.innerHTML = `
+            <div class="upload-spinner"></div>
+            <div class="upload-text">Uploading Video...</div>
+            <div class="upload-subtext">This may take a minute for larger files</div>
+            <div class="upload-progress-bar">
+                <div class="upload-progress-fill" id="uploadProgressFill"></div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        
+        // Simulate progress
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            progress += Math.random() * 10;
+            if (progress > 90) progress = 90;
+            document.getElementById('uploadProgressFill').style.width = progress + '%';
+        }, 300);
+        
+        try {
+            const videoUrl = await uploadFileToStorage(file, 'intro-videos');
+            
+            clearInterval(progressInterval);
+            document.getElementById('uploadProgressFill').style.width = '100%';
+            
+            const updates = { introVideo: videoUrl };
+            await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
+            cachedFounderData = { ...cachedFounderData, ...updates };
+            
+            overlay.innerHTML = `
+                <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" style="margin-bottom: 1rem;">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="16 8 10 14 8 12"></polyline>
+                </svg>
+                <div class="upload-text" style="color: #10b981;">Video Uploaded!</div>
+                <div class="upload-subtext">Refreshing your profile...</div>
+            `;
+            
+            setTimeout(() => {
+                overlay.remove();
+                showEditProfile();
+            }, 1500);
+            
+        } catch (error) {
+            clearInterval(progressInterval);
+            console.error('Error uploading video:', error);
+            
+            overlay.innerHTML = `
+                <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="#ff006e" stroke-width="2" style="margin-bottom: 1rem;">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                </svg>
+                <div class="upload-text" style="color: #ff006e;">Upload Failed</div>
+                <div class="upload-subtext">Please try again</div>
+            `;
+            
+            setTimeout(() => overlay.remove(), 2000);
+        }
+    };
+    
+    input.click();
+};
+window.addEducation = function() {
+    const modal = document.createElement('div');
+    modal.className = 'edit-modal';
+    modal.innerHTML = `
+        <div class="edit-modal-content">
+            <div class="edit-modal-header">
+                <h3>Add Education</h3>
+                <button class="modal-close" onclick="closeEditModal()">×</button>
+            </div>
+            <div class="edit-modal-body">
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">School/University</label>
+                    <input type="text" id="eduSchool" placeholder="e.g., Stanford University" style="width: 100%; padding: 0.75rem; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; color: #fff;">
+                </div>
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Degree/Course</label>
+                    <input type="text" id="eduDegree" placeholder="e.g., B.Tech Computer Science" style="width: 100%; padding: 0.75rem; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; color: #fff;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Year</label>
+                    <input type="text" id="eduYear" placeholder="e.g., 2018-2022" style="width: 100%; padding: 0.75rem; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; color: #fff;">
+                </div>
+            </div>
+            <div class="edit-modal-footer">
+                <button class="modal-btn-cancel" onclick="closeEditModal()">Cancel</button>
+                <button class="modal-btn-save" onclick="saveEducation()">Add Education</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    setTimeout(() => modal.classList.add('show'), 10);
+};
+
+window.saveEducation = async function() {
+    const school = document.getElementById('eduSchool').value.trim();
+    const degree = document.getElementById('eduDegree').value.trim();
+    const year = document.getElementById('eduYear').value.trim();
+    
+    if (!school || !degree) {
+        alert('❌ School and degree are required');
+        return;
+    }
+    
+    try {
+        const education = cachedFounderData?.education || [];
+        education.push({ school, degree, year });
+        
+        const updates = { education };
+        await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
+        cachedFounderData = { ...cachedFounderData, ...updates };
+        
+        closeEditModal();
+        alert('✅ Education added successfully!');
+        showEditProfile();
+    } catch (error) {
+        console.error('Error adding education:', error);
+        alert('❌ Failed to add education');
+    }
+};
+
+window.addWorkExperience = function() {
+    const modal = document.createElement('div');
+    modal.className = 'edit-modal';
+    modal.innerHTML = `
+        <div class="edit-modal-content">
+            <div class="edit-modal-header">
+                <h3>Add Work Experience</h3>
+                <button class="modal-close" onclick="closeEditModal()">×</button>
+            </div>
+            <div class="edit-modal-body">
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Company Name</label>
+                    <input type="text" id="workCompany" placeholder="e.g., Google" style="width: 100%; padding: 0.75rem; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; color: #fff;">
+                </div>
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Position/Role</label>
+                    <input type="text" id="workPosition" placeholder="e.g., Software Engineer" style="width: 100%; padding: 0.75rem; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; color: #fff;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Duration</label>
+                    <input type="text" id="workDuration" placeholder="e.g., 2020-2023" style="width: 100%; padding: 0.75rem; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; color: #fff;">
+                </div>
+            </div>
+            <div class="edit-modal-footer">
+                <button class="modal-btn-cancel" onclick="closeEditModal()">Cancel</button>
+                <button class="modal-btn-save" onclick="saveWorkExperience()">Add Experience</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    setTimeout(() => modal.classList.add('show'), 10);
+};
+
+window.saveWorkExperience = async function() {
+    const company = document.getElementById('workCompany').value.trim();
+    const position = document.getElementById('workPosition').value.trim();
+    const duration = document.getElementById('workDuration').value.trim();
+    
+    if (!company || !position) {
+        alert('❌ Company and position are required');
+        return;
+    }
+    
+    try {
+        const workExperience = cachedFounderData?.workExperience || [];
+        workExperience.push({ company, position, duration });
+        
+        const updates = { workExperience };
+        await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
+        cachedFounderData = { ...cachedFounderData, ...updates };
+        
+        closeEditModal();
+        alert('✅ Work experience added successfully!');
+        showEditProfile();
+    } catch (error) {
+        console.error('Error adding work experience:', error);
+        alert('❌ Failed to add work experience');
+    }
+};
+
+
    onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
@@ -7571,269 +8214,6 @@ document.getElementById("saveAvailability").onclick = function() {
   alert("Availability Updated: " + status + " | Date: " + date);
   modal.style.display = "none";
 }
-// Ensure this variable exists globally
-let currentEditAction = null;
-
-function createEditModal(title, val, ph, isArea, callback) {
-    currentEditAction = callback; 
-    const m = document.createElement('div');
-    m.className = 'edit-modal show'; // Triggers CSS transition
-    m.innerHTML = `
-        <div class="edit-modal-content">
-            <div class="edit-modal-header"><h3>${title}</h3><button class="modal-close" onclick="closeEditModal()">×</button></div>
-            <div class="edit-modal-body">
-                ${isArea ? `<textarea id="editInput" rows="5" placeholder="${ph}">${val}</textarea>` : `<input type="text" id="editInput" value="${val}" placeholder="${ph}">`}
-            </div>
-            <div class="edit-modal-footer">
-                <button class="modal-btn-cancel" onclick="closeEditModal()">Cancel</button>
-                <button class="modal-btn-save" onclick="saveEditModal()">Save</button>
-            </div>
-        </div>`;
-    document.body.appendChild(m);
-    setTimeout(() => document.getElementById('editInput').focus(), 100);
-}
-
-window.closeEditModal = function() {
-    const modal = document.querySelector('.edit-modal');
-    if (modal) modal.remove();
-};
-
-window.saveEditModal = function() {
-    const value = document.getElementById('editInput').value.trim();
-    if (currentEditAction) {
-        currentEditAction(value);
-    }
-};
-window.editUsername = function() {
-    currentEditAction = async (newValue) => {
-        if (!newValue || newValue === cachedFounderData?.founderUsername) return;
-        
-        try {
-            const firstLetter = newValue.charAt(0).toUpperCase();
-            const updates = {
-                founderUsername: newValue,
-                founderImage: firstLetter
-                // DO NOT UPDATE userId - it stays permanent
-            };
-            
-            await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
-            cachedFounderData = { ...cachedFounderData, ...updates };
-            
-            alert('✅ Username updated successfully!');
-            showEditProfile();
-        } catch (error) {
-            console.error('Error updating username:', error);
-            alert('❌ Failed to update username');
-        }
-    };
-    
-    createEditModal('Edit Username', cachedFounderData?.founderUsername || '', 'Enter your username');
-};
-window.editTitle = function() {
-    currentEditAction = async (newValue) => {
-        if (newValue === cachedFounderData?.title) return;
-        
-        try {
-            const updates = { title: newValue };
-            await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
-            cachedFounderData = { ...cachedFounderData, ...updates };
-            
-            alert('✅ Title updated successfully!');
-            showEditProfile();
-        } catch (error) {
-            console.error('Error updating title:', error);
-            alert('❌ Failed to update title');
-        }
-    };
-    
-    createEditModal('Edit Title', cachedFounderData?.title || '', 'e.g., CEO & Founder');
-};
-window.addCoFounder = function() {
-    const modal = document.createElement('div');
-    modal.className = 'edit-modal';
-    modal.innerHTML = `
-        <div class="edit-modal-content">
-            <div class="edit-modal-header">
-                <h3>Add Co-Founder</h3>
-                <button class="modal-close" onclick="closeEditModal()">×</button>
-            </div>
-            <div class="edit-modal-body">
-                <div style="margin-bottom: 1.5rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Co-Founder Name</label>
-                    <input type="text" id="cofounderName" placeholder="Enter name" style="width: 100%; padding: 0.75rem; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; color: #fff;">
-                </div>
-                <div>
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Description (Optional)</label>
-                    <textarea id="cofounderDesc" placeholder="e.g., CTO, 10 years in tech..." rows="3" style="width: 100%; padding: 0.75rem; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; color: #fff;"></textarea>
-                </div>
-            </div>
-            <div class="edit-modal-footer">
-                <button class="modal-btn-cancel" onclick="closeEditModal()">Cancel</button>
-                <button class="modal-btn-save" onclick="saveCoFounder()">Add Co-Founder</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-    setTimeout(() => modal.classList.add('show'), 10);
-};
-
-window.saveCoFounder = async function() {
-    const name = document.getElementById('cofounderName').value.trim();
-    const description = document.getElementById('cofounderDesc').value.trim();
-    
-    if (!name) {
-        alert('❌ Name is required');
-        return;
-    }
-    
-    try {
-        const coFounders = cachedFounderData?.coFounders || {};
-        const newId = `founder_${Object.keys(coFounders).length}`;
-        coFounders[newId] = { name, description };
-        
-        const updates = { coFounders };
-        await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
-        cachedFounderData = { ...cachedFounderData, ...updates };
-        
-        closeEditModal();
-        alert('✅ Co-Founder added successfully!');
-        showEditProfile();
-    } catch (error) {
-        console.error('Error adding co-founder:', error);
-        alert('❌ Failed to add co-founder');
-    }
-};
-window.editAbout = function() {
-    currentEditAction = async (newValue) => {
-        if (newValue === cachedFounderData?.about) return;
-        
-        try {
-            const updates = { about: newValue };
-            await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
-            cachedFounderData = { ...cachedFounderData, ...updates };
-            
-            alert('✅ About section updated successfully!');
-            showEditProfile();
-        } catch (error) {
-            console.error('Error updating about:', error);
-            alert('❌ Failed to update about section');
-        }
-    };
-    
-    createEditModal('About Yourself', cachedFounderData?.about || '', 'Tell investors about yourself...', true);
-};
-
-window.editStartup = function() {
-    const modal = document.createElement('div');
-    modal.className = 'edit-modal';
-    modal.innerHTML = `
-        <div class="edit-modal-content">
-            <div class="edit-modal-header">
-                <h3>Edit Startup Details</h3>
-                <button class="modal-close" onclick="closeEditModal()">×</button>
-            </div>
-            <div class="edit-modal-body">
-                <div style="margin-bottom: 1.5rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Startup Name</label>
-                    <input type="text" id="startupNameInput" placeholder="Enter startup name" value="${cachedStartupData?.startupName || ''}" style="width: 100%; padding: 0.75rem; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; color: #fff;">
-                </div>
-                <div>
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Description</label>
-                    <textarea id="startupDescInput" placeholder="Describe your startup..." rows="4" style="width: 100%; padding: 0.75rem; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; color: #fff;">${cachedStartupData?.description || ''}</textarea>
-                </div>
-            </div>
-            <div class="edit-modal-footer">
-                <button class="modal-btn-cancel" onclick="closeEditModal()">Cancel</button>
-                <button class="modal-btn-save" onclick="saveStartupEdit()">Save Changes</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-    setTimeout(() => modal.classList.add('show'), 10);
-};
-// Edit Profile Photo
-window.editProfilePhoto = async function() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    
-    input.onchange = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        
-        if (file.size > 10 * 1024 * 1024) {
-            alert('❌ Image must be under 10MB');
-            return;
-        }
-        
-        // Show uploading overlay
-        const overlay = document.createElement('div');
-        overlay.className = 'upload-overlay';
-        overlay.innerHTML = `
-            <div class="upload-spinner"></div>
-            <div class="upload-text">Uploading Photo...</div>
-            <div class="upload-subtext">Please wait while we upload your photo</div>
-            <div class="upload-progress-bar">
-                <div class="upload-progress-fill" id="uploadProgressFill"></div>
-            </div>
-        `;
-        document.body.appendChild(overlay);
-        
-        // Simulate progress animation
-        let progress = 0;
-        const progressInterval = setInterval(() => {
-            progress += Math.random() * 15;
-            if (progress > 90) progress = 90;
-            document.getElementById('uploadProgressFill').style.width = progress + '%';
-        }, 200);
-        
-        try {
-            const photoURL = await uploadFileToStorage(file, 'profile-photos');
-            
-            // Complete progress
-            clearInterval(progressInterval);
-            document.getElementById('uploadProgressFill').style.width = '100%';
-            
-            const updates = { photoURL };
-            await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
-            cachedFounderData = { ...cachedFounderData, ...updates };
-            
-            // Show success animation
-            overlay.innerHTML = `
-                <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" style="margin-bottom: 1rem;">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <polyline points="16 8 10 14 8 12"></polyline>
-                </svg>
-                <div class="upload-text" style="color: #10b981;">Photo Uploaded!</div>
-                <div class="upload-subtext">Refreshing your profile...</div>
-            `;
-            
-            setTimeout(() => {
-                overlay.remove();
-                showEditProfile();
-            }, 1500);
-            
-        } catch (error) {
-            clearInterval(progressInterval);
-            console.error('Error uploading photo:', error);
-            
-            // Show error animation
-            overlay.innerHTML = `
-                <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="#ff006e" stroke-width="2" style="margin-bottom: 1rem;">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="15" y1="9" x2="9" y2="15"></line>
-                    <line x1="9" y1="9" x2="15" y2="15"></line>
-                </svg>
-                <div class="upload-text" style="color: #ff006e;">Upload Failed</div>
-                <div class="upload-subtext">Please try again</div>
-            `;
-            
-            setTimeout(() => overlay.remove(), 2000);
-        }
-    };
-    
-    input.click();
-};
 function generateStartupId(startupName) {
     if (!startupName) return 'STARTUP_' + Math.floor(Math.random() * 9000 + 1000);
     
@@ -7845,382 +8225,6 @@ function generateStartupId(startupName) {
     
     return `${cleanName}_${uniqueNum}`;
 }
-// Edit Location
-window.editLocation = function() {
-    const currentLocation = cachedStartupData?.location || { country: '', state: '', city: '' };
-    
-    const modal = document.createElement('div');
-    modal.className = 'edit-modal';
-    modal.innerHTML = `
-        <div class="edit-modal-content">
-            <div class="edit-modal-header">
-                <h3>Edit Location</h3>
-                <button class="modal-close" onclick="closeEditModal()">×</button>
-            </div>
-            <div class="edit-modal-body">
-                <div style="margin-bottom: 1.5rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Country</label>
-                    <input type="text" id="locationCountry" placeholder="e.g., United States" value="${currentLocation.country}" style="width: 100%; padding: 0.75rem; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; color: #fff;">
-                </div>
-                <div style="margin-bottom: 1.5rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">State/Province</label>
-                    <input type="text" id="locationState" placeholder="e.g., California" value="${currentLocation.state}" style="width: 100%; padding: 0.75rem; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; color: #fff;">
-                </div>
-                <div>
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">City</label>
-                    <input type="text" id="locationCity" placeholder="e.g., San Francisco" value="${currentLocation.city}" style="width: 100%; padding: 0.75rem; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; color: #fff;">
-                </div>
-            </div>
-            <div class="edit-modal-footer">
-                <button class="modal-btn-cancel" onclick="closeEditModal()">Cancel</button>
-                <button class="modal-btn-save" onclick="saveLocation()">Save Location</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-    setTimeout(() => modal.classList.add('show'), 10);
-};
-
-window.saveLocation = async function() {
-    const country = document.getElementById('locationCountry').value.trim();
-    const state = document.getElementById('locationState').value.trim();
-    const city = document.getElementById('locationCity').value.trim();
-    
-    try {
-        const updates = {
-            location: { country, state, city }
-        };
-        
-        await update(ref(db, `startupProfile/${currentUser.uid}`), updates);
-        cachedStartupData = { ...cachedStartupData, ...updates };
-        
-        closeEditModal();
-        alert('✅ Location updated!');
-        showEditProfile();
-    } catch (error) {
-        console.error('Error updating location:', error);
-        alert('❌ Failed to update location');
-    }
-};
-
-// Add Language
-window.addLanguage = function() {
-    const modal = document.createElement('div');
-    modal.className = 'edit-modal';
-    modal.innerHTML = `
-        <div class="edit-modal-content">
-            <div class="edit-modal-header">
-                <h3>Add Language</h3>
-                <button class="modal-close" onclick="closeEditModal()">×</button>
-            </div>
-            <div class="edit-modal-body">
-                <div style="margin-bottom: 1.5rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Language</label>
-                    <input type="text" id="languageName" placeholder="e.g., English, Spanish, Hindi" style="width: 100%; padding: 0.75rem; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; color: #fff;">
-                </div>
-                <div>
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Proficiency Level</label>
-                    <select id="languageLevel" style="width: 100%; padding: 0.75rem; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; color: #fff;">
-                        <option value="Beginner">Beginner</option>
-                        <option value="Intermediate">Intermediate</option>
-                        <option value="Fluent">Fluent</option>
-                        <option value="Expert">Expert</option>
-                    </select>
-                </div>
-            </div>
-            <div class="edit-modal-footer">
-                <button class="modal-btn-cancel" onclick="closeEditModal()">Cancel</button>
-                <button class="modal-btn-save" onclick="saveLanguage()">Add Language</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-    setTimeout(() => modal.classList.add('show'), 10);
-};
-
-window.saveLanguage = async function() {
-    const name = document.getElementById('languageName').value.trim();
-    const level = document.getElementById('languageLevel').value;
-    
-    if (!name) {
-        alert('❌ Language name is required');
-        return;
-    }
-    
-    try {
-        const languages = cachedFounderData?.languages || [];
-        
-        // Check if language already exists
-        if (languages.some(lang => lang.name.toLowerCase() === name.toLowerCase())) {
-            alert('❌ Language already added');
-            return;
-        }
-        
-        languages.push({ name, level });
-        
-        const updates = { languages };
-        await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
-        cachedFounderData = { ...cachedFounderData, ...updates };
-        
-        closeEditModal();
-        alert('✅ Language added!');
-        showEditProfile();
-    } catch (error) {
-        console.error('Error adding language:', error);
-        alert('❌ Failed to add language');
-    }
-};
-
-window.removeLanguage = async function(languageName) {
-    if (!confirm(`Remove ${languageName}?`)) return;
-    
-    try {
-        const languages = cachedFounderData?.languages?.filter(lang => lang.name !== languageName) || [];
-        
-        const updates = { languages };
-        await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
-        cachedFounderData = { ...cachedFounderData, ...updates };
-        
-        alert('✅ Language removed!');
-        showEditProfile();
-    } catch (error) {
-        console.error('Error removing language:', error);
-        alert('❌ Failed to remove language');
-    }
-};
-window.saveStartupEdit = async function() {
-    const newName = document.getElementById('startupNameInput').value;
-    const newDesc = document.getElementById('startupDescInput').value;
-    
-    if (!newName) {
-        alert('❌ Startup name is required');
-        return;
-    }
-    
-    try {
-        const updates = {
-            startupName: newName,
-            description: newDesc
-            // DO NOT UPDATE startupId - it stays permanent
-        };
-        
-        await update(ref(db, `startupProfile/${currentUser.uid}`), updates);
-        cachedStartupData = { ...cachedStartupData, ...updates };
-        
-        closeEditModal();
-        alert('✅ Startup info updated successfully!');
-        showEditProfile();
-    } catch (error) {
-        console.error('Error updating startup:', error);
-        alert('❌ Failed to update startup');
-    }
-};
-window.saveEditModal = function() {
-    const value = document.getElementById('editInput').value.trim();
-    if (currentEditAction) {
-        currentEditAction(value);
-    }
-    closeEditModal();
-};
-
-window.uploadVideo = async function() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'video/*';
-    
-    input.onchange = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        
-        if (file.size > 50 * 1024 * 1024) {
-            alert('❌ Video must be under 50MB');
-            return;
-        }
-        
-        // Show uploading overlay
-        const overlay = document.createElement('div');
-        overlay.className = 'upload-overlay';
-        overlay.innerHTML = `
-            <div class="upload-spinner"></div>
-            <div class="upload-text">Uploading Video...</div>
-            <div class="upload-subtext">This may take a minute for larger files</div>
-            <div class="upload-progress-bar">
-                <div class="upload-progress-fill" id="uploadProgressFill"></div>
-            </div>
-        `;
-        document.body.appendChild(overlay);
-        
-        // Simulate progress
-        let progress = 0;
-        const progressInterval = setInterval(() => {
-            progress += Math.random() * 10;
-            if (progress > 90) progress = 90;
-            document.getElementById('uploadProgressFill').style.width = progress + '%';
-        }, 300);
-        
-        try {
-            const videoUrl = await uploadFileToStorage(file, 'intro-videos');
-            
-            clearInterval(progressInterval);
-            document.getElementById('uploadProgressFill').style.width = '100%';
-            
-            const updates = { introVideo: videoUrl };
-            await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
-            cachedFounderData = { ...cachedFounderData, ...updates };
-            
-            overlay.innerHTML = `
-                <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" style="margin-bottom: 1rem;">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <polyline points="16 8 10 14 8 12"></polyline>
-                </svg>
-                <div class="upload-text" style="color: #10b981;">Video Uploaded!</div>
-                <div class="upload-subtext">Refreshing your profile...</div>
-            `;
-            
-            setTimeout(() => {
-                overlay.remove();
-                showEditProfile();
-            }, 1500);
-            
-        } catch (error) {
-            clearInterval(progressInterval);
-            console.error('Error uploading video:', error);
-            
-            overlay.innerHTML = `
-                <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="#ff006e" stroke-width="2" style="margin-bottom: 1rem;">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="15" y1="9" x2="9" y2="15"></line>
-                    <line x1="9" y1="9" x2="15" y2="15"></line>
-                </svg>
-                <div class="upload-text" style="color: #ff006e;">Upload Failed</div>
-                <div class="upload-subtext">Please try again</div>
-            `;
-            
-            setTimeout(() => overlay.remove(), 2000);
-        }
-    };
-    
-    input.click();
-};
-window.addEducation = function() {
-    const modal = document.createElement('div');
-    modal.className = 'edit-modal';
-    modal.innerHTML = `
-        <div class="edit-modal-content">
-            <div class="edit-modal-header">
-                <h3>Add Education</h3>
-                <button class="modal-close" onclick="closeEditModal()">×</button>
-            </div>
-            <div class="edit-modal-body">
-                <div style="margin-bottom: 1.5rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">School/University</label>
-                    <input type="text" id="eduSchool" placeholder="e.g., Stanford University" style="width: 100%; padding: 0.75rem; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; color: #fff;">
-                </div>
-                <div style="margin-bottom: 1.5rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Degree/Course</label>
-                    <input type="text" id="eduDegree" placeholder="e.g., B.Tech Computer Science" style="width: 100%; padding: 0.75rem; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; color: #fff;">
-                </div>
-                <div>
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Year</label>
-                    <input type="text" id="eduYear" placeholder="e.g., 2018-2022" style="width: 100%; padding: 0.75rem; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; color: #fff;">
-                </div>
-            </div>
-            <div class="edit-modal-footer">
-                <button class="modal-btn-cancel" onclick="closeEditModal()">Cancel</button>
-                <button class="modal-btn-save" onclick="saveEducation()">Add Education</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-    setTimeout(() => modal.classList.add('show'), 10);
-};
-
-window.saveEducation = async function() {
-    const school = document.getElementById('eduSchool').value.trim();
-    const degree = document.getElementById('eduDegree').value.trim();
-    const year = document.getElementById('eduYear').value.trim();
-    
-    if (!school || !degree) {
-        alert('❌ School and degree are required');
-        return;
-    }
-    
-    try {
-        const education = cachedFounderData?.education || [];
-        education.push({ school, degree, year });
-        
-        const updates = { education };
-        await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
-        cachedFounderData = { ...cachedFounderData, ...updates };
-        
-        closeEditModal();
-        alert('✅ Education added successfully!');
-        showEditProfile();
-    } catch (error) {
-        console.error('Error adding education:', error);
-        alert('❌ Failed to add education');
-    }
-};
-
-window.addWorkExperience = function() {
-    const modal = document.createElement('div');
-    modal.className = 'edit-modal';
-    modal.innerHTML = `
-        <div class="edit-modal-content">
-            <div class="edit-modal-header">
-                <h3>Add Work Experience</h3>
-                <button class="modal-close" onclick="closeEditModal()">×</button>
-            </div>
-            <div class="edit-modal-body">
-                <div style="margin-bottom: 1.5rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Company Name</label>
-                    <input type="text" id="workCompany" placeholder="e.g., Google" style="width: 100%; padding: 0.75rem; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; color: #fff;">
-                </div>
-                <div style="margin-bottom: 1.5rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Position/Role</label>
-                    <input type="text" id="workPosition" placeholder="e.g., Software Engineer" style="width: 100%; padding: 0.75rem; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; color: #fff;">
-                </div>
-                <div>
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Duration</label>
-                    <input type="text" id="workDuration" placeholder="e.g., 2020-2023" style="width: 100%; padding: 0.75rem; background: #0a0a0a; border: 1px solid #333; border-radius: 8px; color: #fff;">
-                </div>
-            </div>
-            <div class="edit-modal-footer">
-                <button class="modal-btn-cancel" onclick="closeEditModal()">Cancel</button>
-                <button class="modal-btn-save" onclick="saveWorkExperience()">Add Experience</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-    setTimeout(() => modal.classList.add('show'), 10);
-};
-
-window.saveWorkExperience = async function() {
-    const company = document.getElementById('workCompany').value.trim();
-    const position = document.getElementById('workPosition').value.trim();
-    const duration = document.getElementById('workDuration').value.trim();
-    
-    if (!company || !position) {
-        alert('❌ Company and position are required');
-        return;
-    }
-    
-    try {
-        const workExperience = cachedFounderData?.workExperience || [];
-        workExperience.push({ company, position, duration });
-        
-        const updates = { workExperience };
-        await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
-        cachedFounderData = { ...cachedFounderData, ...updates };
-        
-        closeEditModal();
-        alert('✅ Work experience added successfully!');
-        showEditProfile();
-    } catch (error) {
-        console.error('Error adding work experience:', error);
-        alert('❌ Failed to add work experience');
-    }
-};
 
 
 window.filterVests = function(type) {
