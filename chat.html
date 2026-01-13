@@ -27,9 +27,18 @@
 .input-area {
   position: sticky;
   bottom: 0;
+  left: 0;
+  width: 100%;
   z-index: 150;
   background: white;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 20px;
+  border-top: 1px solid #e5e7eb;
+  box-sizing: border-box;
 }
+
 @media (max-width: 768px) {
   .chat-header {
     padding: 10px 14px;
@@ -212,23 +221,6 @@ const firebaseConfig = {
                 if(!recipientUID) { window.location.href = "dashboard.html"; return; }
                 await identifyUserRole();
                 initializeChat();
-async function loadChatHeaderUser() {
-  let name = "User";
-  let photo = "https://via.placeholder.com/45?text=SV";
-
-  const founderSnap = await get(ref(db, `founderProfile/${recipientUID}`));
-  if (founderSnap.exists()) {
-    const d = founderSnap.val();
-    name = d.firstName || d.founderUsername || "Founder";
-    photo = d.photoURL || photo;
-  } else {
-    const investorSnap = await get(ref(db, `investorProfiles/${recipientUID}`));
-    if (investorSnap.exists()) {
-      const d = investorSnap.val();
-      name = d.fullName || "Investor";
-      photo = d.photoURL || d.logo || photo;
-    }
-  }
 
   document.getElementById("chatTitle").textContent = name;
   document.querySelector(".header-logo").src = photo;
@@ -284,8 +276,6 @@ if (triggerMeeting === 'true') {
         }
 
         async function initializeChat() {
-await loadChatHeaderUser();
-
             const participantIDs = [currentUser.uid, recipientUID].sort();
             chatRoomID = `chat_${participantIDs[0]}_${participantIDs[1]}`;
             let chatTitle = "Chat";
