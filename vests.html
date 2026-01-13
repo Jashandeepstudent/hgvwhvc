@@ -6636,20 +6636,21 @@ max-width: 1100px;
 
 
 const dashboardHTML = `
-        <div class="card inbox-card" onclick="window.location.hash='investor_chatlist'" style="cursor:pointer;">
-            <div class="card-title">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:.5rem;">
-                    <path d="M22 12h-6l-2 3h-4l-2-3H2"></path>
-                    <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16 a2 2 0 0 0 2-2v-6l-3.45-6.89"></path>
-                </svg>
-                Inbox
-            </div>
-
-            <div class="inbox-message">
-                <strong>${latestPreview.title}</strong><br>
-                <small>${latestPreview.text}</small>
-            </div>
+    <div class="card inbox-card" onclick="window.location.hash='investor_chatlist'" style="cursor:pointer;">
+        <div class="card-title">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:.5rem;">
+                <path d="M22 12h-6l-2 3h-4l-2-3H2"></path>
+                <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16 a2 2 0 0 0 2-2v-6l-3.45-6.89"></path>
+            </svg>
+            Inbox
         </div>
+
+        <div class="inbox-message">
+            <strong>${latestPreview.title}</strong><br>
+            <small>${latestPreview.text}</small>
+        </div>
+    </div>
+`;
 
         `;
         </div>
