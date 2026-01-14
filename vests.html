@@ -2937,7 +2937,31 @@ import {
     const db = getDatabase(app);
     const storage = getStorage(app);
     const auth = getAuth(app);
+// Variable to store the current notification state
+let globalHasNotifications = false;
 
+// Function to handle clicking the bell
+window.handleBellClick = function() {
+    localStorage.setItem('scaleVest_lastNotificationCheck', Date.now());
+    globalHasNotifications = false;
+    updateNotificationUI();
+    window.location.hash = 'investor_chatlist';
+};
+
+// Force the UI to update based on the global variable
+function updateNotificationUI() {
+    const badge = document.getElementById('navBellBadge');
+    if (badge) {
+        if (globalHasNotifications) {
+            badge.classList.add('active');
+        } else {
+            badge.classList.remove('active');
+        }
+    }
+}
+
+// Run this every 1 second to catch any dynamic HTML changes (Navbar re-renders)
+setInterval(updateNotificationUI, 1000);
     let currentUser = null;
 const STORAGE_KEY = 'vestFormData';
 // Helper function to create reusable navbar
@@ -4727,20 +4751,8 @@ window.deleteConversation = async function(roomKey, event) {
 // NOTIFICATION PERSISTENCE FIX
 // ============================================
 
-// 1. Function to handle clicking the bell
-window.handleBellClick = function() {
-    // Record the exact time the user looked at their inbox
-    localStorage.setItem('scaleVest_lastNotificationCheck', Date.now());
-    
-    // Hide the dot immediately
-    const badge = document.getElementById('navBellBadge');
-    if (badge) badge.classList.remove('active');
 
-    // Go to the chat list
-    window.location.hash = 'investor_chatlist';
-};
 
-// 2. Real-time listener for new messages
 function startNotificationListener() {
     if (!currentUser) return;
     
@@ -4750,28 +4762,28 @@ function startNotificationListener() {
         if (!snapshot.exists()) return;
         
         const allChats = snapshot.val();
-        let hasNewUnseenMessage = false;
-
-        // Get the last time the user cleared their notifications
+        let foundNew = false;
         const lastChecked = parseInt(localStorage.getItem('scaleVest_lastNotificationCheck') || '0');
 
         Object.keys(allChats).forEach(roomKey => {
-            // Check if this chat room belongs to the current user
             if (roomKey.includes(currentUser.uid)) {
                 const messages = Object.values(allChats[roomKey]);
-                if (messages.length === 0) return;
+                // Find the latest message timestamp
+                const latestMsg = messages.reduce((prev, current) => 
+                    (prev.timestamp > current.timestamp) ? prev : current
+                );
 
-                // Get the very last message in this room
-                const lastMsg = messages.sort((a, b) => a.timestamp - b.timestamp)[messages.length - 1];
-
-                // Show dot ONLY if:
-                // 1. The message is NOT from the current user
-                // 2. The message timestamp is NEWER than the last time the bell was clicked
-                if (lastMsg.sender !== currentUser.uid && lastMsg.timestamp > lastChecked) {
-                    hasNewUnseenMessage = true;
+                // If message is from someone else AND newer than our last click
+                if (latestMsg.sender !== currentUser.uid && latestMsg.timestamp > lastChecked) {
+                    foundNew = true;
                 }
             }
         });
+
+        globalHasNotifications = foundNew;
+        updateNotificationUI();
+    });
+}
 
         // Update the UI
         const badge = document.getElementById('navBellBadge');
