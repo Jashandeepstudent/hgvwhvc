@@ -4735,7 +4735,6 @@ function startNotificationListener(myUid) {
 
                 if (msg.recipient === myUid) {
                     const readBy = msg.readBy || {};
-
                     if (readBy[myUid] !== true) {
                         hasUnread = true;
                     }
@@ -4743,10 +4742,11 @@ function startNotificationListener(myUid) {
             });
         });
 
+        // 🔥 ALWAYS re-fetch element (DOM may have reloaded)
         const badge = document.getElementById("navBellBadge");
-        if (badge) {
-            badge.style.display = hasUnread ? "block" : "none";
-        }
+        if (!badge) return;
+
+        badge.style.display = hasUnread ? "block" : "none";
     });
 }
 
@@ -5475,9 +5475,10 @@ function openBellNotifications() {
         currentUser = user;
           setUserPresence(user);
         isInitialLoad = false;
- setTimeout(() => {
-        startNotificationListener(user.uid);
-    }, 0);
+ if (window.__bellListenerStarted) return;
+    window.__bellListenerStarted = true;
+
+    startNotificationListener(user.uid);
                document.getElementById('loadingScreen').classList.remove('hidden');
         
         try {
