@@ -4509,6 +4509,12 @@ window.showInvestorChatList = async function() {
 
         const fetchPromises = myChats.map(async (chat) => {
             const uid = chat.otherUid;
+const presenceSnap = await get(ref(db, `presence/${uid}`));
+
+if (presenceSnap.exists() && presenceSnap.val().online === true) {
+    onlineCount++;
+}
+
             try {
                 let snap = await get(ref(db, `investorProfiles/${uid}`));
                 if (!snap.exists()) snap = await get(ref(db, `founderProfile/${uid}`));
@@ -4565,7 +4571,9 @@ window.showInvestorChatList = async function() {
                 const profile = profileMap[chat.otherUid] || { fullName: 'Unknown' };
                 const displayName = profile.fullName || profile.founderUsername || profile.name || "Investor";
                 const displayPhoto = profile.photoURL || profile.logo; 
-                const isOnline = profile.status === 'online' || profile.isOnline === true;
+                const presenceSnap = await get(ref(db, `presence/${chat.otherUid}`));
+const isOnline = presenceSnap.exists() && presenceSnap.val().online === true;
+
                 const statusClass = isOnline ? 'status-online' : 'status-offline';
 
                 // Time
@@ -5365,9 +5373,32 @@ function timeSince(date) {
     if (interval > 1) return Math.floor(interval) + "m ago";
     return "Just now";
 }
+
+import {
+  onDisconnect,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+function setUserPresence(user) {
+    const presenceRef = ref(db, `presence/${user.uid}`);
+
+    // Mark online
+    set(presenceRef, {
+        online: true,
+        lastSeen: serverTimestamp()
+    });
+
+    // Auto mark offline
+    onDisconnect(presenceRef).set({
+        online: false,
+        lastSeen: serverTimestamp()
+    });
+}
+
    onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
+          setUserPresence(user);
         isInitialLoad = false;
         startNotificationListener();
         document.getElementById('loadingScreen').classList.remove('hidden');
