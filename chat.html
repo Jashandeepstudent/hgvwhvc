@@ -208,6 +208,19 @@ const firebaseConfig = {
         const db = getDatabase(app);
         const storage = getStorage(app);
         const auth = getAuth(app);
+function setUserPresence(user) {
+    const presenceRef = ref(db, `presence/${user.uid}`);
+
+    set(presenceRef, {
+        online: true,
+        lastSeen: serverTimestamp()
+    });
+
+    onDisconnect(presenceRef).set({
+        online: false,
+        lastSeen: serverTimestamp()
+    });
+}
 
         const params = new URLSearchParams(window.location.search);
         const recipientUID = params.get('recipient');
@@ -218,6 +231,7 @@ const firebaseConfig = {
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUser = user;
+                setUserPresence(user); 
                 if(!recipientUID) { window.location.href = "dashboard.html"; return; }
                 await identifyUserRole();
                 initializeChat();
