@@ -4433,6 +4433,7 @@ window.limitWords = function(element, limit) {
 // import { remove } from "firebase/database"; 
 
 window.showInvestorChatList = async function() {
+  try {
     const container = document.getElementById('dashboardContainer');
     
     // Toggle containers
@@ -4636,16 +4637,22 @@ if (presenceSnap.exists() && presenceSnap.val().online === true) {
 listHtml += chatHtmlArray.join('');
 
 
-        listHtml += `</div>`; 
+               listHtml += `</div>`;
         container.innerHTML = listHtml;
 
-        if(typeof updateNotificationBadge === 'function') updateNotificationBadge(0);
+        if (typeof updateNotificationBadge === 'function') {
+            updateNotificationBadge(0);
+        }
 
     } catch (e) {
         console.error("Inbox Error:", e);
-        container.innerHTML = `<div style="text-align:center; padding:4rem; color:#ff4d4d;"><h3>Error loading messages</h3></div>`;
+        container.innerHTML = `
+            <div style="text-align:center; padding:4rem; color:#ff4d4d;">
+                <h3>Error loading messages</h3>
+            </div>`;
     }
 };
+
 
 // --- HELPER FUNCTIONS ---
 
