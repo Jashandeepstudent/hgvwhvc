@@ -5752,64 +5752,102 @@ async function createDashboard() {
     if (!currentUser) return;
 
     // --- REAL-TIME INBOX LISTENER ---
+    // --- REAL-TIME INBOX LISTENER (UPDATED) ---
     const chatsRef = ref(db, 'Chats');
     
     onValue(chatsRef, async (snapshot) => {
-        let latestPreview = { 
-            text: "Start connecting with investors today.", 
-            title: "Welcome to ScaleVest!",
-            timeAgo: ""
+        // Default State
+        let previewData = { 
+            text: "No new messages", 
+            title: "Inbox Empty", 
+            timeAgo: "",
+            isUnread: false
         };
 
         if (snapshot.exists()) {
             const allChats = snapshot.val();
-            let newestInvestorMsg = null;
+            let newestUnreadMsg = null;
+            let newestAnyMsg = null;
 
-            // Loop through chats to find the latest incoming message
+            // 1. Traverse all chat rooms
             Object.keys(allChats).forEach(roomKey => {
                 if (roomKey.includes(currentUser.uid)) {
                     const roomData = allChats[roomKey];
                     const msgs = Object.values(roomData).filter(m => m && typeof m === 'object' && m.timestamp);
                     
                     if (msgs.length > 0) {
+                        // Filter messages sent BY OTHERS (Investors)
                         const investorMsgs = msgs.filter(m => m.sender !== currentUser.uid);
-                        if (investorMsgs.length > 0) {
-                            const lastInRoom = investorMsgs.reduce((prev, curr) => (prev.timestamp > curr.timestamp) ? prev : curr);
-                            if (!newestInvestorMsg || lastInRoom.timestamp > newestInvestorMsg.timestamp) {
-                                newestInvestorMsg = lastInRoom;
+                        
+                        investorMsgs.forEach(msg => {
+                            // Track Latest UNREAD
+                            if (msg.read !== true) {
+                                if (!newestUnreadMsg || msg.timestamp > newestUnreadMsg.timestamp) {
+                                    newestUnreadMsg = msg;
+                                }
                             }
-                        }
+                            // Track Latest ANY (Fallback)
+                            if (!newestAnyMsg || msg.timestamp > newestAnyMsg.timestamp) {
+                                newestAnyMsg = msg;
+                            }
+                        });
                     }
                 }
             });
 
-            if (newestInvestorMsg) {
-                try {
-                    // --- TARGETED NAME FETCHING ---
-                    // Look up the hsi id under 'investorProfiles' to get the 'fullName'
-                    const investorSnap = await get(ref(db, `investorProfiles/${newestInvestorMsg.sender}`));
-                    
-                    const senderName = investorSnap.exists() ? investorSnap.val().fullName : "An Investor";
+            // 2. Prioritize displaying the Unread Message
+            const targetMsg = newestUnreadMsg || newestAnyMsg;
 
-                    latestPreview.title = `${senderName} has sent you a new message:`;
-                    latestPreview.text = newestInvestorMsg.text;
-                    latestPreview.timeAgo = timeSince(newestInvestorMsg.timestamp);
+            if (targetMsg) {
+                try {
+                    // Fetch Sender Name
+                    let senderName = "An Investor";
+                    const investorSnap = await get(ref(db, `investorProfiles/${targetMsg.sender}`));
+                    if (investorSnap.exists()) {
+                        senderName = investorSnap.val().fullName;
+                    } else {
+                        // Fallback checking founder profile just in case
+                        const founderSnap = await get(ref(db, `founderProfile/${targetMsg.sender}`));
+                        if (founderSnap.exists()) senderName = founderSnap.val().founderUsername;
+                    }
+
+                    previewData = {
+                        title: newestUnreadMsg ? `New message from ${senderName}` : `Last message from ${senderName}`,
+                        text: targetMsg.text || "Sent an attachment",
+                        timeAgo: timeSince(targetMsg.timestamp),
+                        isUnread: !!newestUnreadMsg // True if we are showing an unread msg
+                    };
+
                 } catch (e) {
                     console.error("Error fetching investor name:", e);
                 }
             }
         }
 
-        // --- INSTANT UI UPDATE ---
+        // 3. Render HTML with logic for Unread/Read styles
         const inboxElement = document.getElementById('inbox-preview-content');
         if (inboxElement) {
+            // If Unread: Pink Border + White Text
+            // If Read: Transparent Border + Grey Text
+            const borderStyle = previewData.isUnread ? "3px solid #ff006e" : "3px solid #333";
+            const bgStyle = previewData.isUnread ? "rgba(255, 0, 110, 0.05)" : "rgba(255, 255, 255, 0.03)";
+            const titleColor = previewData.isUnread ? "#fff" : "#888";
+            const textColor = previewData.isUnread ? "#eee" : "#666";
+
+            inboxElement.style.borderLeft = borderStyle;
+            inboxElement.style.background = bgStyle;
+
             inboxElement.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
-                    <strong style="color: #fff; font-size: 0.9rem; line-height:1.2;">${latestPreview.title}</strong>
-                    <span style="color: #ff006e; font-size: 0.7rem; font-weight: 800; white-space:nowrap; margin-left:10px;">${latestPreview.timeAgo}</span>
+                    <strong style="color: ${titleColor}; font-size: 0.9rem; line-height:1.2;">
+                        ${previewData.isUnread ? '● ' : ''}${previewData.title}
+                    </strong>
+                    <span style="color: ${previewData.isUnread ? '#ff006e' : '#555'}; font-size: 0.7rem; font-weight: 800; white-space:nowrap; margin-left:10px;">
+                        ${previewData.timeAgo}
+                    </span>
                 </div>
-                <p style="color: #888; font-size: 0.85rem; line-height: 1.4; font-style: italic;">
-                    "${latestPreview.text}"
+                <p style="color: ${textColor}; font-size: 0.85rem; line-height: 1.4; font-style: italic; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                    "${previewData.text}"
                 </p>
             `;
         }
@@ -6914,7 +6952,7 @@ max-width: 1100px;
 
 
 
-<div class="card inbox-card" onclick="window.location.hash='investor_chatlist'" style="cursor:pointer;">
+<div class="card inbox-card" onclick="window.handleBellClick()" style="cursor:pointer;">
     <div class="card-title">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M22 12h-6l-2 3h-4l-2-3H2"></path>
