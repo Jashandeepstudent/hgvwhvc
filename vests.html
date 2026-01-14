@@ -4730,23 +4730,22 @@ function startNotificationListener(myUid) {
         let hasUnread = false;
 
         snapshot.forEach(chatSnap => {
-            chatSnap.forEach(messageSnap => {
-                const msg = messageSnap.val();
+            chatSnap.forEach(msgSnap => {
+                const msg = msgSnap.val();
 
-                if (msg.recipient === myUid) {
-                    const readBy = msg.readBy || {};
-                    if (readBy[myUid] !== true) {
-                        hasUnread = true;
-                    }
+                if (
+                    msg.recipient === myUid &&
+                    msg.read === false
+                ) {
+                    hasUnread = true;
                 }
             });
         });
 
-        // 🔥 ALWAYS re-fetch element (DOM may have reloaded)
         const badge = document.getElementById("navBellBadge");
-        if (!badge) return;
-
-        badge.style.display = hasUnread ? "block" : "none";
+        if (badge) {
+            badge.style.display = hasUnread ? "block" : "none";
+        }
     });
 }
 
