@@ -69,13 +69,11 @@
         /* Only apply this to screens smaller than 768px (Mobile) */
 @media screen and (max-width: 768px) {
     html, body {
-        /* OPTION A: CSS Zoom (Works best on Chrome/Safari/Edge) */
-        zoom: 0.6; /* Scales everything down to 60% size */
+        /* Try 0.85 or 0.9 instead of 0.6 */
+        zoom: 0.85; 
 
-        /* OPTION B: If Zoom glitches, use Overflow control */
-        overflow-x: hidden; /* Prevents side-scrolling */
-        width: 100vw;       /* Forces width to viewport width */
-        position: relative;
+        overflow-x: hidden;
+        width: 100vw;
     }
 }
 /* ===============================
