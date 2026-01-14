@@ -4567,61 +4567,74 @@ if (presenceSnap.exists() && presenceSnap.val().online === true) {
                     <p style="margin:0; font-weight:600;">No messages yet</p>
                 </div>`;
         } else {
-            listHtml += myChats.map(async chat => {
-                const profile = profileMap[chat.otherUid] || { fullName: 'Unknown' };
-                const displayName = profile.fullName || profile.founderUsername || profile.name || "Investor";
-                const displayPhoto = profile.photoURL || profile.logo; 
-                const presenceSnap = await get(ref(db, `presence/${chat.otherUid}`));
-const isOnline = presenceSnap.exists() && presenceSnap.val().online === true;
+           const chatHtmlArray = await Promise.all(
+    myChats.map(async chat => {
 
-                const statusClass = isOnline ? 'status-online' : 'status-offline';
+        const profile = profileMap[chat.otherUid] || { fullName: 'Unknown' };
+        const displayName =
+            profile.fullName ||
+            profile.founderUsername ||
+            profile.name ||
+            "Investor";
 
-                // Time
-                const msgDate = new Date(chat.timestamp);
-                const isToday = new Date().toDateString() === msgDate.toDateString();
-                const timeDisplay = isToday 
-                    ? msgDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
-                    : msgDate.toLocaleDateString();
+        const displayPhoto = profile.photoURL || profile.logo;
 
-                return `
-               <div class="chat-item" onclick="openChat('${chat.otherUid}', '${chat.roomKey}', this)">
+        // 🔥 PRESENCE CHECK
+        const presenceSnap = await get(ref(db, `presence/${chat.otherUid}`));
+        const isOnline = presenceSnap.exists() && presenceSnap.val().online === true;
+        const statusClass = isOnline ? 'status-online' : 'status-offline';
 
-                    <div class="chat-avatar">
-                        ${displayPhoto 
-                            ? `<img src="${displayPhoto}" alt="${displayName}" onerror="this.style.display='none'">` 
-                            : displayName.charAt(0).toUpperCase()}
-                        <div class="status-indicator ${statusClass}"></div>
-                    </div>
-                    
-                    <div class="chat-info">
-                        <div class="chat-name">${displayName}</div>
-                        <div class="chat-preview ${chat.isUnread ? 'unread-text' : ''} ${chat.isAttachment ? 'attachment-text' : ''}">
-                            ${chat.isUnread ? '<span class="unread-dot" style="color:#10b981; margin-right:4px;">●</span>' : ''}
-                            ${chat.isAttachment ? '📎 ' : ''}${chat.lastMessage}
-                        </div>
-                    </div>
-                    
-                    <div class="chat-meta" style="display:flex; flex-direction:column; align-items:flex-end; gap:5px;">
-                        <div class="time-text">${timeDisplay}</div>
-                        ${chat.isUnread ? '<div class="unread-pill">NEW</div>' : ''}
-                        
-                       <button
-  class="delete-chat-btn"
-  onclick="deleteConversation('${chat.roomKey}', event)"
-  onkeydown="event.stopPropagation()"
-  title="Delete Conversation"
->
+        // Time formatting
+        const msgDate = new Date(chat.timestamp);
+        const isToday = new Date().toDateString() === msgDate.toDateString();
+        const timeDisplay = isToday
+            ? msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            : msgDate.toLocaleDateString();
 
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                                <polyline points="3 6 5 6 21 6"></polyline>
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                            </svg>
-                        </button>
-                    </div>
+        return `
+        <div class="chat-item" onclick="openChat('${chat.otherUid}', '${chat.roomKey}', this)">
+
+            <div class="chat-avatar">
+                ${
+                    displayPhoto
+                        ? `<img src="${displayPhoto}" alt="${displayName}" onerror="this.style.display='none'">`
+                        : displayName.charAt(0).toUpperCase()
+                }
+                <div class="status-indicator ${statusClass}"></div>
+            </div>
+
+            <div class="chat-info">
+                <div class="chat-name">${displayName}</div>
+                <div class="chat-preview ${chat.isUnread ? 'unread-text' : ''} ${chat.isAttachment ? 'attachment-text' : ''}">
+                    ${chat.isUnread ? '<span class="unread-dot" style="color:#10b981; margin-right:4px;">●</span>' : ''}
+                    ${chat.isAttachment ? '📎 ' : ''}${chat.lastMessage}
                 </div>
-                `;
-            }).join('');
-        }
+            </div>
+
+            <div class="chat-meta" style="display:flex; flex-direction:column; align-items:flex-end; gap:5px;">
+                <div class="time-text">${timeDisplay}</div>
+                ${chat.isUnread ? '<div class="unread-pill">NEW</div>' : ''}
+
+                <button
+                    class="delete-chat-btn"
+                    onclick="deleteConversation('${chat.roomKey}', event)"
+                    onkeydown="event.stopPropagation()"
+                    title="Delete Conversation"
+                >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        `;
+    })
+);
+
+// ✅ NOW append safely
+listHtml += chatHtmlArray.join('');
+
 
         listHtml += `</div>`; 
         container.innerHTML = listHtml;
