@@ -2877,6 +2877,7 @@ import {
     const auth = getAuth(app);
 
     let currentUser = null;
+let globalUnreadCount = 0;
 const STORAGE_KEY = 'vestFormData';
 // Helper function to create reusable navbar
 function createNavBar() {
@@ -4668,42 +4669,31 @@ window.deleteConversation = async function(roomKey, event) {
 function startNotificationListener() {
     const chatsRef = ref(db, 'Chats');
     
-    // Listen for changes in real-time
     onValue(chatsRef, (snapshot) => {
         if (!snapshot.exists()) {
+            globalUnreadCount = 0; // Update global
             updateNotificationBadge(0);
             return;
         }
-        
+
         const allChats = snapshot.val();
         let unreadCount = 0;
 
-        // Loop through all chat rooms
         Object.keys(allChats).forEach(roomKey => {
-            // Only check rooms where current user is a participant
             if (roomKey.includes(currentUser.uid)) {
                 const messages = allChats[roomKey];
-                
-                // Loop through each message in this room
                 Object.values(messages).forEach(msg => {
-                    // Skip if not a valid message object
-                    if (!msg || typeof msg !== 'object' || !msg.sender || !msg.timestamp) {
-                        return;
-                    }
-                    
-                    // Check if message was sent by someone else (not me)
-                    if (msg.sender !== currentUser.uid) {
-                        // Check if I haven't read it yet
-                        const isReadByMe = msg.readBy && msg.readBy[currentUser.uid] === true;
-                        
-                        if (!isReadByMe) {
-                            unreadCount++;
-                        }
+                    if (msg && msg.recipient === currentUser.uid && msg.read !== true) {
+                        unreadCount++;
                     }
                 });
             }
         });
 
+        // 1. SAVE TO GLOBAL VARIABLE
+        globalUnreadCount = unreadCount; 
+        
+        // 2. TRY TO UPDATE UI (If elements exist)
         updateNotificationBadge(unreadCount);
     });
 }
@@ -7006,7 +6996,7 @@ max-width: 1100px;
     const container = document.getElementById('dashboardContainer');
     container.innerHTML = dashboardHTML;
     container.style.display = 'block';
-    
+    updateNotificationBadge(globalUnreadCount);
 // Function to show sub-sections
 window.showAvailabilityDetail = function(sectionId) {
     document.getElementById('modalMenu').style.display = 'none';
