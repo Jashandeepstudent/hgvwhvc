@@ -4666,6 +4666,7 @@ updateNotificationBadge(0);
 function startNotificationListener() {
     const chatsRef = ref(db, 'Chats');
     
+    // Using onValue ensures real-time updates and persistence on refresh
     onValue(chatsRef, (snapshot) => {
         if (!snapshot.exists()) {
             updateNotificationBadge(0);
@@ -4673,38 +4674,48 @@ function startNotificationListener() {
         }
         
         const allChats = snapshot.val();
-        let unreadCount = 0;
+        let unreadRoomsCount = 0;
 
         // Loop through all chat rooms to find those belonging to current user
         Object.keys(allChats).forEach(roomKey => {
             if (roomKey.includes(currentUser.uid)) {
                 const messages = Object.values(allChats[roomKey]);
-                const lastMsg = messages[messages.length - 1];
+                // Filter out non-message nodes like 'typing' status
+                const validMessages = messages.filter(m => m && m.sender && m.timestamp);
                 
-                // If the last message in a room was NOT sent by the current user,
-                // it counts as an unread conversation.
-                if (lastMsg && lastMsg.sender !== currentUser.uid) {
-                    unreadCount++;
+                if (validMessages.length > 0) {
+                    // Sort to get the absolute last message
+                    validMessages.sort((a, b) => a.timestamp - b.timestamp);
+                    const lastMsg = validMessages[validMessages.length - 1];
+                    
+                    // Count this room if the last message was NOT sent by the current user
+                    if (lastMsg.sender !== currentUser.uid) {
+                        unreadRoomsCount++;
+                    }
                 }
             }
         });
 
-        updateNotificationBadge(unreadCount);
+        updateNotificationBadge(unreadRoomsCount);
     });
 }
-function updateNotificationBadge(count) {
-    const bell = document.getElementById('navBellBadge');
-    const msg = document.getElementById('navMsgBadge');
-    
-    if (count > 0) {
-        if(bell) { bell.classList.add('active'); bell.innerText = ''; } // Just a dot
-        if(msg) { msg.classList.add('active'); msg.innerText = ''; }
-    } else {
-        if(bell) bell.classList.remove('active');
-        if(msg) msg.classList.remove('active');
-    }
-}
 
+function updateNotificationBadge(count) {
+    const msgBadge = document.getElementById('navMsgBadge');
+    const bellBadge = document.getElementById('navBellBadge'); // Use if you have a bell icon badge too
+
+    [msgBadge, bellBadge].forEach(badge => {
+        if (badge) {
+            if (count > 0) {
+                badge.innerText = count > 9 ? '9+' : count;
+                badge.classList.add('active');
+            } else {
+                badge.classList.remove('active');
+                badge.innerText = '';
+            }
+        }
+    });
+}
 // Ensure this variable exists globally
 let currentEditAction = null;
 
@@ -6748,8 +6759,34 @@ max-width: 1100px;
             <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
         </svg>
     </div>
-    <div class="notif-badge" id="navMsgBadge" style="display:none; position:absolute; top:-5px; right:-5px; background:#ff006e; color:white; border-radius:50%; padding:2px 6px; font-size:10px; font-weight:bold; min-width:18px; text-align:center; border:2px solid #0a0a0a;">0</div>
+    <div class="notif-badge" id="navMsgBadge"></div>
 </div>
+
+<style>
+/* Add/Update this CSS to handle numbers */
+.notif-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #ff006e; /* ScaleVest Pink */
+    color: white;
+    border-radius: 50%;
+    padding: 2px 5px;
+    font-size: 10px;
+    font-weight: 800;
+    min-width: 18px;
+    height: 18px;
+    display: none; /* Hidden by default */
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #0a0a0a;
+    z-index: 10;
+    line-height: 1;
+}
+.notif-badge.active {
+    display: flex;
+}
+</style>
 
 
 
