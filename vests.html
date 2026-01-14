@@ -4666,7 +4666,6 @@ updateNotificationBadge(0);
 function startNotificationListener() {
     const chatsRef = ref(db, 'Chats');
     
-    // Using onValue ensures real-time updates and persistence on refresh
     onValue(chatsRef, (snapshot) => {
         if (!snapshot.exists()) {
             updateNotificationBadge(0);
@@ -4674,47 +4673,45 @@ function startNotificationListener() {
         }
         
         const allChats = snapshot.val();
-        let unreadRoomsCount = 0;
+        let unreadCount = 0;
 
-        // Loop through all chat rooms to find those belonging to current user
         Object.keys(allChats).forEach(roomKey => {
+            // 1. Only look at rooms I am part of
             if (roomKey.includes(currentUser.uid)) {
                 const messages = Object.values(allChats[roomKey]);
-                // Filter out non-message nodes like 'typing' status
-                const validMessages = messages.filter(m => m && m.sender && m.timestamp);
                 
-                if (validMessages.length > 0) {
-                    // Sort to get the absolute last message
-                    validMessages.sort((a, b) => a.timestamp - b.timestamp);
-                    const lastMsg = validMessages[validMessages.length - 1];
+                // 2. Filter out non-message data (like 'typing' indicators)
+                const actualMessages = messages.filter(m => m && m.sender && m.timestamp);
+                
+                if (actualMessages.length > 0) {
+                    // 3. Sort to find the absolute latest message
+                    actualMessages.sort((a, b) => a.timestamp - b.timestamp);
+                    const lastMsg = actualMessages[actualMessages.length - 1];
                     
-                    // Count this room if the last message was NOT sent by the current user
+                    // 4. CRITICAL: Only count if the LAST message was from the OTHER person
+                    // This prevents the badge from showing 5 just because you have 5 investors.
                     if (lastMsg.sender !== currentUser.uid) {
-                        unreadRoomsCount++;
+                        unreadCount++;
                     }
                 }
             }
         });
 
-        updateNotificationBadge(unreadRoomsCount);
+        updateNotificationBadge(unreadCount);
     });
 }
-
 function updateNotificationBadge(count) {
     const msgBadge = document.getElementById('navMsgBadge');
-    const bellBadge = document.getElementById('navBellBadge'); // Use if you have a bell icon badge too
-
-    [msgBadge, bellBadge].forEach(badge => {
-        if (badge) {
-            if (count > 0) {
-                badge.innerText = count > 9 ? '9+' : count;
-                badge.classList.add('active');
-            } else {
-                badge.classList.remove('active');
-                badge.innerText = '';
-            }
+    
+    if (msgBadge) {
+        if (count > 0) {
+            msgBadge.style.display = 'flex'; // Show the badge
+            msgBadge.innerText = count;      // Set the number (1, 2, etc)
+        } else {
+            msgBadge.style.display = 'none'; // Hide if 0
+            msgBadge.innerText = '';
         }
-    });
+    }
 }
 // Ensure this variable exists globally
 let currentEditAction = null;
