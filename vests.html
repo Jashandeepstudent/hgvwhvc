@@ -4684,38 +4684,44 @@ window.showInvestorChatList = async function () {
 // --- HELPER FUNCTIONS ---
 
 window.openChat = async function(uid, roomKey, element) {
-    // 1. UI cleanup (instant visual feedback)
-    element.querySelector('.unread-pill')?.remove();
-    element.querySelector('.status-indicator')?.classList.remove('status-online'); // Optional UI cleanup
-    element.querySelector('.chat-preview')?.classList.remove('unread-text');
+    // 1. UI cleanup (Instant visual feedback)
+    if (element) {
+        element.querySelector('.unread-pill')?.remove();
+        element.querySelector('.status-indicator')?.classList.remove('status-online');
+        element.querySelector('.chat-preview')?.classList.remove('unread-text');
+    }
 
-    // 2. 🔥 MARK MESSAGES AS READ IN FIREBASE
+    // 2. 🔥 MARK MESSAGES AS READ IN FIREBASE PERMANENTLY
     const roomRef = ref(db, `Chats/${roomKey}`);
-    const snap = await get(roomRef);
+    
+    try {
+        const snap = await get(roomRef);
 
-    if (snap.exists()) {
-        const updates = {};
-        const messages = snap.val();
+        if (snap.exists()) {
+            const updates = {};
+            const messages = snap.val();
 
-        Object.keys(messages).forEach((msgId) => {
-            const msg = messages[msgId];
-            
-            // Only mark messages sent TO me that are currently unread
-            if (msg.recipient === currentUser.uid && msg.read === false) {
-                updates[`${msgId}/read`] = true;
+            Object.keys(messages).forEach((msgId) => {
+                const msg = messages[msgId];
+                
+                // Only mark messages sent TO me that are currently unread
+                if (msg.recipient === currentUser.uid && msg.read === false) {
+                    updates[`${msgId}/read`] = true;
+                }
+            });
+
+            // 3. Send update to Database
+            if (Object.keys(updates).length > 0) {
+                await update(roomRef, updates);
             }
-        });
-
-        // 3. specific update to DB
-        if (Object.keys(updates).length > 0) {
-            await update(roomRef, updates);
         }
+    } catch (error) {
+        console.error("Error marking messages as read:", error);
     }
 
     // 4. Navigate to chat page
     window.location.href = `chat.html?recipient=${uid}`;
 };
-
 window.deleteConversation = async function(roomKey, event) {
     event.stopPropagation(); 
     if(!confirm("Are you sure you want to delete this conversation?")) return;
@@ -4729,9 +4735,10 @@ window.deleteConversation = async function(roomKey, event) {
     }
 }
 function startNotificationListener() {
+    // Reference to the entire Chats node
     const chatsRef = ref(db, 'Chats');
     
-    // Listen for changes in real-time
+    // Listen for real-time updates (this fires on page load + whenever data changes)
     onValue(chatsRef, (snapshot) => {
         if (!snapshot.exists()) {
             updateNotificationBadge(0);
@@ -4741,16 +4748,18 @@ function startNotificationListener() {
         const allChats = snapshot.val();
         let unreadCount = 0;
 
+        // Iterate through all chat rooms
         Object.keys(allChats).forEach(roomKey => {
-            // 1. Check if this chat room belongs to the current user
+            // 1. Only look at chats relevant to the current user
             if (roomKey.includes(currentUser.uid)) {
                 
                 const messages = allChats[roomKey];
                 
-                // 2. Iterate through ALL messages in this room
+                // 2. Iterate through every message in the room
                 Object.values(messages).forEach(msg => {
-                    // 3. Strict Check: 
-                    // Is the message sent TO me? AND is read equal to false?
+                    // 3. STRICT CHECK:
+                    // Is the message meant for ME? 
+                    // AND is the 'read' status explicitly false?
                     if (msg.recipient === currentUser.uid && msg.read === false) {
                         unreadCount++;
                     }
@@ -4758,7 +4767,7 @@ function startNotificationListener() {
             }
         });
 
-        // Update the UI
+        // 4. Update the red dot based on the final count
         updateNotificationBadge(unreadCount);
     });
 }
