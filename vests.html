@@ -4707,31 +4707,6 @@ function startNotificationListener() {
     });
 }
 
-function updateNotificationBadge(count) {
-    const bell = document.getElementById('navBellBadge');
-    const msg = document.getElementById('navMsgBadge');
-    
-    // Ensure count is a number
-    const numCount = parseInt(count) || 0;
-
-    if (numCount > 0) {
-        // Format the count (e.g., show '99+' if extremely high)
-        const displayCount = numCount > 99 ? '99+' : numCount;
-
-        if(bell) { 
-            bell.classList.add('active'); 
-            bell.innerText = displayCount; // SHOW THE NUMBER
-        }
-        if(msg) { 
-            msg.classList.add('active'); 
-            msg.innerText = displayCount; // SHOW THE NUMBER
-        }
-    } else {
-        // Hide if 0
-        if(bell) bell.classList.remove('active');
-        if(msg) msg.classList.remove('active');
-    }
-}
 
 // Ensure this variable exists globally
 let currentEditAction = null;
@@ -5411,55 +5386,44 @@ function setUserPresence(user) {
     });
 }
 
-// 1. Run on page load to check for existing saved numbers
 document.addEventListener('DOMContentLoaded', () => {
-    refreshBadgeUI();
+    const savedCount = localStorage.getItem('scaleVestMsgCount');
+    if (savedCount && parseInt(savedCount) > 0) {
+        // Pass 'false' to avoid re-saving what we just read
+        updateNotificationBadge(savedCount, false);
+    }
 });
 
-// --- CORE FUNCTIONS ---
+// 2. UPDATE FUNCTION: Updates the UI and saves to Local Storage
+function updateNotificationBadge(count, saveToStorage = true) {
+    const bell = document.getElementById('navBellBadge');
+    const num = parseInt(count) || 0;
 
-// Call this function whenever a new message arrives in your code
-function incrementNotificationCount() {
-    // 1. Get current count from storage (default to 0)
-    let currentCount = parseInt(localStorage.getItem('myMsgCount') || '0');
-    
-    // 2. Add one
-    currentCount++;
-    
-    // 3. Save back to storage
-    localStorage.setItem('myMsgCount', currentCount);
-    
-    // 4. Update the visual badge
-    refreshBadgeUI();
-}
-
-// Call this when the bell is clicked
-function handleBellClick() {
-    // 1. Clear the storage
-    localStorage.setItem('myMsgCount', '0');
-    
-    // 2. Update UI immediately
-    refreshBadgeUI();
-    
-    // 3. Navigate to your chat list
-    window.location.hash = 'investor_chatlist';
-}
-
-// Helper to update the HTML based on Storage
-function refreshBadgeUI() {
-    const badge = document.getElementById('navBellBadge');
-    const count = parseInt(localStorage.getItem('myMsgCount') || '0');
-
-    if (count > 0) {
-        // If count is greater than 99, show '99+'
-        badge.innerText = count > 99 ? '99+' : count;
-        badge.classList.add('active');
+    if (num > 0) {
+        // Update text (cap at 99+)
+        bell.innerText = num > 99 ? '99+' : num;
+        bell.classList.add('active');
+        
+        // Save to browser memory so it survives reload
+        if(saveToStorage) localStorage.setItem('scaleVestMsgCount', num);
     } else {
-        badge.classList.remove('active');
+        // Hide badge
+        bell.classList.remove('active');
+        if(saveToStorage) localStorage.setItem('scaleVestMsgCount', '0');
     }
 }
 
-
+// 3. CLICK HANDLER: Clears the count and redirects
+window.handleBellClick = function() {
+    // 1. Visually clear the badge
+    updateNotificationBadge(0);
+    
+    // 2. Clear the browser memory
+    localStorage.removeItem('scaleVestMsgCount');
+    
+    // 3. Go to chat list
+    window.location.hash = 'investor_chatlist';
+};
    onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
@@ -6919,7 +6883,6 @@ max-width: 1100px;
         <div class="notif-badge" id="navBellBadge">0</div>
     </div>
 </div>
-
         <div class="profile-dropdown">
 <div class="icon-btn" onclick="toggleDashProfileDropdown()">
     ${founderData?.photoURL 
