@@ -4567,7 +4567,7 @@ if (presenceSnap.exists() && presenceSnap.val().online === true) {
                     <p style="margin:0; font-weight:600;">No messages yet</p>
                 </div>`;
         } else {
-            listHtml += myChats.map(chat => {
+            listHtml += myChats.map(async chat => {
                 const profile = profileMap[chat.otherUid] || { fullName: 'Unknown' };
                 const displayName = profile.fullName || profile.founderUsername || profile.name || "Investor";
                 const displayPhoto = profile.photoURL || profile.logo; 
