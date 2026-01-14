@@ -4684,14 +4684,14 @@ updateNotificationBadge(0);
 // --- HELPER FUNCTIONS ---
 
 window.openChat = async function(uid, roomKey, element) {
-    // 1. UI cleanup (Instant visual feedback)
+    // 1. UI Cleanup (Instant feedback)
     if (element) {
         element.querySelector('.unread-pill')?.remove();
         element.querySelector('.status-indicator')?.classList.remove('status-online');
         element.querySelector('.chat-preview')?.classList.remove('unread-text');
     }
 
-    // 2. 🔥 MARK MESSAGES AS READ IN FIREBASE
+    // 2. Mark as Read in Firebase
     const roomRef = ref(db, `Chats/${roomKey}`);
     
     try {
@@ -4704,18 +4704,15 @@ window.openChat = async function(uid, roomKey, element) {
             Object.keys(messages).forEach((msgId) => {
                 const msg = messages[msgId];
                 
-                // ✅ CRITICAL FIX: Check if message object exists and has required fields
-                if (msg && typeof msg === 'object' && msg.recipient && msg.sender) {
-                    // Only mark messages sent TO me that are currently unread
-                    if (msg.recipient === currentUser.uid && msg.read === false) {
-                        updates[`${msgId}/read`] = true;
-                    }
+                // FIX: Changed check from (msg.read === false) to (!msg.read)
+                // This catches false, null, and undefined
+                if (msg && msg.recipient === currentUser.uid && !msg.read) {
+                    updates[`${msgId}/read`] = true;
                 }
             });
 
-            // 3. ✅ Send update to Database (this will trigger the listener)
+            // Only send update if there are changes
             if (Object.keys(updates).length > 0) {
-                console.log(`Marking ${Object.keys(updates).length} messages as read`); // Debug log
                 await update(roomRef, updates);
             }
         }
@@ -4723,7 +4720,7 @@ window.openChat = async function(uid, roomKey, element) {
         console.error("Error marking messages as read:", error);
     }
 
-    // 4. Navigate to chat page
+    // 3. Navigate
     window.location.href = `chat.html?recipient=${uid}`;
 };
 window.deleteConversation = async function(roomKey, event) {
@@ -4739,10 +4736,8 @@ window.deleteConversation = async function(roomKey, event) {
     }
 }
 function startNotificationListener() {
-    // Reference to the entire Chats node
     const chatsRef = ref(db, 'Chats');
     
-    // Listen for real-time updates (this fires on page load + whenever data changes)
     onValue(chatsRef, (snapshot) => {
         if (!snapshot.exists()) {
             updateNotificationBadge(0);
@@ -4754,51 +4749,75 @@ function startNotificationListener() {
 
         // Iterate through all chat rooms
         Object.keys(allChats).forEach(roomKey => {
-            // 1. Only look at chats relevant to the current user
             if (roomKey.includes(currentUser.uid)) {
-                
                 const messages = allChats[roomKey];
                 
-                // 2. Iterate through every message in the room
                 Object.values(messages).forEach(msg => {
-                    // ✅ CRITICAL FIX: Validate message structure
-                    if (msg && typeof msg === 'object' && msg.recipient && msg.sender && msg.hasOwnProperty('read')) {
-                        // 3. Count ONLY if:
-                        // - Message is for ME
-                        // - read field is explicitly false (not undefined, not null)
-                        if (msg.recipient === currentUser.uid && msg.read === false) {
-                            unreadCount++;
-                        }
+                    // FIX: Robust check for unread status
+                    // We check if read is NOT strictly true. 
+                    if (msg && 
+                        msg.recipient === currentUser.uid && 
+                        msg.read !== true) { 
+                        
+                        unreadCount++;
+                        // Debugging: This will tell you exactly which message is stuck
+                        console.log("Found unread message:", msg.text, "in room:", roomKey);
                     }
                 });
             }
         });
 
-        // 4. Update the red dot based on the final count
-        console.log(`Total unread messages: ${unreadCount}`); // Debug log
         updateNotificationBadge(unreadCount);
     });
 }
 function updateNotificationBadge(count) {
     const bell = document.getElementById('navBellBadge');
     
-    if (!bell) {
-        console.warn('Badge element not found!');
-        return;
-    }
-    
-    console.log(`Updating badge to: ${count}`); // Debug log
+    if (!bell) return;
     
     if (count > 0) {
-        bell.classList.add('active');
         bell.innerText = count > 99 ? '99+' : count;
-        bell.style.display = 'flex';
+        bell.style.display = 'flex'; // Force flex to center the number
+        bell.classList.add('active'); // Ensure your CSS handles red background
     } else {
-        bell.classList.remove('active');
         bell.innerText = '';
         bell.style.display = 'none';
+        bell.classList.remove('active');
     }
 }
+
+// Run this in Console to wipe all unread notifications
+async function forceClearNotifications() {
+    const { getDatabase, ref, get, update } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js');
+    const db = getDatabase();
+    const user = window.currentUser || (await new Promise(r => setTimeout(() => r(window.currentUser), 1000))); // wait for user
+    
+    if(!user) return console.log("User not found");
+
+    const snap = await get(ref(db, 'Chats'));
+    const updates = {};
+    let count = 0;
+
+    snap.forEach(room => {
+        if(room.key.includes(user.uid)) {
+            room.forEach(msg => {
+                if(msg.val().recipient === user.uid && msg.val().read !== true) {
+                    updates[`Chats/${room.key}/${msg.key}/read`] = true;
+                    count++;
+                }
+            });
+        }
+    });
+
+    if(count > 0) {
+        await update(ref(db), updates);
+        console.log(`Force cleared ${count} stuck messages.`);
+    } else {
+        console.log("No unread messages found in DB.");
+    }
+}
+forceClearNotifications();
+
 // Ensure this variable exists globally
 let currentEditAction = null;
 
