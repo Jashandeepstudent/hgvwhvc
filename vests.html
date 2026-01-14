@@ -4576,7 +4576,8 @@ window.showInvestorChatList = async function() {
                     : msgDate.toLocaleDateString();
 
                 return `
-                <div class="chat-item" onclick="openChat('${chat.otherUid}', this)">
+               <div class="chat-item" onclick="openChat('${chat.otherUid}', '${chat.roomKey}', this)">
+
                     <div class="chat-avatar">
                         ${displayPhoto 
                             ? `<img src="${displayPhoto}" alt="${displayName}" onerror="this.style.display='none'">` 
@@ -4627,17 +4628,33 @@ window.showInvestorChatList = async function() {
 
 // --- HELPER FUNCTIONS ---
 
-window.openChat = function(uid, element) {
-    const pill = element.querySelector('.unread-pill');
-    const dot = element.querySelector('.unread-dot');
-    const text = element.querySelector('.chat-preview');
-    
-    if(pill) pill.style.display = 'none';
-    if(dot) dot.style.display = 'none';
-    if(text) text.classList.remove('unread-text');
-    
+window.openChat = async function(uid, roomKey, element) {
+    // UI cleanup (instant feedback)
+    element.querySelector('.unread-pill')?.remove();
+    element.querySelector('.unread-dot')?.remove();
+    element.querySelector('.chat-preview')?.classList.remove('unread-text');
+
+    // 🔥 MARK MESSAGES AS READ IN FIREBASE
+    const roomRef = ref(db, `Chats/${roomKey}`);
+    const snap = await get(roomRef);
+
+    if (snap.exists()) {
+        const updates = {};
+        Object.entries(snap.val()).forEach(([msgId, msg]) => {
+            if (msg.sender !== currentUser.uid) {
+                updates[`${msgId}/readBy/${currentUser.uid}`] = true;
+            }
+        });
+
+        if (Object.keys(updates).length) {
+            await update(roomRef, updates);
+        }
+    }
+
+    // Navigate
     window.location.href = `chat.html?recipient=${uid}`;
-}
+};
+
 
 window.deleteConversation = async function(roomKey, event) {
     event.stopPropagation(); 
