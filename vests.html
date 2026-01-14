@@ -3028,6 +3028,8 @@ function loadFromLocalStorage() {
         updateStepDisplay();
     }
 }
+let presenceInterval = null;
+
     let isInitialLoad = true;
     let currentStep = 1;
     let keywords = [];
@@ -10051,16 +10053,14 @@ async function markChatAsRead(roomKey) {
 async function removeInvestorChat(otherUid) {
   if (!confirm("Remove this investor chat?")) return;
 
-  await set(ref(db, `Chats/${currentUser.uid}/${otherUid}`), true);
+  await set(ref(db, `HiddenChats/${currentUser.uid}/${otherUid}`), true);
   window.showInvestorChatList();
 }
-let presenceInterval = null; // ✅ MUST be first
 
 function setupPresence() {
   const statusRef = ref(db, `status/${currentUser.uid}`);
 
-  // Prevent duplicate intervals
-  if (presenceInterval) return;
+  if (presenceInterval) return; // prevent duplicates
 
   set(statusRef, {
     state: "online",
@@ -10081,6 +10081,7 @@ function setupPresence() {
     });
   });
 }
+
 
 
 
