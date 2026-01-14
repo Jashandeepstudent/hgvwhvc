@@ -4723,29 +4723,31 @@ window.deleteConversation = async function(roomKey, event) {
         console.error("Error deleting chat:", err);
     }
 }
-function startNotificationListener(myUid) {
-    const chatsRef = ref(db, "Chats");
-
+// --- 2. GLOBAL NOTIFICATION LISTENER ---
+// Call this function inside your onAuthStateChanged, right after 'isInitialLoad = false;'
+function startNotificationListener() {
+    const chatsRef = ref(db, 'Chats');
+    
+    // Listen for changes in real-time
     onValue(chatsRef, (snapshot) => {
-        let hasUnread = false;
+        if (!snapshot.exists()) return;
+        const allChats = snapshot.val();
+        let unreadCount = 0;
 
-        snapshot.forEach(chatSnap => {
-            chatSnap.forEach(msgSnap => {
-                const msg = msgSnap.val();
-
-                if (
-                    msg.recipient === myUid &&
-                    msg.read === false
-                ) {
-                    hasUnread = true;
+        Object.keys(allChats).forEach(roomKey => {
+            if (roomKey.includes(currentUser.uid)) {
+                const messages = Object.values(allChats[roomKey]);
+                const lastMsg = messages[messages.length - 1];
+                
+                // If last message was NOT sent by me, count it as potential unread
+                // (In a real app, you'd check a 'read' status flag in DB)
+                if (lastMsg.sender !== currentUser.uid) {
+                    unreadCount++;
                 }
-            });
+            }
         });
 
-        const badge = document.getElementById("navBellBadge");
-        if (badge) {
-            badge.style.display = hasUnread ? "block" : "none";
-        }
+        updateNotificationBadge(unreadCount);
     });
 }
 
@@ -5441,54 +5443,30 @@ function setUserPresence(user) {
 }
 document.addEventListener("DOMContentLoaded", () => {
     const hasUnread = localStorage.getItem("hasUnreadNotifications");
-    const badge = document.getElementById("navBellBadge");
-
-    if (hasUnread === "true" && badge) {
-        badge.style.display = "block";
+    if (hasUnread === "true") {
+        document.getElementById("navBellBadge")?.style.display = "block";
     }
 });
-
 function showBellNotification() {
-    const badge = document.getElementById("navBellBadge");
     localStorage.setItem("hasUnreadNotifications", "true");
-
-    if (badge) {
-        badge.style.display = "block";
-    }
+    document.getElementById("navBellBadge")?.style.display = "block";
 }
-
 function openBellNotifications() {
+    // navigate
     window.location.hash = "investor_chatlist";
 
+    // clear notification state
     localStorage.removeItem("hasUnreadNotifications");
-
-    const badge = document.getElementById("navBellBadge");
-    if (badge) {
-        badge.style.display = "none";
-    }
+    document.getElementById("navBellBadge")?.style.display = "none";
 }
-function startBellListener(uid) {
-    const unreadRef = ref(db, `UserUnread/${uid}`);
-
-    onValue(unreadRef, (snap) => {
-        const badge = document.getElementById("navBellBadge");
-        if (!badge) return;
-
-        badge.style.display = snap.val() === true ? "block" : "none";
-    });
-}
-
 
    onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
           setUserPresence(user);
         isInitialLoad = false;
-    if (window.__bellStarted) return;
-    window.__bellStarted = true;
-
-    startBellListener(user.uid);
-               document.getElementById('loadingScreen').classList.remove('hidden');
+        startNotificationListener();
+        document.getElementById('loadingScreen').classList.remove('hidden');
         
         try {
             const [vestsSnapshot, founderSnapshot, startupSnapshot] = await Promise.all([
@@ -6906,7 +6884,7 @@ max-width: 1100px;
 </div>
     </div>
 <div class="top-nav-right">
-   <div class="nav-icon-wrapper" onclick="openBellNotifications()">
+    <div class="nav-icon-wrapper" onclick="window.location.hash='investor_chatlist'">
         <div class="icon-btn">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
