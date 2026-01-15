@@ -1181,6 +1181,64 @@ window.launchAngelProfile = async () => {
         launchBtn.innerText = "LAUNCH ANGEL PROFILE";
     }
 };
+window.enterEditMode = async () => {
+    updateProgress(50, "Opening Edit Terminal...");
+    const rightSection = document.querySelector('.right-section');
+    const snapshot = await get(ref(db, `investorProfiles/${currentUserUID}`));
+    const data = snapshot.exists() ? snapshot.val() : {};
+
+    document.querySelector('.welcome-section').style.display = 'none';
+    document.querySelectorAll('.banner').forEach(b => b.style.display = 'none');
+
+    rightSection.innerHTML = `
+        <h1 class="welcome-text">Profile Terminal</h1>
+        <div class="edit-profile-grid">
+            <div class="card">
+                <div class="card-title" style="display:flex; justify-content:space-between;">
+                    Identity Setup
+                    <svg class="edit-pencil" onclick="openEditIdentity()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                </div>
+                <div class="stat-row"><span class="stat-label">Name</span><span class="stat-val">${data.fullName || '---'}</span></div>
+                <div class="stat-row"><span class="stat-label">UserId</span><span class="stat-val">${data.userID || '---'}</span></div>
+            </div>
+            <div class="card">
+                <div class="card-title" style="display:flex; justify-content:space-between;">
+                    Financial Profile
+                    <svg class="edit-pencil" onclick="openEditInvestment()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                </div>
+                <div class="stat-row"><span class="stat-label">Net Worth</span><span class="stat-val">$${data.netWorth || '0'}</span></div>
+                <div class="stat-row"><span class="stat-label">Sector</span><span class="stat-val">${data.preferredCategories || 'None'}</span></div>
+            </div>
+            <div class="card" style="border: 1px solid #38bdf8; text-align:center;">
+                <button class="card-btn" onclick="location.reload()">EXIT TERMINAL</button>
+            </div>
+        </div>
+    `;
+
+    document.getElementById('editFullName').value = data.fullName || "";
+    document.getElementById('editNetWorth').value = data.netWorth || "";
+    document.getElementById('editMinInv').value = data.minInvestment || "";
+    document.getElementById('editMaxInv').value = data.maxInvestment || "";
+    document.getElementById('editPreferred').value = data.preferredCategories || "";
+};
+
+document.getElementById('photoUploadInput').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const status = document.getElementById('uploadStatus');
+    status.innerText = "⏳ Uploading...";
+    try {
+        const storageRef = sRef(storage, `investor-Photos/${currentUserUID}`);
+        await uploadBytes(storageRef, file);
+        uploadedPhotoURL = await getDownloadURL(storageRef);
+        status.innerText = "✅ Upload Successful! Click Update to Confirm.";
+        status.style.color = "#10b981";
+    } catch (err) {
+        console.error(err);
+        status.innerText = "❌ Upload Failed";
+    }
+});
+
 // =========================================================
 // 1. NOTIFICATION & BELL LOGIC
 // =========================================================
@@ -1428,63 +1486,6 @@ window.openEditIdentity = () => document.getElementById('editIdentityModal').sty
 window.openEditInvestment = () => document.getElementById('editInvestmentModal').style.display = 'flex';
 window.closeModal = (id) => document.getElementById(id).style.display = 'none';
 
-window.enterEditMode = async () => {
-    updateProgress(50, "Opening Edit Terminal...");
-    const rightSection = document.querySelector('.right-section');
-    const snapshot = await get(ref(db, `investorProfiles/${currentUserUID}`));
-    const data = snapshot.exists() ? snapshot.val() : {};
-
-    document.querySelector('.welcome-section').style.display = 'none';
-    document.querySelectorAll('.banner').forEach(b => b.style.display = 'none');
-
-    rightSection.innerHTML = `
-        <h1 class="welcome-text">Profile Terminal</h1>
-        <div class="edit-profile-grid">
-            <div class="card">
-                <div class="card-title" style="display:flex; justify-content:space-between;">
-                    Identity Setup
-                    <svg class="edit-pencil" onclick="openEditIdentity()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                </div>
-                <div class="stat-row"><span class="stat-label">Name</span><span class="stat-val">${data.fullName || '---'}</span></div>
-                <div class="stat-row"><span class="stat-label">UserId</span><span class="stat-val">${data.userID || '---'}</span></div>
-            </div>
-            <div class="card">
-                <div class="card-title" style="display:flex; justify-content:space-between;">
-                    Financial Profile
-                    <svg class="edit-pencil" onclick="openEditInvestment()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                </div>
-                <div class="stat-row"><span class="stat-label">Net Worth</span><span class="stat-val">$${data.netWorth || '0'}</span></div>
-                <div class="stat-row"><span class="stat-label">Sector</span><span class="stat-val">${data.preferredCategories || 'None'}</span></div>
-            </div>
-            <div class="card" style="border: 1px solid #38bdf8; text-align:center;">
-                <button class="card-btn" onclick="location.reload()">EXIT TERMINAL</button>
-            </div>
-        </div>
-    `;
-
-    document.getElementById('editFullName').value = data.fullName || "";
-    document.getElementById('editNetWorth').value = data.netWorth || "";
-    document.getElementById('editMinInv').value = data.minInvestment || "";
-    document.getElementById('editMaxInv').value = data.maxInvestment || "";
-    document.getElementById('editPreferred').value = data.preferredCategories || "";
-};
-
-document.getElementById('photoUploadInput').addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const status = document.getElementById('uploadStatus');
-    status.innerText = "⏳ Uploading...";
-    try {
-        const storageRef = sRef(storage, `investor-Photos/${currentUserUID}`);
-        await uploadBytes(storageRef, file);
-        uploadedPhotoURL = await getDownloadURL(storageRef);
-        status.innerText = "✅ Upload Successful! Click Update to Confirm.";
-        status.style.color = "#10b981";
-    } catch (err) {
-        console.error(err);
-        status.innerText = "❌ Upload Failed";
-    }
-});
 function startDashboardInboxListener() {
     const inboxDiv = document.getElementById('dashInboxContent');
     const dot = document.getElementById('dashInboxDot');
