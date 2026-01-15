@@ -41,11 +41,12 @@
         .angel-card {
             background: #00CED1;
             border-radius: 12px;
-            overflow: hidden;
+            overflow: visible;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             transition: all 0.3s ease;
             cursor: pointer;
             height: 380px;
+            position: relative;
         }
 
         .angel-card:hover {
@@ -57,6 +58,76 @@
             background: #006400;
             height: 150px;
             position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px 12px 0 0;
+            overflow: hidden;
+        }
+
+        .crown-icon {
+            position: absolute;
+            top: 10px;
+            font-size: 2.5rem;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .title-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255,255,255,0.95);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .scepter-icon {
+            position: absolute;
+            bottom: 10px;
+            right: 15px;
+            font-size: 2rem;
+            animation: rotate 4s linear infinite;
+        }
+
+        .aura-effect {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            opacity: 0.3;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.6; }
+        }
+
+        .sparkle {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, transparent 70%);
+            animation: sparkle 2s ease-in-out infinite;
+        }
+
+        @keyframes sparkle {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 1; }
         }
 
         .profile-photo-container {
@@ -64,6 +135,7 @@
             top: 90px;
             left: 50%;
             transform: translateX(-50%);
+            z-index: 10;
         }
 
         .profile-photo {
@@ -74,6 +146,7 @@
             object-fit: cover;
             background: white;
             box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            display: block;
         }
 
         .card-body {
@@ -367,7 +440,6 @@ const firebaseConfig = {
   appId: "1:938358950124:web:043506aeaacea2a96bfdc9",
   measurementId: "G-QD3TWBZHR0"
 };
-
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const database = getDatabase(app);
@@ -421,10 +493,15 @@ const firebaseConfig = {
                 const replyReputation = profile.replyReputation || 0;
                 const investorType = profile.investorType || 'Investor';
 
+                // Determine tier based on reputation
+                const tier = getTierInfo(replyReputation);
+
                 card.innerHTML = `
-                    <div class="card-header"></div>
+                    <div class="card-header" style="background: ${tier.headerColor};">
+                        ${tier.decorations}
+                    </div>
                     <div class="profile-photo-container">
-                        <img src="${photoURL}" alt="${fullName}" class="profile-photo" onerror="this.src='https://via.placeholder.com/90'">
+                        <img src="${photoURL}" alt="${fullName}" class="profile-photo" onerror="this.src='https://via.placeholder.com/90'" loading="eager">
                     </div>
                     <div class="card-body">
                         <div class="investor-name">${fullName}</div>
@@ -432,8 +509,8 @@ const firebaseConfig = {
                         <div class="reputation-count">${replyReputation}</div>
                         <div class="reputation-label">Reply Reputation</div>
                         <div class="button-group">
-                            <button class="pill-button pitch-button" onclick="handlePitch('${userId}')">Pitch</button>
-                            <button class="pill-button view-profile-button" onclick="handleViewProfile('${userId}')">View Profile</button>
+                            <button class="pill-button pitch-button" onclick="event.stopPropagation(); handlePitchPage('${userId}')">Pitch</button>
+                            <button class="pill-button view-profile-button" onclick="event.stopPropagation(); handleViewProfilePage('${userId}')">View Profile</button>
                         </div>
                     </div>
                 `;
@@ -441,6 +518,162 @@ const firebaseConfig = {
                 cardsContainer.appendChild(card);
             });
         }
+
+        function getTierInfo(reputation) {
+            if (reputation >= 100000) {
+                return {
+                    headerColor: 'linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF4500 100%)',
+                    decorations: `
+                        <div class="sparkle"></div>
+                        <div class="crown-icon" style="font-size: 3.5rem;">👑</div>
+                        <div class="title-badge" style="background: linear-gradient(135deg, #FFD700, #FFA500); color: #000;">DIVINE EMPEROR</div>
+                        <div class="scepter-icon" style="left: 15px;">🔱</div>
+                        <div class="scepter-icon">⚜️</div>
+                        <div class="aura-effect" style="background: radial-gradient(circle, rgba(255,215,0,0.6), transparent);"></div>
+                    `
+                };
+            } else if (reputation >= 50000) {
+                return {
+                    headerColor: 'linear-gradient(135deg, #FFD700 0%, #FF69B4 50%, #9370DB 100%)',
+                    decorations: `
+                        <div class="sparkle"></div>
+                        <div class="crown-icon" style="font-size: 3.2rem;">👑</div>
+                        <div class="title-badge" style="background: linear-gradient(135deg, #FFD700, #FF69B4); color: #000;">LEGENDARY MONARCH</div>
+                        <div class="scepter-icon" style="left: 15px;">⚜️</div>
+                        <div class="scepter-icon">🏆</div>
+                        <div class="aura-effect" style="background: radial-gradient(circle, rgba(255,215,0,0.5), transparent);"></div>
+                    `
+                };
+            } else if (reputation >= 25000) {
+                return {
+                    headerColor: 'linear-gradient(135deg, #FF1493 0%, #9370DB 50%, #FFD700 100%)',
+                    decorations: `
+                        <div class="crown-icon" style="font-size: 3rem;">👑</div>
+                        <div class="title-badge" style="background: linear-gradient(135deg, #FF1493, #9370DB); color: #fff;">SUPREME RULER</div>
+                        <div class="scepter-icon" style="left: 15px;">💎</div>
+                        <div class="scepter-icon">🏆</div>
+                        <div class="aura-effect" style="background: radial-gradient(circle, rgba(255,20,147,0.4), transparent);"></div>
+                    `
+                };
+            } else if (reputation >= 10000) {
+                return {
+                    headerColor: 'linear-gradient(135deg, #4169E1 0%, #FFD700 50%, #4169E1 100%)',
+                    decorations: `
+                        <div class="crown-icon" style="font-size: 2.8rem;">👑</div>
+                        <div class="title-badge" style="background: linear-gradient(135deg, #4169E1, #FFD700); color: #fff;">DIAMOND KING</div>
+                        <div class="scepter-icon">💎</div>
+                        <div class="aura-effect" style="background: radial-gradient(circle, rgba(65,105,225,0.4), transparent);"></div>
+                    `
+                };
+            } else if (reputation >= 5000) {
+                return {
+                    headerColor: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
+                    decorations: `
+                        <div class="crown-icon" style="font-size: 2.5rem;">👑</div>
+                        <div class="title-badge" style="background: linear-gradient(135deg, #FFD700, #FFA500); color: #000;">PLATINUM EMPEROR</div>
+                        <div class="scepter-icon">⭐</div>
+                    `
+                };
+            } else if (reputation >= 2500) {
+                return {
+                    headerColor: 'linear-gradient(135deg, #FFD700 0%, #DAA520 100%)',
+                    decorations: `
+                        <div class="crown-icon" style="font-size: 2.3rem;">👑</div>
+                        <div class="title-badge" style="background: #FFD700; color: #000;">GOLDEN PRINCE</div>
+                        <div class="scepter-icon">✨</div>
+                    `
+                };
+            } else if (reputation >= 1000) {
+                return {
+                    headerColor: 'linear-gradient(135deg, #FFD700 0%, #B8860B 100%)',
+                    decorations: `
+                        <div class="crown-icon">👑</div>
+                        <div class="title-badge" style="background: #FFD700; color: #000;">GOLD DUKE</div>
+                    `
+                };
+            } else if (reputation >= 500) {
+                return {
+                    headerColor: 'linear-gradient(135deg, #FFD700 0%, #8B4513 100%)',
+                    decorations: `
+                        <div class="crown-icon">👑</div>
+                        <div class="title-badge" style="background: #FFD700; color: #000;">REAL ANGEL</div>
+                    `
+                };
+            } else if (reputation >= 400) {
+                return {
+                    headerColor: 'linear-gradient(135deg, #FFD700 0%, #DAA520 100%)',
+                    decorations: `
+                        <div class="title-badge" style="background: #FFD700; color: #000;">Golden Elite</div>
+                    `
+                };
+            } else if (reputation >= 350) {
+                return {
+                    headerColor: 'linear-gradient(135deg, #C0C0C0 0%, #E8E8E8 100%)',
+                    decorations: `
+                        <div class="title-badge" style="background: #C0C0C0; color: #000;">Silver Master</div>
+                    `
+                };
+            } else if (reputation >= 300) {
+                return {
+                    headerColor: 'linear-gradient(135deg, #2C2C2C 0%, #1a1a1a 100%)',
+                    decorations: `
+                        <div class="title-badge" style="background: #2C2C2C; color: #fff;">Black Diamond</div>
+                    `
+                };
+            } else if (reputation >= 250) {
+                return {
+                    headerColor: 'linear-gradient(135deg, #8B4513 0%, #A0522D 100%)',
+                    decorations: `
+                        <div class="title-badge" style="background: #8B4513; color: #fff;">Bronze Titan</div>
+                    `
+                };
+            } else if (reputation >= 200) {
+                return {
+                    headerColor: 'linear-gradient(135deg, #FF69B4 0%, #FFB6C1 100%)',
+                    decorations: `
+                        <div class="title-badge" style="background: #FF69B4; color: #fff;">Pink Champion</div>
+                    `
+                };
+            } else if (reputation >= 150) {
+                return {
+                    headerColor: 'linear-gradient(135deg, #FFD700 0%, #FFED4E 100%)',
+                    decorations: `
+                        <div class="title-badge" style="background: #FFD700; color: #000;">Yellow Knight</div>
+                    `
+                };
+            } else if (reputation >= 100) {
+                return {
+                    headerColor: 'linear-gradient(135deg, #DC143C 0%, #8B0000 100%)',
+                    decorations: `
+                        <div class="title-badge" style="background: #DC143C; color: #fff;">Red Warrior</div>
+                    `
+                };
+            } else if (reputation >= 50) {
+                return {
+                    headerColor: 'linear-gradient(135deg, #800080 0%, #9932CC 100%)',
+                    decorations: `
+                        <div class="title-badge" style="background: #800080; color: #fff;">Purple Hero</div>
+                    `
+                };
+            } else {
+                return {
+                    headerColor: '#006400',
+                    decorations: ''
+                };
+            }
+        }
+
+        window.handleViewProfilePage = function(userId) {
+            // Store investor ID in localStorage and navigate to profile page
+            localStorage.setItem('viewInvestorId', userId);
+            window.location.href = `investor-profile.html?id=${userId}`;
+        };
+
+        window.handlePitchPage = function(userId) {
+            // Store investor ID in localStorage and navigate to pitch page
+            localStorage.setItem('pitchToInvestorId', userId);
+            window.location.href = `pitch-investor.html?id=${userId}`;
+        };
 
         window.handleViewProfile = async function(userId) {
             try {
