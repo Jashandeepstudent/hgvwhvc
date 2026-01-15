@@ -1191,12 +1191,15 @@ function updateNotificationBadge(count) {
 window.showInvestorChatList = async function () {
     const container = document.querySelector('.right-section');
     const leftSection = document.querySelector('.left-section');
+    const footer = document.querySelector('.footer'); // Select Footer
 
-    // 1. HIDE SIDEBAR & EXPAND VIEW
+    // 1. HIDE SIDEBAR, FOOTER & EXPAND VIEW
     if (leftSection) leftSection.style.display = 'none';
+    if (footer) footer.style.display = 'none'; // Hide Footer
+    
     if (container) {
-        container.style.maxWidth = '1000px'; // Set a nice max-width for readability
-        container.style.margin = '0 auto';   // Center it
+        container.style.maxWidth = '1000px'; 
+        container.style.margin = '0 auto';   
     }
     
     // Hide Dashboard Elements
@@ -1275,7 +1278,7 @@ window.showInvestorChatList = async function () {
                          <p style="color:#a7f3d0; font-size:0.9rem; margin:5px 0 0 0;">Manage your conversations</p>
                     </div>
 
-                     <button onclick="location.reload()" 
+                     <button onclick="window.location.hash='dashboard'" 
                             style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #fff; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s;"
                             onmouseover="this.style.background='rgba(239, 68, 68, 0.2)'; this.style.borderColor='#ef4444';"
                             onmouseout="this.style.background='transparent'; this.style.borderColor='rgba(255,255,255,0.2)';">
@@ -1366,7 +1369,7 @@ window.showInvestorChatList = async function () {
                 const isOnline = snap.exists() && snap.val().online;
                 const dot = document.getElementById(`status-dot-${uid}`);
                 if (dot) {
-                    dot.style.background = isOnline ? '#10b981' : '#666'; 
+                    dot.style.background = isOnline ? '#10b981' : '#666';
                     dot.style.boxShadow = isOnline ? '0 0 5px #10b981' : 'none';
                     dot.setAttribute('data-online', isOnline ? 'true' : 'false');
                     updateOnlineCounter();
