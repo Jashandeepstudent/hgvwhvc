@@ -5154,41 +5154,85 @@ if (!cachedFounderData.founderUsername) {
         }
     }
 });
-// Ensure this variable exists globally
+// =========================================================
+// 1. GLOBAL VARIABLES & MODAL SYSTEM (FIXED)
+// =========================================================
+
+// Global variable to store the logic to run when "Save" is clicked in the generic modal
 let currentEditAction = null;
 
+/**
+ * Creates and displays the dark-mode edit modal.
+ * CRITICAL FIX: The 'if (callback)' check prevents overwriting currentEditAction with null.
+ */
 function createEditModal(title, val, ph, isArea, callback) {
-    currentEditAction = callback; 
+    // [FIX] Only overwrite the global action if a new callback is actually provided.
+    // This allows functions like editUsername to define the action EXTERNALLY before calling this.
+    if (callback) {
+        currentEditAction = callback;
+    }
+
+    // Remove any existing modals to prevent duplicates
+    const existing = document.querySelector('.edit-modal');
+    if (existing) existing.remove();
+
     const m = document.createElement('div');
-    m.className = 'edit-modal show'; // Triggers CSS transition
+    m.className = 'edit-modal show'; 
     m.innerHTML = `
         <div class="edit-modal-content">
-            <div class="edit-modal-header"><h3>${title}</h3><button class="modal-close" onclick="closeEditModal()">×</button></div>
+            <div class="edit-modal-header">
+                <h3>${title}</h3>
+                <button class="modal-close" onclick="closeEditModal()">×</button>
+            </div>
             <div class="edit-modal-body">
-                ${isArea ? `<textarea id="editInput" rows="5" placeholder="${ph}">${val}</textarea>` : `<input type="text" id="editInput" value="${val}" placeholder="${ph}">`}
+                ${isArea 
+                    ? `<textarea id="editInput" rows="5" placeholder="${ph}">${val}</textarea>` 
+                    : `<input type="text" id="editInput" value="${val}" placeholder="${ph}">`}
             </div>
             <div class="edit-modal-footer">
                 <button class="modal-btn-cancel" onclick="closeEditModal()">Cancel</button>
                 <button class="modal-btn-save" onclick="saveEditModal()">Save</button>
             </div>
         </div>`;
+    
     document.body.appendChild(m);
-    setTimeout(() => document.getElementById('editInput').focus(), 100);
+    
+    // Focus the input automatically for better UX
+    setTimeout(() => {
+        const input = document.getElementById('editInput');
+        if (input) input.focus();
+    }, 100);
 }
 
+// Triggered when the user clicks "Save" inside the generic modal
+window.saveEditModal = function() {
+    const input = document.getElementById('editInput');
+    if (!input) return;
+
+    const value = input.value.trim();
+    
+    if (currentEditAction) {
+        currentEditAction(value); // Execute the stored function
+    } else {
+        console.error("❌ Critical Error: No save action defined.");
+    }
+    
+    closeEditModal();
+};
+
+// Closes the modal
 window.closeEditModal = function() {
     const modal = document.querySelector('.edit-modal');
     if (modal) modal.remove();
 };
 
-window.saveEditModal = function() {
-    const value = document.getElementById('editInput').value.trim();
-    if (currentEditAction) {
-        currentEditAction(value);
-    }
-};
+
+// =========================================================
+// 2. PROFILE EDITING FUNCTIONS (Standard)
+// =========================================================
+
 window.editUsername = function() {
-    // 1. Define what happens when Save is clicked
+    // 1. Define the logic FIRST
     currentEditAction = async (newValue) => {
         if (!newValue || newValue === cachedFounderData?.founderUsername) return;
         
@@ -5202,18 +5246,18 @@ window.editUsername = function() {
             // Update Firebase
             await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
             
-            // Update Local Data
+            // Update Local Cache
             cachedFounderData = { ...cachedFounderData, ...updates };
             
             alert('✅ Username updated successfully!');
-            showEditProfile(); // Refresh UI
+            showEditProfile(); // Refresh the profile view
         } catch (error) {
             console.error('Error updating username:', error);
             alert('❌ Failed to update username');
         }
     };
     
-    // 2. Open the modal (The fix above ensures currentEditAction isn't wiped out)
+    // 2. Open Modal (Callback argument is empty, so logic above is PRESERVED)
     createEditModal('Edit Username', cachedFounderData?.founderUsername || '', 'Enter your username');
 };
 
@@ -5236,6 +5280,33 @@ window.editTitle = function() {
     
     createEditModal('Edit Title', cachedFounderData?.title || '', 'e.g., CEO & Founder');
 };
+
+window.editAbout = function() {
+    currentEditAction = async (newValue) => {
+        if (newValue === cachedFounderData?.about) return;
+        
+        try {
+            const updates = { about: newValue };
+            await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
+            cachedFounderData = { ...cachedFounderData, ...updates };
+            
+            alert('✅ About section updated successfully!');
+            showEditProfile();
+        } catch (error) {
+            console.error('Error updating about:', error);
+            alert('❌ Failed to update about section');
+        }
+    };
+    
+    // Pass 'true' for the 4th argument to make it a Textarea
+    createEditModal('About Yourself', cachedFounderData?.about || '', 'Tell investors about yourself...', true);
+};
+
+
+// =========================================================
+// 3. CO-FOUNDER FUNCTIONS (Custom Modal)
+// =========================================================
+
 window.addCoFounder = function() {
     const modal = document.createElement('div');
     modal.className = 'edit-modal';
@@ -5276,7 +5347,7 @@ window.saveCoFounder = async function() {
     
     try {
         const coFounders = cachedFounderData?.coFounders || {};
-        const newId = `founder_${Object.keys(coFounders).length}`;
+        const newId = `founder_${Object.keys(coFounders).length}`; 
         coFounders[newId] = { name, description };
         
         const updates = { coFounders };
@@ -5291,25 +5362,11 @@ window.saveCoFounder = async function() {
         alert('❌ Failed to add co-founder');
     }
 };
-window.editAbout = function() {
-    currentEditAction = async (newValue) => {
-        if (newValue === cachedFounderData?.about) return;
-        
-        try {
-            const updates = { about: newValue };
-            await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
-            cachedFounderData = { ...cachedFounderData, ...updates };
-            
-            alert('✅ About section updated successfully!');
-            showEditProfile();
-        } catch (error) {
-            console.error('Error updating about:', error);
-            alert('❌ Failed to update about section');
-        }
-    };
-    
-    createEditModal('About Yourself', cachedFounderData?.about || '', 'Tell investors about yourself...', true);
-};
+
+
+// =========================================================
+// 4. STARTUP EDIT FUNCTIONS (Custom Modal)
+// =========================================================
 
 window.editStartup = function() {
     const modal = document.createElement('div');
@@ -5339,7 +5396,39 @@ window.editStartup = function() {
     document.body.appendChild(modal);
     setTimeout(() => modal.classList.add('show'), 10);
 };
-// Edit Profile Photo
+
+window.saveStartupEdit = async function() {
+    const newName = document.getElementById('startupNameInput').value;
+    const newDesc = document.getElementById('startupDescInput').value;
+    
+    if (!newName) {
+        alert('❌ Startup name is required');
+        return;
+    }
+    
+    try {
+        const updates = {
+            startupName: newName,
+            description: newDesc
+        };
+        
+        await update(ref(db, `startupProfile/${currentUser.uid}`), updates);
+        cachedStartupData = { ...cachedStartupData, ...updates };
+        
+        closeEditModal();
+        alert('✅ Startup info updated successfully!');
+        showEditProfile();
+    } catch (error) {
+        console.error('Error updating startup:', error);
+        alert('❌ Failed to update startup');
+    }
+};
+
+
+// =========================================================
+// 5. ASSET UPLOAD FUNCTIONS (Photo & Video)
+// =========================================================
+
 window.editProfilePhoto = async function() {
     const input = document.createElement('input');
     input.type = 'file';
@@ -5378,7 +5467,6 @@ window.editProfilePhoto = async function() {
         try {
             const photoURL = await uploadFileToStorage(file, 'profile-photos');
             
-            // Complete progress
             clearInterval(progressInterval);
             document.getElementById('uploadProgressFill').style.width = '100%';
             
@@ -5405,7 +5493,6 @@ window.editProfilePhoto = async function() {
             clearInterval(progressInterval);
             console.error('Error uploading photo:', error);
             
-            // Show error animation
             overlay.innerHTML = `
                 <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="#ff006e" stroke-width="2" style="margin-bottom: 1rem;">
                     <circle cx="12" cy="12" r="10"></circle>
@@ -5423,7 +5510,89 @@ window.editProfilePhoto = async function() {
     input.click();
 };
 
-// Edit Location
+window.uploadVideo = async function() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'video/*';
+    
+    input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        if (file.size > 50 * 1024 * 1024) {
+            alert('❌ Video must be under 50MB');
+            return;
+        }
+        
+        const overlay = document.createElement('div');
+        overlay.className = 'upload-overlay';
+        overlay.innerHTML = `
+            <div class="upload-spinner"></div>
+            <div class="upload-text">Uploading Video...</div>
+            <div class="upload-subtext">This may take a minute for larger files</div>
+            <div class="upload-progress-bar">
+                <div class="upload-progress-fill" id="uploadProgressFill"></div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            progress += Math.random() * 10;
+            if (progress > 90) progress = 90;
+            document.getElementById('uploadProgressFill').style.width = progress + '%';
+        }, 300);
+        
+        try {
+            const videoUrl = await uploadFileToStorage(file, 'intro-videos');
+            
+            clearInterval(progressInterval);
+            document.getElementById('uploadProgressFill').style.width = '100%';
+            
+            const updates = { introVideo: videoUrl };
+            await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
+            cachedFounderData = { ...cachedFounderData, ...updates };
+            
+            overlay.innerHTML = `
+                <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" style="margin-bottom: 1rem;">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="16 8 10 14 8 12"></polyline>
+                </svg>
+                <div class="upload-text" style="color: #10b981;">Video Uploaded!</div>
+                <div class="upload-subtext">Refreshing your profile...</div>
+            `;
+            
+            setTimeout(() => {
+                overlay.remove();
+                showEditProfile();
+            }, 1500);
+            
+        } catch (error) {
+            clearInterval(progressInterval);
+            console.error('Error uploading video:', error);
+            
+            overlay.innerHTML = `
+                <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="#ff006e" stroke-width="2" style="margin-bottom: 1rem;">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                </svg>
+                <div class="upload-text" style="color: #ff006e;">Upload Failed</div>
+                <div class="upload-subtext">Please try again</div>
+            `;
+            
+            setTimeout(() => overlay.remove(), 2000);
+        }
+    };
+    
+    input.click();
+};
+
+
+// =========================================================
+// 6. LOCATION & LANGUAGE FUNCTIONS
+// =========================================================
+
 window.editLocation = function() {
     const currentLocation = cachedStartupData?.location || { country: '', state: '', city: '' };
     
@@ -5481,7 +5650,6 @@ window.saveLocation = async function() {
     }
 };
 
-// Add Language
 window.addLanguage = function() {
     const modal = document.createElement('div');
     modal.className = 'edit-modal';
@@ -5528,7 +5696,6 @@ window.saveLanguage = async function() {
     try {
         const languages = cachedFounderData?.languages || [];
         
-        // Check if language already exists
         if (languages.some(lang => lang.name.toLowerCase() === name.toLowerCase())) {
             alert('❌ Language already added');
             return;
@@ -5566,120 +5733,12 @@ window.removeLanguage = async function(languageName) {
         alert('❌ Failed to remove language');
     }
 };
-window.saveStartupEdit = async function() {
-    const newName = document.getElementById('startupNameInput').value;
-    const newDesc = document.getElementById('startupDescInput').value;
-    
-    if (!newName) {
-        alert('❌ Startup name is required');
-        return;
-    }
-    
-    try {
-        const updates = {
-            startupName: newName,
-            description: newDesc
-            // DO NOT UPDATE startupId - it stays permanent
-        };
-        
-        await update(ref(db, `startupProfile/${currentUser.uid}`), updates);
-        cachedStartupData = { ...cachedStartupData, ...updates };
-        
-        closeEditModal();
-        alert('✅ Startup info updated successfully!');
-        showEditProfile();
-    } catch (error) {
-        console.error('Error updating startup:', error);
-        alert('❌ Failed to update startup');
-    }
-};
-window.saveEditModal = function() {
-    const value = document.getElementById('editInput').value.trim();
-    if (currentEditAction) {
-        currentEditAction(value);
-    }
-    closeEditModal();
-};
 
-window.uploadVideo = async function() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'video/*';
-    
-    input.onchange = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        
-        if (file.size > 50 * 1024 * 1024) {
-            alert('❌ Video must be under 50MB');
-            return;
-        }
-        
-        // Show uploading overlay
-        const overlay = document.createElement('div');
-        overlay.className = 'upload-overlay';
-        overlay.innerHTML = `
-            <div class="upload-spinner"></div>
-            <div class="upload-text">Uploading Video...</div>
-            <div class="upload-subtext">This may take a minute for larger files</div>
-            <div class="upload-progress-bar">
-                <div class="upload-progress-fill" id="uploadProgressFill"></div>
-            </div>
-        `;
-        document.body.appendChild(overlay);
-        
-        // Simulate progress
-        let progress = 0;
-        const progressInterval = setInterval(() => {
-            progress += Math.random() * 10;
-            if (progress > 90) progress = 90;
-            document.getElementById('uploadProgressFill').style.width = progress + '%';
-        }, 300);
-        
-        try {
-            const videoUrl = await uploadFileToStorage(file, 'intro-videos');
-            
-            clearInterval(progressInterval);
-            document.getElementById('uploadProgressFill').style.width = '100%';
-            
-            const updates = { introVideo: videoUrl };
-            await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
-            cachedFounderData = { ...cachedFounderData, ...updates };
-            
-            overlay.innerHTML = `
-                <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" style="margin-bottom: 1rem;">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <polyline points="16 8 10 14 8 12"></polyline>
-                </svg>
-                <div class="upload-text" style="color: #10b981;">Video Uploaded!</div>
-                <div class="upload-subtext">Refreshing your profile...</div>
-            `;
-            
-            setTimeout(() => {
-                overlay.remove();
-                showEditProfile();
-            }, 1500);
-            
-        } catch (error) {
-            clearInterval(progressInterval);
-            console.error('Error uploading video:', error);
-            
-            overlay.innerHTML = `
-                <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="#ff006e" stroke-width="2" style="margin-bottom: 1rem;">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="15" y1="9" x2="9" y2="15"></line>
-                    <line x1="9" y1="9" x2="15" y2="15"></line>
-                </svg>
-                <div class="upload-text" style="color: #ff006e;">Upload Failed</div>
-                <div class="upload-subtext">Please try again</div>
-            `;
-            
-            setTimeout(() => overlay.remove(), 2000);
-        }
-    };
-    
-    input.click();
-};
+
+// =========================================================
+// 7. EDUCATION & WORK EXPERIENCE
+// =========================================================
+
 window.addEducation = function() {
     const modal = document.createElement('div');
     modal.className = 'edit-modal';
@@ -5800,7 +5859,8 @@ window.saveWorkExperience = async function() {
     }
 };
 
-    // ========================================
+
+   // ========================================
     // SECTION 2: PLACE HASH CHANGE HANDLER HERE
     // ========================================
     
