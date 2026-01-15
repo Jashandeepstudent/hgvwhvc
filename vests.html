@@ -5751,51 +5751,68 @@ async function saveStartupProfile(vestData) {
 async function createDashboard() {
     if (!currentUser) return;
 
-    // --- REAL-TIME INBOX LISTENER ---
+    // --- REAL-TIME INBOX LISTENER (UPDATED LOGIC) ---
     const chatsRef = ref(db, 'Chats');
-    
+
     onValue(chatsRef, async (snapshot) => {
-        let latestPreview = { 
-            text: "Start connecting with investors today.", 
+        // 1. Define Default State (Shown if NO unread messages exist)
+        let displayData = {
             title: "Welcome to ScaleVest!",
-            timeAgo: ""
+            text: "Start connecting with investors today.",
+            timeAgo: "",
+            isUnread: false
         };
 
         if (snapshot.exists()) {
             const allChats = snapshot.val();
-            let newestInvestorMsg = null;
+            let newestUnreadMsg = null;
 
-            // Loop through chats to find the latest incoming message
+            // 2. Loop through all rooms
             Object.keys(allChats).forEach(roomKey => {
                 if (roomKey.includes(currentUser.uid)) {
                     const roomData = allChats[roomKey];
-                    const msgs = Object.values(roomData).filter(m => m && typeof m === 'object' && m.timestamp);
                     
-                    if (msgs.length > 0) {
-                        const investorMsgs = msgs.filter(m => m.sender !== currentUser.uid);
-                        if (investorMsgs.length > 0) {
-                            const lastInRoom = investorMsgs.reduce((prev, curr) => (prev.timestamp > curr.timestamp) ? prev : curr);
-                            if (!newestInvestorMsg || lastInRoom.timestamp > newestInvestorMsg.timestamp) {
-                                newestInvestorMsg = lastInRoom;
+                    // Filter for valid message objects
+                    const msgs = Object.values(roomData).filter(m => m && typeof m === 'object' && m.timestamp);
+
+                    // 3. Find UNREAD messages addressed to ME
+                    msgs.forEach(msg => {
+                        // Check if message is for me AND is explicitly unread
+                        if (msg.recipient === currentUser.uid && msg.read === false) {
+                            
+                            // If we haven't found an unread msg yet, OR this one is newer than the last one found
+                            if (!newestUnreadMsg || msg.timestamp > newestUnreadMsg.timestamp) {
+                                newestUnreadMsg = msg;
                             }
                         }
-                    }
+                    });
                 }
             });
 
-            if (newestInvestorMsg) {
+            // 4. If an unread message was found, update the display data
+            if (newestUnreadMsg) {
                 try {
-                    // --- TARGETED NAME FETCHING ---
-                    // Look up the hsi id under 'investorProfiles' to get the 'fullName'
-                    const investorSnap = await get(ref(db, `investorProfiles/${newestInvestorMsg.sender}`));
+                    // Fetch Sender Name
+                    let senderName = "An Investor";
                     
-                    const senderName = investorSnap.exists() ? investorSnap.val().fullName : "An Investor";
+                    // Try Investor Profile first
+                    const investorSnap = await get(ref(db, `investorProfiles/${newestUnreadMsg.sender}`));
+                    if (investorSnap.exists()) {
+                        senderName = investorSnap.val().fullName || "An Investor";
+                    } else {
+                        // Fallback to Founder Profile (in case of founder-to-founder chat)
+                        const founderSnap = await get(ref(db, `founderProfile/${newestUnreadMsg.sender}`));
+                        if(founderSnap.exists()) senderName = founderSnap.val().founderUsername || "User";
+                    }
 
-                    latestPreview.title = `${senderName} has sent you a new message:`;
-                    latestPreview.text = newestInvestorMsg.text;
-                    latestPreview.timeAgo = timeSince(newestInvestorMsg.timestamp);
+                    displayData = {
+                        title: `${senderName} sent a message:`,
+                        text: newestUnreadMsg.text || "Sent an attachment",
+                        timeAgo: timeSince(newestUnreadMsg.timestamp),
+                        isUnread: true
+                    };
                 } catch (e) {
-                    console.error("Error fetching investor name:", e);
+                    console.error("Error fetching name:", e);
                 }
             }
         }
@@ -5803,13 +5820,18 @@ async function createDashboard() {
         // --- INSTANT UI UPDATE ---
         const inboxElement = document.getElementById('inbox-preview-content');
         if (inboxElement) {
+            // Apply styling based on whether it is unread or default
+            const borderItem = displayData.isUnread ? "3px solid #ff006e" : "3px solid #333";
+            const opacityItem = displayData.isUnread ? "1" : "0.5";
+            
+            inboxElement.style.borderLeft = borderItem;
             inboxElement.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
-                    <strong style="color: #fff; font-size: 0.9rem; line-height:1.2;">${latestPreview.title}</strong>
-                    <span style="color: #ff006e; font-size: 0.7rem; font-weight: 800; white-space:nowrap; margin-left:10px;">${latestPreview.timeAgo}</span>
+                    <strong style="color: #fff; font-size: 0.9rem; line-height:1.2;">${displayData.title}</strong>
+                    <span style="color: #ff006e; font-size: 0.7rem; font-weight: 800; white-space:nowrap; margin-left:10px;">${displayData.timeAgo}</span>
                 </div>
-                <p style="color: #888; font-size: 0.85rem; line-height: 1.4; font-style: italic;">
-                    "${latestPreview.text}"
+                <p style="color: #888; font-size: 0.85rem; line-height: 1.4; font-style: italic; opacity: ${opacityItem};">
+                    "${displayData.text}"
                 </p>
             `;
         }
@@ -6923,12 +6945,12 @@ max-width: 1100px;
         Inbox
     </div>
 
-    <div id="inbox-preview-content" class="inbox-message" style="border-left: 3px solid #ff006e; padding: 12px; background: rgba(255, 255, 255, 0.03);">
-        <p style="color:#666; font-style:italic;">Syncing messages...</p>
+    <div id="inbox-preview-content" class="inbox-message" style="border-left: 3px solid #333; padding: 12px; background: transparent;">
+        <p style="color:#666; font-style:italic;">Loading messages...</p>
     </div>
 </div>
- </div>
-            </div>
+</div>
+</div>
 
 <!-- RIGHT -->
 <div class="right-section">
