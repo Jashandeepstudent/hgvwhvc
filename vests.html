@@ -5509,6 +5509,94 @@ window.handleBellClick = async function() {
         console.error("Error clearing notifications:", error);
     }
 };
+// --- FORCE USERNAME SETUP LOGIC ---
+
+async function showUsernameSetupModal() {
+    // Check if modal already exists to prevent duplicates
+    if (document.getElementById('usernameSetupModal')) return;
+
+    const modal = document.createElement('div');
+    modal.id = 'usernameSetupModal';
+    modal.className = 'edit-modal show'; // Reusing your existing modal styles
+    modal.style.zIndex = '999999'; // Ensure it's on top of everything
+    // Prevent clicking outside to close
+    modal.style.backdropFilter = "blur(10px)";
+    
+    modal.innerHTML = `
+        <div class="edit-modal-content">
+            <div class="edit-modal-header" style="background: linear-gradient(135deg, #ff006e, #8338ec);">
+                <h3 style="color: #fff;">👋 Welcome to ScaleVest!</h3>
+            </div>
+            <div class="edit-modal-body">
+                <p style="color: #ccc; margin-bottom: 1.5rem; line-height: 1.5;">
+                    To continue, please choose a unique <strong>Founder Username</strong>. This will be your identity across the platform.
+                </p>
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Choose Username</label>
+                    <input type="text" id="newUsernameInput" placeholder="e.g. ElonMusk24" 
+                           style="width: 100%; padding: 12px; background: #000; border: 2px solid #333; border-radius: 8px; color: #fff; font-size: 1.1rem;">
+                    <small style="color: #888; display: block; margin-top: 5px;">Min 4 characters, no spaces.</small>
+                </div>
+            </div>
+            <div class="edit-modal-footer">
+                <button class="modal-btn-save" onclick="saveNewUsername()" style="width: 100%; padding: 12px;">Set Username & Continue</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Trap focus in input
+    setTimeout(() => document.getElementById('newUsernameInput').focus(), 100);
+}
+
+window.saveNewUsername = async function() {
+    const input = document.getElementById('newUsernameInput');
+    const btn = document.querySelector('#usernameSetupModal .modal-btn-save');
+    const rawName = input.value.trim();
+    
+    // 1. Validation
+    if (!rawName || rawName.length < 4) {
+        alert("❌ Username must be at least 4 characters long.");
+        return;
+    }
+    if (/\s/.test(rawName)) {
+        alert("❌ Usernames cannot contain spaces.");
+        return;
+    }
+
+    // 2. Processing UI
+    btn.innerHTML = "Saving...";
+    btn.disabled = true;
+
+    try {
+        // 3. Save to Firebase
+        await update(ref(db, `founderProfile/${currentUser.uid}`), {
+            founderUsername: rawName,
+            // Also generate a userId if it doesn't exist, as fallback
+            userId: cachedFounderData?.userId || `USER_${Date.now()}` 
+        });
+
+        // 4. Update Local Cache
+        if(cachedFounderData) {
+            cachedFounderData.founderUsername = rawName;
+        }
+
+        // 5. Success & Cleanup
+        const modal = document.getElementById('usernameSetupModal');
+        if(modal) modal.remove();
+
+        // 6. Reload Dashboard to reflect changes
+        alert("✅ Username Set! Welcome aboard.");
+        window.location.reload(); 
+
+    } catch (error) {
+        console.error("Error saving username:", error);
+        alert("Error saving username. Please try again.");
+        btn.innerHTML = "Set Username & Continue";
+        btn.disabled = false;
+    }
+};
    onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
@@ -5548,6 +5636,12 @@ window.handleBellClick = async function() {
             } else {
                 cachedFounderData = founderSnapshot.val();
                 
+if (!cachedFounderData.founderUsername) {
+                console.log("⚠️ No founderUsername found. Triggering setup modal.");
+                document.getElementById('loadingScreen').classList.add('hidden'); // Hide spinner so they see modal
+                showUsernameSetupModal(); 
+                return; // STOP EXECUTION HERE. Do not load dashboard.
+            }
                 // If profile exists but no userId, show popup
                 if (!cachedFounderData.userId) {
                     document.getElementById('loadingScreen').classList.add('hidden');
