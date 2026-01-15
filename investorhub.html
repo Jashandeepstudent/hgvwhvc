@@ -1115,7 +1115,7 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+const db = getDatabase(app); // Standardized to 'db'
 const auth = getAuth(app);
 const storage = getStorage(app);
 
@@ -1123,48 +1123,39 @@ let currentUser = null;
 let currentUserUID = null;
 let globalUnreadCount = 0;
 let presenceListeners = [];
+let uploadedPhotoURL = "";
 
 // =========================================================
 // 1. NOTIFICATION & BELL LOGIC
 // =========================================================
 
-// Handle clicking the Bell Icon
 window.handleBellClick = async function() {
-    // 1. Instant UI Feedback (Hide badge immediately)
     const badge = document.getElementById('navBellBadge');
     if(badge) {
-        badge.style.display = 'none'; // Force hide
+        badge.style.display = 'none';
         badge.classList.remove('active');
     }
-    
-    // 2. Navigate to the chat list
     window.location.hash = 'founder_chatlist'; 
 };
 
 function startNotificationListener() {
     const chatsRef = ref(db, 'Chats');
-    
     onValue(chatsRef, (snapshot) => {
         if (!snapshot.exists() || !currentUser) {
             updateNotificationBadge(0);
             return;
         }
-
         const allChats = snapshot.val();
         let unreadCount = 0;
-
         Object.keys(allChats).forEach(roomKey => {
             if (roomKey.includes(currentUser.uid)) {
-                const messages = allChats[roomKey];
-                Object.values(messages).forEach(msg => {
-                    // Check if message is for ME and NOT read
+                Object.values(allChats[roomKey]).forEach(msg => {
                     if (msg && msg.recipient === currentUser.uid && msg.read !== true) {
                         unreadCount++;
                     }
                 });
             }
         });
-
         globalUnreadCount = unreadCount;
         updateNotificationBadge(unreadCount);
     });
@@ -1173,8 +1164,6 @@ function startNotificationListener() {
 function updateNotificationBadge(count) {
     const badge = document.getElementById('navBellBadge');
     if (!badge) return;
-
-    // Only show if count > 0 AND we aren't currently viewing the chat list
     if (count > 0 && window.location.hash !== '#founder_chatlist') {
         badge.style.display = 'block';
         badge.classList.add('active');
@@ -1185,37 +1174,83 @@ function updateNotificationBadge(count) {
 }
 
 // =========================================================
-// 2. CHAT LIST LOGIC (With Online Count & Mark Read)
+// 2. DASHBOARD INBOX PREVIEW (Sidebar Card)
+// =========================================================
+
+function startDashboardInboxListener() {
+    const inboxDiv = document.getElementById('dashInboxContent');
+    const dot = document.getElementById('dashInboxDot');
+    
+    onValue(ref(db, 'Chats'), async (snapshot) => {
+        if (!snapshot.exists()) {
+            inboxDiv.innerHTML = `<p style="color:#666; font-size:0.9rem;">No messages yet.</p>`;
+            return;
+        }
+
+        const allChats = snapshot.val();
+        let latestMsg = null;
+        let latestTimestamp = 0;
+
+        Object.keys(allChats).forEach(roomKey => {
+            if (roomKey.includes(currentUser.uid)) {
+                Object.values(allChats[roomKey]).forEach(msg => {
+                    if (msg.timestamp > latestTimestamp) {
+                        latestTimestamp = msg.timestamp;
+                        latestMsg = msg;
+                    }
+                });
+            }
+        });
+
+        if (!latestMsg) return;
+
+        let senderName = "You";
+        if (latestMsg.sender !== currentUser.uid) {
+            try {
+                let snap = await get(ref(db, `founderProfile/${latestMsg.sender}`));
+                if (!snap.exists()) snap = await get(ref(db, `investorProfiles/${latestMsg.sender}`));
+                if (snap.exists()) {
+                    const d = snap.val();
+                    senderName = d.founderUsername || d.fullName || "User";
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        const isUnread = (latestMsg.recipient === currentUser.uid && latestMsg.read !== true);
+        if(dot) dot.style.display = isUnread ? 'block' : 'none';
+
+        inboxDiv.innerHTML = `
+            <div style="display:flex; align-items:center; gap: 10px; margin-bottom: 5px;">
+                <span style="font-weight: 700; color: #fff; font-size: 0.95rem;">${senderName}</span>
+            </div>
+            <div style="color: ${isUnread ? '#fff' : '#94a3b8'}; font-size: 0.9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                ${latestMsg.text}
+            </div>
+        `;
+    });
+}
+
+// =========================================================
+// 3. FULL INVESTOR INBOX LIST
 // =========================================================
 
 window.showInvestorChatList = async function () {
     const container = document.querySelector('.right-section');
     const leftSection = document.querySelector('.left-section');
-    const footer = document.querySelector('.footer'); // Select Footer
+    const footer = document.querySelector('.footer');
 
-    // 1. HIDE SIDEBAR, FOOTER & EXPAND VIEW
     if (leftSection) leftSection.style.display = 'none';
-    if (footer) footer.style.display = 'none'; // Hide Footer
+    if (footer) footer.style.display = 'none';
     
-    if (container) {
-        container.style.maxWidth = '1000px'; 
-        container.style.margin = '0 auto';   
-    }
-    
-    // Hide Dashboard Elements
     document.querySelector('.welcome-section').style.display = 'none';
     document.querySelectorAll('.banner').forEach(el => el.style.display = 'none');
     
-    // Cleanup old listeners
     if (presenceListeners.length > 0) {
         presenceListeners.forEach(unsub => unsub());
         presenceListeners = [];
     }
 
-    container.innerHTML = `
-        <div style="text-align:center; padding: 50px;">
-            <p style="color:#10b981; font-weight:bold;">Loading Conversations...</p>
-        </div>`;
+    container.innerHTML = `<div style="text-align:center; padding: 50px;"><p style="color:#10b981; font-weight:bold;">Syncing Inbox...</p></div>`;
 
     try {
         const chatsRef = ref(db, 'Chats');
@@ -1223,23 +1258,18 @@ window.showInvestorChatList = async function () {
         const allChats = snapshot.val() || {};
         const chatMap = new Map();
 
-        // Process Chats
         Object.keys(allChats).forEach(roomKey => {
             if (!roomKey.includes(currentUser.uid)) return;
-
             const messages = Object.values(allChats[roomKey]).filter(m => m.timestamp);
             if (!messages.length) return;
-
             messages.sort((a, b) => a.timestamp - b.timestamp);
             const lastMsg = messages[messages.length - 1];
-
             const parts = roomKey.split('_');
             const otherUid = parts.find(p => p !== 'chat' && p !== currentUser.uid);
             if (!otherUid) return;
 
             chatMap.set(otherUid, {
-                roomKey,
-                otherUid,
+                roomKey, otherUid,
                 lastMessage: lastMsg.text?.trim() || "Sent an attachment",
                 timestamp: lastMsg.timestamp,
                 isUnread: !lastMsg.readBy || !lastMsg.readBy[currentUser.uid]
@@ -1247,193 +1277,149 @@ window.showInvestorChatList = async function () {
         });
 
         const myChats = Array.from(chatMap.values()).sort((a, b) => b.timestamp - a.timestamp);
-
-        // Fetch Profiles
         const profileMap = {};
-        await Promise.all(
-            myChats.map(async chat => {
-                const uid = chat.otherUid;
-                let snap = await get(ref(db, `founderProfile/${uid}`));
-                if (!snap.exists()) snap = await get(ref(db, `investorProfiles/${uid}`));
+        await Promise.all(myChats.map(async chat => {
+            const uid = chat.otherUid;
+            let snap = await get(ref(db, `founderProfile/${uid}`));
+            if (!snap.exists()) snap = await get(ref(db, `investorProfiles/${uid}`));
+            profileMap[uid] = snap.exists() ? snap.val() : { fullName: "User" };
+        }));
 
-                if (snap.exists()) {
-                    const data = snap.val();
-                    profileMap[uid] = {
-                        name: data.founderUsername || data.fullName || "User",
-                        photo: data.photoURL || data.founderImage || null
-                    };
-                } else {
-                    profileMap[uid] = { name: "Unknown User", photo: null };
-                }
-            })
-        );
-
-        // Render List
         let html = `
             <div style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 16px; padding: 2rem; position: relative; margin-top: 20px;">
-                
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <div>
-                        <h2 style="color:#fff; margin:0; font-size:1.8rem;">Investor Inbox</h2>
-                         <p style="color:#a7f3d0; font-size:0.9rem; margin:5px 0 0 0;">Manage your conversations</p>
-                    </div>
-
-                     <button onclick="window.location.hash='dashboard'" 
-                            style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #fff; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s;"
-                            onmouseover="this.style.background='rgba(239, 68, 68, 0.2)'; this.style.borderColor='#ef4444';"
-                            onmouseout="this.style.background='transparent'; this.style.borderColor='rgba(255,255,255,0.2)';">
-                        ✕
-                    </button>
+                    <h2 style="color:#fff; margin:0;">Investor Inbox</h2>
+                    <button onclick="window.location.hash='dashboard'" style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #fff; width: 40px; height: 40px; border-radius: 50%; cursor: pointer;">✕</button>
                 </div>
-
-                <div id="liveOnlineCounter" style="background:#064e3b; color:#10b981; padding:8px 16px; border-radius:20px; font-size:0.85rem; font-weight:700; border:1px solid #10b981; width: fit-content; margin-bottom: 20px;">
-                    <span style="color:#10b981;">●</span> 0 Online
-                </div>
-
+                <div id="liveOnlineCounter" style="background:#064e3b; color:#10b981; padding:8px 16px; border-radius:20px; font-size:0.85rem; margin-bottom: 20px; width:fit-content;">0 Online</div>
                 <div style="display:flex; flex-direction:column; gap:10px;">
         `;
 
-        if (myChats.length === 0) {
-            html += `<p style="text-align:center; color:#6ee7b7; padding:20px;">No messages yet.</p>`;
-        } else {
-            myChats.forEach(chat => {
-                const profile = profileMap[chat.otherUid];
-                const displayName = profile.name;
-                const photoHtml = profile.photo 
-                    ? `<img src="${profile.photo}" style="width:100%; height:100%; object-fit:cover;">` 
-                    : `<div style="display:flex;align-items:center;justify-content:center;background:#10b981;width:100%;height:100%;color:white;font-weight:bold;">${displayName[0]}</div>`;
-                
-                const time = new Date(chat.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                const unreadStyle = chat.isUnread ? 'border-left: 4px solid #ef4444; background: rgba(255,255,255,0.05);' : '';
-                const isOnlineId = `status-dot-${chat.otherUid}`;
-
-                html += `
-                    <div class="chat-item-row"
-                         onclick="window.openChatAndMarkRead('${chat.otherUid}', '${chat.roomKey}')" 
-                         style="display:flex; align-items:center; gap:15px; padding:15px; border-radius:8px; cursor:pointer; transition:0.2s; position: relative; ${unreadStyle}"
-                         onmouseover="this.style.backgroundColor='rgba(16, 185, 129, 0.1)'"
-                         onmouseout="this.style.backgroundColor='transparent'">
-                        
-                        <div style="position: relative; width:50px; height:50px;">
-                            <div style="width:100%; height:100%; border-radius:50%; overflow:hidden; border:1px solid #333;">
-                                ${photoHtml}
-                            </div>
-                            <div id="${isOnlineId}" class="status-indicator" style="
-                                position: absolute; bottom: 0; right: 0; 
-                                width: 12px; height: 12px; background: #666; 
-                                border: 2px solid #000; border-radius: 50%;
-                            "></div>
-                        </div>
-
-                        <div style="flex:1;">
-                            <div style="display:flex; justify-content:space-between;">
-                                <strong style="color:#fff; font-size:1rem;">${displayName}</strong>
-                                <span style="color:#666; font-size:0.8rem;">${time}</span>
-                            </div>
-                            <div style="color:#aaa; font-size:0.9rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:200px;">
-                                ${chat.isUnread ? '<span style="color:#ef4444;font-weight:bold;">New: </span>' : ''}
-                                ${chat.lastMessage}
-                            </div>
-                        </div>
-
-                        <button onclick="deleteConversation('${chat.roomKey}', event)" 
-                                style="background: transparent; border: none; padding: 5px; cursor: pointer; opacity: 0.6; transition: 0.2s;"
-                                onmouseover="this.style.opacity='1'; this.style.color='#ef4444';"
-                                onmouseout="this.style.opacity='0.6'; this.style.color='inherit';">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="3 6 5 6 21 6"></polyline>
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                            </svg>
-                        </button>
-                    </div>
-                `;
-            });
-        }
-        
-        html += `</div></div>`;
-        container.innerHTML = html;
-
-        // Setup Presence Listeners
-        const updateOnlineCounter = () => {
-            const onlineCount = document.querySelectorAll('.status-indicator[data-online="true"]').length;
-            const counterEl = document.getElementById('liveOnlineCounter');
-            if(counterEl) {
-                counterEl.innerHTML = `<span style="color:${onlineCount > 0 ? '#10b981' : '#6b7280'};">●</span> ${onlineCount} Online`;
-            }
-        };
-
         myChats.forEach(chat => {
-            const uid = chat.otherUid;
-            const refPres = ref(db, `presence/${uid}`);
-            const unsub = onValue(refPres, (snap) => {
+            const profile = profileMap[chat.otherUid];
+            const displayName = profile.founderUsername || profile.fullName || "User";
+            const isOnlineId = `status-dot-${chat.otherUid}`;
+            html += `
+                <div onclick="window.openChatAndMarkRead('${chat.otherUid}', '${chat.roomKey}')" 
+                     style="display:flex; align-items:center; gap:15px; padding:15px; border-radius:8px; cursor:pointer; background: rgba(0,0,0,0.3); border: 1px solid ${chat.isUnread ? '#10b981' : 'transparent'};">
+                    <div style="position:relative; width:50px; height:50px; flex-shrink:0;">
+                        <div style="width:100%; height:100%; border-radius:50%; background:#10b981; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+                            ${profile.photoURL ? `<img src="${profile.photoURL}" style="width:100%;height:100%;object-fit:cover;">` : displayName[0]}
+                        </div>
+                        <div id="${isOnlineId}" class="status-indicator" style="position:absolute; bottom:0; right:0; width:12px; height:12px; border-radius:50%; background:#666; border:2px solid #000;"></div>
+                    </div>
+                    <div style="flex:1;">
+                        <strong style="color:#fff;">${displayName}</strong>
+                        <div style="color:#aaa; font-size:0.9rem;">${chat.lastMessage}</div>
+                    </div>
+                    <button onclick="deleteConversation('${chat.roomKey}', event)" style="background:none; border:none; color:#ef4444; cursor:pointer;">🗑️</button>
+                </div>`;
+        });
+
+        container.innerHTML = html + `</div></div>`;
+
+        // Presence Listeners
+        myChats.forEach(chat => {
+            const unsub = onValue(ref(db, `presence/${chat.otherUid}`), (snap) => {
                 const isOnline = snap.exists() && snap.val().online;
-                const dot = document.getElementById(`status-dot-${uid}`);
+                const dot = document.getElementById(`status-dot-${chat.otherUid}`);
                 if (dot) {
                     dot.style.background = isOnline ? '#10b981' : '#666';
-                    dot.style.boxShadow = isOnline ? '0 0 5px #10b981' : 'none';
                     dot.setAttribute('data-online', isOnline ? 'true' : 'false');
-                    updateOnlineCounter();
                 }
+                const count = document.querySelectorAll('.status-indicator[data-online="true"]').length;
+                document.getElementById('liveOnlineCounter').innerText = `${count} Online`;
             });
             presenceListeners.push(unsub);
         });
 
-    } catch (err) {
-        console.error("Chat list error:", err);
-        container.innerHTML = `<p style="color:red">Failed to load chats.</p>`;
-    }
+    } catch (err) { console.error(err); }
 };
+
 // =========================================================
-// 3. MARK READ & OPEN CHAT
+// 4. CHAT ACTIONS (Mark Read & Delete)
 // =========================================================
 
 window.openChatAndMarkRead = async function(uid, roomKey) {
     if (!currentUser) return;
-
     try {
         const roomRef = ref(db, `Chats/${roomKey}`);
         const snapshot = await get(roomRef);
-        
         if (snapshot.exists()) {
             const updates = {};
-            const messages = snapshot.val();
-            
-            // Find all unread messages for ME and set read: true
-            Object.keys(messages).forEach(msgId => {
-                const msg = messages[msgId];
+            Object.entries(snapshot.val()).forEach(([msgId, msg]) => {
                 if (msg.recipient === currentUser.uid && msg.read !== true) {
                     updates[`${msgId}/read`] = true;
                 }
             });
-
-            // If there are updates, send to Firebase
-            if (Object.keys(updates).length > 0) {
-                await update(roomRef, updates);
-            }
+            if (Object.keys(updates).length > 0) await update(roomRef, updates);
         }
-    } catch (e) {
-        console.error("Error marking read:", e);
-    }
-
-    // Redirect to chat page
+    } catch (e) { console.error(e); }
     window.location.href = `chat.html?recipient=${uid}&room=${roomKey}`;
 };
 
-// Helper for delete
 window.deleteConversation = async function(roomKey, event) {
-    event.stopPropagation(); 
-    if(!confirm("Delete this conversation?")) return;
-    try {
-        await remove(ref(db, `Chats/${roomKey}`));
-        window.showInvestorChatList(); 
-    } catch(e) {
-        console.error(e);
-        alert("Error deleting chat");
-    }
+    event.stopPropagation();
+    if(!confirm("Delete conversation?")) return;
+    await remove(ref(db, `Chats/${roomKey}`));
+    window.showInvestorChatList();
 };
 
 // =========================================================
-// 4. CORE AUTH & ROUTING
+// 5. PROFILE & IDENTITY SYSTEM
+// =========================================================
+
+async function loadUserProfile(uid) {
+    const avatarDiv = document.getElementById("profileAvatar");
+    try {
+        const snapshot = await get(ref(db, "investorProfiles/" + uid));
+        if (snapshot.exists()) {
+            const data = snapshot.val();
+            const fullName = data.fullName || "Investor";
+            document.getElementById("profileName").innerText = fullName;
+            document.getElementById("profileNetWorth").innerText = data.netWorth ? `$${data.netWorth}` : "$0.00";
+            document.getElementById("profileId").innerText = data.userID || "ID Pending";
+            if(document.getElementById("welcomeUser")) document.getElementById("welcomeUser").innerText = `Welcome, ${fullName.split(' ')[0]}!`;
+
+            if (data.photoURL) {
+                avatarDiv.innerHTML = `<img src="${data.photoURL}" style="width:100%; height:100%; object-fit:cover;">`;
+            } else {
+                avatarDiv.innerHTML = `<span>${fullName[0]}</span>`;
+            }
+            if (!data.userID) document.getElementById("userIdModal").style.display = "flex";
+        }
+
+        // PUBLISH BUTTON SWITCH LOGIC
+        const angelSnap = await get(ref(db, `angelProfiles/${uid}`));
+        const launchBtn = document.getElementById('launchBtn');
+        if (angelSnap.exists() && angelSnap.val().status === "Live") {
+            if (launchBtn) {
+                launchBtn.innerText = "VIEW YOUR PROFILE";
+                launchBtn.style.background = "#3b82f6";
+                launchBtn.onclick = () => window.location.hash = 'profile'; 
+            }
+            document.querySelector('.progress-label').innerText = "STATUS: PUBLISHED";
+        }
+    } catch (err) { console.error(err); }
+}
+
+window.launchAngelProfile = async () => {
+    const launchBtn = document.getElementById('launchBtn');
+    if(!confirm("Publish your profile?")) return;
+    launchBtn.disabled = true;
+    try {
+        const snap = await get(ref(db, `investorProfiles/${currentUserUID}`));
+        if (snap.exists()) {
+            const angelData = { ...snap.val(), status: "Live", launchedAt: new Date().toISOString() };
+            await update(ref(db, `angelProfiles/${currentUserUID}`), angelData);
+            alert("Success!");
+            location.reload();
+        }
+    } catch (e) { launchBtn.disabled = false; }
+};
+
+// =========================================================
+// 6. CORE BOOTSTRAP
 // =========================================================
 
 function setUserPresence(user) {
@@ -1442,22 +1428,14 @@ function setUserPresence(user) {
     onDisconnect(presenceRef).set({ online: false, lastSeen: serverTimestamp() });
 }
 
-function updateProgress(percent, status) {
-    const bar = document.getElementById("loadingProgress");
-    const text = document.getElementById("loadingStatus");
-    if (bar) bar.style.width = percent + "%";
-    if (text) text.innerText = status;
-}
-
 onAuthStateChanged(auth, async (user) => {
-    updateProgress(20, "Authenticating...");
-    
     if (user) {
         currentUser = user;
         currentUserUID = user.uid;
         setUserPresence(user);
-        startNotificationListener(); 
+        startNotificationListener();
         startDashboardInboxListener();
+
         window.addEventListener('hashchange', () => {
             if (window.location.hash === '#founder_chatlist') {
                 window.showInvestorChatList();
@@ -1468,22 +1446,13 @@ onAuthStateChanged(auth, async (user) => {
 
         if (window.location.hash === '#founder_chatlist') {
             window.showInvestorChatList();
-            const loader = document.getElementById("loadingScreen");
-            if(loader) loader.style.display = 'none';
+            document.getElementById("loadingScreen").style.display = 'none';
         } else {
-            try {
-                updateProgress(50, "Fetching Profile...");
-                await loadUserProfile(user.uid);
-                updateProgress(100, "Ready");
-                setTimeout(() => {
-                    const loader = document.getElementById("loadingScreen");
-                    if(loader) {
-                        loader.style.opacity = "0";
-                        setTimeout(() => loader.style.display = "none", 800);
-                    }
-                }, 500);
-            } catch (e) {
-                console.error(e);
+            await loadUserProfile(user.uid);
+            const loader = document.getElementById("loadingScreen");
+            if(loader) {
+                loader.style.opacity = "0";
+                setTimeout(() => loader.style.display = "none", 800);
             }
         }
     } else {
@@ -1491,6 +1460,7 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
+// UI Modal Controls
 window.toggleDropdown = (id) => document.getElementById(id)?.classList.toggle('show');
 window.toggleProfileDropdown = () => document.getElementById('profileDropdown')?.classList.toggle('show');
 window.openEditIdentity = () => document.getElementById('editIdentityModal').style.display = 'flex';
