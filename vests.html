@@ -4439,16 +4439,14 @@ window.limitWords = function(element, limit) {
         alert(`Professional Guard: Maximum ${limit} words allowed per section.`);
     }
 };
-// Global array to track active listeners so we can detach them later
-if (!window.presenceListeners) {
-    window.presenceListeners = [];
-}
+// Global tracking for listeners
+window.presenceListeners = window.presenceListeners || [];
 
 window.showInvestorChatList = async function () {
     try {
         const container = document.getElementById('dashboardContainer');
 
-        // 1. CLEANUP: Detach previous listeners to prevent memory leaks/duplicates
+        // 1. CLEANUP: Remove old listeners to prevent memory leaks/duplicates
         if (window.presenceListeners.length > 0) {
             window.presenceListeners.forEach(unsub => unsub());
             window.presenceListeners = [];
@@ -4468,7 +4466,7 @@ window.showInvestorChatList = async function () {
             </div>`;
 
         // -----------------------------
-        // 2. FETCH CHATS
+        // 2. FETCH CHATS & PROFILES
         // -----------------------------
         const chatsRef = ref(db, 'Chats');
         const snapshot = await get(chatsRef);
@@ -4476,6 +4474,7 @@ window.showInvestorChatList = async function () {
 
         const chatMap = new Map();
 
+        // Process Chats
         Object.keys(allChats).forEach(roomKey => {
             if (!roomKey.includes(currentUser.uid)) return;
 
@@ -4484,6 +4483,7 @@ window.showInvestorChatList = async function () {
 
             if (!messages.length) return;
 
+            // Sort messages to get the last one
             messages.sort((a, b) => a.timestamp - b.timestamp);
             const lastMsg = messages[messages.length - 1];
 
@@ -4503,11 +4503,8 @@ window.showInvestorChatList = async function () {
 
         const myChats = Array.from(chatMap.values()).sort((a, b) => b.timestamp - a.timestamp);
 
-        // -----------------------------
-        // 3. FETCH PROFILES ONLY (Presence moved to listeners)
-        // -----------------------------
+        // Fetch Profiles
         const profileMap = {};
-
         await Promise.all(
             myChats.map(async chat => {
                 const uid = chat.otherUid;
@@ -4521,7 +4518,7 @@ window.showInvestorChatList = async function () {
         );
 
         // -----------------------------
-        // 4. RENDER UI (With IDs for real-time updates)
+        // 3. RENDER UI (Defaulting to Offline initially)
         // -----------------------------
         let listHtml = `
         <div class="chat-list-container">
@@ -4560,7 +4557,7 @@ window.showInvestorChatList = async function () {
                     ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                     : date.toLocaleDateString();
 
-                // Generate a unique ID for the status dot
+                // Unique ID for the Status Dot
                 const statusDotId = `status-dot-${chat.otherUid}`;
 
                 return `
@@ -4598,37 +4595,40 @@ window.showInvestorChatList = async function () {
         listHtml += `</div>`;
         container.innerHTML = listHtml;
 
-        if (typeof updateNotificationBadge === 'function') {
-            updateNotificationBadge(0);
-        }
-
         // -----------------------------
-        // 5. ATTACH REAL-TIME PRESENCE LISTENERS
+        // 4. ATTACH REAL-TIME PRESENCE LISTENERS
         // -----------------------------
         if (myChats.length > 0) {
+            
+            // Helper function to update the header count
+            const updateOnlineCount = () => {
+                const totalOnline = document.querySelectorAll('.status-online').length;
+                const counterEl = document.getElementById('liveOnlineCounter');
+                if (counterEl) {
+                    counterEl.innerHTML = `<span style="color:${totalOnline ? '#10b981' : '#6b7280'};">●</span> ${totalOnline} Online`;
+                }
+            };
+
             myChats.forEach(chat => {
                 const uid = chat.otherUid;
                 const presenceRef = ref(db, `presence/${uid}`);
 
-                // Subscribe to real-time changes
+                // Real-time listener for THIS specific user
                 const unsubscribe = onValue(presenceRef, (snap) => {
                     const isOnline = snap.exists() && snap.val().online === true;
-                    
-                    // 1. Update the specific dot
+                    console.log(`User ${uid} is ${isOnline ? 'Online' : 'Offline'}`); // Debug log
+
+                    // 1. Find the dot
                     const dotEl = document.getElementById(`status-dot-${uid}`);
                     if (dotEl) {
+                        // 2. Update Class
                         dotEl.className = `status-indicator ${isOnline ? 'status-online' : 'status-offline'}`;
-                    }
-
-                    // 2. Recalculate total "Online" count
-                    const totalOnline = document.querySelectorAll('.status-online').length;
-                    const counterEl = document.getElementById('liveOnlineCounter');
-                    if (counterEl) {
-                        counterEl.innerHTML = `<span style="color:${totalOnline ? '#10b981' : '#6b7280'};">●</span> ${totalOnline} Online`;
+                        // 3. Update Global Counter
+                        updateOnlineCount();
                     }
                 });
 
-                // Store unsubscribe function to clean up later
+                // Store listener so we can clean it up later
                 window.presenceListeners.push(unsubscribe);
             });
         }
