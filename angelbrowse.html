@@ -170,9 +170,9 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             transition: all 0.3s ease;
             cursor: pointer;
-            height: 420px;
-            min-width: 280px;
-            max-width: 280px;
+            height: 460px;
+            min-width: 320px;
+            max-width: 320px;
             position: relative;
             flex-shrink: 0;
         }
@@ -234,14 +234,6 @@
             50% { opacity: 0.6; }
         }
 
-        .sparkle {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, transparent 70%);
-            animation: sparkle 2s ease-in-out infinite;
-        }
-
         @keyframes sparkle {
             0%, 100% { opacity: 0; }
             50% { opacity: 1; }
@@ -295,17 +287,29 @@
             font-weight: 500;
         }
 
-        .reputation-count {
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin: 10px 0 5px;
-            color: #1a1a1a;
+        .stats-container {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin: 10px 0 20px;
         }
 
-        .reputation-label {
-            font-size: 0.8rem;
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-count {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
             color: #444;
-            margin-bottom: 20px;
+            margin-top: 3px;
+            display: block;
         }
 
         .button-group {
@@ -540,7 +544,16 @@
             left: 0;
             right: 0;
             bottom: 0;
-            opacity: 0.3;
+            opacity: 0.2;
+            pointer-events: none;
+        }
+
+        .sparkle {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+            pointer-events: none;
         }
     </style>
 </head>
@@ -610,6 +623,7 @@
         const database = getDatabase(app);
 
         let currentUser = null;
+        let currentUserCategory = null;
         let selectedInvestor = null;
         let selectedApplication = null;
         let allProfiles = {};
@@ -619,6 +633,17 @@
         const loadingMessage = document.getElementById('loadingMessage');
         const rowsContainer = document.getElementById('rowsContainer');
         const searchBox = document.getElementById('searchBox');
+
+        // Helper function to format numbers
+        function formatNumber(num) {
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+            }
+            if (num >= 1000) {
+                return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+            }
+            return num.toString();
+        }
 
         // Category filter buttons
         document.querySelectorAll('.category-pill').forEach(btn => {
@@ -635,14 +660,29 @@
             displayRows();
         });
 
-        onAuthStateChanged(auth, (user) => {
+        onAuthStateChanged(auth, async (user) => {
             if (!user) {
                 window.location.href = 'login2.html';
             } else {
                 currentUser = user;
+                await loadUserCategory();
                 loadAngelProfiles();
             }
         });
+
+        async function loadUserCategory() {
+            try {
+                const startupRef = ref(database, `startupProfiles/${currentUser.uid}`);
+                const snapshot = await get(startupRef);
+                
+                if (snapshot.exists()) {
+                    const profile = snapshot.val();
+                    currentUserCategory = profile.category;
+                }
+            } catch (error) {
+                console.error('Error loading user category:', error);
+            }
+        }
 
         async function loadAngelProfiles() {
             try {
@@ -671,38 +711,48 @@
             const reputation = profile.replyReputation || 0;
             score += reputation * 0.4;
             
-            // Pitched count (20% weight) - more pitched = higher score
+            // Pitched count (20% weight)
             const pitchedCount = profile.PitchedCount || 0;
             score += pitchedCount * 0.2;
+
+            // Category matching bonus (2x multiplier)
+            if (currentUserCategory && profile.preferredCategories) {
+                const preferredCats = Array.isArray(profile.preferredCategories) 
+                    ? profile.preferredCategories 
+                    : [];
+                
+                if (preferredCats.includes(currentUserCategory)) {
+                    score *= 2; // 2x multiplier for matching categories
+                }
+            }
             
-            // New user boost (within 24 hours of launch)
+            // New user boost
             if (profile.launchedAt) {
                 const launchedTime = new Date(profile.launchedAt).getTime();
                 const hoursSinceLaunch = (now - launchedTime) / (1000 * 60 * 60);
                 
                 if (hoursSinceLaunch < 24) {
-                    score += 500; // First day boost
+                    score += 500;
                 }
             }
             
-            // Activity boost (last updated recently)
+            // Activity boost
             if (profile.lastUpdated) {
                 const lastUpdate = new Date(profile.lastUpdated).getTime();
                 const minutesSinceUpdate = (now - lastUpdate) / (1000 * 60);
                 
-                // Boost based on recent activity
                 if (minutesSinceUpdate < 10) {
-                    score += 200; // Very recent (1 minute boost)
+                    score += 200;
                 } else if (minutesSinceUpdate < 120) {
-                    score += 100; // Medium boost (active in last 2 hours)
+                    score += 100;
                 }
             }
             
-            // Trending boost - reputation gain momentum (simulated by recent pitched count)
+            // Trending boost
             const trendingScore = (pitchedCount * 0.5) + (reputation * 0.0001);
             score += trendingScore * 10;
             
-            // Randomization factor (10% variance) to prevent same order every time
+            // Randomization factor
             const randomFactor = Math.random() * 0.1 * score;
             score += randomFactor;
             
@@ -714,27 +764,23 @@
             const reputation = profile.replyReputation || 0;
             const now = Date.now();
             
-            // Featured: High reputation + high activity
             if (reputation >= 5000 && score > 3000) {
                 return 'featured';
             }
             
-            // Trending: Growing reputation or high recent activity
             const pitchedCount = profile.PitchedCount || 0;
             if (pitchedCount > 50 || (reputation >= 1000 && score > 1500)) {
                 return 'trending';
             }
             
-            // New: Launched within last 7 days
             if (profile.launchedAt) {
                 const launchedTime = new Date(profile.launchedAt).getTime();
                 const hoursSinceLaunch = (now - launchedTime) / (1000 * 60 * 60);
-                if (hoursSinceLaunch < 168) { // 7 days
+                if (hoursSinceLaunch < 168) {
                     return 'new';
                 }
             }
             
-            // Active: Recently updated
             if (profile.lastUpdated) {
                 const lastUpdate = new Date(profile.lastUpdated).getTime();
                 const minutesSinceUpdate = (now - lastUpdate) / (1000 * 60);
@@ -748,15 +794,12 @@
 
         function filterAndSortProfiles() {
             let filtered = Object.entries(allProfiles).filter(([userId, profile]) => {
-                // Only show "Live" status profiles
                 if (profile.status !== 'Live') return false;
                 
-                // Category filter
                 if (selectedCategory !== 'All' && profile.investorType !== selectedCategory) {
                     return false;
                 }
                 
-                // Search filter
                 if (searchTerm) {
                     const fullName = (profile.fullName || '').toLowerCase();
                     const userID = (profile.userID || '').toLowerCase();
@@ -770,7 +813,6 @@
                 return true;
             });
 
-            // Calculate scores for all profiles
             filtered = filtered.map(([userId, profile]) => ({
                 userId,
                 profile,
@@ -791,7 +833,6 @@
                 return;
             }
 
-            // Group by category
             const categories = {
                 featured: [],
                 trending: [],
@@ -804,7 +845,6 @@
                 categories[item.category].push(item);
             });
 
-            // Create rows for each category
             const rowConfig = [
                 { key: 'featured', title: 'Featured Investors', badge: 'Featured', badgeClass: 'badge-featured' },
                 { key: 'trending', title: 'Trending Now', badge: 'Trending', badgeClass: 'badge-trending' },
@@ -819,23 +859,18 @@
                 }
             });
 
-            // Add regular profiles in multiple rows
             const regularProfiles = [...categories.regular, ...profiles.filter(p => p.category === 'regular')];
             if (regularProfiles.length > 0) {
-                // Sort regular profiles by score
                 regularProfiles.sort((a, b) => b.score - a.score);
                 
-                // Create multiple rows for regular profiles (10 per row)
                 for (let i = 0; i < Math.min(10, Math.ceil(regularProfiles.length / 10)); i++) {
                     const start = i * 10;
                     const rowProfiles = regularProfiles.slice(start, start + 10);
                     
-                    // Ensure 3 out of 10 are lower-scored or new profiles for diversity
                     const sortedByScore = [...rowProfiles].sort((a, b) => b.score - a.score);
                     const highScorers = sortedByScore.slice(0, 7);
                     const lowerScorers = sortedByScore.slice(7);
                     
-                    // Mix them for variety
                     const mixedRow = [];
                     for (let j = 0; j < 10; j++) {
                         if (j % 3 === 2 && lowerScorers.length > 0) {
@@ -886,17 +921,20 @@
             const photoURL = profile.photoURL || 'https://via.placeholder.com/90';
             const fullName = profile.fullName || 'Anonymous Investor';
             const replyReputation = profile.replyReputation || 0;
+            const pitchedCount = profile.PitchedCount || 0;
             const investorType = profile.investorType || 'Investor';
 
-            const tier = getTierInfo(replyReputation);
+            // Use max of reputation or pitched count for tier
+            const maxMetric = Math.max(replyReputation, pitchedCount);
+            const tier = getTierInfo(maxMetric);
 
-            if (replyReputation >= 500) {
+            if (maxMetric >= 500) {
                 card.style.background = tier.cardBackground;
                 card.style.animation = tier.animation;
             }
 
             card.innerHTML = `
-                <div class="card-header" ${replyReputation >= 500 ? '' : `style="background: ${tier.headerColor};"`}>
+                <div class="card-header" ${maxMetric >= 500 ? `style="background: ${tier.headerColor};"` : `style="background: ${tier.headerColor};"`}>
                     ${tier.decorations}
                 </div>
                 <div class="profile-photo-container">
@@ -905,8 +943,16 @@
                 <div class="card-body">
                     <div class="investor-name">${fullName}</div>
                     <div class="investor-type">${investorType}</div>
-                    <div class="reputation-count">${replyReputation}</div>
-                    <div class="reputation-label">Reply Reputation</div>
+                    <div class="stats-container">
+                        <div class="stat-item">
+                            <span class="stat-count">${formatNumber(replyReputation)}</span>
+                            <span class="stat-label">Reputation</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-count">${formatNumber(pitchedCount)}</span>
+                            <span class="stat-label">Pitched</span>
+                        </div>
+                    </div>
                     <div class="button-group">
                         <button class="pill-button pitch-button" onclick="event.stopPropagation(); handlePitchPage('${userId}')">Pitch</button>
                         <button class="pill-button view-profile-button" onclick="event.stopPropagation(); handleViewProfilePage('${userId}')">View Profile</button>
@@ -917,10 +963,10 @@
             return card;
         }
 
-        function getTierInfo(reputation) {
-            if (reputation >= 100000) {
+        function getTierInfo(metric) {
+            if (metric >= 100000) {
                 return {
-                    headerColor: 'transparent',
+                    headerColor: 'linear-gradient(135deg, #FFD700 0%, #FFA500 30%, #FF4500 60%, #DC143C 100%)',
                     cardBackground: 'linear-gradient(135deg, #FFD700 0%, #FFA500 30%, #FF4500 60%, #DC143C 100%)',
                     animation: 'pulse 3s ease-in-out infinite, glow 2s ease-in-out infinite',
                     decorations: `
@@ -929,12 +975,12 @@
                         <div class="title-badge" style="background: linear-gradient(135deg, #FFD700, #FFA500); color: #000;">DIVINE EMPEROR</div>
                         <div class="scepter-icon" style="left: 15px;">🔱</div>
                         <div class="scepter-icon">⚜️</div>
-                        <div class="aura-effect" style="background: radial-gradient(circle, rgba(255,215,0,0.6), transparent);"></div>
+                        <div class="aura-effect" style="background: radial-gradient(circle at center, rgba(255,215,0,0.3), transparent 60%);"></div>
                     `
                 };
-            } else if (reputation >= 50000) {
+            } else if (metric >= 50000) {
                 return {
-                    headerColor: 'transparent',
+                    headerColor: 'linear-gradient(135deg, #FFD700 0%, #FF69B4 40%, #9370DB 80%, #4169E1 100%)',
                     cardBackground: 'linear-gradient(135deg, #FFD700 0%, #FF69B4 40%, #9370DB 80%, #4169E1 100%)',
                     animation: 'glow 2.5s ease-in-out infinite',
                     decorations: `
@@ -943,12 +989,12 @@
                         <div class="title-badge" style="background: linear-gradient(135deg, #FFD700, #FF69B4); color: #000;">LEGENDARY MONARCH</div>
                         <div class="scepter-icon" style="left: 15px;">⚜️</div>
                         <div class="scepter-icon">🏆</div>
-                        <div class="aura-effect" style="background: radial-gradient(circle, rgba(255,215,0,0.5), transparent);"></div>
+                        <div class="aura-effect" style="background: radial-gradient(circle at center, rgba(255,215,0,0.3), transparent 60%);"></div>
                     `
                 };
-            } else if (reputation >= 25000) {
+            } else if (metric >= 25000) {
                 return {
-                    headerColor: 'transparent',
+                    headerColor: 'linear-gradient(135deg, #FF1493 0%, #9370DB 50%, #FFD700 100%)',
                     cardBackground: 'linear-gradient(135deg, #FF1493 0%, #9370DB 50%, #FFD700 100%)',
                     animation: 'glow 3s ease-in-out infinite',
                     decorations: `
@@ -956,24 +1002,24 @@
                         <div class="title-badge" style="background: linear-gradient(135deg, #FF1493, #9370DB); color: #fff;">SUPREME RULER</div>
                         <div class="scepter-icon" style="left: 15px;">💎</div>
                         <div class="scepter-icon">🏆</div>
-                        <div class="aura-effect" style="background: radial-gradient(circle, rgba(255,20,147,0.4), transparent);"></div>
+                        <div class="aura-effect" style="background: radial-gradient(circle at center, rgba(255,20,147,0.25), transparent 60%);"></div>
                     `
                 };
-            } else if (reputation >= 10000) {
+            } else if (metric >= 10000) {
                 return {
-                    headerColor: 'transparent',
+                    headerColor: 'linear-gradient(135deg, #4169E1 0%, #FFD700 50%, #4169E1 100%)',
                     cardBackground: 'linear-gradient(135deg, #4169E1 0%, #FFD700 50%, #4169E1 100%)',
                     animation: 'glow 3s ease-in-out infinite',
                     decorations: `
                         <div class="crown-icon" style="font-size: 2.8rem;">👑</div>
                         <div class="title-badge" style="background: linear-gradient(135deg, #4169E1, #FFD700); color: #fff;">DIAMOND KING</div>
                         <div class="scepter-icon">💎</div>
-                        <div class="aura-effect" style="background: radial-gradient(circle, rgba(65,105,225,0.4), transparent);"></div>
+                        <div class="aura-effect" style="background: radial-gradient(circle at center, rgba(65,105,225,0.25), transparent 60%);"></div>
                     `
                 };
-            } else if (reputation >= 5000) {
+            } else if (metric >= 5000) {
                 return {
-                    headerColor: 'transparent',
+                    headerColor: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
                     cardBackground: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
                     animation: 'glow 3s ease-in-out infinite',
                     decorations: `
@@ -982,9 +1028,9 @@
                         <div class="scepter-icon">⭐</div>
                     `
                 };
-            } else if (reputation >= 2500) {
+            } else if (metric >= 2500) {
                 return {
-                    headerColor: 'transparent',
+                    headerColor: 'linear-gradient(135deg, #FFD700 0%, #DAA520 100%)',
                     cardBackground: 'linear-gradient(135deg, #FFD700 0%, #DAA520 100%)',
                     animation: 'glow 3s ease-in-out infinite',
                     decorations: `
@@ -993,9 +1039,9 @@
                         <div class="scepter-icon">✨</div>
                     `
                 };
-            } else if (reputation >= 1000) {
+            } else if (metric >= 1000) {
                 return {
-                    headerColor: 'transparent',
+                    headerColor: 'linear-gradient(135deg, #FFD700 0%, #B8860B 100%)',
                     cardBackground: 'linear-gradient(135deg, #FFD700 0%, #B8860B 100%)',
                     animation: 'glow 3s ease-in-out infinite',
                     decorations: `
@@ -1003,9 +1049,9 @@
                         <div class="title-badge" style="background: #FFD700; color: #000;">GOLD DUKE</div>
                     `
                 };
-            } else if (reputation >= 500) {
+            } else if (metric >= 500) {
                 return {
-                    headerColor: 'transparent',
+                    headerColor: 'linear-gradient(135deg, #FFD700 0%, #8B4513 100%)',
                     cardBackground: 'linear-gradient(135deg, #FFD700 0%, #8B4513 100%)',
                     animation: 'glow 3s ease-in-out infinite',
                     decorations: `
@@ -1013,42 +1059,42 @@
                         <div class="title-badge" style="background: #FFD700; color: #000;">REAL ANGEL</div>
                     `
                 };
-            } else if (reputation >= 400) {
+            } else if (metric >= 400) {
                 return {
                     headerColor: 'linear-gradient(135deg, #FFD700 0%, #DAA520 100%)',
                     decorations: `<div class="title-badge" style="background: #FFD700; color: #000;">Golden Elite</div>`
                 };
-            } else if (reputation >= 350) {
+            } else if (metric >= 350) {
                 return {
                     headerColor: 'linear-gradient(135deg, #C0C0C0 0%, #E8E8E8 100%)',
                     decorations: `<div class="title-badge" style="background: #C0C0C0; color: #000;">Silver Master</div>`
                 };
-            } else if (reputation >= 300) {
+            } else if (metric >= 300) {
                 return {
                     headerColor: 'linear-gradient(135deg, #2C2C2C 0%, #1a1a1a 100%)',
                     decorations: `<div class="title-badge" style="background: #2C2C2C; color: #fff;">Black Diamond</div>`
                 };
-            } else if (reputation >= 250) {
+            } else if (metric >= 250) {
                 return {
                     headerColor: 'linear-gradient(135deg, #8B4513 0%, #A0522D 100%)',
                     decorations: `<div class="title-badge" style="background: #8B4513; color: #fff;">Bronze Titan</div>`
                 };
-            } else if (reputation >= 200) {
+            } else if (metric >= 200) {
                 return {
                     headerColor: 'linear-gradient(135deg, #FF69B4 0%, #FFB6C1 100%)',
                     decorations: `<div class="title-badge" style="background: #FF69B4; color: #fff;">Pink Champion</div>`
                 };
-            } else if (reputation >= 150) {
+            } else if (metric >= 150) {
                 return {
                     headerColor: 'linear-gradient(135deg, #FFD700 0%, #FFED4E 100%)',
                     decorations: `<div class="title-badge" style="background: #FFD700; color: #000;">Yellow Knight</div>`
                 };
-            } else if (reputation >= 100) {
+            } else if (metric >= 100) {
                 return {
                     headerColor: 'linear-gradient(135deg, #DC143C 0%, #8B0000 100%)',
                     decorations: `<div class="title-badge" style="background: #DC143C; color: #fff;">Red Warrior</div>`
                 };
-            } else if (reputation >= 50) {
+            } else if (metric >= 50) {
                 return {
                     headerColor: 'linear-gradient(135deg, #800080 0%, #9932CC 100%)',
                     decorations: `<div class="title-badge" style="background: #800080; color: #fff;">Purple Hero</div>`
@@ -1116,7 +1162,12 @@
                 
                 <div class="profile-detail">
                     <strong>Reply Reputation</strong>
-                    <div>${profile.replyReputation || 0}</div>
+                    <div>${formatNumber(profile.replyReputation || 0)}</div>
+                </div>
+
+                <div class="profile-detail">
+                    <strong>Pitched Count</strong>
+                    <div>${formatNumber(profile.PitchedCount || 0)}</div>
                 </div>
                 
                 <div class="profile-detail">
