@@ -250,20 +250,23 @@
         });
     }
 
-    async function viewApplication(appId) {
-        document.getElementById('inboxView').style.display = 'none';
-        document.getElementById('applicationDetail').style.display = 'block';
-        const contentDiv = document.getElementById('appContent');
-        contentDiv.innerHTML = '<div class="loader"></div>';
+   async function viewApplication(appId) {
+    document.getElementById('inboxView').style.display = 'none';
+    document.getElementById('applicationDetail').style.display = 'block';
+    const contentDiv = document.getElementById('appContent');
+    contentDiv.innerHTML = '<div class="loader"></div>';
 
+    try {
+        // 1. Get pitch metadata from inbox
         const inboxSnap = await get(ref(db, `investorInbox/${auth.currentUser.uid}/${appId}`));
         if (!inboxSnap.exists()) return;
         const pitch = inboxSnap.val();
-        currentApp = pitch;
+        const founderUid = pitch.founderId;
 
+        // 2. Fetch App and Startup Profile
         const [appSnap, startupSnap] = await Promise.all([
-            get(ref(db, `Applications/${pitch.founderId}/${appId}`)),
-            get(ref(db, `startupProfile/${pitch.founderId}`))
+            get(ref(db, `Applications/${founderUid}/${appId}`)),
+            get(ref(db, `startupProfile/${founderUid}`))
         ]);
 
         const aData = appSnap.val() || {};
@@ -274,22 +277,60 @@
                 <img src="${sData.logo || 'https://via.placeholder.com/100'}" style="width:100px; height:100px; border-radius:12px; object-fit:cover; border:1px solid #ddd;">
                 <div>
                     <h1 style="margin:0; font-size:2.5rem; color:#000;">${sData.startupName || pitch.startupName}</h1>
-                    <p style="color:#00CED1; font-weight:800; margin-top:5px; text-transform:uppercase; letter-spacing:1px;">Founder: ${pitch.founderName}</p>
+                    <p style="color:#00CED1; font-weight:800; margin-top:5px; text-transform:uppercase; letter-spacing:1px;">Application for Funding</p>
                 </div>
             </div>
+
             <div style="padding: 40px;">
-                <div style="background:#000; padding:20px 30px; border-radius:12px; display:inline-block; margin-bottom:30px;">
+                <div style="background:#000; padding:20px 30px; border-radius:12px; display:inline-block; margin-bottom:35px; width: 100%; box-sizing: border-box;">
                     <small style="color:#555; font-weight:900; letter-spacing:2px; display:block; margin-bottom:10px;">PITCH HOOK</small>
                     <p style="font-size:1.5rem; font-style:italic; margin:0; color:#00CED1; font-weight:300;">"${aData.appHook || pitch.vestHook}"</p>
                 </div>
                 
-                <div style="margin-top:20px; line-height:1.8; color:#333; font-size:1.1rem;">
-                    <h4 style="border-bottom: 2px solid #f0f0f0; padding-bottom:15px; color:#000; font-weight:900; letter-spacing:1px;">EXECUTIVE SUMMARY</h4>
-                    <p style="white-space: pre-wrap; padding-top:10px;">${aData.mainContent || 'The founder has not provided a summary for this specific application.'}</p>
+                <div style="background: #fdfdfd; border: 1px solid #eee; padding: 40px; border-radius: 4px; line-height: 1.8; color: #333; font-size: 1.1rem; box-shadow: inset 0 0 10px rgba(0,0,0,0.02);">
+                    
+                    <h4 style="color:#000; font-weight:900; border-bottom: 2px solid #000; padding-bottom:10px; margin-bottom:20px; letter-spacing:1px;">EXECUTIVE PROPOSAL</h4>
+
+                    <div class="app-section">
+                        <p style="white-space: pre-wrap;">${aData.startingContent || ''}</p>
+                    </div>
+
+                    <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
+
+                    <div class="app-section">
+                        <p style="white-space: pre-wrap;">${aData.mainContent || ''}</p>
+                    </div>
+
+                    <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
+
+                    <div class="app-section">
+                        <p style="white-space: pre-wrap;">${aData.endingContent || ''}</p>
+                    </div>
+
+                    <div style="margin-top: 50px; border-top: 1px solid #333; padding-top: 20px;">
+                        <p style="margin:0; font-weight:700; color:#000;">Best Regards,</p>
+                        <p style="margin:0; font-size: 1.2rem; color:#00CED1; font-weight:800; text-transform: uppercase;">${aData.founderName || pitch.founderName}</p>
+                    </div>
+                </div>
+
+                <div style="margin-top: 30px; background: #f0f0f0; padding: 15px; border-radius: 8px; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 12px; font-weight: 900; color: #666;">ATTACHED:</span>
+                    <a href="https://upscalevest.site/vest-details.html?id=${aData.vestId}&owner=${founderUid}" 
+                       target="_blank" 
+                       style="color: #000; font-weight: 700; text-decoration: underline; font-size: 0.95rem;">
+                       ${sData.startupName || 'Startup'} Vest Profile
+                    </a>
                 </div>
             </div>
         `;
+
+        currentApp = { appId: appId, founderId: founderUid };
+
+    } catch (error) {
+        console.error("Error loading application:", error);
+        contentDiv.innerHTML = "<p style='color:red; text-align:center;'>Failed to load startup profile details.</p>";
     }
+}
 
     window.deletePitch = async (appId) => {
         if(confirm("Permanently archive this application?")) {
