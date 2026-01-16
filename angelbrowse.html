@@ -872,7 +872,7 @@
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
         import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
 import { getDatabase, ref, get, set, update, increment } from import { getDatabase, ref, get, set, update, increment, onValue } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
-
+import { serverTimestamp, onDisconnect, runTransaction } from "firebase/database";
         const firebaseConfig = {
             apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
             authDomain: "scalevest-163a0.firebaseapp.com",
@@ -887,6 +887,61 @@ import { getDatabase, ref, get, set, update, increment } from import { getDataba
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const database = getDatabase(app);
+
+async function setUserPresence(user) {
+    // 1. Manage Real-time Presence
+    const presenceRef = ref(db, `presence/${user.uid}`);
+    set(presenceRef, { 
+        online: true, 
+        lastSeen: serverTimestamp() 
+    });
+    
+    // Ensure they show as offline when they disconnect
+    onDisconnect(presenceRef).set({ 
+        online: false, 
+        lastSeen: serverTimestamp() 
+    });
+
+    // 2. Update Login Stats (Streak & Today's Status)
+    const statsRef = ref(db, `users/${user.uid}/stats`);
+    
+    try {
+        await runTransaction(statsRef, (currentData) => {
+            const now = new Date();
+            const todayStr = now.toISOString().split('T')[0]; // e.g., "2026-01-16"
+            
+            if (!currentData) {
+                return { todayLogin: true, loginStreak: 1, lastLoginDate: todayStr };
+            }
+
+            // If they already logged in today, don't change the streak
+            if (currentData.lastLoginDate === todayStr) {
+                return { ...currentData, todayLogin: true };
+            }
+
+            // Check if they logged in yesterday to continue the streak
+            const yesterday = new Date();
+            yesterday.setDate(now.getDate() - 1);
+            const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+            let newStreak = currentData.loginStreak || 0;
+            if (currentData.lastLoginDate === yesterdayStr) {
+                newStreak += 1;
+            } else {
+                newStreak = 1; // Streak broken, reset to 1
+            }
+
+            return {
+                todayLogin: true,
+                loginStreak: newStreak,
+                lastLoginDate: todayStr
+            };
+        });
+    } catch (error) {
+        console.error("Streak update failed:", error);
+    }
+}
+
 
         let currentUser = null;
         let currentUserCategory = null;
@@ -1298,6 +1353,7 @@ searchBox.addEventListener('input', (e) => {
                  await loadFounderBehavior(); 
                 loadAngelProfiles();
                  loadOnlineStatus();
+                 setUserPresence(user);
                  startBrowseTimeTracking();
             }
         });
@@ -1345,13 +1401,24 @@ async function loadOnlineStatus() {
             if (snapshot.exists()) {
                 const presenceData = snapshot.val();
                 
-                // Update our online status map
+                // Update our online status map with FULL presence data
                 Object.keys(presenceData).forEach(userId => {
                     const userPresence = presenceData[userId];
-                    onlineStatusMap[userId] = userPresence.online === true;
+                    
+                    onlineStatusMap[userId] = {
+                        online: userPresence.online === true,
+                        todayLogin: userPresence.todayLogin === true, // 🔥 NEW
+                        loginStreak: userPresence.loginStreak || 0,   // 🔥 NEW
+                        lastSeen: userPresence.lastSeen || null       // 🔥 NEW
+                    };
                 });
                 
-                console.log('✅ Online status updated:', Object.keys(onlineStatusMap).filter(id => onlineStatusMap[id]).length, 'users online');
+                const onlineCount = Object.values(onlineStatusMap).filter(p => p.online).length;
+                const todayLoginCount = Object.values(onlineStatusMap).filter(p => p.todayLogin).length;
+                
+                console.log('✅ Presence updated:');
+                console.log(`   🔥 Online NOW: ${onlineCount} investors`);
+                console.log(`   📅 Logged in today: ${todayLoginCount} investors`);
                 
                 // Refresh the display to show updated online status
                 displayRows();
@@ -1361,7 +1428,6 @@ async function loadOnlineStatus() {
         console.error('❌ Error loading online status:', error);
     }
 }
-
 
 
 
@@ -1415,34 +1481,89 @@ function calculateInvestorScore(profile, userId) {
         }
     }
     
-    // **📅 DAILY LOGIN BOOST - Reward consistent activity**
-    if (profile.lastUpdated) {
-        const lastUpdate = new Date(profile.lastUpdated).getTime();
-        const daysSinceUpdate = (now - lastUpdate) / (1000 * 60 * 60 * 24);
-        
-        // If logged in today (within last 24 hours)
-        if (daysSinceUpdate < 1) {
-            score += 25; // Daily boost
-            
-            // SUPER BOOST if online RIGHT NOW (within last hour)
-            const hoursSinceUpdate = (now - lastUpdate) / (1000 * 60 * 60);
-            if (hoursSinceUpdate < 1) {
-                score += 500; // Online NOW boost
-            }
-            
-            // MEGA BOOST if online in last 10 minutes
-            const minutesSinceUpdate = (now - lastUpdate) / (1000 * 60);
-            if (minutesSinceUpdate < 10) {
-                score += 1000; // Super active RIGHT NOW
-            }
-        }
-        
-        // Track login streaks (if you have loginStreak field in profile)
-        if (profile.loginStreak) {
-            const streakBonus = Math.min(profile.loginStreak * 10, 300); // Max +300
-            score += streakBonus;
-        }
+   // ============================================
+// 📅 COMBINED DAILY LOGIN & ONLINE BOOST SYSTEM
+// Uses Firebase Presence (primary) + Profile data (fallback)
+// ============================================
+
+const presenceData = onlineStatusMap[userId] || {};
+
+// **🔥 PRIORITY 1: ONLINE NOW BOOST** (Highest boost)
+let isOnlineNow = false;
+
+// Check Firebase Presence first (most accurate)
+if (presenceData.online === true) {
+    isOnlineNow = true;
+    score += 1500; // 🔥 MEGA BOOST for being online RIGHT NOW
+    console.log(`🔥 ${profile.fullName || 'Investor'} is ONLINE NOW! +1500`);
+}
+// Fallback: Check lastUpdated if presence not available
+else if (profile.lastUpdated) {
+    const lastUpdate = new Date(profile.lastUpdated).getTime();
+    const minutesSinceUpdate = (now - lastUpdate) / (1000 * 60);
+    
+    if (minutesSinceUpdate < 10) {
+        isOnlineNow = true;
+        score += 1000; // MEGA BOOST (slightly less than presence)
+        console.log(`⚡ ${profile.fullName || 'Investor'} active in last 10 min! +1000`);
     }
+}
+
+// **📅 PRIORITY 2: DAILY LOGIN BOOST** (Logged in today)
+let hasDailyLogin = false;
+
+// Check Firebase Presence first
+if (presenceData.todayLogin === true) {
+    hasDailyLogin = true;
+    score += 400; // Daily boost from presence
+    console.log(`📅 ${profile.fullName || 'Investor'} logged in today! +400`);
+}
+// Fallback: Check lastUpdated
+else if (profile.lastUpdated && !isOnlineNow) {
+    const lastUpdate = new Date(profile.lastUpdated).getTime();
+    const daysSinceUpdate = (now - lastUpdate) / (1000 * 60 * 60 * 24);
+    
+    if (daysSinceUpdate < 1) {
+        hasDailyLogin = true;
+        score += 350; // Daily boost (slightly less than presence)
+        console.log(`📅 ${profile.fullName || 'Investor'} logged in today (from profile)! +350`);
+    }
+}
+
+// **⭐ PRIORITY 3: LOGIN STREAK BOOST**
+let loginStreak = 0;
+
+// Check Firebase Presence first
+if (presenceData.loginStreak && presenceData.loginStreak > 0) {
+    loginStreak = presenceData.loginStreak;
+    const streakBonus = Math.min(loginStreak * 10, 300); // Max +300
+    score += streakBonus;
+    console.log(`⭐ ${profile.fullName || 'Investor'} has ${loginStreak} day streak! +${streakBonus}`);
+}
+// Fallback: Check profile
+else if (profile.loginStreak && profile.loginStreak > 0) {
+    loginStreak = profile.loginStreak;
+    const streakBonus = Math.min(loginStreak * 10, 300); // Max +300
+    score += streakBonus;
+    console.log(`⭐ ${profile.fullName || 'Investor'} has ${loginStreak} day streak (from profile)! +${streakBonus}`);
+}
+
+// **🎯 PRIORITY 4: RECENT ACTIVITY BOOST** (For those not online but recently active)
+if (!isOnlineNow && !hasDailyLogin && profile.lastUpdated) {
+    const lastUpdate = new Date(profile.lastUpdated).getTime();
+    const hoursSinceUpdate = (now - lastUpdate) / (1000 * 60 * 60);
+    
+    if (hoursSinceUpdate < 1) {
+        score += 200; // Active in last hour
+        console.log(`⚡ ${profile.fullName || 'Investor'} active in last hour! +200`);
+    } else if (hoursSinceUpdate < 6) {
+        score += 100; // Active in last 6 hours
+        console.log(`📊 ${profile.fullName || 'Investor'} active in last 6 hours! +100`);
+    } else if (hoursSinceUpdate < 24) {
+        score += 50; // Active today
+        console.log(`📊 ${profile.fullName || 'Investor'} active today! +50`);
+    }
+}
     
     // **Trending boost**
     const trendingScore = (pitchedCount * 0.5) + (reputation * 0.0001);
@@ -1564,10 +1685,27 @@ function displayRows() {
         
         // Check online status
 
-let isOnlineNow = onlineStatusMap[item.userId] === true; // Real Firebase presence
-let isDailyActive = false;
+// ============================================
+// ✅ COMBINED: Firebase Presence + Profile Fallback
+// ============================================
 
-if (item.profile.lastUpdated) {
+const presenceData = onlineStatusMap[item.userId] || {};
+
+// **🔥 CHECK ONLINE NOW** (Presence first, then profile fallback)
+let isOnlineNow = presenceData.online === true;
+
+if (!isOnlineNow && item.profile.lastUpdated) {
+    // Fallback: Check if active in last 10 minutes from profile
+    const lastUpdate = new Date(item.profile.lastUpdated).getTime();
+    const minutesSince = (now - lastUpdate) / (1000 * 60);
+    isOnlineNow = minutesSince < 10;
+}
+
+// **📅 CHECK DAILY ACTIVITY** (Presence first, then profile fallback)
+let isDailyActive = presenceData.todayLogin === true;
+
+if (!isDailyActive && item.profile.lastUpdated && !isOnlineNow) {
+    // Fallback: Check if logged in today from profile
     const lastUpdate = new Date(item.profile.lastUpdated).getTime();
     const daysSince = (now - lastUpdate) / (1000 * 60 * 60 * 24);
     isDailyActive = daysSince < 1;
