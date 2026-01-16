@@ -605,54 +605,57 @@
     color: #7dd3fc; /* Light blue */
     letter-spacing: 0.5px;
 }
-/* Card Container Styling */
 .applications-card {
+    position: relative; /* Essential for the bottom box */
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start; /* Align items to top to make room for bottom box */
     background: linear-gradient(135deg, #1a1a1a 0%, #252525 100%);
     border: 1px solid #333;
     padding: 24px;
+    padding-bottom: 50px; /* Add extra padding at bottom for the box */
     border-radius: 16px;
-    transition: transform 0.3s ease, border-color 0.3s ease;
+    transition: all 0.3s ease;
+    min-height: 160px;
 }
 
 .applications-card:hover {
-    transform: translateY(-5px);
     border-color: #00CED1;
+    background: linear-gradient(135deg, #1a1a1a 0%, #202020 100%);
 }
 
-/* The small "Latest Applications" box */
-.latest-badge {
-    display: inline-block;
-    background: rgba(0, 206, 209, 0.15);
-    color: #00CED1;
-    font-size: 10px;
-    font-weight: 800;
+/* The small box at the bottom */
+.latest-badge-bottom {
+    position: absolute;
+    bottom: 20px;
+    left: 24px;
+    background: #00CED1; /* Solid background makes it look like a small box */
+    color: #000; /* Dark text on bright background */
+    font-size: 9px;
+    font-weight: 900;
     letter-spacing: 1px;
     padding: 4px 10px;
-    border-radius: 6px;
-    margin-bottom: 12px;
-    border: 1px solid rgba(0, 206, 209, 0.3);
+    border-radius: 4px;
+    text-transform: uppercase;
 }
 
 .banner-content h3 {
-    font-size: 1.5rem;
+    font-size: 1.6rem;
     margin-bottom: 8px;
     color: #fff;
 }
 
 .banner-content p {
-    color: #aaa;
-    font-size: 0.95rem;
+    color: #888;
+    font-size: 0.9rem;
+    max-width: 80%;
 }
 
-/* Icon Styling */
 .banner-icon svg {
-    width: 50px;
-    height: 50px;
+    width: 45px;
+    height: 45px;
     stroke: #00CED1;
-    opacity: 0.8;
+    opacity: 0.9;
 }
 /* Stat value */
 .stat-val {
@@ -1059,12 +1062,12 @@
             </div>
 
             <!-- Banners -->
-            <div class="banner applications-card" onclick="window.location.href='applications-inbox.html'" style="cursor: pointer;">
+           <div class="banner" onclick="window.location.href='applications-inbox.html'" style="cursor: pointer;">
     <div class="banner-content">
-        <div class="latest-badge">LATEST APPLICATIONS</div>
-        
         <h3>Applications Inbox</h3>
         <p>Review and manage incoming funding requests from founders and startups.</p>
+        
+        <div class="latest-badge-bottom">LATEST APPLICATIONS</div>
     </div>
     <div class="banner-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
