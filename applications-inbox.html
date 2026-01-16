@@ -221,34 +221,6 @@
         }
     });
 
-    // --- LOAD INBOX ---
-    function loadInbox() {
-        const inboxRef = ref(db, `investorInbox/${auth.currentUser.uid}`);
-        onValue(inboxRef, (snapshot) => {
-            const list = document.getElementById('inboxList');
-            list.innerHTML = "";
-            if (!snapshot.exists()) return list.innerHTML = "<p style='color:#666; text-align:center;'>No pitches in your inbox.</p>";
-
-            const data = Object.entries(snapshot.val()).sort((a,b) => b[1].timestamp - a[1].timestamp);
-            data.forEach(([key, pitch]) => {
-                const card = document.createElement('div');
-                card.className = 'pitch-card';
-                card.innerHTML = `
-                    <div class="card-info" onclick="window.location.hash='view_application_${pitch.appId}'">
-                        <span class="time-tag">${formatTime(pitch.timestamp)}</span>
-                        <h3>${pitch.startupName}</h3>
-                        <p>from ${pitch.founderName}</p>
-                    </div>
-                    <button class="delete-btn" onclick="deletePitch('${pitch.appId}')">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path></svg>
-                    </button>
-                `;
-                list.appendChild(card);
-            });
-        });
-    }
-
-    // --- VIEW APPLICATION ---
    // --- LOAD INBOX LIST WITH REAL STARTUP NAMES ---
 function loadInbox() {
     const inboxRef = ref(db, `investorInbox/${auth.currentUser.uid}`);
@@ -305,6 +277,7 @@ function loadInbox() {
     });
 }
 
+   
     // --- ACTIONS ---
     window.deletePitch = async (appId) => {
         if (confirm("Delete this application from your inbox?")) {
