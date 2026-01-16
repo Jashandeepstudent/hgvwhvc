@@ -249,44 +249,87 @@
     }
 
     // --- VIEW APPLICATION ---
-    async function viewApplication(appId) {
-        document.getElementById('inboxView').style.display = 'none';
-        document.getElementById('applicationDetail').style.display = 'block';
-        document.getElementById('appContent').innerHTML = '<div class="loader"></div>';
+   // --- VIEW SINGLE APPLICATION ---
+async function viewApplication(appId) {
+    document.getElementById('inboxView').style.display = 'none';
+    document.getElementById('applicationDetail').style.display = 'block';
+    
+    const appContentDiv = document.getElementById('appContent');
+    appContentDiv.innerHTML = '<div class="loader"></div>'; // Show loading animation
 
+    try {
+        // 1. Get the Pitch metadata from the investor's inbox
         const inboxSnap = await get(ref(db, `investorInbox/${auth.currentUser.uid}/${appId}`));
         if (!inboxSnap.exists()) return;
         const pitchData = inboxSnap.val();
-        currentApp = pitchData;
+        
+        // Use the founderId stored in the pitch to find their profile
+        const founderUid = pitchData.founderId;
 
-        // Chain fetch App and Vest details
-        const [appSnap, vestSnap] = await Promise.all([
-            get(ref(db, `Applications/${pitchData.founderId}/${appId}`)),
-            get(ref(db, `Vests/${pitchData.founderId}/${pitchData.vestId || ''}`))
+        // 2. FETCH REAL STARTUP DATA FROM startupProfile NODE
+        // This targets: https://scalevest-163a0-default-rtdb.firebaseio.com/startupProfile/FOUNDER_ID
+        const [appSnap, startupSnap] = await Promise.all([
+            get(ref(db, `Applications/${founderUid}/${appId}`)),
+            get(ref(db, `startupProfile/${founderUid}`))
         ]);
 
         const appData = appSnap.exists() ? appSnap.val() : {};
-        const vestData = vestSnap.exists() ? vestSnap.val() : {};
-        const startup = vestData.StartupDetails || {};
+        const startup = startupSnap.exists() ? startupSnap.val() : {};
 
-        document.getElementById('appContent').innerHTML = `
-            <div class="startup-header">
-                <img src="${startup.logoUrl || 'https://via.placeholder.com/80'}" class="startup-logo">
+        // Use data from startupProfile (logo and startupName)
+        const logoUrl = startup.logo || 'https://via.placeholder.com/80';
+        const realStartupName = startup.startupName || "Unnamed Startup";
+
+        appContentDiv.innerHTML = `
+            <div class="startup-header" style="display: flex; align-items: center; gap: 20px; background: rgba(255,255,255,0.03); padding: 25px; border-radius: 15px;">
+                <img src="${logoUrl}" class="startup-logo" style="width: 80px; height: 80px; border-radius: 12px; object-fit: cover; border: 2px solid var(--primary);">
                 <div>
-                    <h1 style="margin:0">${startup.startupName || pitchData.startupName}</h1>
-                    <p style="color:var(--primary)">Pitched by ${pitchData.founderName}</p>
+                    <h1 style="margin: 0; font-size: 1.8rem;">${realStartupName}</h1>
+                    <p style="margin: 5px 0 0; color: var(--primary); font-weight: 600;">Founder: ${appData.founderName || 'ScaleVest User'}</p>
                 </div>
             </div>
-            <div style="background:#111; padding:25px; border-radius:15px; border-left:4px solid var(--primary)">
-                <h4 style="margin:0 0 10px; color:#555">THE HOOK</h4>
-                <p style="font-size:1.2rem; font-style:italic; margin:0">"${appData.appHook || pitchData.vestHook}"</p>
+
+            <div style="margin-top: 30px; background: #111; padding: 20px; border-radius: 12px; border-left: 4px solid var(--primary);">
+                <h4 style="margin: 0 0 10px; color: #555; font-size: 0.7rem; letter-spacing: 1px;">PITCH HOOK</h4>
+                <p style="font-size: 1.1rem; font-style: italic; margin: 0;">"${appData.appHook || 'No hook provided'}"</p>
             </div>
-            <div style="margin-top:30px; line-height:1.8; color:#ccc">
-                <h4>Executive Summary</h4>
-                <p>${appData.mainContent || 'No description provided.'}</p>
+
+            <div style="margin-top: 30px; line-height: 1.8; color: #ccc;">
+                <h4 style="border-bottom: 1px solid #333; padding-bottom: 10px;">Executive Summary</h4>
+                <p style="white-space: pre-wrap;">${appData.mainContent || 'No description provided.'}</p>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px;">
+                    <div style="background: #000; padding: 15px; border-radius: 8px;">
+                        <small style="color: #666; display: block; margin-bottom: 5px;">Starting Point</small>
+                        <p style="margin:0; font-size: 0.9rem;">${appData.startingContent || '...'}</p>
+                    </div>
+                    <div style="background: #000; padding: 15px; border-radius: 8px;">
+                        <small style="color: #666; display: block; margin-bottom: 5px;">Call to Action</small>
+                        <p style="margin:0; font-size: 0.9rem;">${appData.endingContent || '...'}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 40px; text-align: center;">
+                <a href="https://upscalevest.site/vest-details.html?id=${appData.vestId}&owner=${founderUid}" 
+                   target="_blank" 
+                   style="display: inline-block; padding: 12px 30px; background: var(--primary); color: #000; text-decoration: none; border-radius: 30px; font-weight: bold; transition: 0.3s;">
+                   Launch Full Vest Details →
+                </a>
             </div>
         `;
+
+        // Update currentApp global for the reply system
+        currentApp = {
+            appId: appId,
+            founderId: founderUid
+        };
+
+    } catch (error) {
+        console.error("Error loading application:", error);
+        appContentDiv.innerHTML = "<p style='color:red; text-align:center;'>Failed to load startup profile details.</p>";
     }
+}
 
     // --- ACTIONS ---
     window.deletePitch = async (appId) => {
