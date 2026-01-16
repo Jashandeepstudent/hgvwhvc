@@ -6085,12 +6085,12 @@ function handleHashChange() {
         } 
 // Inside handleHashChange function
 else if (hash === 'application_replies') {
+    console.log("Routing to Application Replies..."); // Debug log
     document.body.style.background = "#000";
-    // Explicitly call the function
     if (typeof window.showApplicationReplies === 'function') {
         window.showApplicationReplies();
     } else {
-        console.error("showApplicationReplies is not defined");
+        console.error("Critical Error: window.showApplicationReplies function not found!");
     }
 }
         else if (hash.startsWith('view_application_')) {
