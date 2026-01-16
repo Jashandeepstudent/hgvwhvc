@@ -1718,7 +1718,7 @@ if (!isDailyActive && item.profile.lastUpdated && !isOnlineNow) {
         categories.onlineNow.sort((a, b) => b.score - a.score);
         createRow(
             categories.onlineNow.slice(0, 20), 
-            '🔥 Investors Online RIGHT NOW', 
+            '🔥 Active Now', 
             'Live', 
             'badge-featured'
         );
@@ -1729,7 +1729,7 @@ if (!isDailyActive && item.profile.lastUpdated && !isOnlineNow) {
         categories.suiMatch.sort((a, b) => b.score - a.score);
         createRow(
             categories.suiMatch.slice(0, 20), 
-            `🎯 Perfect Matches: ${currentUserCategory || 'Your Category'}`, 
+            `🎯  Perfect Match: ${currentUserCategory || 'Your Category'}`, 
             'SUI Match', 
             'badge-featured'
         );
@@ -1740,7 +1740,7 @@ if (!isDailyActive && item.profile.lastUpdated && !isOnlineNow) {
         categories.dailyActive.sort((a, b) => b.score - a.score);
         createRow(
             categories.dailyActive.slice(0, 15), 
-            '⚡ Active Today - Daily Boost', 
+            '⚡ Active Today', 
             'Active', 
             'badge-active'
         );
@@ -1754,7 +1754,7 @@ if (!isDailyActive && item.profile.lastUpdated && !isOnlineNow) {
             categories.matchingPattern.sort((a, b) => b.score - a.score);
             createRow(
                 categories.matchingPattern.slice(0, 15), 
-                `🤖 AI Picked for You (${Math.round(learningConfidence)}% Confidence)`, 
+                `🤖 Picked for You (${Math.round(learningConfidence)}% Confidence)`, 
                 'AI Match', 
                 'badge-trending'
             );
@@ -1811,7 +1811,7 @@ if (!isDailyActive && item.profile.lastUpdated && !isOnlineNow) {
                         categoryInvestors.sort((a, b) => b.score - a.score);
                         createRow(
                             categoryInvestors.slice(0, 10),
-                            `📂 Top ${preferredCat} Investors You Like`,
+                            `📂 Top in ${preferredCat} `,
                             'AI Learned',
                             'badge-new'
                         );
@@ -1826,7 +1826,7 @@ if (!isDailyActive && item.profile.lastUpdated && !isOnlineNow) {
         categories.highReputation.sort((a, b) => b.score - a.score);
         createRow(
             categories.highReputation.slice(0, 10), 
-            '💎 Elite Investors (500+ Reply Reputation)', 
+            '💎 Elite Investors', 
             'Elite', 
             'badge-featured'
         );
