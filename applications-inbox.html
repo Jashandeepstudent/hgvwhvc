@@ -249,86 +249,60 @@
     }
 
     // --- VIEW APPLICATION ---
-   // --- VIEW SINGLE APPLICATION ---
-async function viewApplication(appId) {
-    document.getElementById('inboxView').style.display = 'none';
-    document.getElementById('applicationDetail').style.display = 'block';
+   // --- LOAD INBOX LIST WITH REAL STARTUP NAMES ---
+function loadInbox() {
+    const inboxRef = ref(db, `investorInbox/${auth.currentUser.uid}`);
     
-    const appContentDiv = document.getElementById('appContent');
-    appContentDiv.innerHTML = '<div class="loader"></div>'; // Show loading animation
+    // Listen for changes in the investor's inbox
+    onValue(inboxRef, async (snapshot) => {
+        const listDiv = document.getElementById('inboxList');
+        if (!snapshot.exists()) {
+            listDiv.innerHTML = "<p style='color:#666; text-align:center;'>No applications received yet.</p>";
+            return;
+        }
 
-    try {
-        // 1. Get the Pitch metadata from the investor's inbox
-        const inboxSnap = await get(ref(db, `investorInbox/${auth.currentUser.uid}/${appId}`));
-        if (!inboxSnap.exists()) return;
-        const pitchData = inboxSnap.val();
+        const data = snapshot.val();
+        listDiv.innerHTML = "";
         
-        // Use the founderId stored in the pitch to find their profile
-        const founderUid = pitchData.founderId;
+        // Sort by latest timestamp
+        const sortedEntries = Object.entries(data).sort((a, b) => b[1].timestamp - a[1].timestamp);
 
-        // 2. FETCH REAL STARTUP DATA FROM startupProfile NODE
-        // This targets: https://scalevest-163a0-default-rtdb.firebaseio.com/startupProfile/FOUNDER_ID
-        const [appSnap, startupSnap] = await Promise.all([
-            get(ref(db, `Applications/${founderUid}/${appId}`)),
-            get(ref(db, `startupProfile/${founderUid}`))
-        ]);
+        for (const [id, pitch] of sortedEntries) {
+            // FETCH THE REAL STARTUP NAME FROM startupProfile/{founderId}
+            const startupProfileRef = ref(db, `startupProfile/${pitch.founderId}`);
+            const startupSnap = await get(startupProfileRef);
+            
+            let displayStartupName = "Unnamed Startup";
+            let displayLogo = "https://via.placeholder.com/50";
 
-        const appData = appSnap.exists() ? appSnap.val() : {};
-        const startup = startupSnap.exists() ? startupSnap.val() : {};
+            if (startupSnap.exists()) {
+                const startupData = startupSnap.val();
+                displayStartupName = startupData.startupName || pitch.startupName || "Unnamed Startup";
+                displayLogo = startupData.logo || "https://via.placeholder.com/50";
+            }
 
-        // Use data from startupProfile (logo and startupName)
-        const logoUrl = startup.logo || 'https://via.placeholder.com/80';
-        const realStartupName = startup.startupName || "Unnamed Startup";
-
-        appContentDiv.innerHTML = `
-            <div class="startup-header" style="display: flex; align-items: center; gap: 20px; background: rgba(255,255,255,0.03); padding: 25px; border-radius: 15px;">
-                <img src="${logoUrl}" class="startup-logo" style="width: 80px; height: 80px; border-radius: 12px; object-fit: cover; border: 2px solid var(--primary);">
-                <div>
-                    <h1 style="margin: 0; font-size: 1.8rem;">${realStartupName}</h1>
-                    <p style="margin: 5px 0 0; color: var(--primary); font-weight: 600;">Founder: ${appData.founderName || 'ScaleVest User'}</p>
-                </div>
-            </div>
-
-            <div style="margin-top: 30px; background: #111; padding: 20px; border-radius: 12px; border-left: 4px solid var(--primary);">
-                <h4 style="margin: 0 0 10px; color: #555; font-size: 0.7rem; letter-spacing: 1px;">PITCH HOOK</h4>
-                <p style="font-size: 1.1rem; font-style: italic; margin: 0;">"${appData.appHook || 'No hook provided'}"</p>
-            </div>
-
-            <div style="margin-top: 30px; line-height: 1.8; color: #ccc;">
-                <h4 style="border-bottom: 1px solid #333; padding-bottom: 10px;">Executive Summary</h4>
-                <p style="white-space: pre-wrap;">${appData.mainContent || 'No description provided.'}</p>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px;">
-                    <div style="background: #000; padding: 15px; border-radius: 8px;">
-                        <small style="color: #666; display: block; margin-bottom: 5px;">Starting Point</small>
-                        <p style="margin:0; font-size: 0.9rem;">${appData.startingContent || '...'}</p>
-                    </div>
-                    <div style="background: #000; padding: 15px; border-radius: 8px;">
-                        <small style="color: #666; display: block; margin-bottom: 5px;">Call to Action</small>
-                        <p style="margin:0; font-size: 0.9rem;">${appData.endingContent || '...'}</p>
+            const timeStr = formatTime(pitch.timestamp);
+            
+            const card = document.createElement('div');
+            card.className = 'pitch-card';
+            card.innerHTML = `
+                <div class="card-info" onclick="window.location.hash='view_application_${pitch.appId}'" style="display:flex; align-items:center; gap:15px; width:100%;">
+                    <img src="${displayLogo}" style="width:50px; height:50px; border-radius:8px; object-fit:cover; border:1px solid #333;">
+                    <div style="flex:1">
+                        <span class="time-tag">${timeStr}</span>
+                        <h3 style="margin:2px 0;">${displayStartupName}</h3>
+                        <p style="margin:0; font-size:0.85rem; color:#666;">from ${pitch.founderName}</p>
                     </div>
                 </div>
-            </div>
-
-            <div style="margin-top: 40px; text-align: center;">
-                <a href="https://upscalevest.site/vest-details.html?id=${appData.vestId}&owner=${founderUid}" 
-                   target="_blank" 
-                   style="display: inline-block; padding: 12px 30px; background: var(--primary); color: #000; text-decoration: none; border-radius: 30px; font-weight: bold; transition: 0.3s;">
-                   Launch Full Vest Details →
-                </a>
-            </div>
-        `;
-
-        // Update currentApp global for the reply system
-        currentApp = {
-            appId: appId,
-            founderId: founderUid
-        };
-
-    } catch (error) {
-        console.error("Error loading application:", error);
-        appContentDiv.innerHTML = "<p style='color:red; text-align:center;'>Failed to load startup profile details.</p>";
-    }
+                <button class="delete-btn" onclick="deletePitch('${pitch.appId}')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path>
+                    </svg>
+                </button>
+            `;
+            listDiv.appendChild(card);
+        }
+    });
 }
 
     // --- ACTIONS ---
