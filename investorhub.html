@@ -1099,7 +1099,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, get, update, onValue, remove, set, onDisconnect, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getDatabase, ref, get, update, onValue, remove, set, onDisconnect,runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
@@ -1436,10 +1436,58 @@ window.deleteConversation = async function(roomKey, event) {
 // 4. CORE AUTH & ROUTING
 // =========================================================
 
-function setUserPresence(user) {
+async function setUserPresence(user) {
+    // 1. Manage Real-time Presence
     const presenceRef = ref(db, `presence/${user.uid}`);
-    set(presenceRef, { online: true, lastSeen: serverTimestamp() });
-    onDisconnect(presenceRef).set({ online: false, lastSeen: serverTimestamp() });
+    set(presenceRef, { 
+        online: true, 
+        lastSeen: serverTimestamp() 
+    });
+    
+    // Ensure they show as offline when they disconnect
+    onDisconnect(presenceRef).set({ 
+        online: false, 
+        lastSeen: serverTimestamp() 
+    });
+
+    // 2. Update Login Stats (Streak & Today's Status)
+    const statsRef = ref(db, `users/${user.uid}/stats`);
+    
+    try {
+        await runTransaction(statsRef, (currentData) => {
+            const now = new Date();
+            const todayStr = now.toISOString().split('T')[0]; // e.g., "2026-01-16"
+            
+            if (!currentData) {
+                return { todayLogin: true, loginStreak: 1, lastLoginDate: todayStr };
+            }
+
+            // If they already logged in today, don't change the streak
+            if (currentData.lastLoginDate === todayStr) {
+                return { ...currentData, todayLogin: true };
+            }
+
+            // Check if they logged in yesterday to continue the streak
+            const yesterday = new Date();
+            yesterday.setDate(now.getDate() - 1);
+            const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+            let newStreak = currentData.loginStreak || 0;
+            if (currentData.lastLoginDate === yesterdayStr) {
+                newStreak += 1;
+            } else {
+                newStreak = 1; // Streak broken, reset to 1
+            }
+
+            return {
+                todayLogin: true,
+                loginStreak: newStreak,
+                lastLoginDate: todayStr
+            };
+        });
+    } catch (error) {
+        console.error("Streak update failed:", error);
+    }
 }
 
 function updateProgress(percent, status) {
