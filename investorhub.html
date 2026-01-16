@@ -1831,13 +1831,12 @@ window.checkAngelStatus = async () => {
 // 2. Helper function to change the button appearance and behavior
 function convertToViewButton(btn) {
     btn.innerText = "View Profile";
-    btn.classList.add("btn-success"); // Optional: Change color to green/different style
+    btn.classList.add("btn-success"); 
     btn.disabled = false;
     
-    // Override the onclick to navigate instead of launch
     btn.onclick = () => {
-        // REPLACE THIS with your actual profile view URL
-        window.location.href = `/angel-profile.html?id=${currentUserUID}`;
+        // This adds '?view=ID' to the end of the URL
+        window.location.href = `angelbrowse.html?view=${currentUserUID}`;
     };
 }
 
