@@ -4408,24 +4408,34 @@ window.renderFullApplicationPage = async function(appId) {
                         <h2 style="font-size: 26px; font-weight: 700; margin: 0;">${app.founderName}</h2>
                     </div>
 
-                    ${vest ? `
-                    <div style="margin-top: 70px; background: #000; color: #fff; padding: 40px; border-radius: 4px; font-family: sans-serif;">
-                        <p style="font-size: 10px; letter-spacing: 3px; color: #666; margin-bottom: 15px; text-transform: uppercase;">Linked Startup Identity</p>
-                        <h3 style="font-size: 24px; margin-bottom: 10px;">${vest.MainVest?.hook || 'Startup Vest'}</h3>
-                        <p style="font-size: 14px; color: #aaa; margin-bottom: 25px; line-height: 1.5;">${vest.MainVest?.description?.substring(0, 180)}...</p>
-                        
-                        <div style="display: flex; gap: 40px; border-top: 1px solid #333; padding-top: 20px;">
-                            <div>
-                                <small style="color: #666; display: block; margin-bottom: 5px;">FUNDING ASK</small>
-                                <span style="font-size: 1.2rem; font-weight: 800;">$${vest.MainVest?.fundAsk || '0'}</span>
-                            </div>
-                            <div>
-                                <small style="color: #666; display: block; margin-bottom: 5px;">EQUITY OFFER</small>
-                                <span style="font-size: 1.2rem; font-weight: 800;">${vest.MainVest?.equityOffered || '0'}%</span>
-                            </div>
-                        </div>
-                    </div>
-                    ` : ''}
+                   ${vest ? `
+<div style="margin-top: 70px; background: #000; color: #fff; padding: 40px; border-radius: 4px; font-family: sans-serif;">
+    <p style="font-size: 10px; letter-spacing: 3px; color: #666; margin-bottom: 15px; text-transform: uppercase;">Linked Startup Identity</p>
+    <h3 style="font-size: 24px; margin-bottom: 10px;">${vest.MainVest?.hook || 'Startup Vest'}</h3>
+    
+    <div style="margin-bottom: 25px;">
+        <p style="font-size: 12px; color: #888; margin-bottom: 4px; font-weight: 700;">VEST LINK:</p>
+        <a href="https://upscalevest.site/vest-details.html?id=${app.vestId}&owner=${currentUser.uid}" 
+           target="_blank" 
+           style="color: #3a86ff; text-decoration: none; font-size: 13px; font-family: monospace; word-break: break-all;">
+           https://upscalevest.site/vest-details.html?id=${app.vestId}&owner=${currentUser.uid}
+        </a>
+    </div>
+
+    <p style="font-size: 14px; color: #aaa; margin-bottom: 25px; line-height: 1.5;">${vest.MainVest?.description?.substring(0, 180)}...</p>
+    
+    <div style="display: flex; gap: 40px; border-top: 1px solid #333; padding-top: 20px;">
+        <div>
+            <small style="color: #666; display: block; margin-bottom: 5px;">FUNDING ASK</small>
+            <span style="font-size: 1.2rem; font-weight: 800;">$${vest.MainVest?.fundAsk || '0'}</span>
+        </div>
+        <div>
+            <small style="color: #666; display: block; margin-bottom: 5px;">EQUITY OFFER</small>
+            <span style="font-size: 1.2rem; font-weight: 800;">${vest.MainVest?.equityOffered || '0'}%</span>
+        </div>
+    </div>
+</div>
+` : ''}
                 </div>
             </div>
         </div>
