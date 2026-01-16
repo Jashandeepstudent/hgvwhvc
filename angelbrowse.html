@@ -869,10 +869,20 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
-        import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
-import { getDatabase, ref, get, set, update, increment } from import { getDatabase, ref, get, set, update, increment, onValue } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
-import { serverTimestamp, onDisconnect, runTransaction } from "firebase/database";
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+    import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+    import { 
+        getDatabase, 
+        ref, 
+        get, 
+        set, 
+        update, 
+        increment, 
+        onValue, 
+        serverTimestamp, 
+        onDisconnect, 
+        runTransaction 
+    } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
         const firebaseConfig = {
             apiKey: "AIzaSyD6PdrKp2XLfRqjC587lMpdKTaWD4MBens",
             authDomain: "scalevest-163a0.firebaseapp.com",
