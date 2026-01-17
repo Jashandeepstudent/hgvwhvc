@@ -2357,6 +2357,7 @@ document.getElementById('submitPitchBtn').onclick = async function() {
         await set(investorInboxRef, {
             appId: selectedApplication,
             founderId: currentUser.uid,
+             read: false,
             founderName: appData.founderName || "Unknown Founder",
             startupName: appData.startupName || "Unnamed Startup",
             vestHook: appData.appHook || "No hook provided",
