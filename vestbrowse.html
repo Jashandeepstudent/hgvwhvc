@@ -988,33 +988,41 @@
         });
 
         // SORT CATEGORIES BY PRIORITY
-        const sortedCategories = Object.entries(startupCategories)
-            .map(([category, vests]) => {
-                const totalScore = vests.reduce((sum, v) => sum + v.score, 0);
-                const avgScore = totalScore / vests.length;
-                
-                // Check if this category is a SUI match
-                const isSUICategory = investorPreferences && 
-                                     investorPreferences.preferredCategories && 
-                                     Array.isArray(investorPreferences.preferredCategories) &&
-                                     investorPreferences.preferredCategories.includes(category);
-                
-                return { 
-                    category, 
-                    vests, 
-                    totalScore, 
-                    avgScore,
-                    isSUICategory 
-                };
-            })
-            .sort((a, b) => {
-                // SUI categories always come first
-                if (a.isSUICategory && !b.isSUICategory) return -1;
-                if (!a.isSUICategory && b.isSUICategory) return 1;
-                
-                // Then sort by average score (quality)
-                return b.avgScore - a.avgScore;
-            });
+        // SORT CATEGORIES BY PRIORITY (SUI Match First, then Quality)
+const sortedCategories = Object.entries(startupCategories)
+    .map(([category, vests]) => {
+        // 1. Calculate the 'Quality Heat' of this specific row
+        const totalScore = vests.reduce((sum, v) => sum + v.score, 0);
+        const avgScore = totalScore / vests.length;
+        
+        // 2. 🛡️ DEEP NESTING ACCESS:
+        // We look specifically at the object nested inside investorPreferences
+        const prefsData = investorPreferences?.preferredCategories;
+        
+        // 3. 🔥 SURGICAL CONVERSION:
+        // Since it's stored as {0: "HealthTech", 1: "MedTech"}, 
+        // Object.values() turns it back into ["HealthTech", "MedTech"]
+        const myPrefsArray = prefsData ? Object.values(prefsData) : [];
+
+        // 4. 🎯 SUI MATCH: Compare current row category to Megumi's preferences
+        const isSUICategory = myPrefsArray.includes(category);
+        
+        return { 
+            category, 
+            vests, 
+            totalScore, 
+            avgScore, 
+            isSUICategory 
+        };
+    })
+    .sort((a, b) => {
+        // RULE 1: SUI matched categories (e.g. HealthTech for Megumi) go to the top
+        if (a.isSUICategory && !b.isSUICategory) return -1;
+        if (!a.isSUICategory && b.isSUICategory) return 1;
+        
+        // RULE 2: Within those groups, sort by the highest quality score
+        return b.avgScore - a.avgScore;
+    });
         
         // DISPLAY EACH CATEGORY ROW
         sortedCategories.forEach(({ category, vests, isSUICategory }) => {
