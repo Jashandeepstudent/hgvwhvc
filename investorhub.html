@@ -1975,11 +1975,10 @@ function showNewApplicationPopup(appData, founderName, appId, founderId) {
     document.body.appendChild(popup);
 }
 
-// Function to update the database and close the UI
 window.markAppAsRead = async function(founderId, appId) {
     try {
-        // Update Firebase node
-        const appRef = ref(db, `Applications/${founderId}/${appId}`);
+        // Update the 'read' status inside investorInbox
+        const appRef = ref(db, `investorInbox/${currentUser.uid}/${appId}`);
         await update(appRef, { read: true });
 
         // Remove UI
@@ -1990,7 +1989,6 @@ window.markAppAsRead = async function(founderId, appId) {
         }
     } catch (error) {
         console.error("Error marking as read:", error);
-        // Fallback: just remove popup if DB update fails so user isn't stuck
         document.getElementById('newAppPopup')?.remove();
     }
 };
