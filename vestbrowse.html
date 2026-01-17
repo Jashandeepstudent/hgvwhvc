@@ -1,4 +1,69 @@
-<!DOCTYPE html>
+function displayVests() {
+        const container = document.getElementById('vestsContainer');
+        const noVestsMsg = document.getElementById('noVests');
+        
+        container.innerHTML = '';
+        
+        const vests = filterAndSortVests();
+        
+        if (vests.length === 0) {
+            noVestsMsg.innerText = 'No vests found matching your criteria.';
+            noVestsMsg.style.display = 'block';
+            return;
+        }
+
+        noVestsMsg.style.display = 'none';
+
+        const preferences = analyzeInvestorPreferences();
+        const learningConfidence = preferences.learningConfidence;
+        const now = Date.now();
+
+        // GROUP ALL VESTS BY THEIR STARTUP CATEGORY
+        const startupCategories = {};
+
+        vests.forEach(item => {
+            const vestCategory = item.vestData.StartupDetails?.category || 'Other';
+            
+            if (!startupCategories[vestCategory]) {
+                startupCategories[vestCategory] = [];
+            }
+            startupCategories[vestCategory].push(item);
+        });
+
+        // SORT CATEGORIES BY PRIORITY
+        const sortedCategories = Object.entries(startupCategories)
+            .map(([category, vests]) => {
+                const totalScore = vests.reduce((sum, v) => sum + v.score, 0);
+                const avgScore = totalScore / vests.length;
+                
+                // Check if this category is a SUI match
+                const isSUICategory = investorPreferences && 
+                                     investorPreferences.preferredCategories && 
+                                     Array.isArray(investorPreferences.preferredCategories) &&
+                                     investorPreferences.preferredCategories.includes(category);
+                
+                return { 
+                    category, 
+                    vests, 
+                    totalScore, 
+                    avgScore,
+                    isSUICategory 
+                };
+            })
+            .sort((a, b) => {
+                // SUI categories always come first
+                if (a.isSUICategory && !b.isSUICategory) return -1;
+                if (!a.isSUICategory && b.isSUICategory) return 1;
+                
+                // Then sort by average score (quality)
+                return b.avgScore - a.avgScore;
+            });
+        
+        // DISPLAY EACH CATEGORY ROW
+        sortedCategories.forEach(({ category, vests, isSUICategory }) => {
+            if (vests.length > 0) {
+                // SEPARATE NEW VESTS (< 24 hours) from REGULAR VESTS
+                const newVests = [];<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -973,6 +1038,7 @@
 
         const preferences = analyzeInvestorPreferences();
         const learningConfidence = preferences.learningConfidence;
+        const now = Date.now();
 
         // GROUP ALL VESTS BY THEIR STARTUP CATEGORY
         const startupCategories = {};
@@ -987,8 +1053,6 @@
         });
 
         // SORT CATEGORIES BY PRIORITY
-        // 1. SUI-matched categories first
-        // 2. Then by total score
         const sortedCategories = Object.entries(startupCategories)
             .map(([category, vests]) => {
                 const totalScore = vests.reduce((sum, v) => sum + v.score, 0);
@@ -1020,11 +1084,54 @@
         // DISPLAY EACH CATEGORY ROW
         sortedCategories.forEach(({ category, vests, isSUICategory }) => {
             if (vests.length > 0) {
-                // Sort vests within category by score (SUI, online, new, AI all affect this)
-                vests.sort((a, b) => b.score - a.score);
+                // SEPARATE NEW VESTS (< 24 hours) from REGULAR VESTS
+                const newVests = [];
+                const regularVests = [];
                 
-                // Limit to top 10 per category
-                const vestsToShow = vests.slice(0, 10);
+                vests.forEach(vest => {
+                    if (vest.vestData.createdAt) {
+                        const createdTime = new Date(vest.vestData.createdAt).getTime();
+                        const hoursSinceCreation = (now - createdTime) / (1000 * 60 * 60);
+                        
+                        if (hoursSinceCreation < 24) {
+                            newVests.push(vest);
+                        } else {
+                            regularVests.push(vest);
+                        }
+                    } else {
+                        regularVests.push(vest);
+                    }
+                });
+                
+                // Sort both groups by score
+                newVests.sort((a, b) => b.score - a.score);
+                regularVests.sort((a, b) => b.score - a.score);
+                
+                // DISTRIBUTE 3 NEW VESTS throughout 10 slots
+                // Target positions: 3, 6, 9 (or scattered naturally)
+                const totalSlots = 10;
+                const newVestSlots = [2, 5, 8]; // Positions 3, 6, 9 (0-indexed)
+                
+                const finalVests = [];
+                let newVestIndex = 0;
+                let regularVestIndex = 0;
+                
+                for (let i = 0; i < totalSlots; i++) {
+                    // Check if this position should have a new vest
+                    if (newVestSlots.includes(i) && newVestIndex < newVests.length) {
+                        finalVests.push(newVests[newVestIndex]);
+                        newVestIndex++;
+                    } else if (regularVestIndex < regularVests.length) {
+                        finalVests.push(regularVests[regularVestIndex]);
+                        regularVestIndex++;
+                    } else if (newVestIndex < newVests.length) {
+                        // If we run out of regular vests, fill with new vests
+                        finalVests.push(newVests[newVestIndex]);
+                        newVestIndex++;
+                    } else {
+                        break; // No more vests to add
+                    }
+                }
                 
                 // Get category emoji
                 const categoryEmoji = getCategoryEmoji(category);
@@ -1039,7 +1146,7 @@
                 }
                 
                 createRow(
-                    vestsToShow,
+                    finalVests,
                     `${categoryEmoji} ${category}`,
                     badge,
                     badgeClass
