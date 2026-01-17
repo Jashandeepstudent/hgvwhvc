@@ -46,6 +46,24 @@
             width: 50px;
             height: 50px;
         }
+.reply-notif-badge {
+    position: absolute;
+    top: 16px;
+    right: 18px;
+
+    background: #ff006e;
+    color: #fff;
+
+    padding: 6px 10px;
+    border-radius: 999px;
+
+    font-size: 0.7rem;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+
+    box-shadow: 0 6px 18px rgba(255, 0, 110, 0.35);
+    z-index: 10;
+}
 
         .roadmap {
             display: flex;
@@ -2327,18 +2345,6 @@
     margin-bottom: 0.25rem;
     display: flex; align-items: center; gap: 8px;
 }
-.reply-notif-badge {
-    position: fixed;
-    top: 14px;
-    right: 18px;
-    background: #ff006e;
-    color: #fff;
-    padding: 6px 12px;
-    border-radius: 999px;
-    font-size: 0.75rem;
-    font-weight: 800;
-    z-index: 9999999;
-}
 
 .pdf-filesize {
     font-size: 0.85rem; color: #888;
@@ -2454,9 +2460,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
-<div id="replyNotifBadge" class="reply-notif-badge" style="display:none;">
-    <span id="replyCount">0</span> New
-</div>
 <div id="availabilityModal" class="modal">
   <div class="modal-content">
     <span class="close-btn">&times;</span>
@@ -7667,6 +7670,24 @@ max-width: 1100px;
             display: flex;
             gap: 0.5rem;
         }
+.reply-notif-badge {
+    position: absolute;
+    top: 16px;
+    right: 18px;
+
+    background: #ff006e;
+    color: #fff;
+
+    padding: 6px 10px;
+    border-radius: 999px;
+
+    font-size: 0.7rem;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+
+    box-shadow: 0 6px 18px rgba(255, 0, 110, 0.35);
+    z-index: 10;
+}
 
         .vest-tab {
             padding: 0.5rem 1rem;
@@ -7875,7 +7896,25 @@ max-width: 1100px;
     /* Background & Text */
     background-color: #ffffff;
     color: #000000;
-    
+    .reply-notif-badge {
+    position: absolute;
+    top: 16px;
+    right: 18px;
+
+    background: #ff006e;
+    color: #fff;
+
+    padding: 6px 10px;
+    border-radius: 999px;
+
+    font-size: 0.7rem;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+
+    box-shadow: 0 6px 18px rgba(255, 0, 110, 0.35);
+    z-index: 10;
+}
+
     /* Font: Clean, modern sans-serif with tight tracking */
     font-family: 'Inter', -apple-system, system-ui, sans-serif;
     font-size: 0.72rem; 
