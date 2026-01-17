@@ -389,7 +389,7 @@
         <button class="category-pill" data-stage="Building">Building</button>
         <button class="category-pill" data-stage="MVP">MVP</button>
         <button class="category-pill" data-stage="Pre-Launch">Pre-Launch</button>
-        <button class="category-pill" data-stage="Growing">Growing</button>
+        <button class="category-pill" data-stage="Growth">Growth</button>
         <button class="category-pill" data-stage="Scale">Scale</button>
     </div>
 
@@ -1178,7 +1178,7 @@
         const details = vestData.StartupDetails || {};
         const startupName = details.name || 'Premium Startup';
         const initials = startupName.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
-        const stage = details.stage || 'Growing';
+        const stage = details.stage || 'Growth';
         const category = details.category || 'Tech';
 
         card.innerHTML = `
