@@ -698,7 +698,7 @@ await triggerRecipientAutoReply();
 }
 async function triggerRecipientAutoReply() {
 try {
-const founderSnap = await get(ref(db, founderProfile/${recipientUID}));
+const founderSnap = await get(ref(db, `founderProfile/${recipientUID}`));
     if (!founderSnap.exists()) {
         return;
     }
