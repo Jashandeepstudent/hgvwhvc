@@ -880,6 +880,110 @@
         
         displayVests();
     });
+// ============================================
+    // ANALYTICS TRACKING FUNCTIONS
+    // ============================================
+
+    async function trackImpression(vestId, ownerUID) {
+        if (!currentUser || !vestId || !ownerUID) return;
+        
+        try {
+            const today = new Date().toISOString().split('T')[0];
+            const impressionKey = `${currentUser.uid}_${vestId}_impression`;
+            
+            const tracked = sessionStorage.getItem(impressionKey);
+            if (tracked === today) return;
+            
+            const analyticsRef = ref(db, `Vests/${ownerUID}/${vestId}/analytics`);
+            const userImpressionRef = ref(db, `Vests/${ownerUID}/${vestId}/analytics/impressions/${currentUser.uid}`);
+            
+            await runTransaction(analyticsRef, (current) => {
+                if (!current) {
+                    current = {
+                        totalImpressions: 0,
+                        todayImpressions: 0,
+                        lastImpressionDate: today,
+                        totalClicks: 0,
+                        todayClicks: 0,
+                        totalTimeSpent: 0,
+                        todayTimeSpent: 0,
+                        totalInterestedToFund: 0,
+                        todayInterestedToFund: 0
+                    };
+                }
+                
+                if (current.lastImpressionDate !== today) {
+                    current.todayImpressions = 0;
+                    current.todayClicks = 0;
+                    current.todayTimeSpent = 0;
+                    current.todayInterestedToFund = 0;
+                    current.lastImpressionDate = today;
+                }
+                
+                current.totalImpressions = (current.totalImpressions || 0) + 1;
+                current.todayImpressions = (current.todayImpressions || 0) + 1;
+                
+                return current;
+            });
+            
+            await set(userImpressionRef, {
+                timestamp: Date.now(),
+                date: today
+            });
+            
+            sessionStorage.setItem(impressionKey, today);
+            
+        } catch (error) {
+            console.error('Error tracking impression:', error);
+        }
+    }
+
+    async function trackClick(vestId, ownerUID) {
+        if (!currentUser || !vestId || !ownerUID) return;
+        
+        try {
+            const today = new Date().toISOString().split('T')[0];
+            const clickKey = `${currentUser.uid}_${vestId}_click`;
+            
+            const tracked = sessionStorage.getItem(clickKey);
+            if (tracked === today) return;
+            
+            const analyticsRef = ref(db, `Vests/${ownerUID}/${vestId}/analytics`);
+            const userClickRef = ref(db, `Vests/${ownerUID}/${vestId}/analytics/clicks/${currentUser.uid}`);
+            
+            await runTransaction(analyticsRef, (current) => {
+                if (!current) {
+                    current = {
+                        totalImpressions: 0,
+                        todayImpressions: 0,
+                        totalClicks: 0,
+                        todayClicks: 0,
+                        lastImpressionDate: today
+                    };
+                }
+                
+                if (current.lastImpressionDate !== today) {
+                    current.todayClicks = 0;
+                }
+                
+                current.totalClicks = (current.totalClicks || 0) + 1;
+                current.todayClicks = (current.todayClicks || 0) + 1;
+                current.lastImpressionDate = today;
+                
+                return current;
+            });
+            
+            await set(userClickRef, {
+                timestamp: Date.now(),
+                date: today
+            });
+            
+            sessionStorage.setItem(clickKey, today);
+            
+        } catch (error) {
+            console.error('Error tracking click:', error);
+        }
+    }
 
     async function loadVests() {
         const container = document.getElementById('vestsContainer');
@@ -1191,7 +1295,21 @@ const sortedCategories = Object.entries(startupCategories)
             </div>
         `;
 
+// Track impression when card is visible
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    trackImpression(vestId, vestData.ownerUID);
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.5 });
+        
+        observer.observe(card);
+
+        // Track click
         card.onclick = () => {
+            trackClick(vestId, vestData.ownerUID);
             window.location.href = `vest-details.html?id=${vestId}&owner=${vestData.ownerUID}`;
         };
 
