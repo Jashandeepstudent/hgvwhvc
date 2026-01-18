@@ -6276,6 +6276,45 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+async function checkScheduledAvailability() {
+    if (!currentUser) return;
+    
+    try {
+        const profileRef = ref(db, `founderProfile/${currentUser.uid}/scheduledUnavailability`);
+        const snapshot = await get(profileRef);
+        
+        if (snapshot.exists()) {
+            const scheduled = snapshot.val();
+            const targetDate = new Date(scheduled.date);
+            const now = new Date();
+            
+            // If the scheduled date has passed, apply it
+            if (now >= targetDate) {
+                console.log("Applying overdue scheduled unavailability...");
+                
+                // Set all vests to inactive
+                const vestsRef = ref(db, `Vests/${currentUser.uid}`);
+                const vestsSnapshot = await get(vestsRef);
+                
+                if (vestsSnapshot.exists()) {
+                    const updates = {};
+                    Object.keys(vestsSnapshot.val()).forEach(vestId => {
+                        updates[`Vests/${currentUser.uid}/${vestId}/status`] = 'inactive';
+                    });
+                    
+                    updates[`founderProfile/${currentUser.uid}/activeVestsCount`] = 0;
+                    updates[`founderProfile/${currentUser.uid}/scheduledUnavailability`] = null;
+                    
+                    await update(ref(db), updates);
+                    
+                    console.log("✅ Scheduled unavailability applied");
+                }
+            }
+        }
+    } catch (error) {
+        console.error("Error checking scheduled availability:", error);
+    }
+}
    onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
@@ -7256,6 +7295,7 @@ window.saveCustomUserId = async function() {
         
         container.style.display = 'block';
         createDashboard();
+        checkScheduledAvailability();
     }
 
     // ========================================
