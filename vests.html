@@ -6238,7 +6238,8 @@ window.updateNavStatusUI = function(status) {
     }
 };
 
-// --- CONSOLIDATED SAVE AVAILABILITY STATUS ---
+// Add this updated saveStatus function to replace the existing one:
+
 window.saveStatus = async function() {
     if (!currentUser) return;
     
@@ -6276,6 +6277,7 @@ window.saveStatus = async function() {
         updates[`founderProfile/${currentUser.uid}/availabilityStatus`] = selectedStatus;
         updates[`founderProfile/${currentUser.uid}/activeVestsCount`] = activeCount;
         
+        // **NEW: Save the unavailability date if provided**
         if (unavailableDate) {
             const selectedDate = new Date(unavailableDate);
             const today = new Date();
@@ -6288,7 +6290,8 @@ window.saveStatus = async function() {
 
             updates[`founderProfile/${currentUser.uid}/scheduledUnavailability`] = {
                 date: unavailableDate,
-                scheduledAt: Date.now()
+                scheduledAt: Date.now(),
+                targetStatus: 'busy' // When this date arrives, set status to busy
             };
         }
 
@@ -6299,20 +6302,34 @@ window.saveStatus = async function() {
         if (cachedFounderData) {
             cachedFounderData.availabilityStatus = selectedStatus;
             cachedFounderData.activeVestsCount = activeCount;
+            if (unavailableDate) {
+                cachedFounderData.scheduledUnavailability = {
+                    date: unavailableDate,
+                    scheduledAt: Date.now(),
+                    targetStatus: 'busy'
+                };
+            }
         }
 
         // 5. Update the Navbar Status Pill immediately
         window.updateNavStatusUI(selectedStatus);
         
-        // Finalize
-        const statusMessage = selectedStatus === 'active' 
+        // 6. Build success message
+        let statusMessage = selectedStatus === 'active' 
             ? `✅ All vests activated! (${activeCount} live)` 
             : `⏸️ System set to BUSY. All vests are now hidden.`;
-            
-        alert(statusMessage);
-        document.getElementById('availabilityModal').style.display = 'none';
         
-        // Refresh the Dashboard View
+        if (unavailableDate) {
+            statusMessage += `\n📅 Scheduled unavailability on ${unavailableDate}`;
+        }
+        
+        alert(statusMessage);
+        
+        // 7. Close modal and reset
+        document.getElementById('availabilityModal').style.display = 'none';
+        resetModal(); // Clear the form
+        
+        // 8. Refresh the Dashboard View
         if (window.location.hash === '#founder_dashboard' || window.location.hash === '') {
             if (typeof createDashboard === 'function') {
                 createDashboard(); 
@@ -6325,40 +6342,9 @@ window.saveStatus = async function() {
         console.error("❌ Sync Error:", error);
         alert("❌ Failed to update status: " + error.message);
     }
-};// Schedule status change for a future date
-function scheduleStatusChange(targetDate) {
-    const checkInterval = setInterval(async () => {
-        const now = new Date();
-        const target = new Date(targetDate);
-        
-        if (now >= target) {
-            clearInterval(checkInterval);
-            
-            try {
-                const vestsRef = ref(db, `Vests/${currentUser.uid}`);
-                const snapshot = await get(vestsRef);
-                
-                if (snapshot.exists()) {
-                    const updates = {};
-                    const vestIds = Object.keys(snapshot.val());
-                    
-                    vestIds.forEach(vestId => {
-                        updates[`Vests/${currentUser.uid}/${vestId}/status`] = 'inactive'; // Correct status
-                    });
-                    
-                    updates[`founderProfile/${currentUser.uid}/activeVestsCount`] = 0;
-                    
-                    await update(ref(db), updates);
-                    
-                    console.log("✅ Scheduled unavailability activated");
-                }
-            } catch (error) {
-                console.error("Error applying scheduled status:", error);
-            }
-        }
-    }, 60000);
-}
+};
 
+// Add this function to check and apply scheduled unavailability
 async function checkScheduledAvailability() {
     if (!currentUser) return;
     
@@ -6370,9 +6356,12 @@ async function checkScheduledAvailability() {
             const scheduled = snapshot.val();
             const targetDate = new Date(scheduled.date);
             const now = new Date();
+            now.setHours(0, 0, 0, 0);
+            targetDate.setHours(0, 0, 0, 0);
             
+            // If the scheduled date has arrived or passed
             if (now >= targetDate) {
-                console.log("Applying overdue scheduled unavailability...");
+                console.log("⏰ Applying scheduled unavailability...");
                 
                 const vestsRef = ref(db, `Vests/${currentUser.uid}`);
                 const vestsSnapshot = await get(vestsRef);
@@ -6380,15 +6369,21 @@ async function checkScheduledAvailability() {
                 if (vestsSnapshot.exists()) {
                     const updates = {};
                     Object.keys(vestsSnapshot.val()).forEach(vestId => {
-                        updates[`Vests/${currentUser.uid}/${vestId}/status`] = 'inactive'; // Correct status
+                        updates[`Vests/${currentUser.uid}/${vestId}/status`] = 'inactive';
                     });
                     
                     updates[`founderProfile/${currentUser.uid}/activeVestsCount`] = 0;
-                    updates[`founderProfile/${currentUser.uid}/scheduledUnavailability`] = null;
+                    updates[`founderProfile/${currentUser.uid}/availabilityStatus`] = 'busy';
+                    updates[`founderProfile/${currentUser.uid}/scheduledUnavailability`] = null; // Clear it
                     
                     await update(ref(db), updates);
                     
                     console.log("✅ Scheduled unavailability applied");
+                    
+                    // Update UI
+                    if (window.updateNavStatusUI) {
+                        window.updateNavStatusUI('busy');
+                    }
                 }
             }
         }
@@ -6396,6 +6391,23 @@ async function checkScheduledAvailability() {
         console.error("Error checking scheduled availability:", error);
     }
 }
+
+// Update the modal reset function to clear inputs
+window.resetModal = function() {
+    // Hide sub-sections
+    document.getElementById('dateSection').style.display = 'none';
+    document.getElementById('statusSection').style.display = 'none';
+    
+    // Show main menu
+    document.getElementById('modalMenu').style.display = 'block';
+    
+    // **NEW: Clear the form inputs**
+    const dateInput = document.getElementById('unavailableDate');
+    const statusSelect = document.getElementById('status');
+    
+    if (dateInput) dateInput.value = '';
+    if (statusSelect) statusSelect.value = 'active'; // Reset to default
+};
 // Event listeners for modal
 document.addEventListener('DOMContentLoaded', function() {
     // Open modal button
