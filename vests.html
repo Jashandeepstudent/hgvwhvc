@@ -6441,7 +6441,52 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+// Add this function to load current status when modal opens
+window.openAvailabilityModal = async function() {
+    const modal = document.getElementById('availabilityModal');
+    if (!modal) return;
+    
+    // Show modal
+    modal.style.display = 'block';
+    resetModal(); // Reset to main menu
+    
+    // **Load current status from database/cache**
+    if (cachedFounderData && cachedFounderData.availabilityStatus) {
+        const statusSelect = document.getElementById('status');
+        if (statusSelect) {
+            statusSelect.value = cachedFounderData.availabilityStatus;
+        }
+    }
+    
+    // **Load scheduled date if exists**
+    if (cachedFounderData && cachedFounderData.scheduledUnavailability) {
+        const dateInput = document.getElementById('unavailableDate');
+        if (dateInput && cachedFounderData.scheduledUnavailability.date) {
+            dateInput.value = cachedFounderData.scheduledUnavailability.date;
+        }
+    }
+};
 
+// Update the existing event listener to use the new function
+document.addEventListener('click', function (e) {
+    const modal = document.getElementById("availabilityModal");
+
+    // 1. Open Modal - Use new function
+    if (e.target && e.target.id === 'openModal') {
+        openAvailabilityModal(); // Changed from inline code
+        return;
+    }
+
+    // 2. Close Modal (X button)
+    if (e.target && e.target.classList.contains('close-btn')) {
+        modal.style.display = "none";
+    }
+
+    // 3. Close if clicking outside the box
+    if (e.target === modal) {
+        modal.style.display = "none";
+    }
+});
    onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
@@ -8797,7 +8842,7 @@ max-width: 1100px;
 
     <div class="card-title">Founder Availability</div>
 
-   <button class="card-btn" id="openModal">Set Availability</button>
+   <button class="card-btn" onclick="openAvailabilityModal()">Set Availability</button>
 
     <p class="card-description">
         Control when you're available.
