@@ -6088,6 +6088,194 @@ document.addEventListener('click', (e) => {
         closeAutoReplyModal();
     }
 });
+
+// ==========================================
+// FOUNDER AVAILABILITY MANAGEMENT
+// ==========================================
+
+// Show availability detail section
+window.showAvailabilityDetail = function(sectionId) {
+    document.getElementById('modalMenu').style.display = 'none';
+    document.getElementById(sectionId).style.display = 'block';
+};
+
+// Reset modal to main menu
+window.resetModal = function() {
+    document.getElementById('dateSection').style.display = 'none';
+    document.getElementById('statusSection').style.display = 'none';
+    document.getElementById('modalMenu').style.display = 'block';
+};
+
+// Save Availability Status
+window.saveStatus = async function() {
+    if (!currentUser) return;
+    
+    const statusSelect = document.getElementById('status');
+    const dateInput = document.getElementById('unavailableDate');
+    
+    const status = statusSelect ? statusSelect.value : null;
+    const unavailableDate = dateInput ? dateInput.value : null;
+    
+    try {
+        // Get all vests for this user
+        const vestsRef = ref(db, `Vests/${currentUser.uid}`);
+        const vestsSnapshot = await get(vestsRef);
+        
+        if (!vestsSnapshot.exists()) {
+            alert("No vests found to update.");
+            return;
+        }
+        
+        const vests = vestsSnapshot.val();
+        const vestIds = Object.keys(vests);
+        
+        // Prepare updates
+        const updates = {};
+        let activeCount = 0;
+        let inactiveCount = 0;
+        
+        // Handle immediate status change
+        if (status) {
+            const newStatus = status === 'active' ? 'active' : 'inactive';
+            
+            vestIds.forEach(vestId => {
+                updates[`Vests/${currentUser.uid}/${vestId}/status`] = newStatus;
+                
+                if (newStatus === 'active') {
+                    activeCount++;
+                } else {
+                    inactiveCount++;
+                }
+            });
+            
+            // Update founder profile with new active vest count
+            updates[`founderProfile/${currentUser.uid}/activeVestsCount`] = activeCount;
+            
+            // Apply all updates
+            await update(ref(db), updates);
+            
+            // Update local cache
+            if (cachedFounderData) {
+                cachedFounderData.activeVestsCount = activeCount;
+            }
+            
+            const statusMessage = status === 'active' 
+                ? `✅ All vests activated! (${activeCount} active)` 
+                : `⏸️ All vests set to busy/inactive (${inactiveCount} inactive)`;
+            
+            alert(statusMessage);
+        }
+        
+        // Handle date-based availability
+        if (unavailableDate) {
+            const selectedDate = new Date(unavailableDate);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            if (selectedDate < today) {
+                alert("❌ Please select a future date.");
+                return;
+            }
+            
+            // Save scheduled unavailability
+            await update(ref(db, `founderProfile/${currentUser.uid}`), {
+                scheduledUnavailability: {
+                    date: unavailableDate,
+                    scheduledAt: Date.now()
+                }
+            });
+            
+            // Set up the date change (this would ideally be a Cloud Function)
+            // For now, we'll store it and handle it client-side
+            scheduleStatusChange(unavailableDate);
+            
+            alert(`📅 Vests will be set to inactive on ${unavailableDate}`);
+        }
+        
+        // Close modal
+        document.getElementById('availabilityModal').style.display = 'none';
+        
+        // Refresh dashboard
+        if (window.location.hash === '#founder_dashboard' || window.location.hash === '') {
+            showDashboard();
+        }
+        
+    } catch (error) {
+        console.error("Error updating availability:", error);
+        alert("❌ Failed to update availability. Please try again.");
+    }
+};
+
+// Schedule status change for a future date
+function scheduleStatusChange(targetDate) {
+    const checkInterval = setInterval(async () => {
+        const now = new Date();
+        const target = new Date(targetDate);
+        
+        // Check if we've reached the target date
+        if (now >= target) {
+            clearInterval(checkInterval);
+            
+            try {
+                // Set all vests to inactive
+                const vestsRef = ref(db, `Vests/${currentUser.uid}`);
+                const snapshot = await get(vestsRef);
+                
+                if (snapshot.exists()) {
+                    const updates = {};
+                    const vestIds = Object.keys(snapshot.val());
+                    
+                    vestIds.forEach(vestId => {
+                        updates[`Vests/${currentUser.uid}/${vestId}/status`] = 'inactive';
+                    });
+                    
+                    // Update active vest count to 0
+                    updates[`founderProfile/${currentUser.uid}/activeVestsCount`] = 0;
+                    
+                    await update(ref(db), updates);
+                    
+                    console.log("✅ Scheduled unavailability activated");
+                }
+            } catch (error) {
+                console.error("Error applying scheduled status:", error);
+            }
+        }
+    }, 60000); // Check every minute
+}
+
+// Event listeners for modal
+document.addEventListener('DOMContentLoaded', function() {
+    // Open modal button
+    const openModalBtn = document.getElementById('openModal');
+    if (openModalBtn) {
+        openModalBtn.addEventListener('click', function() {
+            const modal = document.getElementById('availabilityModal');
+            if (modal) {
+                modal.style.display = 'block';
+                resetModal();
+            }
+        });
+    }
+    
+    // Close modal button
+    const closeBtn = document.querySelector('.close-btn');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function() {
+            const modal = document.getElementById('availabilityModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        });
+    }
+    
+    // Close modal when clicking outside
+    window.addEventListener('click', function(event) {
+        const modal = document.getElementById('availabilityModal');
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+});
    onAuthStateChanged(auth, async (user) => {
     if (user) {
         currentUser = user;
@@ -8578,8 +8766,8 @@ max-width: 1100px;
 </div>
 
 
-<!-- FOOTER -->
-<footer class="footer">
+</div> 
+</div> <footer class="footer">
     <div class="footer-content">
         <div>
             <div class="footer-logo-text">ScaleVest</div>
