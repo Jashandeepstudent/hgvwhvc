@@ -6104,7 +6104,7 @@ window.openAutoReplySetup = async function() {
         } else {
             // Set default message
             document.getElementById('autoReplyTextarea').value = 
-                "Hi! Thanks for reaching out. I'm excited to discuss potential opportunities. I typically respond within 24 hours.";
+                "";
             document.getElementById('autoReplyEnabled').checked = true;
         }
     } catch (error) {
@@ -12043,7 +12043,7 @@ window.closeFullScreenPDF = function() {
             
             <textarea 
                 id="autoReplyTextarea" 
-                
+                placeholder="Hi! Thanks for reaching out. I'm excited to discuss potential opportunities. I typically respond within 24 hours."
             ></textarea>
             
             <div class="status-card-lite">
