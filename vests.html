@@ -6538,36 +6538,38 @@ document.addEventListener('click', function (e) {
         modal.style.display = "none";
     }
 });
+// --- REFERRAL SYSTEM LOGIC ---
 window.showReferralPage = function() {
     const mainContent = document.getElementById('mainContent');
     if (!mainContent) return;
 
+    // Use default values if data isn't fully loaded to prevent crashes
     const tokens = cachedFounderData?.scaleTokens || 0;
     const existingUrl = cachedFounderData?.referralUrl || null;
+    const founderName = cachedFounderData?.founderName || "Founder";
 
     mainContent.innerHTML = `
-        <div class="referral-container" style="max-width: 800px; margin: 60px auto; padding: 40px; background: #000; border: 1px solid #222; text-align: center;">
-            <div class="referral-icon-anim" style="font-size: 60px; margin-bottom: 20px;">✨</div>
-            <h1 style="letter-spacing: 5px; color: #fff; text-transform: uppercase;">ScaleVest Refers</h1>
+        <div class="referral-container" style="max-width: 600px; margin: 80px auto; padding: 40px; border: 1px solid #222; background: #000; text-align: center;">
+            <div class="referral-icon-anim" style="font-size: 50px; margin-bottom: 20px;">✉️</div>
+            <h2 style="letter-spacing: 5px; text-transform: uppercase; color: #fff;">ScaleVest Refers</h2>
             
-            <div style="margin: 20px 0;">
-                <span style="background: #fff; color: #00; padding: 5px 15px; font-weight: 900; font-size: 0.8rem;">
-                    BALANCE: ${tokens} SCALETOKENS
-                </span>
+            <div style="margin: 20px 0; border: 1px solid #333; padding: 10px; display: inline-block;">
+                <span style="color: #888; font-size: 0.7rem; text-transform: uppercase;">Balance</span>
+                <div style="font-size: 1.5rem; font-weight: bold; color: #fff;">${tokens} TOKENS</div>
             </div>
 
-            <div id="referralActionArea" style="margin-top: 30px; padding: 30px; border: 1px dashed #444; background: #050505;">
+            <div id="referralActionArea" style="margin-top: 40px;">
                 ${existingUrl ? `
-                    <p style="color: #888; font-size: 0.8rem; margin-bottom: 15px;">YOUR UNIQUE REFERRAL LINK:</p>
-                    <div style="font-family: monospace; color: #fff; background: #111; padding: 15px; border: 1px solid #333; margin-bottom: 20px; word-break: break-all;">
+                    <p style="color: #666; font-size: 0.8rem; margin-bottom: 10px;">SHARE YOUR LINK</p>
+                    <div style="background: #111; color: #fff; padding: 15px; border: 1px solid #222; font-family: monospace; font-size: 0.9rem; margin-bottom: 20px; word-break: break-all;">
                         ${existingUrl}
                     </div>
-                    <button class="modal-btn-save" onclick="window.copyReferralLink()" style="background:#fff; color:#000; padding: 12px 30px; cursor:pointer; border:none; font-weight:bold;">
-                        COPY URL
+                    <button class="modal-btn-save" onclick="copyReferralLink()" style="width: 100%; background: #fff; color: #000; border: none; padding: 12px; font-weight: bold; cursor: pointer;">
+                        COPY LINK
                     </button>
                 ` : `
-                    <p style="color: #666; margin-bottom: 25px;">Introduce a founder. Earn 10 ScaleTokens.</p>
-                    <button class="modal-btn-save" onclick="window.generateReferralURL()" style="background:#fff; color:#000; padding: 12px 30px; cursor:pointer; border:none; font-weight:bold;">
+                    <p style="color: #555; margin-bottom: 30px; line-height: 1.6;">Generate your unique founder URL. Each person who joins using your link grants you +10 ScaleTokens.</p>
+                    <button class="modal-btn-save" onclick="generateReferralURL()" style="width: 100%; background: #fff; color: #000; border: none; padding: 12px; font-weight: bold; cursor: pointer;">
                         GENERATE YOUR REFER URL
                     </button>
                 `}
@@ -6575,14 +6577,12 @@ window.showReferralPage = function() {
         </div>
     `;
 };
-// Function to generate the Gojo-style URL
-window.generateReferralURL = async function() {
-    if (!currentUser || !cachedFounderData) {
-        alert("User data not loaded yet.");
-        return;
-    }
 
-    const username = (cachedFounderData.founderName || "Founder").replace(/\s+/g, '');
+window.generateReferralURL = async function() {
+    if (!currentUser) return;
+    
+    // Create the Gojo-style URL
+    const username = (cachedFounderData?.founderName || "Founder").replace(/\s+/g, '');
     const referCode = `${username}_ScalevestRefer001`;
     const fullURL = `https://scalevest.site/?ref=${referCode}`;
 
@@ -6592,26 +6592,26 @@ window.generateReferralURL = async function() {
             referralUrl: fullURL
         });
 
-        // Update local cache so UI reflects change immediately
-        cachedFounderData.referralUrl = fullURL;
+        // Update local state
+        if (cachedFounderData) cachedFounderData.referralUrl = fullURL;
         
-        // Refresh page view
+        // Instant Re-render
         window.showReferralPage();
-        alert("✅ Referral Link Generated!");
+        alert("✅ Referral Link Active!");
     } catch (e) {
-        console.error("Referral Gen Error:", e);
-        alert("Error saving referral link.");
+        console.error(e);
+        alert("Error generating link.");
     }
 };
 
-// Copy to clipboard helper
 window.copyReferralLink = function() {
-    const url = cachedFounderData.referralUrl;
+    const url = cachedFounderData?.referralUrl;
     if (url) {
         navigator.clipboard.writeText(url);
         alert("Copied to clipboard!");
     }
 };
+
 // Detect referral in URL
 const urlParams = new URLSearchParams(window.location.search);
 const refCode = urlParams.get('ref');
@@ -7489,8 +7489,11 @@ function handleHashChange() {
         } 
 else if (hash === 'scalevest_refers') {
     document.body.style.background = "#000";
-    if (typeof window.showReferralPage === 'function') {
+    if (cachedFounderData) {
         window.showReferralPage();
+    } else {
+        // If data isn't ready, show a loader and wait
+        document.getElementById('mainContent').innerHTML = '<div class="loader"></div>';
     }
 }
 
