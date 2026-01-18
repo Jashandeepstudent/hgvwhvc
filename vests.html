@@ -6227,6 +6227,18 @@ window.resetModal = function() {
 };
 
 // Save Availability Status - CORRECTED VERSION
+// --- GLOBAL UI HELPER FOR NAVBAR ---
+window.updateNavStatusUI = function(status) {
+    const pill = document.getElementById('navStatusPill');
+    const text = document.getElementById('navStatusText');
+    if (pill && text) {
+        // Switch between 'active' and 'busy' classes for the Noir theme
+        pill.className = `status-pill-nav ${status === 'busy' ? 'busy' : 'active'}`;
+        text.innerText = `Status: ${status === 'busy' ? 'Busy' : 'Active'}`;
+    }
+};
+
+// --- CONSOLIDATED SAVE AVAILABILITY STATUS ---
 window.saveStatus = async function() {
     if (!currentUser) return;
     
@@ -6235,74 +6247,35 @@ window.saveStatus = async function() {
     
     if (!statusSelect) {
         console.error("❌ Status select not found");
-        alert("❌ Error: Status selector not found");
         return;
     }
     
     const selectedStatus = statusSelect.value; // 'active' or 'busy'
     const unavailableDate = dateInput ? dateInput.value : null;
     
-    console.log("🔍 Selected Status:", selectedStatus); // Debug log
-    
     try {
-        // Get all vests for this user
+        // 1. Fetch current vests to perform bulk update
         const vestsRef = ref(db, `Vests/${currentUser.uid}`);
         const vestsSnapshot = await get(vestsRef);
         
-        if (!vestsSnapshot.exists()) {
-            alert("No vests found to update.");
-            return;
-        }
-        
-        const vests = vestsSnapshot.val();
-        const vestIds = Object.keys(vests);
-        
-        console.log("📊 Found vests:", vestIds.length); // Debug log
-        
-        // Prepare updates
         const updates = {};
         let activeCount = 0;
-        let inactiveCount = 0;
         
-        // Handle immediate status change
-        if (selectedStatus) {
-            // CRITICAL FIX: Your database uses "active" and "inactive", not "live"
-            const newStatus = selectedStatus === 'active' ? 'active' : 'inactive';
+        if (vestsSnapshot.exists()) {
+            const vestIds = Object.keys(vestsSnapshot.val());
+            const newVestStatus = selectedStatus === 'active' ? 'active' : 'inactive';
             
-            console.log("🔄 Setting all vests to:", newStatus); // Debug log
-            
+            // Loop through all vests to change their individual visibility
             vestIds.forEach(vestId => {
-                updates[`Vests/${currentUser.uid}/${vestId}/status`] = newStatus;
-                
-                if (newStatus === 'active') {
-                    activeCount++;
-                } else {
-                    inactiveCount++;
-                }
+                updates[`Vests/${currentUser.uid}/${vestId}/status`] = newVestStatus;
+                if (newVestStatus === 'active') activeCount++;
             });
-            
-            // Update founder profile with new active vest count
-            updates[`founderProfile/${currentUser.uid}/activeVestsCount`] = activeCount;
-            
-            console.log("📝 Applying updates:", updates); // Debug log
-            
-            // Apply all updates
-            await update(ref(db), updates);
-            
-            // Update local cache
-            if (cachedFounderData) {
-                cachedFounderData.activeVestsCount = activeCount;
-            }
-            
-            const statusMessage = selectedStatus === 'active' 
-                ? `✅ All vests activated! (${activeCount} active)` 
-                : `⏸️ All vests set to busy/inactive (${inactiveCount} inactive)`;
-            
-            console.log("✅ Update successful:", statusMessage); // Debug log
-            alert(statusMessage);
         }
         
-        // Handle date-based availability
+        // 2. Update Founder Profile (Status + Active Count + Optional Date)
+        updates[`founderProfile/${currentUser.uid}/availabilityStatus`] = selectedStatus;
+        updates[`founderProfile/${currentUser.uid}/activeVestsCount`] = activeCount;
+        
         if (unavailableDate) {
             const selectedDate = new Date(unavailableDate);
             const today = new Date();
@@ -6312,36 +6285,47 @@ window.saveStatus = async function() {
                 alert("❌ Please select a future date.");
                 return;
             }
-            
-            // Save scheduled unavailability
-            await update(ref(db, `founderProfile/${currentUser.uid}`), {
-                scheduledUnavailability: {
-                    date: unavailableDate,
-                    scheduledAt: Date.now()
-                }
-            });
-            
-            console.log("📅 Scheduled unavailability set for:", unavailableDate);
-            
-            alert(`📅 Vests will be set to inactive on ${unavailableDate}`);
+
+            updates[`founderProfile/${currentUser.uid}/scheduledUnavailability`] = {
+                date: unavailableDate,
+                scheduledAt: Date.now()
+            };
         }
+
+        // 3. Execute all database changes in one trip
+        await update(ref(db), updates);
         
-        // Close modal
+        // 4. Update Local Cache for immediate UI feedback
+        if (cachedFounderData) {
+            cachedFounderData.availabilityStatus = selectedStatus;
+            cachedFounderData.activeVestsCount = activeCount;
+        }
+
+        // 5. Update the Navbar Status Pill immediately
+        window.updateNavStatusUI(selectedStatus);
+        
+        // Finalize
+        const statusMessage = selectedStatus === 'active' 
+            ? `✅ All vests activated! (${activeCount} live)` 
+            : `⏸️ System set to BUSY. All vests are now hidden.`;
+            
+        alert(statusMessage);
         document.getElementById('availabilityModal').style.display = 'none';
         
-        // Refresh dashboard
+        // Refresh the Dashboard View
         if (window.location.hash === '#founder_dashboard' || window.location.hash === '') {
-            console.log("🔄 Refreshing dashboard...");
-            await showDashboard(); // Make it async
+            if (typeof createDashboard === 'function') {
+                createDashboard(); 
+            } else if (typeof showDashboard === 'function') {
+                await showDashboard();
+            }
         }
         
     } catch (error) {
-        console.error("❌ Error updating availability:", error);
-        alert("❌ Failed to update availability: " + error.message);
+        console.error("❌ Sync Error:", error);
+        alert("❌ Failed to update status: " + error.message);
     }
-};
-
-// Schedule status change for a future date
+};// Schedule status change for a future date
 function scheduleStatusChange(targetDate) {
     const checkInterval = setInterval(async () => {
         const now = new Date();
