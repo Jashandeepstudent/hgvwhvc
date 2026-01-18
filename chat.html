@@ -340,68 +340,152 @@ if (triggerMeeting === 'true') {
             } catch(e) {}
         }
 
-        async function initializeChat() {
-            const participantIDs = [currentUser.uid, recipientUID].sort();
-            chatRoomID = `chat_${participantIDs[0]}_${participantIDs[1]}`;
-            let chatTitle = "Chat";
-            try {
-                const fSnap = await get(ref(db, `founderProfile/${recipientUID}`));
-                if (fSnap.exists()) chatTitle = fSnap.val().firstName || "Founder";
-                else {
-                    const iSnap = await get(ref(db, `investorProfiles/${recipientUID}`));
-                    if (iSnap.exists()) chatTitle = iSnap.val().fullName || "Investor";
-                }
-            } catch (e) {}
-            document.getElementById('chatTitle').textContent = chatTitle;
-            document.getElementById('initialLoader').style.display = 'none';
+async function initializeChat() {
+    const participantIDs = [currentUser.uid, recipientUID].sort();
+    chatRoomID = `chat_${participantIDs[0]}_${participantIDs[1]}`;
+    let chatTitle = "Chat";
+    
+    try {
+        const fSnap = await get(ref(db, `founderProfile/${recipientUID}`));
+        if (fSnap.exists()) chatTitle = fSnap.val().firstName || "Founder";
+        else {
+            const iSnap = await get(ref(db, `investorProfiles/${recipientUID}`));
+            if (iSnap.exists()) chatTitle = iSnap.val().fullName || "Investor";
+        }
+    } catch (e) {}
+    
+    document.getElementById('chatTitle').textContent = chatTitle;
+    document.getElementById('initialLoader').style.display = 'none';
 
-            const messagesRef = ref(db, `Chats/${chatRoomID}`);
-            onChildAdded(messagesRef, (snapshot) => {
-                const msg = snapshot.val();
-                if(msg.sender) renderMessage(msg);
+    const messagesRef = ref(db, `Chats/${chatRoomID}`);
+    
+    // Listen for new messages
+    onChildAdded(messagesRef, (snapshot) => {
+        const msg = snapshot.val();
+        if(msg.sender) renderMessage(msg);
+    });
+    
+    // Check for auto-reply AFTER messages are loaded
+    await checkAndSendAutoReply();
+    
+    const typingRef = ref(db, `Chats/${chatRoomID}/typing/${recipientUID}`);
+    onValue(typingRef, (snapshot) => {
+        const isTyping = snapshot.val();
+        const bubble = document.getElementById('typingBubble');
+        const container = document.getElementById('chatContainer');
+        if (isTyping) {
+            bubble.style.display = 'flex';
+            container.appendChild(bubble); 
+            container.scrollTop = container.scrollHeight;
+        } else {
+            bubble.style.display = 'none';
+        }
+    });
+}
+// Check and send auto-reply for first-time investor contact
+async function checkAndSendAutoReply() {
+    try {
+        // 1. Check if chatroom has any messages
+        const messagesRef = ref(db, `Chats/${chatRoomID}`);
+        const snapshot = await get(messagesRef);
+        
+        if (!snapshot.exists()) {
+            console.log("No messages in chatroom yet");
+            return;
+        }
+        
+        const messages = snapshot.val();
+        const messageArray = Object.values(messages).filter(m => m && m.sender && m.timestamp);
+        
+        // 2. Count messages from each participant
+        const myMessages = messageArray.filter(m => m.sender === currentUser.uid).length;
+        const theirMessages = messageArray.filter(m => m.sender === recipientUID).length;
+        
+        console.log(`Message count - Me: ${myMessages}, Them: ${theirMessages}`);
+        
+        // 3. Only send auto-reply if:
+        //    - Investor sent at least 1 message
+        //    - Founder has sent 0 messages
+        //    - No auto-reply already sent
+        if (theirMessages > 0 && myMessages === 0) {
+            const alreadySentAutoReply = messageArray.some(m => 
+                m.sender === currentUser.uid && m.isAutoReply === true
+            );
+            
+            if (alreadySentAutoReply) {
+                console.log("Auto-reply already sent");
+                return;
+            }
+            
+            // 4. Get founder's auto-reply settings
+            const founderRef = ref(db, `founderProfile/${currentUser.uid}/autoReply`);
+            const autoReplySnap = await get(founderRef);
+            
+            if (!autoReplySnap.exists()) {
+                console.log("No auto-reply configured");
+                return;
+            }
+            
+            const autoReplyData = autoReplySnap.val();
+            
+            // 5. Check if auto-reply is enabled
+            if (!autoReplyData.enabled) {
+                console.log("Auto-reply is disabled");
+                return;
+            }
+            
+            // 6. Send the auto-reply message
+            console.log("Sending auto-reply...");
+            await push(ref(db, `Chats/${chatRoomID}`), {
+                sender: currentUser.uid,
+                text: autoReplyData.message,
+                timestamp: Date.now(),
+                recipient: recipientUID,
+                read: false,
+                isAutoReply: true // Mark as auto-reply
             });
             
-            const typingRef = ref(db, `Chats/${chatRoomID}/typing/${recipientUID}`);
-            onValue(typingRef, (snapshot) => {
-                const isTyping = snapshot.val();
-                const bubble = document.getElementById('typingBubble');
-                const container = document.getElementById('chatContainer');
-                if (isTyping) {
-                    bubble.style.display = 'flex';
-                    container.appendChild(bubble); 
-                    container.scrollTop = container.scrollHeight;
-                } else {
-                    bubble.style.display = 'none';
-                }
-            });
+            console.log("✅ Auto-reply sent successfully");
         }
-
+    } catch (error) {
+        console.error("Error in auto-reply check:", error);
+    }
+}
         function renderMessage(msg) {
-            const container = document.getElementById('chatContainer');
-            const isMine = msg.sender === currentUser.uid;
-            const div = document.createElement('div');
-            div.className = `message-bubble ${isMine ? 'msg-mine' : 'msg-theirs'}`;
-            const time = new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            let contentHtml = "";
-            if (msg.fileType === 'image') {
-                contentHtml = `<img src="${msg.fileUrl}" style="max-width:100%; border-radius:8px; cursor:pointer;" onclick="window.open('${msg.fileUrl}')">`;
-            } else if (msg.fileType === 'video') {
-                contentHtml = `<video src="${msg.fileUrl}" style="max-width:100%; border-radius:8px;" controls></video>`;
-            } else if (msg.fileType === 'document') {
-                contentHtml = `<a href="${msg.fileUrl}" target="_blank" style="color:inherit; text-decoration:underline;">📄 ${msg.fileName || 'Document'}</a>`;
-            }
-            if (msg.text) {
-                contentHtml += `<div>${msg.text}</div>`;
-            } else if (msg.type === 'meeting') {
-                const isScheduled = msg.scheduledTime && msg.scheduledTime !== 'now';
-                const dateObj = isScheduled ? new Date(msg.scheduledTime) : new Date();
-                const displayTime = isScheduled ? dateObj.toLocaleString() : "Happening Now";
-                contentHtml = `<div class="meeting-card" onclick="event.stopPropagation(); window.tryJoinMeeting('${msg.meetingId}', '${msg.roomToken}', ${msg.scheduledTime === 'now' ? "'now'" : msg.scheduledTime})"><span style="font-size:2rem">📹</span><div style="flex:1"><div style="font-weight:700; font-size:1rem;">${msg.title}</div><div style="font-size:0.85rem; opacity:0.8;">${displayTime}</div><button class="join-btn" onclick="event.stopPropagation(); window.tryJoinMeeting('${msg.meetingId}', '${msg.roomToken}', ${msg.scheduledTime === 'now' ? "'now'" : msg.scheduledTime})">JOIN MEETING</button></div></div>`;
-            }
-            div.innerHTML = `${contentHtml}<span class="timestamp">${time}</span>`;
-            container.appendChild(div);
-            container.scrollTop = container.scrollHeight;
+    const container = document.getElementById('chatContainer');
+    const isMine = msg.sender === currentUser.uid;
+    const div = document.createElement('div');
+    div.className = `message-bubble ${isMine ? 'msg-mine' : 'msg-theirs'}`;
+    const time = new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    
+    let contentHtml = "";
+    
+    if (msg.fileType === 'image') {
+        contentHtml = `<img src="${msg.fileUrl}" style="max-width:100%; border-radius:8px; cursor:pointer;" onclick="window.open('${msg.fileUrl}')">`;
+    } else if (msg.fileType === 'video') {
+        contentHtml = `<video src="${msg.fileUrl}" style="max-width:100%; border-radius:8px;" controls></video>`;
+    } else if (msg.fileType === 'document') {
+        contentHtml = `<a href="${msg.fileUrl}" target="_blank" style="color:inherit; text-decoration:underline;">📄 ${msg.fileName || 'Document'}</a>`;
+    }
+    
+    if (msg.text) {
+        contentHtml += `<div>${msg.text}</div>`;
+        
+        // Add auto-reply indicator
+        if (msg.isAutoReply && isMine) {
+            contentHtml += `<div style="font-size: 0.75rem; opacity: 0.7; margin-top: 5px; font-style: italic;">🤖 Auto-reply</div>`;
         }
+    } else if (msg.type === 'meeting') {
+        const isScheduled = msg.scheduledTime && msg.scheduledTime !== 'now';
+        const dateObj = isScheduled ? new Date(msg.scheduledTime) : new Date();
+        const displayTime = isScheduled ? dateObj.toLocaleString() : "Happening Now";
+        contentHtml = `<div class="meeting-card" onclick="event.stopPropagation(); window.tryJoinMeeting('${msg.meetingId}', '${msg.roomToken}', ${msg.scheduledTime === 'now' ? "'now'" : msg.scheduledTime})"><span style="font-size:2rem">📹</span><div style="flex:1"><div style="font-weight:700; font-size:1rem;">${msg.title}</div><div style="font-size:0.85rem; opacity:0.8;">${displayTime}</div><button class="join-btn" onclick="event.stopPropagation(); window.tryJoinMeeting('${msg.meetingId}', '${msg.roomToken}', ${msg.scheduledTime === 'now' ? "'now'" : msg.scheduledTime})">JOIN MEETING</button></div></div>`;
+    }
+    
+    div.innerHTML = `${contentHtml}<span class="timestamp">${time}</span>`;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+}
 
 async function createVideoSDKRoom() {
     // Generate a unique room ID locally - no API call needed
@@ -652,5 +736,6 @@ sender: currentUser.uid, text: "", fileUrl: downloadURL, fileType: type, fileNam
         input.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
 
     </script>
+
 </body>
 </html>
