@@ -8486,7 +8486,7 @@ window.generateVerificationLine = async function() {
     
     try {
         // Call Vercel API to generate line using Gemini
-        const response = await fetch('YOUR_VERCEL_URL/api/videogemini', {
+        const response = await fetch('https://gemini-sigma-plum.vercel.app/api/videogemini', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
