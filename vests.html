@@ -10869,12 +10869,11 @@ function showVerificationBanner() {
         </style>
         
 window.showVerificationBanner = function() {
-    // Check if banner already exists
     if (document.getElementById('verificationBanner')) return;
 
     const banner = document.createElement('div');
     banner.id = 'verificationBanner';
-    banner.className = 'v-banner-fixed';
+    banner.className = 'v-banner-fixed'; // This refers to the CSS class above
     banner.innerHTML = `
         <div class="v-banner-container">
             <div class="v-banner-left">
@@ -10886,9 +10885,9 @@ window.showVerificationBanner = function() {
     `;
     
     document.body.prepend(banner);
-    // Add space for the banner so it doesn't overlap content
     document.body.style.paddingTop = '50px'; 
-}
+};
+
 // Block unverified users from browsing vests
 window.checkVerificationForBrowse = async function() {
     if (!currentUser) return false;
