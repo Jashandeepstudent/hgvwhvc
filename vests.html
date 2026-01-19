@@ -3760,7 +3760,7 @@
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import { getDatabase, ref, set, push, get, remove } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
     import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
-    import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+    import { getAuth, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 // Locate your existing import and add 'update' to the list
 import { 
     update, 
@@ -3781,7 +3781,20 @@ import {
     const db = getDatabase(app);
     const storage = getStorage(app);
     const auth = getAuth(app);
-
+const signOutBtn = document.getElementById('sign-out-btn');
+signOutBtn.addEventListener('click', () => {
+    // 1. Sign out from Firebase
+    signOut(auth).then(() => {
+        // 2. Clear specific item from localStorage
+        localStorage.removeItem('startupProfileCreated');
+        
+        // 3. Redirect to the index page
+        window.location.href = "https://upscalevest.site/index.html";
+    }).catch((error) => {
+        console.error("Sign out error:", error);
+        alert("An error occurred while signing out.");
+    });
+});
     let currentUser = null;
 let globalUnreadCount = 0;
 const STORAGE_KEY = 'vestFormData';
@@ -12322,6 +12335,7 @@ max-width: 1100px;
 <button class="btn-browse-angels" onclick="handleBrowseAngels()">
     Browse Angel Profiles
 </button>
+
     </div>
 <div id="navStatusPill" class="status-pill-nav ${founderData?.availabilityStatus === 'busy' ? 'busy' : 'active'}">
             <span class="dot-indicator"></span>
@@ -12559,15 +12573,15 @@ max-width: 1100px;
 
 </div> 
 </div> <footer class="footer">
-    <div class="footer-content">
-        <div>
-            <div class="footer-logo-text">ScaleVest</div>
-            <div class="footer-company">UnioraX Private Limited</div>
-        </div>
-        <div class="footer-links">
-
-        </div>
+<div class="footer-content">
+    <div>
+        <div class="footer-logo-text">ScaleVest</div>
+        <div class="footer-company">UnioraX Private Limited</div>
     </div>
+    <div class="footer-links">
+        <button id="sign-out-btn" class="btn-browse-angels">Sign Out</button>
+    </div>
+</div>
 </footer>
 
     `;
