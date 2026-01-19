@@ -9326,7 +9326,7 @@ function showVerificationFailed(expectedLine, transcript, matchPercentage) {
                         <div class="detail-label">Match Score</div>
                         <div class="match-percentage">${matchPercentage || 0}%</div>
                         <div style="color: #666; font-size: 0.85rem; margin-top: 0.5rem;">
-                            (Need 80% or higher to pass)
+                           
                         </div>
                     </div>
                 </div>
@@ -9571,6 +9571,38 @@ window.launchEditedVest = async function() {
         btn.disabled = false;
     }
 };
+// ⭐ ADD THIS AFTER createDashboard() function closes
+
+// Global Profile Dropdown Toggle
+window.toggleDashProfileDropdown = function(event) {
+    if (event) event.stopPropagation();
+    
+    const dropdown = document.getElementById('dashProfileDropdown');
+    if (!dropdown) {
+        console.error("Dropdown element not found!");
+        return;
+    }
+    
+    // Close all other dropdowns first
+    document.querySelectorAll('.dropdown-content').forEach(dd => {
+        if (dd.id !== 'dashProfileDropdown') {
+            dd.classList.remove('show');
+        }
+    });
+    
+    // Toggle this dropdown
+    dropdown.classList.toggle('show');
+};
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.profile-dropdown') && !e.target.closest('.icon-btn')) {
+        const dropdown = document.getElementById('dashProfileDropdown');
+        if (dropdown) {
+            dropdown.classList.remove('show');
+        }
+    }
+});
 window.showVestAnalytics = showVestAnalytics;
 
 
