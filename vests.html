@@ -28,7 +28,29 @@
             text-align: center;
             margin-bottom: 40px;
         }
+/* Ensure the parent is relative */
+.profile-dropdown {
+    position: relative;
+    display: inline-block;
+}
 
+/* Hide by default */
+.profile-dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    background-color: #ffffff;
+    min-width: 200px;
+    box-shadow: 0px 8px 16px rgba(0,0,0,0.1);
+    z-index: 1000;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+/* Show class toggled by JS */
+.profile-dropdown-content.show {
+    display: block !important;
+}
         .header h1 {
             font-size: 2.5rem;
             background: linear-gradient(135deg, #ff006e, #8338ec, #3a86ff);
@@ -3826,60 +3848,67 @@ function createNavBar() {
                 </div>
                 <div class="profile-dropdown">
 <div class="icon-btn" onclick="toggleDashProfileDropdown(event)">
-    ${founderData?.photoURL 
-        ? `<img src="${founderData.photoURL}" alt="Profile" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` 
-        : `<div style="font-size:1.2rem;font-weight:600;">${founderData.founderImage || 'U'}</div>`}
-</div>
+                        ${founderData?.photoURL 
+                            ? `<img src="${founderData.photoURL}" alt="Profile" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` 
+                            : `<div style="font-size:1.2rem;font-weight:600;">${founderData?.founderImage || 'U'}</div>`}
                     </div>
+
                     <div class="profile-dropdown-content" id="dashProfileDropdown">
                         <div class="profile-info">
-                            <div class="profile-username">${founderData.founderUsername || 'Username'}</div>
-                            <div class="profile-userid">${founderData.userId || 'USER_ID'}</div>
+                            <div class="profile-username">${founderData?.founderUsername || 'Username'}</div>
+                            <div class="profile-userid">${founderData?.userId || 'USER_ID'}</div>
                         </div>
                         <button class="switch-btn">Switch to Browse</button>
                         <div class="profile-section">
                             <a href="#" class="profile-link">Refer a Friend</a>
                             <a href="#edit_founderprofile" class="profile-link">Profile</a>
-                            <a href="#" class="profile-link" onclick="auth.signOut();return false;">Log Out</a>
+                            <a href="#" class="profile-link" onclick="auth.signOut(); return false;">Log Out</a>
                         </div>
                     </div>
-                </div>
-            </div>
-        </nav>
-    `;
+                </div> </div> </div> </nav>
+`;
 }
 
 // Toggle dropdown function
-window.toggleDropdown = function(id) {
-    event.stopPropagation();
+// Toggle general dropdowns
+window.toggleDropdown = function(e, id) {
+    if (e) e.stopPropagation();
     const dropdown = document.getElementById(id);
     
     // Close all other dropdowns
-    document.querySelectorAll('.dropdown-content').forEach(dd => {
+    document.querySelectorAll('.dropdown-content, .profile-dropdown-content').forEach(dd => {
         if (dd.id !== id) dd.classList.remove('show');
     });
     
-    // Toggle this dropdown
-    dropdown.classList.toggle('show');
+    if (dropdown) dropdown.classList.toggle('show');
 };
 
-// Toggle profile dropdown
-window.toggleDashProfileDropdown = function() {
-    event.stopPropagation();
+// Toggle profile-specific dropdown
+window.toggleDashProfileDropdown = function(e) {
+    if (e) e.stopPropagation();
     const dropdown = document.getElementById('dashProfileDropdown');
+    
+    // Close other general dropdowns first
+    document.querySelectorAll('.dropdown-content').forEach(dd => {
+        dd.classList.remove('show');
+    });
+
     if (dropdown) {
         dropdown.classList.toggle('show');
     }
 };
 
-// Close dropdowns when clicking outside
+// Close all dropdowns when clicking anywhere else on the page
 document.addEventListener('click', (e) => {
-    if (!e.target.closest('.dropdown') && !e.target.closest('.profile-dropdown')) {
+    const isClickInside = e.target.closest('.profile-dropdown') || e.target.closest('.dropdown');
+    
+    if (!isClickInside) {
         document.querySelectorAll('.dropdown-content, .profile-dropdown-content').forEach(dd => {
             dd.classList.remove('show');
         });
     }
 });
+
 // Save form data to localStorage
 function saveToLocalStorage() {
     const formData = {
