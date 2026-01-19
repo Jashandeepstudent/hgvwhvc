@@ -1440,41 +1440,53 @@ searchBox.addEventListener('input', (e) => {
     const lockOverlay = document.getElementById('verificationLock');
 
     try {
-        // 1. Fetch verification status FIRST
-        // Make sure this path matches where you store 'isVerified'
-        const userRef = ref(database, `users/${user.uid}`);
-        const userSnap = await get(userRef);
+        // 1. LOOK SPECIFICALLY IN founderProfile node
+        const verificationRef = ref(database, `founderProfile/${user.uid}`);
+        const snapshot = await get(verificationRef);
         
-        const userData = userSnap.exists() ? userSnap.val() : null;
-
-        // 2. HARD LOCK LOGIC
-        // If data is missing OR isVerified is explicitly false
-        if (!userData || userData.isVerified === false) {
-            console.log("🛑 Access Denied: User is not verified.");
+        if (snapshot.exists()) {
+            const profileData = snapshot.val();
+            
+            // 2. CHECK THE NODE: isVerified
+            // If it is false (or not there), trigger the LOCK
+            if (profileData.isVerified === false || profileData.isVerified === undefined) {
+                console.log("🛑 Access Denied: founderProfile/isVerified is false");
+                
+                // Show the lock overlay
+                lockOverlay.style.display = 'flex';
+                
+                // Disable scrolling on the background
+                document.body.style.overflow = 'hidden'; 
+                
+                // Hide the loading message
+                document.getElementById('loadingMessage').style.display = 'none';
+                
+                return; // 🔥 STOPS the script here. Profiles will NEVER load.
+            }
+        } else {
+            // If the profile doesn't even exist yet, they definitely aren't verified
             lockOverlay.style.display = 'flex';
-            
-            // Remove the loading message so it doesn't look like it's still trying
-            document.getElementById('loadingMessage').style.display = 'none';
-            
-            return; // 🔥 CRITICAL: Stops the rest of the script from running
+            document.body.style.overflow = 'hidden';
+            return;
         }
 
-        // 3. ONLY IF VERIFIED: Load the app
-        console.log("✅ Access Granted: User is verified.");
-        lockOverlay.style.display = 'none'; // Ensure it's hidden
+        // 3. ONLY RUNS IF isVerified is TRUE
+        console.log("✅ Access Granted: User is verified in founderProfile.");
+        lockOverlay.style.display = 'none';
+        document.body.style.overflow = 'auto'; // Re-enable scroll
 
+        // Now load the rest of the page data
         await loadUserCategory();
         await loadFounderBehavior(); 
-        loadAngelProfiles(); // Only runs if verified
+        loadAngelProfiles(); 
         loadOnlineStatus();
         setUserPresence(user);
         startBrowseTimeTracking();
         autoOpenProfile();
 
     } catch (error) {
-        console.error("Verification check failed:", error);
-        // Safety lock on error
-        lockOverlay.style.display = 'flex';
+        console.error("Critical Security Check Error:", error);
+        lockOverlay.style.display = 'flex'; // Lock the page if database fails
     }
 });
 
