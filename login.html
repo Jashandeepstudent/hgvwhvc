@@ -47,6 +47,7 @@ body::before{
     width:100%; max-width:400px; padding:32px; border-radius:12px;
     background:#ffffff; color:#111827;
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    text-align: center;
 }
 
 /* MAIN CONTAINER RESPONSIVENESS */
@@ -55,30 +56,28 @@ body::before{
     background:#fff; border-radius:16px; display:flex; overflow:hidden;
 }
 .modal-left {
-    width: 50%; background: url('scalevestauth.jpg') no-repeat center center;
+    width: 50%; background: url('scalevestauth.png') no-repeat center center;
     background-size: cover; display: flex; align-items: flex-end; padding: 40px;
     color: #fff; position: relative; z-index: 1;
 }
 .modal-left::before {
     content: ""; position: absolute; inset: 0;
-    background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%); z-index: -1;
+    background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%); z-index: -1;
 }
-.modal-right { width:50%; padding:40px; display: flex; flex-direction: column; justify-content: center; }
+.modal-right { width:50%; padding:40px; display: flex; flex-direction: column; justify-content: center; text-align: left;}
 
-/* MOBILE BREAKPOINT */
 @media (max-width: 768px) {
     .modal { flex-direction: column; max-width: 450px; height: auto; }
     .modal-left { width: 100%; height: 180px; padding: 20px; }
     .modal-right { width: 100%; padding: 30px 20px; }
-    .modal-left h2 { font-size: 24px !important; }
 }
 
+/* FORM STYLES */
 .input-group { margin-bottom: 16px; text-align: left; }
 .input-group label { display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 4px; }
 input, select {
     width:100%; padding:10px 12px; border-radius:6px; border: 1px solid #d1d5db; font-size:14px; outline: none;
 }
-
 .phone-row { display: flex; gap: 8px; }
 .phone-row select { width: 100px; }
 
@@ -110,7 +109,7 @@ input, select {
 
         <div class="modal-right">
             <h3 style="margin-top:0; font-size: 22px;">Get Started</h3>
-            <p style="color: #6b7280; font-size: 14px; margin-bottom: 24px;">Join ScaleVest today.</p>
+            <p style="color: #6b7280; font-size: 14px; margin-bottom: 24px;">Join thousands of businesses today.</p>
 
             <button class="auth-btn btn-google" onclick="googleLogin()">
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
@@ -144,20 +143,20 @@ input, select {
             <label>Password</label>
             <input id="signupPassword" type="password" placeholder="••••••••" oninput="checkPasswordRules()">
         </div>
-        <ul style="color:#6b7280; font-size:11px; list-style:none; padding:0; margin-bottom:20px; line-height: 1.6;">
+        <ul style="color:#6b7280; font-size:11px; text-align: left; list-style:none; padding:0; margin-bottom:20px;">
             <li id="rule_length">❌ 6+ Characters</li>
             <li id="rule_number">❌ One Number</li>
             <li id="rule_special">❌ One Special Character</li>
         </ul>
         <button class="auth-btn" style="background:#2563eb; color:#fff; border:none;" onclick="emailSignup()">Continue</button>
-        <button class="auth-btn" style="background:transparent; color:#6b7280; border:none; margin-top:5px;" onclick="closeModals()">Cancel</button>
+        <button class="auth-btn" style="background:transparent; color:#6b7280; border:none;" onclick="closeModals()">Cancel</button>
     </div>
 </div>
 
 <div class="email-overlay" id="mobileModal">
     <div class="modal-content-prof">
         <h3>Verify Phone</h3>
-        <p>Confirm your phone to finalize registration.</p>
+        <p>Security verification required.</p>
         <div class="error-msg" id="mobileError"></div>
         <div class="input-group">
             <label>Mobile Number</label>
@@ -173,36 +172,35 @@ input, select {
         </div>
         <div id="recaptcha-container"></div>
         <button class="auth-btn" style="background:#2563eb; color:#fff; border:none;" onclick="sendOTP()">Send OTP</button>
-        <button class="auth-btn" style="background:transparent; color:#6b7280; border:none; margin-top:5px;" onclick="cancelFlow()">Cancel</button>
+        <button class="auth-btn" style="background:transparent; color:#6b7280; border:none;" onclick="cancelFlow()">Cancel</button>
     </div>
 </div>
 
 <div class="email-overlay" id="otpModal">
     <div class="modal-content-prof">
         <h3>Enter OTP</h3>
-        <p>We've sent a code to your mobile.</p>
         <div class="error-msg" id="otpError"></div>
         <input id="otpCode" type="number" placeholder="000000" style="text-align:center; font-size:24px; letter-spacing:4px; margin-bottom:20px;">
         <button class="auth-btn" style="background:#10b981; color:#fff; border:none;" onclick="verifyOTPAndSignup()">Verify & Create</button>
-        <button class="auth-btn" style="background:transparent; color:#6b7280; border:none; margin-top:5px;" onclick="cancelFlow()">Cancel Registration</button>
+        <button class="auth-btn" style="background:transparent; color:#6b7280; border:none;" onclick="cancelFlow()">Cancel Registration</button>
     </div>
 </div>
 
 <div class="email-overlay" id="signinModal">
     <div class="modal-content-prof">
         <h3>Welcome Back</h3>
-        <p>Sign in to your account.</p>
         <div class="error-msg" id="signinError"></div>
         <div class="input-group">
             <label>Email</label>
-            <input id="signinEmail" type="email">
+            <input id="signinEmail" type="email" placeholder="email@address.com">
         </div>
         <div class="input-group">
             <label>Password</label>
-            <input id="signinPassword" type="password">
+            <input id="signinPassword" type="password" placeholder="••••••••">
         </div>
         <button class="auth-btn" style="background:#2563eb; color:#fff; border:none;" onclick="emailSignin()">Sign In</button>
-        <button class="auth-btn" style="background:transparent; color:#6b7280; border:none; margin-top:5px;" onclick="closeModals()">Cancel</button>
+        <p style="margin: 10px 0;"><span style="color: #2563eb; font-size: 13px; cursor: pointer;" onclick="handleForgotPassword()">Forgot password?</span></p>
+        <button class="auth-btn" style="background:transparent; color:#6b7280; border:none;" onclick="closeModals()">Cancel</button>
     </div>
 </div>
 
@@ -218,13 +216,11 @@ firebase.initializeApp({
 
 const auth = firebase.auth();
 let confirmationResult = null;
-
 window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', { 'size': 'invisible' });
 
-// Check for existing flow on page load
+// Handle page refresh persistence
 window.onload = () => {
-    const savedStep = localStorage.getItem('authStep');
-    if(savedStep === 'OTP_PENDING') {
+    if(localStorage.getItem('authStep') === 'OTP_PENDING') {
         otpModal.style.display = "flex";
     }
 };
@@ -232,13 +228,7 @@ window.onload = () => {
 function emailAuthHandler(){ signupModal.style.display="flex"; }
 function switchToSigninUI(){ closeModals(); signinModal.style.display="flex"; }
 function closeModals(){ document.querySelectorAll('.email-overlay').forEach(el => el.style.display='none'); }
-
-function cancelFlow() {
-    localStorage.removeItem('authStep');
-    localStorage.removeItem('tempEmail');
-    localStorage.removeItem('tempPass');
-    closeModals();
-}
+function cancelFlow() { localStorage.clear(); closeModals(); }
 
 function checkPasswordRules(){
     const p = signupPassword.value;
@@ -251,10 +241,8 @@ async function emailSignup() {
     const email = signupEmail.value.trim();
     const pass = signupPassword.value;
     if(!email || pass.length < 6) return;
-    
     localStorage.setItem('tempEmail', email);
     localStorage.setItem('tempPass', pass);
-    
     signupModal.style.display = "none";
     mobileModal.style.display = "flex";
 }
@@ -262,10 +250,8 @@ async function emailSignup() {
 async function sendOTP() {
     const code = document.getElementById('countryCode').value;
     const num = document.getElementById('mobileNumber').value.trim();
-    const fullPhone = code + num;
-
     try {
-        confirmationResult = await auth.signInWithPhoneNumber(fullPhone, window.recaptchaVerifier);
+        confirmationResult = await auth.signInWithPhoneNumber(code + num, window.recaptchaVerifier);
         localStorage.setItem('authStep', 'OTP_PENDING');
         mobileModal.style.display = "none";
         otpModal.style.display = "flex";
@@ -273,23 +259,39 @@ async function sendOTP() {
 }
 
 async function verifyOTPAndSignup() {
-    const code = otpCode.value;
-    const email = localStorage.getItem('tempEmail');
-    const pass = localStorage.getItem('tempPass');
-
     try {
-        await confirmationResult.confirm(code);
-        await auth.createUserWithEmailAndPassword(email, pass);
+        await confirmationResult.confirm(otpCode.value);
+        await auth.createUserWithEmailAndPassword(localStorage.getItem('tempEmail'), localStorage.getItem('tempPass'));
         localStorage.clear();
         window.location.href = "business-side.html";
-    } catch (err) { alert("Invalid OTP or Session Expired. Please try again."); }
+    } catch (err) { alert("Invalid OTP"); }
 }
 
 async function emailSignin() {
     try {
         await auth.signInWithEmailAndPassword(signinEmail.value, signinPassword.value);
         window.location.href = "mainbusinesshub.html";
-    } catch (err) { alert("Login failed: " + err.message); }
+    } catch (err) { 
+        const errEl = document.getElementById('signinError');
+        errEl.innerText = err.message;
+        errEl.style.display = "block";
+    }
+}
+
+async function handleForgotPassword() {
+    const email = signinEmail.value.trim();
+    const errEl = document.getElementById('signinError');
+    if (!email) {
+        errEl.innerText = "Enter email first.";
+        errEl.style.display = "block";
+        return;
+    }
+    try {
+        await auth.sendPasswordResetEmail(email);
+        errEl.style.background = "#ecfdf5"; errEl.style.color = "#047857"; errEl.style.borderColor = "#10b981";
+        errEl.innerText = "Reset link sent! Check your inbox.";
+        errEl.style.display = "block";
+    } catch (err) { alert(err.message); }
 }
 
 async function googleLogin() {
@@ -300,4 +302,3 @@ async function googleLogin() {
 </script>
 </body>
 </html>
-
