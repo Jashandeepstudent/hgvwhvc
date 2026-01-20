@@ -3566,6 +3566,7 @@
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </head>
 <body>
 <div id="availabilityModal" class="modal">
@@ -4553,7 +4554,7 @@ window.showFounderEmergence = async function() {
                         <div class="price-row"><span class="old-price">₹300</span><span class="discount-pill">Launch OFF</span></div>
                         <span class="new-price">₹150</span>
                     </div>
-                    <button class="buy-btn-premium" onclick="selectEmergencePlan('alpha', 7, 'cash')">Choose Alpha</button>
+<button class="buy-btn-premium" onclick="openEmergenceCheckout('Alpha', 150)">Choose Alpha</button>
                 </div>
 
                 <div class="emergence-card bundle-card featured">
@@ -4570,7 +4571,7 @@ window.showFounderEmergence = async function() {
                         <div class="price-row"><span class="old-price">₹400</span><span class="discount-pill">Launch OFF</span></div>
                         <span class="new-price">₹200</span>
                     </div>
-                    <button class="buy-btn-premium" onclick="selectEmergencePlan('steady', 12, 'cash')">Choose Steady</button>
+<button class="buy-btn-premium" onclick="openEmergenceCheckout('Steady', 200)">Choose Steady</button>
                 </div>
 
                 <div class="emergence-card bundle-card">
@@ -4584,7 +4585,7 @@ window.showFounderEmergence = async function() {
                         <div class="price-row"><span class="old-price">₹699</span><span class="discount-pill">Launch OFF</span></div>
                         <span class="new-price">₹350</span>
                     </div>
-                    <button class="buy-btn-premium" onclick="selectEmergencePlan('critical', 18, 'cash')">Go Super Critical</button>
+<button class="buy-btn-premium" onclick="openEmergenceCheckout('Critical', 350)">Go Super Critical</button>
                 </div>
             </div>
         </div>
@@ -4594,35 +4595,38 @@ window.showFounderEmergence = async function() {
 // APPLICATION SELECTION FOR EMERGENCE
 // ==========================================
 
-window.selectEmergencePlan = async function(planType, investorCount, paymentMethod) {
-    // Check cooldown first
-    const cooldownCheck = await checkEmergenceCooldown();
-    if (!cooldownCheck.allowed) {
-        showCooldownModal(cooldownCheck.timeLeft);
+// ==========================================
+// PAYMENT & CHECKOUT SYSTEM
+// ==========================================
+
+// Open Emergence Checkout
+window.openEmergenceCheckout = async function(plan, price) {
+    if (!currentUser) {
+        alert("Please login first");
         return;
     }
     
-    // Check tokens if payment method is tokens
-    if (paymentMethod === 'tokens') {
-        const tokenCost = {
-            'tiny': 100,
-            'small': 200,
-            'medium': 320
-        }[planType];
-        
-        const currentTokens = await getLiveTokens();
-        if (currentTokens < tokenCost) {
-            alert(`❌ Insufficient tokens! You need ${tokenCost} tokens but have ${currentTokens}.`);
-            return;
-        }
+    // Check verification
+    const founderRef = ref(db, `founderProfile/${currentUser.uid}`);
+    const snapshot = await get(founderRef);
+    
+    if (snapshot.exists() && snapshot.val().isVerified === false) {
+        showVerificationBlockPopup('use Founder Emergence');
+        return;
     }
     
-    // Fetch completed applications
-    const appsRef = ref(db, `Applications/${currentUser.uid}`);
-    const snapshot = await get(appsRef);
+    // Show application selector
+    showApplicationSelector(plan, price);
+};
+
+// Show Application Selector Modal
+async function showApplicationSelector(plan, price) {
+    const appRef = ref(db, `Applications/${currentUser.uid}`);
+    const snapshot = await get(appRef);
     
     if (!snapshot.exists()) {
-        alert("❌ No applications found. Please create one first!");
+        alert("You need to create at least one application first!");
+        window.location.hash = 'applications';
         return;
     }
     
@@ -4630,82 +4634,456 @@ window.selectEmergencePlan = async function(planType, investorCount, paymentMeth
     const completedApps = Object.entries(apps).filter(([id, app]) => app.status === 'completed');
     
     if (completedApps.length === 0) {
-        alert("❌ No completed applications found. Please complete an application first!");
+        alert("You need at least one completed application to launch Emergence!");
+        window.location.hash = 'applications';
         return;
     }
     
-    // Show selection modal
     const modal = document.createElement('div');
     modal.className = 'edit-modal show';
     modal.innerHTML = `
-        <style>
-            .app-selection-card {
-                background: #0a0a0a;
-                border: 2px solid #222;
-                border-radius: 12px;
-                padding: 1.5rem;
-                margin-bottom: 1rem;
-                cursor: pointer;
-                transition: all 0.3s;
-            }
-            .app-selection-card:hover {
-                border-color: #ff006e;
-                transform: translateX(10px);
-                background: #111;
-            }
-            .app-selection-card.selected {
-                border-color: #10b981;
-                background: rgba(16, 185, 129, 0.1);
-            }
-        </style>
-        
         <div class="edit-modal-content" style="max-width: 600px;">
+            <button class="modal-close" onclick="this.closest('.edit-modal').remove()">×</button>
+            
             <div class="edit-modal-header">
-                <h3>Select Application to Launch</h3>
-                <button class="modal-close" onclick="this.closest('.edit-modal').remove()">×</button>
+                <h3>🚀 Select Application for ${plan} Emergence</h3>
             </div>
+            
             <div class="edit-modal-body" style="max-height: 400px; overflow-y: auto;">
                 <p style="color: #888; margin-bottom: 1.5rem;">
-                    Choose which application you want to send to <strong>${investorCount} investors</strong>
+                    Choose which application you want to send to investors:
                 </p>
                 
-                ${completedApps.map(([appId, app]) => `
-                    <div class="app-selection-card" onclick="selectApplication('${appId}', this)">
-                        <h4 style="font-size: 1.1rem; margin-bottom: 0.5rem;">${app.appName || 'Untitled Application'}</h4>
-                        <p style="color: #888; font-size: 0.9rem;">${app.appHook || 'No hook available'}</p>
-                        <p style="color: #666; font-size: 0.8rem; margin-top: 0.5rem;">
+                ${completedApps.map(([id, app]) => `
+                    <div class="app-selector-card" style="background: #0a0a0a; border: 2px solid #222; border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem; cursor: pointer; transition: all 0.3s;" 
+                         onclick="selectApplicationForEmergence('${id}', '${plan}', ${price}, this)">
+                        <h4 style="color: #fff; margin-bottom: 0.5rem;">${app.appName}</h4>
+                        <p style="color: #666; font-size: 0.9rem;">${app.appHook || 'No hook'}</p>
+                        <div style="margin-top: 0.75rem; color: #888; font-size: 0.85rem;">
                             Created: ${new Date(app.updatedAt).toLocaleDateString()}
-                        </p>
+                        </div>
                     </div>
                 `).join('')}
             </div>
-            <div class="edit-modal-footer">
-                <button class="modal-btn-cancel" onclick="this.closest('.edit-modal').remove()">Cancel</button>
-                <button class="modal-btn-save" id="launchEmergenceBtn" disabled onclick="launchEmergence('${planType}', ${investorCount}, '${paymentMethod}')">
-                    Launch Emergence 🚀
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+// Select Application and Open Checkout
+window.selectApplicationForEmergence = function(appId, plan, price, element) {
+    // Visual feedback
+    document.querySelectorAll('.app-selector-card').forEach(card => {
+        card.style.borderColor = '#222';
+    });
+    element.style.borderColor = '#10b981';
+    
+    setTimeout(() => {
+        document.querySelector('.edit-modal').remove();
+        openPaymentCheckout(plan, price, 'emergence', appId);
+    }, 300);
+};
+
+// Open Token Checkout
+window.openTokenCheckout = function(bundle, price, tokens) {
+    openPaymentCheckout(bundle, price, 'tokens', tokens);
+};
+
+// Universal Payment Checkout
+function openPaymentCheckout(itemName, price, type, extraData) {
+    const modal = document.createElement('div');
+    modal.className = 'edit-modal show';
+    modal.id = 'checkoutModal';
+    modal.innerHTML = `
+        <style>
+            .checkout-container {
+                background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+                border: 1px solid #333;
+                border-radius: 20px;
+                max-width: 500px;
+                overflow: hidden;
+            }
+            
+            .checkout-header {
+                background: linear-gradient(135deg, #ff006e, #8338ec);
+                padding: 2rem;
+                text-align: center;
+                color: #fff;
+            }
+            
+            .checkout-title {
+                font-size: 1.8rem;
+                font-weight: 800;
+                margin-bottom: 0.5rem;
+            }
+            
+            .checkout-subtitle {
+                opacity: 0.9;
+                font-size: 0.95rem;
+            }
+            
+            .checkout-body {
+                padding: 2rem;
+            }
+            
+            .price-display {
+                text-align: center;
+                padding: 2rem;
+                background: #000;
+                border-radius: 16px;
+                margin-bottom: 2rem;
+            }
+            
+            .price-amount {
+                font-size: 3rem;
+                font-weight: 800;
+                color: #fff;
+                margin-bottom: 0.5rem;
+            }
+            
+            .price-label {
+                color: #888;
+                font-size: 0.9rem;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+            }
+            
+            .payment-methods {
+                margin-bottom: 2rem;
+            }
+            
+            .method-title {
+                color: #666;
+                font-size: 0.85rem;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                margin-bottom: 1rem;
+            }
+            
+            .method-grid {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+            }
+            
+            .method-card {
+                background: #111;
+                border: 2px solid #222;
+                border-radius: 12px;
+                padding: 1rem;
+                text-align: center;
+                cursor: pointer;
+                transition: all 0.3s;
+            }
+            
+            .method-card:hover {
+                border-color: #ff006e;
+                transform: translateY(-2px);
+            }
+            
+            .method-card.selected {
+                border-color: #10b981;
+                background: rgba(16, 185, 129, 0.1);
+            }
+            
+            .method-icon {
+                font-size: 2rem;
+                margin-bottom: 0.5rem;
+            }
+            
+            .method-name {
+                color: #fff;
+                font-size: 0.9rem;
+                font-weight: 600;
+            }
+            
+            .checkout-btn {
+                width: 100%;
+                padding: 1.25rem;
+                background: linear-gradient(135deg, #10b981, #059669);
+                color: #fff;
+                border: none;
+                border-radius: 12px;
+                font-size: 1.1rem;
+                font-weight: 800;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                cursor: pointer;
+                transition: all 0.3s;
+            }
+            
+            .checkout-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4);
+            }
+            
+            .checkout-btn:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+            
+            .secure-badge {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.5rem;
+                margin-top: 1rem;
+                color: #666;
+                font-size: 0.85rem;
+            }
+        </style>
+        
+        <div class="checkout-container">
+            <button class="modal-close" onclick="this.closest('.edit-modal').remove()" 
+                    style="position: absolute; top: 15px; right: 15px; z-index: 10;">×</button>
+            
+            <div class="checkout-header">
+                <div class="checkout-title">${itemName} ${type === 'tokens' ? 'Bundle' : 'Plan'}</div>
+                <div class="checkout-subtitle">Complete your purchase securely</div>
+            </div>
+            
+            <div class="checkout-body">
+                <div class="price-display">
+                    <div class="price-amount">₹${price}</div>
+                    <div class="price-label">Total Amount</div>
+                </div>
+                
+                <div class="payment-methods">
+                    <div class="method-title">Select Payment Method</div>
+                    <div class="method-grid">
+                        <div class="method-card" data-method="upi" onclick="selectPaymentMethod('upi', this)">
+                            <div class="method-icon">📱</div>
+                            <div class="method-name">UPI</div>
+                        </div>
+                        <div class="method-card" data-method="card" onclick="selectPaymentMethod('card', this)">
+                            <div class="method-icon">💳</div>
+                            <div class="method-name">Card</div>
+                        </div>
+                        <div class="method-card" data-method="netbanking" onclick="selectPaymentMethod('netbanking', this)">
+                            <div class="method-icon">🏦</div>
+                            <div class="method-name">NetBanking</div>
+                        </div>
+                        <div class="method-card" data-method="wallet" onclick="selectPaymentMethod('wallet', this)">
+                            <div class="method-icon">👛</div>
+                            <div class="method-name">Wallet</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="checkout-btn" id="proceedPayBtn" onclick="proceedToPayment('${itemName}', ${price}, '${type}', '${extraData}')" disabled>
+                    Proceed to Payment
                 </button>
+                
+                <div class="secure-badge">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                    Secured by Razorpay
+                </div>
             </div>
         </div>
     `;
-    document.body.appendChild(modal);
     
-    // Store selected app globally
-    window.selectedApplicationId = null;
-};
+    document.body.appendChild(modal);
+}
 
-window.selectApplication = function(appId, element) {
-    // Remove previous selections
-    document.querySelectorAll('.app-selection-card').forEach(card => {
+// Select Payment Method
+let selectedPaymentMethod = null;
+window.selectPaymentMethod = function(method, element) {
+    selectedPaymentMethod = method;
+    
+    // Update UI
+    document.querySelectorAll('.method-card').forEach(card => {
         card.classList.remove('selected');
     });
-    
-    // Select this one
     element.classList.add('selected');
-    window.selectedApplicationId = appId;
     
-    // Enable launch button
-    document.getElementById('launchEmergenceBtn').disabled = false;
+    // Enable button
+    document.getElementById('proceedPayBtn').disabled = false;
 };
+
+// Proceed to Razorpay Payment
+window.proceedToPayment = async function(itemName, price, type, extraData) {
+    if (!selectedPaymentMethod) {
+        alert("Please select a payment method");
+        return;
+    }
+    
+    const btn = document.getElementById('proceedPayBtn');
+    btn.innerHTML = 'Processing...';
+    btn.disabled = true;
+    
+    // Razorpay Test Key (Replace with your key)
+    const RAZORPAY_KEY = 'rzp_test_mXk8s9Lp2nQv5r'; // ⚠️ Replace this!
+    
+    const options = {
+        key: RAZORPAY_KEY,
+        amount: price * 100, // Convert to paise
+        currency: 'INR',
+        name: 'ScaleVest',
+        description: `${itemName} ${type === 'tokens' ? 'Token Bundle' : 'Emergence Plan'}`,
+        image: 'ScaleVestLogo.png',
+        handler: function(response) {
+            handlePaymentSuccess(response, itemName, price, type, extraData);
+        },
+        prefill: {
+            name: cachedFounderData?.founderUsername || 'User',
+            email: currentUser?.email || '',
+        },
+        theme: {
+            color: '#ff006e'
+        },
+        modal: {
+            ondismiss: function() {
+                btn.innerHTML = 'Proceed to Payment';
+                btn.disabled = false;
+            }
+        }
+    };
+    
+    // Specify payment method if selected
+    if (selectedPaymentMethod === 'upi') {
+        options.method = 'upi';
+    } else if (selectedPaymentMethod === 'card') {
+        options.method = 'card';
+    } else if (selectedPaymentMethod === 'netbanking') {
+        options.method = 'netbanking';
+    } else if (selectedPaymentMethod === 'wallet') {
+        options.method = 'wallet';
+    }
+    
+    const rzp = new Razorpay(options);
+    rzp.open();
+};
+
+// Handle Payment Success
+async function handlePaymentSuccess(response, itemName, price, type, extraData) {
+    console.log('Payment Success:', response);
+    
+    // Close checkout modal
+    document.getElementById('checkoutModal')?.remove();
+    
+    // Show success animation
+    showPaymentSuccessAnimation();
+    
+    try {
+        if (type === 'tokens') {
+            // Add tokens to user account
+            const tokens = parseInt(extraData);
+            const currentTokens = await getLiveTokens();
+            await update(ref(db, `founderProfile/${currentUser.uid}`), {
+                scaleTokens: currentTokens + tokens
+            });
+            
+            setTimeout(() => {
+                alert(`✅ ${tokens} tokens added successfully!`);
+                showTokenShop();
+            }, 2000);
+            
+        } else if (type === 'emergence') {
+            // Launch emergence campaign
+            const appId = extraData;
+            await launchEmergenceCampaign(appId, itemName, price);
+            
+            setTimeout(() => {
+                alert(`🚀 ${itemName} Emergence launched successfully!`);
+                window.location.hash = 'founder_dashboard';
+            }, 2000);
+        }
+        
+    } catch (error) {
+        console.error('Post-payment error:', error);
+        alert('Payment successful but there was an error processing your request. Please contact support.');
+    }
+}
+
+// Launch Emergence Campaign
+async function launchEmergenceCampaign(appId, plan, price) {
+    const timestamp = Date.now();
+    
+    const campaignData = {
+        applicationId: appId,
+        founderId: currentUser.uid,
+        plan: plan,
+        price: price,
+        status: 'active',
+        investorsSent: 0,
+        investorsTarget: plan === 'Alpha' ? 7 : plan === 'Steady' ? 12 : 18,
+        launchedAt: timestamp,
+        paymentVerified: true
+    };
+    
+    await push(ref(db, `EmergenceCampaigns/${currentUser.uid}`), campaignData);
+}
+
+// Payment Success Animation
+function showPaymentSuccessAnimation() {
+    const animation = document.createElement('div');
+    animation.innerHTML = `
+        <style>
+            .payment-success-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background: rgba(0, 0, 0, 0.95);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 999999;
+                animation: fadeIn 0.3s;
+            }
+            
+            .success-circle {
+                width: 120px;
+                height: 120px;
+                border-radius: 50%;
+                background: #10b981;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            }
+            
+            @keyframes scaleIn {
+                0% { transform: scale(0); }
+                100% { transform: scale(1); }
+            }
+            
+            .checkmark {
+                width: 60px;
+                height: 60px;
+                stroke: white;
+                stroke-width: 4;
+                animation: drawCheck 0.8s ease 0.3s forwards;
+                stroke-dasharray: 100;
+                stroke-dashoffset: 100;
+            }
+            
+            @keyframes drawCheck {
+                to { stroke-dashoffset: 0; }
+            }
+        </style>
+        
+        <div class="payment-success-overlay">
+            <div class="success-circle">
+                <svg class="checkmark" viewBox="0 0 24 24" fill="none">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(animation);
+    
+    setTimeout(() => {
+        animation.style.animation = 'fadeIn 0.3s reverse';
+        setTimeout(() => animation.remove(), 300);
+    }, 1500);
+}
 window.showScaleShop = async function() {
     const tokens = await getLiveTokens();
     const container = document.getElementById('dashboardContainer');
@@ -4778,9 +5156,7 @@ window.showTokenShop = async function() {
                     <h2 class="plan-title">Small Bundle</h2>
                     <div class="token-amount">80 Scale Tokens</div>
                     <div class="price-section"><span class="new-price">₹50</span></div>
-                    <button class="buy-btn-premium" onclick="window.addTokensToDB(80, 'small', 50)">
-                        Buy Now
-                    </button>
+<button class="buy-btn-premium" onclick="openTokenCheckout('Small', 50, 80)">Buy Now</button>
                 </div>
 
                 <!-- Medium Bundle -->
@@ -4791,9 +5167,7 @@ window.showTokenShop = async function() {
                     <h2 class="plan-title">Medium Bundle</h2>
                     <div class="token-amount">180 Scale Tokens</div>
                     <div class="price-section"><span class="new-price">₹150</span></div>
-                    <button class="buy-btn-premium" onclick="window.addTokensToDB(180, 'medium', 150)">
-                        Buy Now
-                    </button>
+<button class="buy-btn-premium" onclick="openTokenCheckout('Medium', 150, 180)">Buy Now</button>
                 </div>
 
                 <!-- Large Bundle -->
@@ -4804,9 +5178,7 @@ window.showTokenShop = async function() {
                     <h2 class="plan-title">Large Bundle</h2>
                     <div class="token-amount">500 Scale Tokens</div>
                     <div class="price-section"><span class="new-price">₹400</span></div>
-                    <button class="buy-btn-premium" onclick="window.addTokensToDB(500, 'large', 400)">
-                        Buy Now
-                    </button>
+<button class="buy-btn-premium" onclick="openTokenCheckout('Large', 400, 500)">Buy Now</button>
                 </div>
             </div>
         </div>
