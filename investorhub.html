@@ -2308,6 +2308,37 @@ const stepsSection = document.getElementById('verificationSteps');
         console.error("Error: verificationSteps element not found!");
     }
 };
+let uploadedVideoFile = null;
+
+window.handleVideoUpload = function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    // Check file size (100MB limit)
+    if (file.size > 100 * 1024 * 1024) {
+        alert('❌ Video file must be under 100MB');
+        return;
+    }
+    
+    // Check file type
+    const validTypes = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/webm'];
+    if (!validTypes.includes(file.type)) {
+        alert('❌ Please upload a valid video file (MP4, MOV, AVI, WEBM)');
+        return;
+    }
+    
+    uploadedVideoFile = file;
+    
+    // Update UI
+    const uploadBox = document.getElementById('uploadBox');
+    const uploadText = document.getElementById('uploadText');
+    
+    uploadBox.classList.add('has-file');
+    uploadText.innerHTML = `✓ ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+    
+    // Enable submit button
+    document.getElementById('submitVerifyBtn').disabled = false;
+};
 
 onAuthStateChanged(auth, async (user) => {
     updateProgress(20, "Authenticating...");
