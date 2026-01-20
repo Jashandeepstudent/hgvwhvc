@@ -2909,9 +2909,11 @@ window.saveUserID = async () => {
     await update(ref(db, `investorProfiles/${currentUserUID}`), { userID: newId });
     location.reload();
 };
-function startVerification() {
+
+window.startVerification = function() {
     window.location.hash = 'scalevest_verify';
-}
+};
+
 
 </script>
 
