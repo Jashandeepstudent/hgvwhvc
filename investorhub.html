@@ -2339,6 +2339,309 @@ window.handleVideoUpload = function(event) {
     // Enable submit button
     document.getElementById('submitVerifyBtn').disabled = false;
 };
+function showVerificationLoader() {
+    const loader = document.createElement('div');
+    loader.id = 'verificationLoader';
+    loader.innerHTML = `
+        <style>
+            .verification-loader-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background: rgba(0, 0, 0, 0.95);
+                backdrop-filter: blur(15px);
+                z-index: 999999;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .verification-loader-box {
+                background: #0a0a0a;
+                border: 1px solid #333;
+                border-radius: 20px;
+                padding: 3rem;
+                max-width: 500px;
+                text-align: center;
+            }
+            
+            .verification-spinner {
+                width: 100px;
+                height: 100px;
+                margin: 0 auto 2rem;
+                position: relative;
+            }
+            
+            .spinner-ring {
+                width: 100%;
+                height: 100%;
+                border: 8px solid #1a1a1a;
+                border-top: 8px solid #ff006e;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+            }
+            
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+            
+            .verification-loader-text {
+                font-size: 1.5rem;
+                font-weight: 700;
+                color: #fff;
+                margin-bottom: 1rem;
+            }
+            
+            .verification-loader-subtext {
+                color: #888;
+                font-size: 1rem;
+                margin-bottom: 2rem;
+            }
+            
+            .verification-progress-bar {
+                width: 100%;
+                height: 8px;
+                background: #1a1a1a;
+                border-radius: 10px;
+                overflow: hidden;
+            }
+            
+            .verification-progress-fill {
+                height: 100%;
+                background: linear-gradient(90deg, #ff006e, #8338ec);
+                width: 0%;
+                transition: width 0.5s ease;
+            }
+            
+            .verification-percentage {
+                color: #ff006e;
+                font-size: 1.2rem;
+                font-weight: 700;
+                margin-top: 1rem;
+            }
+        </style>
+        
+        <div class="verification-loader-overlay">
+            <div class="verification-loader-box">
+                <div class="verification-spinner">
+                    <div class="spinner-ring"></div>
+                </div>
+                
+                <div class="verification-loader-text" id="loaderText">Initializing...</div>
+                <div class="verification-loader-subtext" id="loaderSubtext">Please wait while we verify your video</div>
+                
+                <div class="verification-progress-bar">
+                    <div class="verification-progress-fill" id="progressFill"></div>
+                </div>
+                
+                <div class="verification-percentage" id="progressPercent">0%</div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(loader);
+}
+
+function updateVerificationLoader(text, percentage) {
+    const loaderText = document.getElementById('loaderText');
+    const progressFill = document.getElementById('progressFill');
+    const progressPercent = document.getElementById('progressPercent');
+    
+    if (loaderText) loaderText.textContent = text;
+    if (progressFill) progressFill.style.width = percentage + '%';
+    if (progressPercent) progressPercent.textContent = percentage + '%';
+}
+
+function hideVerificationLoader() {
+    const loader = document.getElementById('verificationLoader');
+    if (loader) {
+        loader.style.opacity = '0';
+        loader.style.transition = 'opacity 0.3s ease';
+        setTimeout(() => loader.remove(), 300);
+    }
+}
+
+// ==========================================
+// VERIFICATION SUCCESS SCREEN
+// ==========================================
+
+function showVerificationSuccess() {
+    const success = document.createElement('div');
+    success.id = 'verificationSuccess';
+    success.innerHTML = `
+        <style>
+            .verification-success-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background: rgba(0, 0, 0, 0.95);
+                backdrop-filter: blur(15px);
+                z-index: 999999;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                animation: fadeIn 0.5s ease;
+            }
+            
+            .verification-success-box {
+                background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+                border: 2px solid #10b981;
+                border-radius: 20px;
+                padding: 3rem;
+                max-width: 550px;
+                text-align: center;
+                box-shadow: 0 0 50px rgba(16, 185, 129, 0.3);
+                animation: slideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            }
+            
+            @keyframes slideUp {
+                from { transform: translateY(50px); opacity: 0; }
+                to { transform: translateY(0); opacity: 1; }
+            }
+            
+            .success-checkmark {
+                width: 120px;
+                height: 120px;
+                margin: 0 auto 2rem;
+                background: rgba(16, 185, 129, 0.15);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                position: relative;
+                animation: scaleIn 0.6s ease;
+            }
+            
+            @keyframes scaleIn {
+                0% { transform: scale(0); }
+                50% { transform: scale(1.1); }
+                100% { transform: scale(1); }
+            }
+            
+            .success-checkmark svg {
+                width: 60px;
+                height: 60px;
+                stroke: #10b981;
+                stroke-width: 3;
+                animation: drawCheck 0.8s ease 0.3s forwards;
+                stroke-dasharray: 100;
+                stroke-dashoffset: 100;
+            }
+            
+            @keyframes drawCheck {
+                to { stroke-dashoffset: 0; }
+            }
+            
+            .success-title {
+                font-size: 2.5rem;
+                font-weight: 800;
+                color: #fff;
+                margin-bottom: 1rem;
+                background: linear-gradient(135deg, #10b981, #34d399);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+            
+            .success-message {
+                color: #aaa;
+                font-size: 1.1rem;
+                line-height: 1.8;
+                margin-bottom: 2rem;
+            }
+            
+            .success-badge {
+                display: inline-block;
+                background: rgba(16, 185, 129, 0.15);
+                border: 1px solid #10b981;
+                color: #10b981;
+                padding: 0.75rem 1.5rem;
+                border-radius: 50px;
+                font-weight: 700;
+                margin-bottom: 2rem;
+                font-size: 0.9rem;
+                letter-spacing: 1px;
+            }
+            
+            .success-btn {
+                background: linear-gradient(135deg, #10b981, #34d399);
+                color: #fff;
+                border: none;
+                padding: 1rem 2.5rem;
+                border-radius: 10px;
+                font-weight: 700;
+                font-size: 1rem;
+                cursor: pointer;
+                transition: all 0.3s;
+                box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+            }
+            
+            .success-btn:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 15px 40px rgba(16, 185, 129, 0.5);
+            }
+            
+            .confetti {
+                position: absolute;
+                width: 10px;
+                height: 10px;
+                background: #10b981;
+                animation: confettiFall 3s linear infinite;
+            }
+            
+            @keyframes confettiFall {
+                0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+                100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+            }
+        </style>
+        
+        <div class="verification-success-overlay">
+            ${generateConfetti()}
+            
+            <div class="verification-success-box">
+                <div class="success-checkmark">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                
+                <h2 class="success-title">Successfully Verified!</h2>
+                
+                <div class="success-badge">✓ FOUNDER VERIFIED</div>
+                
+                <p class="success-message">
+                    Congratulations! Your founder account has been verified. 
+                    All your vests have been reactivated and you now have full access to ScaleVest.
+                </p>
+                
+                <button class="success-btn" onclick="closeSuccessAndRedirect()">
+                    Go to Dashboard
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(success);
+}
+
+function generateConfetti() {
+    let confetti = '';
+    const colors = ['#10b981', '#34d399', '#6ee7b7', '#a7f3d0'];
+    
+    for (let i = 0; i < 50; i++) {
+        const left = Math.random() * 100;
+        const delay = Math.random() * 3;
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        
+        confetti += `<div class="confetti" style="left: ${left}%; animation-delay: ${delay}s; background: ${color};"></div>`;
+    }
+    
+    return confetti;
+}
 
 onAuthStateChanged(auth, async (user) => {
     updateProgress(20, "Authenticating...");
