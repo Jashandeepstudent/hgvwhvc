@@ -61,6 +61,14 @@
     background: #000;
     border-bottom: 1px solid #222;
 }
+
+.edit-modal-header h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
 /* ==========================================
    PREMIUM PAYMENT OVERLAY
 ========================================== */
@@ -363,14 +371,6 @@
         width: 100%;
     }
 }
-.edit-modal-header h3 {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: #fff;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-}
-
 #autoReplyTextarea {
     width: 100%;
     min-height: 180px;
@@ -700,167 +700,46 @@
     }
     
     /* Modals */
-  /* ======================================
-   MODAL CONTENT – PREMIUM CARD
-====================================== */
-.edit-modal-content,
-.special-app-popup {
-    width: 95% !important;
-    max-width: 460px !important;
-    padding: 1.6rem !important;
-    max-height: 90vh !important;
-    overflow-y: auto !important;
-
-    background: linear-gradient(180deg, #0b0b0b, #111) !important;
-    border-radius: 22px !important;
-    color: #ffffff !important;
-
-    border: 1px solid rgba(255,255,255,0.08) !important;
-    box-shadow:
-        0 40px 120px rgba(0,0,0,0.85),
-        inset 0 1px 0 rgba(255,255,255,0.04) !important;
-
-    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif !important;
-    animation: modalFloatIn 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* ======================================
-   HEADER
-====================================== */
-.edit-modal-header {
-    padding: 1.2rem 1.2rem 0.9rem !important;
-    border-bottom: 1px solid rgba(255,255,255,0.08) !important;
-}
-
-.edit-modal-header h3 {
-    font-size: 1.15rem !important;
-    font-weight: 700 !important;
-    letter-spacing: 0.4px;
-}
-
-/* ======================================
-   BODY
-====================================== */
-.edit-modal-body {
-    padding: 1.4rem 1.2rem !important;
-    text-align: center;
-}
-
-.edit-modal-body p {
-    color: #d1d5db !important;
-    font-size: 1.05rem !important;
-    line-height: 1.75 !important;
-}
-
-/* ======================================
-   TIMER / HIGHLIGHT
-====================================== */
-.edit-modal-body .timer,
-.edit-modal-body .highlight {
-    margin: 1.6rem 0 !important;
-    font-size: 2.2rem !important;
-    font-weight: 800 !important;
-    letter-spacing: 1px !important;
-
-    background: linear-gradient(90deg, #ff006e, #ff4d9d) !important;
-    -webkit-background-clip: text !important;
-    -webkit-text-fill-color: transparent !important;
-
-    animation: pulseGlow 1.6s infinite;
-}
-
-/* ======================================
-   FOOTER
-====================================== */
-.edit-modal-footer {
-    padding: 1.2rem !important;
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 0.8rem !important;
-}
-
-/* ======================================
-   PRIMARY + SECONDARY BUTTONS
-====================================== */
-.modal-btn-save,
-.preview-btn,
-.share-btn {
-    width: 100% !important;
-    padding: 0.95rem !important;
-    border-radius: 14px !important;
-
-    background: linear-gradient(90deg, #ff006e, #ff4d9d) !important;
-    color: #ffffff !important;
-
-    font-weight: 700 !important;
-    font-size: 0.95rem !important;
-    border: none !important;
-
-    cursor: pointer !important;
-    transition: all 0.25s ease !important;
-}
-
-.modal-btn-save:hover,
-.preview-btn:hover,
-.share-btn:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 14px 40px rgba(255,0,110,0.35) !important;
-}
-
-/* CANCEL / BACK */
-.modal-btn-cancel,
-.back-to-dash,
-.back-btn {
-    width: 100% !important;
-    padding: 0.75rem 1rem !important;
-    font-size: 0.85rem !important;
-
-    background: rgba(255,255,255,0.06) !important;
-    color: #e5e7eb !important;
-
-    border: 1px solid rgba(255,255,255,0.12) !important;
-    border-radius: 12px !important;
-
-    cursor: pointer !important;
-    transition: all 0.2s ease !important;
-}
-
-.modal-btn-cancel:hover,
-.back-to-dash:hover,
-.back-btn:hover {
-    background: rgba(255,255,255,0.14) !important;
-}
-
-/* ======================================
-   ACTION BUTTON GROUP
-====================================== */
-.action-buttons {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 0.8rem !important;
-    width: 100% !important;
-}
-
-/* ======================================
-   ANIMATIONS
-====================================== */
-@keyframes modalFloatIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px) scale(0.94);
+    .edit-modal-content, .special-app-popup {
+        width: 95% !important;
+        padding: 1.5rem !important;
+        max-height: 90vh !important;
+        overflow-y: auto !important;
     }
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
+    
+    .edit-modal-header {
+        padding: 1rem !important;
     }
-}
-
-@keyframes pulseGlow {
-    0% { opacity: 0.85; }
-    50% { opacity: 1; }
-    100% { opacity: 0.85; }
-}
-
+    
+    .edit-modal-body {
+        padding: 1rem !important;
+    }
+    
+    .edit-modal-footer {
+        padding: 1rem !important;
+        flex-direction: column !important;
+    }
+    
+    .modal-btn-save, .modal-btn-cancel {
+        width: 100% !important;
+    }
+    
+    /* Back Button */
+    .back-to-dash, .back-btn {
+        padding: 0.6rem 1rem !important;
+        font-size: 0.85rem !important;
+    }
+    
+    /* Action Buttons */
+    .action-buttons {
+        flex-direction: column !important;
+        width: 100% !important;
+    }
+    
+    .preview-btn, .share-btn {
+        width: 100% !important;
+    }
+    
     /* Verification Pages */
     .verify-page {
         padding: 2rem 1rem !important;
@@ -1400,7 +1279,7 @@
   display: inline-block;
 }
 
-    /* 🔒 CRITICAL FIXES */
+    /* ðŸ”’ CRITICAL FIXES */
     width: auto;
     min-width: fit-content;
     flex: 0 0 auto;
@@ -1701,24 +1580,20 @@
     background: #000 !important; /* Pure Black */
 }
 /* --- SPECIAL WHITE POPUP UI --- */
-/* ===============================
-   MODAL OVERLAY
-================================ */
 .edit-modal {
     position: fixed;
-    inset: 0;
+    top: 0;
+    left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.88);
-    backdrop-filter: blur(10px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex; /* Use flexbox */
+    align-items: center; /* Vertical center */
+    justify-content: center; /* Horizontal center */
     z-index: 1000000;
-
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.35s ease, visibility 0.35s ease;
+    transition: all 0.3s ease;
 }
 
 .edit-modal.show {
@@ -1726,132 +1601,37 @@
     visibility: visible;
 }
 
-/* ===============================
-   POPUP CARD
-================================ */
+/* --- SPECIAL WHITE POPUP UI --- */
 .special-app-popup {
-    background: linear-gradient(180deg, #0b0b0b, #111);
+    background: #ffffff;
     width: 90%;
-    max-width: 480px;
-    border-radius: 18px;
+    max-width: 500px;
+    border-radius: 4px; /* Slightly smoother professional edges */
     padding: 0;
-    position: relative;
+    position: relative; /* Required for absolute positioning of close button */
     overflow: hidden;
-
-    color: #ffffff;
-    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-
-    border: 1px solid rgba(255,255,255,0.08);
-    box-shadow:
-        0 40px 120px rgba(0,0,0,0.85),
-        inset 0 1px 0 rgba(255,255,255,0.05);
-
-    animation: popupSlideIn 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 30px 100px rgba(0,0,0,0.6);
+    animation: popupSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* ===============================
-   HEADER (OPTIONAL USE)
-================================ */
-.special-app-popup h3 {
-    margin: 0;
-    padding: 1.6rem 1.8rem 1.2rem;
-    font-size: 1.15rem;
-    font-weight: 700;
-    letter-spacing: 0.3px;
-    border-bottom: 1px solid rgba(255,255,255,0.08);
-}
-
-/* ===============================
-   CONTENT AREA
-================================ */
-.special-app-popup .content {
-    padding: 2rem 1.8rem;
-    text-align: center;
-}
-
-.special-app-popup p {
-    color: #d1d5db;
-    font-size: 1.05rem;
-    line-height: 1.8;
-    margin: 0.8rem 0;
-}
-
-/* ===============================
-   HIGHLIGHT / TIMER
-================================ */
-.special-app-popup .highlight {
-    margin: 1.6rem 0;
-    font-size: 2.2rem;
-    font-weight: 800;
-    letter-spacing: 1px;
-    background: linear-gradient(90deg, #ff006e, #ff4d9d);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-/* ===============================
-   FOOTER BUTTON
-================================ */
-.special-app-popup .primary-btn {
-    width: 100%;
-    padding: 1rem;
-    background: linear-gradient(90deg, #ff006e, #ff4d9d);
-    border: none;
-    border-radius: 12px;
-    color: #fff;
-    font-weight: 700;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: all 0.25s ease;
-}
-
-.special-app-popup .primary-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 12px 35px rgba(255,0,110,0.35);
-}
-
-/* ===============================
-   CLOSE BUTTON (TOP RIGHT)
-================================ */
+/* --- CLOSE BUTTON: Absolute Top Right --- */
 .close-x {
-    position: absolute;
-    top: 14px;
-    right: 14px;
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-
-    background: rgba(255,255,255,0.06);
+    position: absolute; /* Take out of flow */
+    top: 15px;
+    right: 20px;
+    background: none;
     border: none;
-    color: #fff;
-    font-size: 20px;
+    font-size: 32px;
+    line-height: 1;
     cursor: pointer;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    transition: all 0.25s ease;
+    color: #bbb; /* Subtle gray */
+    transition: all 0.2s ease;
     z-index: 10;
 }
 
-.close-x:hover {
-    background: rgba(255,255,255,0.14);
-    transform: rotate(90deg) scale(1.05);
-}
-
-/* ===============================
-   ANIMATION
-================================ */
-@keyframes popupSlideIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px) scale(0.94);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
+.close-x:hover { 
+    color: #000; 
+    transform: scale(1.1);
 }
 
 .app-popup-header {
@@ -3877,10 +3657,10 @@
     
     <div id="modalMenu">
         <button class="modal-option-btn" onclick="showAvailabilityDetail('dateSection')">
-            📅 Set Date of Unavailability
+            ðŸ“… Set Date of Unavailability
         </button>
         <button class="modal-option-btn" onclick="showAvailabilityDetail('statusSection')">
-            🔘 Set Status Now (Active/Busy)
+            ðŸ”˜ Set Status Now (Active/Busy)
         </button>
     </div>
 
@@ -3896,8 +3676,8 @@
     <div id="statusSection" class="availability-sub-section">
       <label>Set your current status:</label>
       <select id="status">
-        <option value="active">🟢 Active</option>
-        <option value="busy">🔴 Busy / Passive</option>
+        <option value="active">ðŸŸ¢ Active</option>
+        <option value="busy">ðŸ”´ Busy / Passive</option>
       </select>
       <div style="display:flex; gap:10px; margin-top:20px;">
           <button class="btn-back" onclick="resetModal()">Back</button>
@@ -4282,7 +4062,7 @@
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import { getDatabase, ref, set, push, get, remove } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
     import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
-    import { getAuth, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+    import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 // Locate your existing import and add 'update' to the list
 import { 
     update, 
@@ -4325,7 +4105,7 @@ function createNavBar() {
                 <a href="#founder_dashboard" class="nav-link">Dashboard</a>
              <a href="vests.html#edit_startup" class="nav-link">My Startup</a>
                 <div class="dropdown">
-                    <span class="nav-link" onclick="toggleDropdown('scaleDropdown')">Scale and Elevate ▾</span>
+                    <span class="nav-link" onclick="toggleDropdown('scaleDropdown')">Scale and Elevate â–¾</span>
                     <div class="dropdown-content" id="scaleDropdown">
                        <a href="#founder_emergence" class="dropdown-item">Founder Emergence</a>
                         <a href="#ScaleVEST_Refers" class="dropdown-item">Referrals</a>
@@ -4347,7 +4127,7 @@ function createNavBar() {
                     </svg>
                 </div>
                 <div class="profile-dropdown">
-<div class="icon-btn" onclick="toggleDashProfileDropdown(event)">
+<div class="icon-btn" onclick="toggleDashProfileDropdown()">
     ${founderData?.photoURL 
         ? `<img src="${founderData.photoURL}" alt="Profile" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` 
         : `<div style="font-size:1.2rem;font-weight:600;">${founderData.founderImage || 'U'}</div>`}
@@ -4372,45 +4152,36 @@ function createNavBar() {
 }
 
 // Toggle dropdown function
-// Toggle general dropdowns
-window.toggleDropdown = function(e, id) {
-    if (e) e.stopPropagation();
+window.toggleDropdown = function(id) {
+    event.stopPropagation();
     const dropdown = document.getElementById(id);
     
     // Close all other dropdowns
-    document.querySelectorAll('.dropdown-content, .profile-dropdown-content').forEach(dd => {
+    document.querySelectorAll('.dropdown-content').forEach(dd => {
         if (dd.id !== id) dd.classList.remove('show');
     });
     
-    if (dropdown) dropdown.classList.toggle('show');
+    // Toggle this dropdown
+    dropdown.classList.toggle('show');
 };
 
-// Toggle profile-specific dropdown
-window.toggleDashProfileDropdown = function(e) {
-    if (e) e.stopPropagation();
+// Toggle profile dropdown
+window.toggleDashProfileDropdown = function() {
+    event.stopPropagation();
     const dropdown = document.getElementById('dashProfileDropdown');
-    
-    // Close other general dropdowns first
-    document.querySelectorAll('.dropdown-content').forEach(dd => {
-        dd.classList.remove('show');
-    });
-
     if (dropdown) {
         dropdown.classList.toggle('show');
     }
 };
 
-// Close all dropdowns when clicking anywhere else on the page
+// Close dropdowns when clicking outside
 document.addEventListener('click', (e) => {
-    const isClickInside = e.target.closest('.profile-dropdown') || e.target.closest('.dropdown');
-    
-    if (!isClickInside) {
+    if (!e.target.closest('.dropdown') && !e.target.closest('.profile-dropdown')) {
         document.querySelectorAll('.dropdown-content, .profile-dropdown-content').forEach(dd => {
             dd.classList.remove('show');
         });
     }
 });
-
 // Save form data to localStorage
 function saveToLocalStorage() {
     const formData = {
@@ -4547,12 +4318,12 @@ window.checkWordCount = function(input, maxWords, counterId) {
 // New File Listeners
 const pdInput = document.getElementById('newPitchDeck');
 if(pdInput) pdInput.addEventListener('change', (e) => {
-    if (e.target.files[0]) document.getElementById('newPitchDeckName').textContent = '✓ ' + e.target.files[0].name;
+    if (e.target.files[0]) document.getElementById('newPitchDeckName').textContent = 'âœ“ ' + e.target.files[0].name;
 });
 
 const vidInput = document.getElementById('newDemoVideo');
 if(vidInput) vidInput.addEventListener('change', (e) => {
-    if (e.target.files[0]) document.getElementById('newDemoVideoName').textContent = '✓ ' + e.target.files[0].name;
+    if (e.target.files[0]) document.getElementById('newDemoVideoName').textContent = 'âœ“ ' + e.target.files[0].name;
 });
 
  async function uploadFileToStorage(file, folder) {
@@ -4574,7 +4345,7 @@ if(thumbInput) {
         const file = e.target.files[0];
         if (file) {
             // Show filename
-            document.getElementById('thumbFileName').textContent = '✓ ' + file.name;
+            document.getElementById('thumbFileName').textContent = 'âœ“ ' + file.name;
             
             // Show Image Preview
             const reader = new FileReader();
@@ -4825,6 +4596,123 @@ window.toggleCoFounders = function(hasCoFounders) {
 
 
 
+// 1. FOUNDER EMERGENCE (CASH SHOP)
+window.showFounderEmergence = async function() {
+    const tokens = await getLiveTokens();
+    const container = document.getElementById('dashboardContainer');
+    document.title = "Founder Emergence Plans | ScaleVest";
+    container.style.display = 'block';
+    document.querySelector('.vest-container').style.display = 'none';
+
+    container.innerHTML = `
+      
+        <div class="emergence-page shop-bw">
+            ${getShopHeaderHTML(tokens, 'emergence')}
+            
+            <div class="emergence-header">
+                <div class="release-tag">PREMIUM OUTREACH</div>
+                <h1>Founder Emergence Plans</h1>
+                <p>Get your startup in front of the right eyes. Our algorithms match your Funding Application with investors who specialize in your specific category.</p>
+            </div>
+
+            <div class="emergence-grid">
+                <div class="emergence-card bundle-card">
+                    <div class="plan-badge" style="background:#fff; color:#000;">50% OFF</div>
+                    <div class="bundle-image-wrapper">
+                        <img src="alpha.svg" alt="Alpha Plan" class="chest-img">
+                    </div>
+                    <h2 class="plan-title">Emerge: Alpha</h2>
+                    <p class="plan-desc">The essential entry point. We send your application to <strong>7 interested investors</strong> who actively fund startups in your category.</p>
+                    <div class="price-section">
+                        <div class="price-row"><span class="old-price">â‚¹300</span><span class="discount-pill">Launch OFF</span></div>
+                        <span class="new-price">â‚¹150</span>
+                    </div>
+                    <button class="buy-btn-premium">Choose Alpha</button>
+                </div>
+
+                <div class="emergence-card bundle-card featured">
+                    <div class="plan-badge" style="background:#fff; color:#000;">50% OFF</div>
+                    <div class="most-popular">MOST POPULAR</div>
+                    <div class="plan-icon" style="margin: 0 auto 20px auto;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" width="60" height="60">
+                            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+                        </svg>
+                    </div>
+                    <h2 class="plan-title">Emerge: Steady</h2>
+                    <p class="plan-desc">Our most balanced plan. Take your funding application to <strong>12 interested investors</strong> with high-intent matching.</p>
+                    <div class="price-section">
+                        <div class="price-row"><span class="old-price">â‚¹400</span><span class="discount-pill">Launch OFF</span></div>
+                        <span class="new-price">â‚¹200</span>
+                    </div>
+                    <button class="buy-btn-premium">Choose Steady</button>
+                </div>
+
+                <div class="emergence-card bundle-card">
+                    <div class="plan-badge" style="background:#fff; color:#000;">50% OFF</div>
+                    <div class="bundle-image-wrapper">
+                        <img src="critical.svg" alt="Critical Plan" class="chest-img">
+                    </div>
+                    <h2 class="plan-title">Emerge: Super Critical</h2>
+                    <p class="plan-desc">The ultimate outreach powerhouse. Send your application to <strong>18 top-tier investors</strong> for maximum visibility.</p>
+                    <div class="price-section">
+                        <div class="price-row"><span class="old-price">â‚¹699</span><span class="discount-pill">Launch OFF</span></div>
+                        <span class="new-price">â‚¹350</span>
+                    </div>
+                    <button class="buy-btn-premium">Go Super Critical</button>
+                </div>
+            </div>
+        </div>
+    `;
+};
+
+window.showScaleShop = async function() {
+    const tokens = await getLiveTokens();
+    const container = document.getElementById('dashboardContainer');
+    document.title = "Scale Shop | ScaleVest";
+
+    container.innerHTML = `
+           <div class="emergence-page shop-bw">
+            ${getShopHeaderHTML(tokens, 'scale')}
+            
+            <div class="emergence-header">
+                <h1>Scale Shop</h1>
+                <p>Redeem your Scale Tokens to boost your outreach without spending cash.</p>
+            </div>
+
+            <div class="emergence-grid">
+                <div class="emergence-card bundle-card">
+                    <div class="bundle-image-wrapper">
+                        <img src="token1.svg" alt="Tiny Token" class="chest-img">
+                    </div>
+                    <h2 class="plan-title">Emergence: Tiny</h2>
+                    <p class="plan-desc">The FREE entry point. Send your application to <strong>3 interested investors</strong>.</p>
+                    <div class="token-cost">100 Tokens</div>
+                    <button class="buy-btn-premium" onclick="window.handleTokenRedeem(100, 'Tiny')">Redeem Tiny</button>
+                </div>
+
+                <div class="emergence-card bundle-card featured">
+                    <div class="bundle-image-wrapper">
+                        <img src="token2.svg" alt="Small Token" class="chest-img">
+                    </div>
+                    <h2 class="plan-title">Emergence: Small</h2>
+                    <p class="plan-desc">Our most helpful free plan. Take your funding application to <strong>6 interested investors</strong>.</p>
+                    <div class="token-cost">200 Tokens</div>
+                    <button class="buy-btn-premium" onclick="window.handleTokenRedeem(200, 'Small')">Redeem Small</button>
+                </div>
+
+                <div class="emergence-card bundle-card">
+                    <div class="bundle-image-wrapper">
+                        <img src="token3.svg" alt="Medium Token" class="chest-img">
+                    </div>
+                    <h2 class="plan-title">Emergence: Medium</h2>
+                    <p class="plan-desc">Strategic boost. Take your funding application to <strong>10 interested investors</strong>.</p>
+                    <div class="token-cost">320 Tokens</div>
+                    <button class="buy-btn-premium" onclick="window.handleTokenRedeem(320, 'Medium')">Redeem Medium</button>
+                </div>
+            </div>
+        </div>
+    `;
+};
 window.showFounderEmergence = async function() {
     const tokens = await getLiveTokens();
     const container = document.getElementById('dashboardContainer');
@@ -4891,598 +4779,8 @@ window.showFounderEmergence = async function() {
         </div>
     `;
 };
-// ==========================================
-// APPLICATION SELECTION FOR EMERGENCE
-// ==========================================
-
-// ==========================================
-// PAYMENT & CHECKOUT SYSTEM
-// ==========================================
-
-// Open Emergence Checkout
-window.openEmergenceCheckout = async function(plan, price) {
-    if (!currentUser) {
-        alert("Please login first");
-        return;
-    }
-    
-    // Check verification
-    const founderRef = ref(db, `founderProfile/${currentUser.uid}`);
-    const snapshot = await get(founderRef);
-    
-    if (snapshot.exists() && snapshot.val().isVerified === false) {
-        showVerificationBlockPopup('use Founder Emergence');
-        return;
-    }
-    
-    // Show application selector
-    showApplicationSelector(plan, price);
-};
-
-// Show Application Selector Modal
-async function showApplicationSelector(plan, price) {
-    const appRef = ref(db, `Applications/${currentUser.uid}`);
-    const snapshot = await get(appRef);
-    
-    if (!snapshot.exists()) {
-        alert("You need to create at least one application first!");
-        window.location.hash = 'applications';
-        return;
-    }
-    
-    const apps = snapshot.val();
-    const completedApps = Object.entries(apps).filter(([id, app]) => app.status === 'completed');
-    
-    if (completedApps.length === 0) {
-        alert("You need at least one completed application to launch Emergence!");
-        window.location.hash = 'applications';
-        return;
-    }
-    
-    const modal = document.createElement('div');
-    modal.className = 'edit-modal show';
-    modal.innerHTML = `
-        <div class="edit-modal-content" style="max-width: 600px;">
-            <button class="modal-close" onclick="this.closest('.edit-modal').remove()">×</button>
-            
-            <div class="edit-modal-header">
-                <h3>🚀 Select Application for ${plan} Emergence</h3>
-            </div>
-            
-            <div class="edit-modal-body" style="max-height: 400px; overflow-y: auto;">
-                <p style="color: #888; margin-bottom: 1.5rem;">
-                    Choose which application you want to send to investors:
-                </p>
-                
-                ${completedApps.map(([id, app]) => `
-                    <div class="app-selector-card" style="background: #0a0a0a; border: 2px solid #222; border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem; cursor: pointer; transition: all 0.3s;" 
-                         onclick="selectApplicationForEmergence('${id}', '${plan}', ${price}, this)">
-                        <h4 style="color: #fff; margin-bottom: 0.5rem;">${app.appName}</h4>
-                        <p style="color: #666; font-size: 0.9rem;">${app.appHook || 'No hook'}</p>
-                        <div style="margin-top: 0.75rem; color: #888; font-size: 0.85rem;">
-                            Created: ${new Date(app.updatedAt).toLocaleDateString()}
-                        </div>
-                    </div>
-                `).join('')}
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-}
-
-// Select Application and Open Checkout
-window.selectApplicationForEmergence = function(appId, plan, price, element) {
-    // Visual feedback
-    document.querySelectorAll('.app-selector-card').forEach(card => {
-        card.style.borderColor = '#222';
-    });
-    element.style.borderColor = '#10b981';
-    
-    setTimeout(() => {
-        document.querySelector('.edit-modal').remove();
-        openPaymentCheckout(plan, price, 'emergence', appId);
-    }, 300);
-};
-
-// Open Token Checkout
-window.openTokenCheckout = function(bundle, price, tokens) {
-    openPaymentCheckout(bundle, price, 'tokens', tokens);
-};
-
-// Universal Payment Checkout
-function openPaymentCheckout(itemName, price, type, extraData) {
-    const modal = document.createElement('div');
-    modal.className = 'edit-modal show';
-    modal.id = 'checkoutModal';
-    modal.innerHTML = `
-        <style>
-            .checkout-container {
-                background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
-                border: 1px solid #333;
-                border-radius: 20px;
-                max-width: 500px;
-                overflow: hidden;
-            }
-            
-            .checkout-header {
-                background: linear-gradient(135deg, #ff006e, #8338ec);
-                padding: 2rem;
-                text-align: center;
-                color: #fff;
-            }
-            
-            .checkout-title {
-                font-size: 1.8rem;
-                font-weight: 800;
-                margin-bottom: 0.5rem;
-            }
-            
-            .checkout-subtitle {
-                opacity: 0.9;
-                font-size: 0.95rem;
-            }
-            
-            .checkout-body {
-                padding: 2rem;
-            }
-            
-            .price-display {
-                text-align: center;
-                padding: 2rem;
-                background: #000;
-                border-radius: 16px;
-                margin-bottom: 2rem;
-            }
-            
-            .price-amount {
-                font-size: 3rem;
-                font-weight: 800;
-                color: #fff;
-                margin-bottom: 0.5rem;
-            }
-            
-            .price-label {
-                color: #888;
-                font-size: 0.9rem;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-            }
-            
-            .payment-methods {
-                margin-bottom: 2rem;
-            }
-            
-            .method-title {
-                color: #666;
-                font-size: 0.85rem;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-                margin-bottom: 1rem;
-            }
-            
-            .method-grid {
-                display: grid;
-                grid-template-columns: repeat(2, 1fr);
-                gap: 1rem;
-            }
-            
-            .method-card {
-                background: #111;
-                border: 2px solid #222;
-                border-radius: 12px;
-                padding: 1rem;
-                text-align: center;
-                cursor: pointer;
-                transition: all 0.3s;
-            }
-            
-            .method-card:hover {
-                border-color: #ff006e;
-                transform: translateY(-2px);
-            }
-            
-            .method-card.selected {
-                border-color: #10b981;
-                background: rgba(16, 185, 129, 0.1);
-            }
-            
-            .method-icon {
-                font-size: 2rem;
-                margin-bottom: 0.5rem;
-            }
-            
-            .method-name {
-                color: #fff;
-                font-size: 0.9rem;
-                font-weight: 600;
-            }
-            
-            .checkout-btn {
-                width: 100%;
-                padding: 1.25rem;
-                background: linear-gradient(135deg, #10b981, #059669);
-                color: #fff;
-                border: none;
-                border-radius: 12px;
-                font-size: 1.1rem;
-                font-weight: 800;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-                cursor: pointer;
-                transition: all 0.3s;
-            }
-            
-            .checkout-btn:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4);
-            }
-            
-            .checkout-btn:disabled {
-                opacity: 0.5;
-                cursor: not-allowed;
-            }
-            
-            .secure-badge {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 0.5rem;
-                margin-top: 1rem;
-                color: #666;
-                font-size: 0.85rem;
-            }
-        </style>
-        
-        <div class="checkout-container">
-            <button class="modal-close" onclick="this.closest('.edit-modal').remove()" 
-                    style="position: absolute; top: 15px; right: 15px; z-index: 10;">×</button>
-            
-            <div class="checkout-header">
-                <div class="checkout-title">${itemName} ${type === 'tokens' ? 'Bundle' : 'Plan'}</div>
-                <div class="checkout-subtitle">Complete your purchase securely</div>
-            </div>
-            
-            <div class="checkout-body">
-                <div class="price-display">
-                    <div class="price-amount">₹${price}</div>
-                    <div class="price-label">Total Amount</div>
-                </div>
-                
-                <div class="payment-methods">
-                    <div class="method-title">Select Payment Method</div>
-                    <div class="method-grid">
-                        <div class="method-card" data-method="upi" onclick="selectPaymentMethod('upi', this)">
-                            <div class="method-icon">📱</div>
-                            <div class="method-name">UPI</div>
-                        </div>
-                        <div class="method-card" data-method="card" onclick="selectPaymentMethod('card', this)">
-                            <div class="method-icon">💳</div>
-                            <div class="method-name">Card</div>
-                        </div>
-                        <div class="method-card" data-method="netbanking" onclick="selectPaymentMethod('netbanking', this)">
-                            <div class="method-icon">🏦</div>
-                            <div class="method-name">NetBanking</div>
-                        </div>
-                        <div class="method-card" data-method="wallet" onclick="selectPaymentMethod('wallet', this)">
-                            <div class="method-icon">👛</div>
-                            <div class="method-name">Wallet</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <button class="checkout-btn" id="proceedPayBtn" onclick="proceedToPayment('${itemName}', ${price}, '${type}', '${extraData}')" disabled>
-                    Proceed to Payment
-                </button>
-                
-                <div class="secure-badge">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                    </svg>
-                    Secured by Razorpay
-                </div>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-}
-
-// Select Payment Method
-let selectedPaymentMethod = null;
-window.selectPaymentMethod = function(method, element) {
-    selectedPaymentMethod = method;
-    
-    // Update UI
-    document.querySelectorAll('.method-card').forEach(card => {
-        card.classList.remove('selected');
-    });
-    element.classList.add('selected');
-    
-    // Enable button
-    document.getElementById('proceedPayBtn').disabled = false;
-};
-
-// Proceed to Razorpay Payment
-window.proceedToPayment = async function(itemName, price, type, extraData) {
-    if (!selectedPaymentMethod) {
-        alert("Please select a payment method");
-        return;
-    }
-    
-    const btn = document.getElementById('proceedPayBtn');
-    btn.innerHTML = 'Processing...';
-    btn.disabled = true;
-    
-    // Razorpay Test Key (Replace with your key)
-    const RAZORPAY_KEY = 'rzp_test_mXk8s9Lp2nQv5r'; // ⚠️ Replace this!
-    
-    const options = {
-        key: RAZORPAY_KEY,
-        amount: price * 100, // Convert to paise
-        currency: 'INR',
-        name: 'ScaleVest',
-        description: `${itemName} ${type === 'tokens' ? 'Token Bundle' : 'Emergence Plan'}`,
-        image: 'ScaleVestLogo.png',
-        handler: function(response) {
-            handlePaymentSuccess(response, itemName, price, type, extraData);
-        },
-        prefill: {
-            name: cachedFounderData?.founderUsername || 'User',
-            email: currentUser?.email || '',
-        },
-        theme: {
-            color: '#ff006e'
-        },
-        modal: {
-            ondismiss: function() {
-                btn.innerHTML = 'Proceed to Payment';
-                btn.disabled = false;
-            }
-        }
-    };
-    
-    // Specify payment method if selected
-    if (selectedPaymentMethod === 'upi') {
-        options.method = 'upi';
-    } else if (selectedPaymentMethod === 'card') {
-        options.method = 'card';
-    } else if (selectedPaymentMethod === 'netbanking') {
-        options.method = 'netbanking';
-    } else if (selectedPaymentMethod === 'wallet') {
-        options.method = 'wallet';
-    }
-    
-    const rzp = new Razorpay(options);
-    rzp.open();
-};
-
-// Handle Payment Success
-async function handlePaymentSuccess(response, itemName, price, type, extraData) {
-    console.log('Payment Success:', response);
-    
-    // Close checkout modal
-    document.getElementById('checkoutModal')?.remove();
-    
-    // Show success animation
-    showPaymentSuccessAnimation();
-    
-    try {
-        if (type === 'tokens') {
-            // Add tokens to user account
-            const tokens = parseInt(extraData);
-            const currentTokens = await getLiveTokens();
-            await update(ref(db, `founderProfile/${currentUser.uid}`), {
-                scaleTokens: currentTokens + tokens
-            });
-            
-            setTimeout(() => {
-                alert(`✅ ${tokens} tokens added successfully!`);
-                showTokenShop();
-            }, 2000);
-            
-        } else if (type === 'emergence') {
-            // Launch emergence campaign
-            const appId = extraData;
-            await launchEmergenceCampaign(appId, itemName, price);
-            
-            setTimeout(() => {
-                alert(`🚀 ${itemName} Emergence launched successfully!`);
-                window.location.hash = 'founder_dashboard';
-            }, 2000);
-        }
-        
-    } catch (error) {
-        console.error('Post-payment error:', error);
-        alert('Payment successful but there was an error processing your request. Please contact support.');
-    }
-}
-
-// Launch Emergence Campaign
-async function launchEmergenceCampaign(appId, plan, price) {
-    const timestamp = Date.now();
-    
-    const campaignData = {
-        applicationId: appId,
-        founderId: currentUser.uid,
-        plan: plan,
-        price: price,
-        status: 'active',
-        investorsSent: 0,
-        investorsTarget: plan === 'Alpha' ? 7 : plan === 'Steady' ? 12 : 18,
-        launchedAt: timestamp,
-        paymentVerified: true
-    };
-    
-    await push(ref(db, `EmergenceCampaigns/${currentUser.uid}`), campaignData);
-}
-
-// Payment Success Animation
-function showPaymentSuccessAnimation() {
-    const animation = document.createElement('div');
-    animation.innerHTML = `
-        <style>
-            .payment-success-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100vw;
-                height: 100vh;
-                background: rgba(0, 0, 0, 0.95);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 999999;
-                animation: fadeIn 0.3s;
-            }
-            
-            .success-circle {
-                width: 120px;
-                height: 120px;
-                border-radius: 50%;
-                background: #10b981;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-            }
-            
-            @keyframes scaleIn {
-                0% { transform: scale(0); }
-                100% { transform: scale(1); }
-            }
-            
-            .checkmark {
-                width: 60px;
-                height: 60px;
-                stroke: white;
-                stroke-width: 4;
-                animation: drawCheck 0.8s ease 0.3s forwards;
-                stroke-dasharray: 100;
-                stroke-dashoffset: 100;
-            }
-            
-            @keyframes drawCheck {
-                to { stroke-dashoffset: 0; }
-            }
-        </style>
-        
-        <div class="payment-success-overlay">
-            <div class="success-circle">
-                <svg class="checkmark" viewBox="0 0 24 24" fill="none">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(animation);
-    
-    setTimeout(() => {
-        animation.style.animation = 'fadeIn 0.3s reverse';
-        setTimeout(() => animation.remove(), 300);
-    }, 1500);
-}
-window.showScaleShop = async function() {
-    const tokens = await getLiveTokens();
-    const container = document.getElementById('dashboardContainer');
-    document.title = "Scale Shop | ScaleVest";
-
-    container.innerHTML = `
-           <div class="emergence-page shop-bw">
-            ${getShopHeaderHTML(tokens, 'scale')}
-            
-            <div class="emergence-header">
-                <h1>Scale Shop</h1>
-                <p>Redeem your Scale Tokens to boost your outreach without spending cash.</p>
-            </div>
-
-            <div class="emergence-grid">
-                <div class="emergence-card bundle-card">
-                    <div class="bundle-image-wrapper">
-                        <img src="token1.svg" alt="Tiny Token" class="chest-img">
-                    </div>
-                    <h2 class="plan-title">Emergence: Tiny</h2>
-                    <p class="plan-desc">The FREE entry point. Send your application to <strong>3 interested investors</strong>.</p>
-                    <div class="token-cost">100 Tokens</div>
-<button class="buy-btn-premium" onclick="selectEmergencePlan('small', 6, 'tokens')">Redeem Small</button>
-                </div>
-
-                <div class="emergence-card bundle-card featured">
-                    <div class="bundle-image-wrapper">
-                        <img src="token2.svg" alt="Small Token" class="chest-img">
-                    </div>
-                    <h2 class="plan-title">Emergence: Small</h2>
-                    <p class="plan-desc">Our most helpful free plan. Take your funding application to <strong>6 interested investors</strong>.</p>
-                    <div class="token-cost">200 Tokens</div>
-<button class="buy-btn-premium" onclick="selectEmergencePlan('small', 6, 'tokens')">Redeem Small</button>
-                </div>
-
-                <div class="emergence-card bundle-card">
-                    <div class="bundle-image-wrapper">
-                        <img src="token3.svg" alt="Medium Token" class="chest-img">
-                    </div>
-                    <h2 class="plan-title">Emergence: Medium</h2>
-                    <p class="plan-desc">Strategic boost. Take your funding application to <strong>10 interested investors</strong>.</p>
-                    <div class="token-cost">320 Tokens</div>
-<button class="buy-btn-premium" onclick="selectEmergencePlan('medium', 10, 'tokens')">Redeem Medium</button>
-                </div>
-            </div>
-        </div>
-    `;
-};
-// 3. TOKEN SHOP (BUY SCALE TOKENS)
-window.showTokenShop = async function() {
-    const tokens = await getLiveTokens();
-    const container = document.getElementById('dashboardContainer');
-    document.title = "Buy Scale Tokens | ScaleVest";
-
-    container.innerHTML = `
-        <div class="emergence-page shop-bw">
-            ${getShopHeaderHTML(tokens, 'tokens')}
-            
-            <div class="emergence-header">
-                <h1>Token Shop</h1>
-                <p>Choose a bundle to refill your Scale balance.</p>
-            </div>
-
-            <div class="emergence-grid">
-                <div class="emergence-card bundle-card">
-                    <div class="bundle-image-wrapper">
-                        <img src="chest1.svg" alt="Small Chest" class="chest-img">
-                    </div>
-                    <h2 class="plan-title">Small Bundle</h2>
-                    <div class="token-amount">80 Scale Tokens</div>
-                    <div class="price-section"><span class="new-price">₹50</span></div>
-                    <button class="buy-btn-premium" onclick="openPaymentModal('Small Bundle', 50, 'tokens', 80)">Buy Now</button>
-                </div>
-
-                <div class="emergence-card bundle-card featured">
-                    <div class="bundle-image-wrapper">
-                        <img src="chest2.svg" alt="Medium Chest" class="chest-img">
-                    </div>
-                    <h2 class="plan-title">Medium Bundle</h2>
-                    <div class="token-amount">180 Scale Tokens</div>
-                    <div class="price-section"><span class="new-price">₹150</span></div>
-                    <button class="buy-btn-premium" onclick="openPaymentModal('Medium Bundle', 150, 'tokens', 180)">Buy Now</button>
-                </div>
-
-                <div class="emergence-card bundle-card">
-                    <div class="bundle-image-wrapper">
-                        <img src="chest3.svg" alt="Large Chest" class="chest-img">
-                    </div>
-                    <h2 class="plan-title">Large Bundle</h2>
-                    <div class="token-amount">500 Scale Tokens</div>
-                    <div class="price-section"><span class="new-price">₹400</span></div>
-                    <button class="buy-btn-premium" onclick="openPaymentModal('Large Bundle', 400, 'tokens', 500)">Buy Now</button>
-                </div>
-            </div>
-        </div>
-    `;
-};
 async function showManageVests() {
-    // ⭐ ADD THIS CHECK AT THE VERY START
+    // â­ ADD THIS CHECK AT THE VERY START
     if (!currentUser) {
         window.location.href = 'login2.html';
         return;
@@ -5579,7 +4877,7 @@ async function showManageVests() {
                                 </div>
 
                                 <div class="card-actions">
-                                    <!-- ⭐ NEW EDIT BUTTON -->
+                                    <!-- â­ NEW EDIT BUTTON -->
                                     <button class="action-btn btn-edit" 
                                         onclick="window.editVest('${id}', '${vest.status}')">
                                         Edit
@@ -5661,7 +4959,7 @@ function loadVestDataIntoForm(vestData) {
             document.getElementById('imgPreview').src = vestData.MainVest.thumbnailUrl;
             document.getElementById('thumbPreview').style.display = 'block';
             document.getElementById('uploadPlaceholder').style.opacity = '0.3';
-            document.getElementById('thumbFileName').textContent = '✓ Current thumbnail';
+            document.getElementById('thumbFileName').textContent = 'âœ“ Current thumbnail';
         }
     }
     
@@ -5675,7 +4973,7 @@ function loadVestDataIntoForm(vestData) {
         document.getElementById('stValuation').value = vestData.StartupDetails.valuation || '';
         
         if (vestData.StartupDetails.pitchDeckUrl) {
-            document.getElementById('newPitchDeckName').textContent = '✓ Pitch deck uploaded';
+            document.getElementById('newPitchDeckName').textContent = 'âœ“ Pitch deck uploaded';
         }
     }
     
@@ -5713,7 +5011,7 @@ function loadVestDataIntoForm(vestData) {
         }
         
         if (vestData.FounderPresence.demoVideoUrl) {
-            document.getElementById('newDemoVideoName').textContent = '✓ Demo video uploaded';
+            document.getElementById('newDemoVideoName').textContent = 'âœ“ Demo video uploaded';
         }
     }
 }
@@ -5785,7 +5083,7 @@ window.addTokensToDB = async function(amount) {
             scaleTokens: newTotal
         });
         
-        alert(`✅ Success! Added ${amount} tokens. New balance: ${newTotal}`);
+        alert(`âœ… Success! Added ${amount} tokens. New balance: ${newTotal}`);
         showScaleShop(); // Take user to use their new tokens
     } catch (e) {
         console.error(e);
@@ -5797,7 +5095,7 @@ window.addTokensToDB = async function(amount) {
 window.handleTokenRedeem = async function(cost, planName) {
     const currentTokens = await getLiveTokens();
     if (currentTokens < cost) {
-        alert("❌ Not enough tokens!");
+        alert("âŒ Not enough tokens!");
         return;
     }
     
@@ -5806,7 +5104,7 @@ window.handleTokenRedeem = async function(cost, planName) {
             await update(ref(db, `founderProfile/${currentUser.uid}`), {
                 scaleTokens: currentTokens - cost
             });
-            alert(`🚀 ${planName} Plan Activated! We are sending your application now.`);
+            alert(`ðŸš€ ${planName} Plan Activated! We are sending your application now.`);
             showScaleShop(); // Refresh UI balance
         } catch (e) {
             alert("Error processing redemption.");
@@ -5826,74 +5124,7 @@ async function getLiveTokens() {
         return 0;
     }
 }
-// ==========================================
-// COOLDOWN & ELIGIBILITY CHECKS
-// ==========================================
 
-async function checkEmergenceCooldown() {
-    if (!currentUser) return { allowed: false, reason: "Not logged in" };
-    
-    const profileRef = ref(db, `founderProfile/${currentUser.uid}`);
-    const snapshot = await get(profileRef);
-    
-    if (!snapshot.exists()) return { allowed: true };
-    
-    const data = snapshot.val();
-    const lastLaunch = data.lastEmergenceDate;
-    
-    if (!lastLaunch) return { allowed: true };
-    
-    const now = Date.now();
-    const timeSinceLastLaunch = now - lastLaunch;
-    const cooldownPeriod = 24 * 60 * 60 * 1000; // 24 hours
-    
-    if (timeSinceLastLaunch < cooldownPeriod) {
-        const timeLeft = cooldownPeriod - timeSinceLastLaunch;
-        const hoursLeft = Math.floor(timeLeft / (60 * 60 * 1000));
-        const minutesLeft = Math.floor((timeLeft % (60 * 60 * 1000)) / (60 * 1000));
-        
-        return {
-            allowed: false,
-            reason: "cooldown",
-            timeLeft: `${hoursLeft}h ${minutesLeft}m`
-        };
-    }
-    
-    return { allowed: true };
-}
-
-// Show cooldown modal
-function showCooldownModal(timeLeft) {
-    const modal = document.createElement('div');
-    modal.className = 'edit-modal show';
-    modal.innerHTML = `
-        <div class="edit-modal-content">
-            <div class="edit-modal-header">
-                <h3>⏰ Emergence Cooldown Active</h3>
-                <button class="modal-close" onclick="this.closest('.edit-modal').remove()">×</button>
-            </div>
-            <div class="edit-modal-body" style="text-align: center; padding: 2rem;">
-                <div style="font-size: 4rem; margin-bottom: 1rem;">⏳</div>
-                <p style="color: #aaa; font-size: 1.1rem; line-height: 1.8;">
-                    You've already launched an Emergence today. 
-                    <br>You can launch again in:
-                </p>
-                <div style="font-size: 2rem; font-weight: 800; color: #ff006e; margin: 1.5rem 0;">
-                    ${timeLeft}
-                </div>
-                <p style="color: #666; font-size: 0.9rem;">
-                    Pro tip: Use this time to refine your application or engage with investors who received your last emergence!
-                </p>
-            </div>
-            <div class="edit-modal-footer">
-                <button class="modal-btn-save" onclick="this.closest('.edit-modal').remove()" style="width: 100%;">
-                    Got It
-                </button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-}
 // --- UI HEADER HELPER ---
 function getShopHeaderHTML(tokenCount, activeTab) {
     let navButtons = '';
@@ -6069,7 +5300,7 @@ window.promptNewApplication = function() {
     
     modal.innerHTML = `
         <div class="special-app-popup">
-            <button class="close-x" onclick="this.closest('.edit-modal').remove()">×</button>
+            <button class="close-x" onclick="this.closest('.edit-modal').remove()">Ã—</button>
             
             <div class="app-popup-header">
                 <div class="logo-mini">SV</div>
@@ -6176,7 +5407,7 @@ window.renderApplicationForm = async function(appId, appName) {
     // Check vest status
     let attachedVestText = "";
     if (appData.vestId) {
-        attachedVestText = "✓ Vest Attached"; 
+        attachedVestText = "âœ“ Vest Attached"; 
     }
 
     // 2. Render HTML
@@ -6298,7 +5529,7 @@ window.saveApplicationDraft = async function(appId, isBackAction) {
         } else {
             if (window.showSuccessToast) window.showSuccessToast("Progress Saved");
             if(submitBtn) {
-                submitBtn.innerText = "Saved ✓";
+                submitBtn.innerText = "Saved âœ“";
                 setTimeout(() => { submitBtn.innerText = originalText; }, 1500);
             }
         }
@@ -6338,7 +5569,7 @@ window.openVestPicker = async function() {
 
 window.selectVestForApp = function(id, hook) {
     document.getElementById('selectedVestId').value = id;
-    document.getElementById('attachedVestName').innerText = "✓ Attached: " + hook;
+    document.getElementById('attachedVestName').innerText = "âœ“ Attached: " + hook;
     document.getElementById('tempPicker').remove();
 };
 
@@ -6714,7 +5945,7 @@ window.showInvestorChatList = async function () {
                     </div>
                 </div>
                 <div class="inbox-count" id="liveOnlineCounter">
-                    <span style="color:#6b7280;">●</span> 0 Online
+                    <span style="color:#6b7280;">â—</span> 0 Online
                 </div>
             </div>
         `;
@@ -6751,7 +5982,7 @@ window.showInvestorChatList = async function () {
                         <div class="chat-info">
                             <div class="chat-name">${displayName}</div>
                             <div class="chat-preview ${chat.isUnread ? 'unread-text' : ''}">
-                                ${chat.isUnread ? '<strong>●</strong> ' : ''}${chat.lastMessage}
+                                ${chat.isUnread ? '<strong>â—</strong> ' : ''}${chat.lastMessage}
                             </div>
                         </div>
 
@@ -6803,7 +6034,7 @@ window.showInvestorChatList = async function () {
                 const totalOnline = document.querySelectorAll('.status-online').length;
                 const counterEl = document.getElementById('liveOnlineCounter');
                 if (counterEl) {
-                    counterEl.innerHTML = `<span style="color:${totalOnline ? '#10b981' : '#6b7280'};">●</span> ${totalOnline} Online`;
+                    counterEl.innerHTML = `<span style="color:${totalOnline ? '#10b981' : '#6b7280'};">â—</span> ${totalOnline} Online`;
                 }
             };
 
@@ -6847,7 +6078,7 @@ window.openChat = async function(uid, roomKey, element) {
     element.querySelector('.unread-dot')?.remove();
     element.querySelector('.chat-preview')?.classList.remove('unread-text');
 
-    // 🔥 MARK ALL MESSAGES AS READ IN FIREBASE
+    // ðŸ”¥ MARK ALL MESSAGES AS READ IN FIREBASE
     const roomRef = ref(db, `Chats/${roomKey}`);
     const snap = await get(roomRef);
 
@@ -6865,7 +6096,7 @@ window.openChat = async function(uid, roomKey, element) {
         // Apply all updates at once
         if (Object.keys(updates).length > 0) {
             await update(roomRef, updates);
-            console.log(`✅ Marked ${Object.keys(updates).length} messages as read`);
+            console.log(`âœ… Marked ${Object.keys(updates).length} messages as read`);
         }
     }
 
@@ -6935,7 +6166,7 @@ function updateNotificationBadge(count) {
         if(msg) msg.classList.remove('active');
     }
     
-    console.log(`📬 Unread messages: ${count}`); // Debug log
+    console.log(`ðŸ“¬ Unread messages: ${count}`); // Debug log
 }
 
 function timeSince(date) {
@@ -6973,14 +6204,14 @@ function startApplicationReplyListener() {
 
         // Find unread replies for this user
         for (const [replyId, reply] of Object.entries(allReplies)) {
-            // ✅ ONLY process replies for THIS user
+            // âœ… ONLY process replies for THIS user
             if (reply.founderId === currentUser.uid) {
                 
                 // Count unread replies
                 if (reply.read === false) {
                     unreadCount++;
                     
-                    // ✅ Show popup ONLY if:
+                    // âœ… Show popup ONLY if:
                     // 1. Reply is unread (read: false)
                     // 2. We haven't shown popup for this reply before
                     // 3. User is on dashboard
@@ -7020,7 +6251,7 @@ function startApplicationReplyListener() {
                     }
                 }
                 
-                // ✅ IMPORTANT: If reply is now read, remove from shown list
+                // âœ… IMPORTANT: If reply is now read, remove from shown list
                 // This allows popup to show again if status changes back to unread
                 if (reply.read === true && shownPopups.has(replyId)) {
                     shownPopups.delete(replyId);
@@ -7164,7 +6395,7 @@ function showNewReplyPopup(replyData, investorName, appName, replyId) {
                 
                 <div class="popup-content-area">
                     
-                    <div class="popup-new-tag">🔔 NEW REPLY</div>
+                    <div class="popup-new-tag">ðŸ”” NEW REPLY</div>
                     
                     <h2 class="popup-main-title">
                         Application Reply Received!
@@ -7313,7 +6544,7 @@ window.handleBellClick = async function() {
             // Execute Bulk Update if there are messages to mark
             if (Object.keys(updates).length > 0) {
                 await update(ref(db), updates);
-                console.log(`✅ Marked ${Object.keys(updates).length} messages as read.`);
+                console.log(`âœ… Marked ${Object.keys(updates).length} messages as read.`);
             }
         }
     } catch (error) {
@@ -7463,14 +6694,14 @@ window.saveNewUsername = async function() {
     // 1. Validation (Strict 6 char limit)
     if (!rawName || rawName.length < 6) {
         input.style.borderBottomColor = "#ff4d4d"; // Red error indication
-        alert("❌ Username must be at least 6 characters long.");
+        alert("âŒ Username must be at least 6 characters long.");
         return;
     }
     
     // Regex: Only letters and numbers allowed
     if (!/^[a-zA-Z0-9]+$/.test(rawName)) {
         input.style.borderBottomColor = "#ff4d4d";
-        alert("❌ Usernames can only contain letters and numbers (No spaces).");
+        alert("âŒ Usernames can only contain letters and numbers (No spaces).");
         return;
     }
 
@@ -7494,7 +6725,7 @@ window.saveNewUsername = async function() {
         }
 
         // 5. Success Animation
-        btn.innerText = "Success ✓";
+        btn.innerText = "Success âœ“";
         setTimeout(() => {
              const modal = document.getElementById('usernameSetupModal');
              if(modal) {
@@ -7601,15 +6832,15 @@ userReplies = Object.fromEntries(
             if (reply.status === 'YES') {
                 statusClass = 'status-accepted';
                 statusText = 'Accepted';
-                statusIcon = '✓';
+                statusIcon = 'âœ“';
             } else if (reply.status === 'LATER') {
                 statusClass = 'status-postponed';
                 statusText = 'Postponed';
-                statusIcon = '⏸';
+                statusIcon = 'â¸';
             } else {
                 statusClass = 'status-rejected';
                 statusText = 'Rejected';
-                statusIcon = '✕';
+                statusIcon = 'âœ•';
             }
             
             const isUnread = !reply.read;
@@ -8045,20 +7276,20 @@ async function showReplyPopup(replyId, reply) {
     let message = '';
     
     if (reply.status === 'YES') {
-        icon = '✓';
+        icon = 'âœ“';
         iconClass = 'accepted';
         title = 'Application Accepted!';
         message = `Your application has been <strong>accepted</strong> by <span class="popup-investor">${investorName}</span>! They may have sent you a message in chat. Check your inbox to continue the conversation.`;
     } else if (reply.status === 'LATER') {
-        icon = '⏸';
+        icon = 'â¸';
         iconClass = 'postponed';
         title = 'Application Postponed';
         message = `Your application is currently being <strong>postponed</strong> by <span class="popup-investor">${investorName}</span>. They may want you to try again after gaining some more traction. Don't give up!`;
     } else {
-        icon = '✕';
+        icon = 'âœ•';
         iconClass = 'rejected';
         title = 'Application Status Update';
-        message = `Unfortunately, your application has been <strong>rejected</strong> by <span class="popup-investor">${investorName}</span>. This doesn't mean your startup isn't good—it can be a path to another investor. Many big ideas failed many times before finding success!`;
+        message = `Unfortunately, your application has been <strong>rejected</strong> by <span class="popup-investor">${investorName}</span>. This doesn't mean your startup isn't goodâ€”it can be a path to another investor. Many big ideas failed many times before finding success!`;
     }
     
     // Create popup
@@ -8186,12 +7417,12 @@ window.saveAutoReply = async function() {
     const enabled = document.getElementById('autoReplyEnabled').checked;
     
     if (!message) {
-        alert("❌ Please enter an auto-reply message");
+        alert("âŒ Please enter an auto-reply message");
         return;
     }
     
     if (message.length > 500) {
-        alert("❌ Message is too long. Please keep it under 500 characters.");
+        alert("âŒ Message is too long. Please keep it under 500 characters.");
         return;
     }
     
@@ -8217,11 +7448,11 @@ window.saveAutoReply = async function() {
         }
         
         closeAutoReplyModal();
-        alert("✅ Auto-reply saved successfully!");
+        alert("âœ… Auto-reply saved successfully!");
         
     } catch (error) {
         console.error("Error saving auto-reply:", error);
-        alert("❌ Failed to save auto-reply");
+        alert("âŒ Failed to save auto-reply");
         saveBtn.innerText = originalText;
         saveBtn.disabled = false;
     }
@@ -8273,7 +7504,7 @@ window.saveStatus = async function() {
     const dateInput = document.getElementById('unavailableDate');
     
     if (!statusSelect) {
-        console.error("❌ Status select not found");
+        console.error("âŒ Status select not found");
         return;
     }
     
@@ -8310,7 +7541,7 @@ window.saveStatus = async function() {
             today.setHours(0, 0, 0, 0);
             
             if (selectedDate < today) {
-                alert("❌ Please select a future date.");
+                alert("âŒ Please select a future date.");
                 return;
             }
 
@@ -8342,11 +7573,11 @@ window.saveStatus = async function() {
         
         // 6. Build success message
         let statusMessage = selectedStatus === 'active' 
-            ? `✅ All vests activated! (${activeCount} live)` 
-            : `⏸️ System set to BUSY. All vests are now hidden.`;
+            ? `âœ… All vests activated! (${activeCount} live)` 
+            : `â¸ï¸ System set to BUSY. All vests are now hidden.`;
         
         if (unavailableDate) {
-            statusMessage += `\n📅 Scheduled unavailability on ${unavailableDate}`;
+            statusMessage += `\nðŸ“… Scheduled unavailability on ${unavailableDate}`;
         }
         
         alert(statusMessage);
@@ -8365,8 +7596,8 @@ window.saveStatus = async function() {
         }
         
     } catch (error) {
-        console.error("❌ Sync Error:", error);
-        alert("❌ Failed to update status: " + error.message);
+        console.error("âŒ Sync Error:", error);
+        alert("âŒ Failed to update status: " + error.message);
     }
 };
 
@@ -8385,9 +7616,9 @@ async function checkScheduledAvailability() {
             now.setHours(0, 0, 0, 0);
             targetDate.setHours(0, 0, 0, 0);
             
-            // ⭐ CHECK IF DATE HAS PASSED (not just equals)
+            // â­ CHECK IF DATE HAS PASSED (not just equals)
             if (now >= targetDate) {
-                console.log("⏰ Applying scheduled unavailability...");
+                console.log("â° Applying scheduled unavailability...");
                 
                 const vestsRef = ref(db, `Vests/${currentUser.uid}`);
                 const vestsSnapshot = await get(vestsRef);
@@ -8404,16 +7635,16 @@ async function checkScheduledAvailability() {
                     
                     await update(ref(db), updates);
                     
-                    console.log("✅ Scheduled unavailability applied");
+                    console.log("âœ… Scheduled unavailability applied");
                     
-                    // ⭐ SHOW ALERT TO USER
-                    alert("🔒 Your scheduled unavailability has been applied. All vests are now inactive.");
+                    // â­ SHOW ALERT TO USER
+                    alert("ðŸ”’ Your scheduled unavailability has been applied. All vests are now inactive.");
                     
                     if (window.updateNavStatusUI) {
                         window.updateNavStatusUI('busy');
                     }
                     
-                    // ⭐ REFRESH DASHBOARD
+                    // â­ REFRESH DASHBOARD
                     if (window.location.hash === '#founder_dashboard' || !window.location.hash) {
                         window.location.reload();
                     }
@@ -9161,7 +8392,7 @@ try {
     </div>
     <div class="analytics-vest-info">
         <h2>${vest?.MainVest?.hook || 'Vest Analytics'}</h2>
-        <p>${vest?.StartupDetails?.name || 'Startup'} • Last updated: ${new Date().toLocaleDateString()}</p>
+        <p>${vest?.StartupDetails?.name || 'Startup'} â€¢ Last updated: ${new Date().toLocaleDateString()}</p>
     </div>
 </div>
                 
@@ -9255,7 +8486,7 @@ try {
                             <div class="stat-value-pro">${analytics.todayClicks || 0}</div>
                             <div class="stat-comparison ${parseFloat(clickChange) > 0 ? 'positive' : parseFloat(clickChange) < 0 ? 'negative' : 'neutral'}">
                                 <span class="stat-arrow ${parseFloat(clickChange) > 0 ? 'up' : 'down'}">
-                                    ${parseFloat(clickChange) > 0 ? '↑' : parseFloat(clickChange) < 0 ? '↓' : '—'}
+                                    ${parseFloat(clickChange) > 0 ? 'â†‘' : parseFloat(clickChange) < 0 ? 'â†“' : 'â€”'}
                                 </span>
                                 ${Math.abs(clickChange)}% vs yesterday
                             </div>
@@ -9274,7 +8505,7 @@ try {
                             <div class="stat-value-pro">${analytics.todayImpressions || 0}</div>
                             <div class="stat-comparison ${parseFloat(impressionChange) > 0 ? 'positive' : parseFloat(impressionChange) < 0 ? 'negative' : 'neutral'}">
                                 <span class="stat-arrow ${parseFloat(impressionChange) > 0 ? 'up' : 'down'}">
-                                    ${parseFloat(impressionChange) > 0 ? '↑' : parseFloat(impressionChange) < 0 ? '↓' : '—'}
+                                    ${parseFloat(impressionChange) > 0 ? 'â†‘' : parseFloat(impressionChange) < 0 ? 'â†“' : 'â€”'}
                                 </span>
                                 ${Math.abs(impressionChange)}% vs yesterday
                             </div>
@@ -9294,7 +8525,7 @@ try {
                             <div class="stat-value-pro">${formatTime(analytics.todayTimeSpent || 0)}</div>
                             <div class="stat-comparison ${parseFloat(timeChange) > 0 ? 'positive' : parseFloat(timeChange) < 0 ? 'negative' : 'neutral'}">
                                 <span class="stat-arrow ${parseFloat(timeChange) > 0 ? 'up' : 'down'}">
-                                    ${parseFloat(timeChange) > 0 ? '↑' : parseFloat(timeChange) < 0 ? '↓' : '—'}
+                                    ${parseFloat(timeChange) > 0 ? 'â†‘' : parseFloat(timeChange) < 0 ? 'â†“' : 'â€”'}
                                 </span>
                                 ${Math.abs(timeChange)}% vs yesterday
                             </div>
@@ -9341,10 +8572,11 @@ async function showVerificationPage() {
     container.style.display = 'block';
     document.title = "Verify Your Account | ScaleVest";
     
-    // ⭐ CHECK if verification line already exists
+    // Check if verification line already exists
     const founderRef = ref(db, `founderProfile/${currentUser.uid}`);
     const snapshot = await get(founderRef);
-    const existingLine = snapshot.exists() ? snapshot.val().verificationLine : null;
+    const founderData = snapshot.val() || {};
+    const existingLine = founderData.verificationLine || null;
     
     container.innerHTML = `
         <style>
@@ -9565,36 +8797,20 @@ async function showVerificationPage() {
  
         
        <div class="verify-page">
-            <a href="#founder_dashboard" class="back-to-dash">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M19 12H5M12 19l-7-7 7-7"/>
-                </svg>
-                Back to Dashboard
-            </a>
-            
-            <div class="verify-header">
-                <h1 class="verify-title">Founder Verification</h1>
-                <p class="verify-subtitle">
-                    Complete verification to unlock full access to ScaleVest features
-                </p>
-            </div>
-            
-            ${existingLine ? `
-    <div class="verification-steps active" style="display: block;">
-        <div class="step-item">
-            <div class="step-number">1</div>
-            <div class="verify-step-content">
-                <h4>Your Verification Line</h4>
-                <p>Speak this exact line in your video:</p>
-                <div class="verification-line-box active">
-                    <div class="verification-line-text">${existingLine}</div>
-                </div>
-                <div class="upload-section active">
-                    </div>
-            </div>
-        </div>
+    <a href="#founder_dashboard" class="back-to-dash">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Back to Dashboard
+    </a>
+    
+    <div class="verify-header">
+        <h1 class="verify-title">Founder Verification</h1>
+        <p class="verify-subtitle">
+            Complete verification to unlock full access to ScaleVest features
+        </p>
     </div>
-` : `
+    
     <div class="verify-card">
         <button class="verify-option-btn" onclick="startVideoVerification()">
             <div class="verify-icon">
@@ -9605,11 +8821,10 @@ async function showVerificationPage() {
             </div>
             <div class="verify-option-content">
                 <h3>ScaleVest Video Script Verification</h3>
-                <p>Click to start the process</p>
+                <p>Record a 30-second video speaking your unique verification line to prove you're a real founder</p>
             </div>
         </button>
     </div>
-`}
     
     <div class="verification-steps" id="verificationSteps" style="display: none;">
         <div class="step-item">
@@ -9628,7 +8843,7 @@ async function showVerificationPage() {
                     <div class="verification-line-text" id="verificationLineText">
                         </div>
                     <p style="color: #666; font-size: 0.85rem; margin-top: 1rem;">
-                        ⚠️ You must speak this exact line in your video
+                        âš ï¸ You must speak this exact line in your video
                     </p>
                 </div>
             </div>
@@ -9649,7 +8864,7 @@ async function showVerificationPage() {
                             <line x1="12" y1="3" x2="12" y2="15"></line>
                         </svg>
                         <p style="color: #888; font-size: 1.1rem; margin-bottom: 0.5rem;" id="uploadText">Click to Upload Video</p>
-                        <small style="color: #555;">Max 100MB • MP4, MOV, AVI</small>
+                        <small style="color: #555;">Max 100MB â€¢ MP4, MOV, AVI</small>
                         <input type="file" id="videoUpload" accept="video/*" style="display: none;" onchange="handleVideoUpload(event)">
                     </div>
                     
@@ -9694,7 +8909,7 @@ window.generateVerificationLine = async function() {
     btn.disabled = true;
     
     try {
-        // ✅ 1. FIXED URL: Using your specific Vercel domain
+        // âœ… 1. FIXED URL: Using your specific Vercel domain
         const response = await fetch('https://gemini-sigma-plum.vercel.app/api/videogemini', {
             method: 'POST',
             headers: {
@@ -9730,7 +8945,7 @@ window.generateVerificationLine = async function() {
         document.getElementById('uploadSection').classList.add('active');
         btn.style.display = 'none';
         
-        alert('✅ Verification line generated! Please speak this line in your video.');
+        alert('âœ… Verification line generated! Please speak this line in your video.');
         
     } catch (error) {
         console.error('Error generating line:', error);
@@ -9753,14 +8968,14 @@ window.handleVideoUpload = function(event) {
     
     // Check file size (100MB limit)
     if (file.size > 100 * 1024 * 1024) {
-        alert('❌ Video file must be under 100MB');
+        alert('âŒ Video file must be under 100MB');
         return;
     }
     
     // Check file type
     const validTypes = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/webm'];
     if (!validTypes.includes(file.type)) {
-        alert('❌ Please upload a valid video file (MP4, MOV, AVI, WEBM)');
+        alert('âŒ Please upload a valid video file (MP4, MOV, AVI, WEBM)');
         return;
     }
     
@@ -9771,7 +8986,7 @@ window.handleVideoUpload = function(event) {
     const uploadText = document.getElementById('uploadText');
     
     uploadBox.classList.add('has-file');
-    uploadText.innerHTML = `✓ ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+    uploadText.innerHTML = `âœ“ ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
     
     // Enable submit button
     document.getElementById('submitVerifyBtn').disabled = false;
@@ -9783,7 +8998,7 @@ window.handleVideoUpload = function(event) {
 
 window.submitVideoVerification = async function() {
     if (!uploadedVideoFile) {
-        alert('❌ Please upload a video first');
+        alert('âŒ Please upload a video first');
         return;
     }
     
@@ -9841,7 +9056,7 @@ window.submitVideoVerification = async function() {
     } catch (error) {
         console.error('Verification error:', error);
         hideVerificationLoader();
-        alert('❌ Error: ' + error.message);
+        alert('âŒ Error: ' + error.message);
         btn.innerHTML = 'Submit for Verification';
         btn.disabled = false;
     }
@@ -10147,7 +9362,7 @@ function showVerificationSuccess() {
                 
                 <h2 class="success-title">Successfully Verified!</h2>
                 
-                <div class="success-badge">✓ FOUNDER VERIFIED</div>
+                <div class="success-badge">âœ“ FOUNDER VERIFIED</div>
                 
                 <p class="success-message">
                     Congratulations! Your founder account has been verified. 
@@ -10190,7 +9405,7 @@ window.closeSuccessAndRedirect = async function() {
         document.body.style.paddingTop = '0';
     }
     
-    // ⭐ AUTO-ACTIVATE ALL VESTS
+    // â­ AUTO-ACTIVATE ALL VESTS
     try {
         const vestsRef = ref(db, `Vests/${currentUser.uid}`);
         const vestsSnap = await get(vestsRef);
@@ -10212,7 +9427,7 @@ window.closeSuccessAndRedirect = async function() {
             // Execute bulk update
             await update(ref(db), updates);
             
-            console.log(`✅ Activated ${activeCount} vests automatically`);
+            console.log(`âœ… Activated ${activeCount} vests automatically`);
         }
     } catch (error) {
         console.error("Error auto-activating vests:", error);
@@ -10413,7 +9628,7 @@ function showVerificationFailed(expectedLine, transcript, matchPercentage) {
                         <div class="detail-label">Match Score</div>
                         <div class="match-percentage">${matchPercentage || 0}%</div>
                         <div style="color: #666; font-size: 0.85rem; margin-top: 0.5rem;">
-                           
+                            (Need 80% or higher to pass)
                         </div>
                     </div>
                 </div>
@@ -10593,8 +9808,8 @@ window.saveVestChanges = async function() {
         // Update session storage
         sessionStorage.setItem('editVestData', JSON.stringify(vestData));
         
-        // ⭐ CHANGED: Redirect to dashboard instead of showing "Saved"
-        alert('✅ Changes saved successfully!');
+        // â­ CHANGED: Redirect to dashboard instead of showing "Saved"
+        alert('âœ… Changes saved successfully!');
         
         // Clear edit mode
         isEditMode = false;
@@ -10608,7 +9823,7 @@ window.saveVestChanges = async function() {
         
     } catch (error) {
         console.error("Save error:", error);
-        alert("❌ Failed to save changes");
+        alert("âŒ Failed to save changes");
         btn.innerHTML = originalText;
         btn.disabled = false;
     }
@@ -10648,400 +9863,14 @@ window.launchEditedVest = async function() {
         sessionStorage.removeItem('editVestId');
         sessionStorage.removeItem('editVestData');
         
-        alert('🚀 Vest launched successfully!');
+        alert('ðŸš€ Vest launched successfully!');
         window.location.hash = 'manage_vests';
         
     } catch (error) {
         console.error("Launch error:", error);
-        alert("❌ Failed to launch vest");
+        alert("âŒ Failed to launch vest");
         btn.innerHTML = 'Launch Vest';
         btn.disabled = false;
-    }
-};
-// ⭐ ADD THIS AFTER createDashboard() function closes
-
-// Global Profile Dropdown Toggle
-window.toggleDashProfileDropdown = function(event) {
-    if (event) event.stopPropagation();
-    
-    const dropdown = document.getElementById('dashProfileDropdown');
-    if (!dropdown) {
-        console.error("Dropdown element not found!");
-        return;
-    }
-    
-    // Close all other dropdowns first
-    document.querySelectorAll('.dropdown-content').forEach(dd => {
-        if (dd.id !== 'dashProfileDropdown') {
-            dd.classList.remove('show');
-        }
-    });
-    
-    // Toggle this dropdown
-    dropdown.classList.toggle('show');
-};
-
-// Close dropdowns when clicking outside
-document.addEventListener('click', (e) => {
-    if (!e.target.closest('.profile-dropdown') && !e.target.closest('.icon-btn')) {
-        const dropdown = document.getElementById('dashProfileDropdown');
-        if (dropdown) {
-            dropdown.classList.remove('show');
-        }
-    }
-});
-// This listens to clicks on the entire page
-document.addEventListener('click', (event) => {
-    // Check if the clicked element (or its parent) has the ID 'sign-out-btn'
-    if (event.target && event.target.id === 'sign-out-btn') {
-        
-        // Prevent default button behavior
-        event.preventDefault();
-
-        // 1. Firebase Sign Out
-        // Ensure 'auth' is defined globally or imported in this file
-        signOut(auth).then(() => {
-            console.log("Sign out successful");
-
-            // 2. Clear Local Storage
-            localStorage.removeItem('startupProfileCreated');
-
-            // 3. Redirect
-            window.location.href = "https://upscalevest.site/index.html";
-        }).catch((error) => {
-            console.error("Firebase Sign Out Error:", error);
-        });
-    }
-});
-
-// ==========================================
-// INVESTOR MATCHING ENGINE
-// ==========================================
-
-async function findMatchingInvestors(userCategory, targetCount) {
-    const investorsRef = ref(db, 'investorProfiles');
-    const snapshot = await get(investorsRef);
-    
-    if (!snapshot.exists()) return [];
-    
-    const allInvestors = snapshot.val();
-    const matched = [];
-    const secondary = [];
-    const fallback = [];
-    
-    // Phase 1: Exact category match
-    Object.entries(allInvestors).forEach(([id, investor]) => {
-        if (!investor.preferredCategories) return;
-        
-        const categories = Object.values(investor.preferredCategories);
-        
-        if (categories.includes(userCategory)) {
-            matched.push(id);
-        } else if (categories.some(cat => isRelatedCategory(userCategory, cat))) {
-            secondary.push(id);
-        } else {
-            fallback.push(id);
-        }
-    });
-    
-    // Build final list
-    const finalList = [
-        ...matched.slice(0, targetCount),
-        ...secondary.slice(0, Math.max(0, targetCount - matched.length)),
-        ...fallback.slice(0, Math.max(0, targetCount - matched.length - secondary.length))
-    ];
-    
-    return finalList.slice(0, targetCount);
-}
-
-function isRelatedCategory(cat1, cat2) {
-    const categoryGroups = {
-        'tech': ['AI/ML', 'SaaS', 'B2B SaaS', 'Web3', 'Blockchain'],
-        'health': ['HealthTech', 'MedTech', 'BioTech'],
-        'finance': ['FinTech', 'InsurTech'],
-        'consumer': ['E-commerce', 'FoodTech', 'TravelTech']
-    };
-    
-    for (const [group, cats] of Object.entries(categoryGroups)) {
-        if (cats.includes(cat1) && cats.includes(cat2)) {
-            return true;
-        }
-    }
-    return false;
-}
-// ==========================================
-// LAUNCH EMERGENCE - MAIN FUNCTION
-// ==========================================
-
-window.launchEmergence = async function(planType, investorCount, paymentMethod) {
-    if (!window.selectedApplicationId) {
-        alert("❌ Please select an application first!");
-        return;
-    }
-    
-    const launchBtn = document.getElementById('launchEmergenceBtn');
-    launchBtn.innerHTML = 'Launching... 🚀';
-    launchBtn.disabled = true;
-    
-    try {
-        // 1. Get user's startup category
-        const startupRef = ref(db, `startupProfile/${currentUser.uid}`);
-        const startupSnap = await get(startupRef);
-        const userCategory = startupSnap.val()?.category || 'Other';
-        
-        // 2. Find matching investors
-        const matchedInvestors = await findMatchingInvestors(userCategory, investorCount);
-        
-        if (matchedInvestors.length === 0) {
-            alert("❌ No investors found. Please try again later.");
-            return;
-        }
-        
-        // 3. Get application data
-        const appRef = ref(db, `Applications/${currentUser.uid}/${window.selectedApplicationId}`);
-        const appSnap = await get(appRef);
-        const appData = appSnap.val();
-        
-        // 4. Send to each investor's inbox
-        const timestamp = Date.now();
-        const updates = {};
-        
-        matchedInvestors.forEach(investorId => {
-            const messageId = push(ref(db, `InvestorInbox/${investorId}`)).key;
-            updates[`InvestorInbox/${investorId}/${messageId}`] = {
-                applicationId: window.selectedApplicationId,
-                founderId: currentUser.uid,
-                appName: appData.appName,
-                appHook: appData.appHook,
-                vestId: appData.vestId,
-                timestamp: timestamp,
-                read: false,
-                emergenceType: planType
-            };
-        });
-        
-        // 5. Deduct tokens if token payment
-        if (paymentMethod === 'tokens') {
-            const tokenCost = {
-                'tiny': 100,
-                'small': 200,
-                'medium': 320
-            }[planType];
-            
-            const currentTokens = await getLiveTokens();
-            updates[`founderProfile/${currentUser.uid}/scaleTokens`] = currentTokens - tokenCost;
-        }
-        
-        // 6. Update cooldown
-        updates[`founderProfile/${currentUser.uid}/lastEmergenceDate`] = timestamp;
-        updates[`founderProfile/${currentUser.uid}/emergenceCount`] = (cachedFounderData?.emergenceCount || 0) + 1;
-        
-        // 7. Track launch
-        const launchId = push(ref(db, `EmergenceLaunches/${currentUser.uid}`)).key;
-        updates[`EmergenceLaunches/${currentUser.uid}/${launchId}`] = {
-            applicationId: window.selectedApplicationId,
-            planType,
-            investorsSent: matchedInvestors,
-            timestamp,
-            paymentMethod
-        };
-        
-        // 8. Execute all updates
-        await update(ref(db), updates);
-        
-        // 9. Show success animation
-        document.querySelector('.edit-modal').remove();
-        showRocketLaunchAnimation(matchedInvestors.length);
-        
-    } catch (error) {
-        console.error("Launch error:", error);
-        alert("❌ Launch failed. Please try again.");
-        launchBtn.innerHTML = 'Launch Emergence 🚀';
-        launchBtn.disabled = false;
-    }
-};
-// ==========================================
-// ROCKET LAUNCH SUCCESS ANIMATION
-// ==========================================
-
-function showRocketLaunchAnimation(investorCount) {
-    const animation = document.createElement('div');
-    animation.innerHTML = `
-        <style>
-            .rocket-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100vw;
-                height: 100vh;
-                background: rgba(0, 0, 0, 0.95);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 999999;
-                animation: fadeIn 0.5s;
-            }
-            
-            .rocket-container {
-                text-align: center;
-            }
-            
-            .rocket {
-                font-size: 8rem;
-                animation: rocketLaunch 2s ease-out;
-            }
-            
-            @keyframes rocketLaunch {
-                0% { transform: translateY(100vh) rotate(-45deg); opacity: 0; }
-                50% { transform: translateY(-20vh) rotate(0deg); opacity: 1; }
-                100% { transform: translateY(-120vh) rotate(0deg); opacity: 0; }
-            }
-            
-            .success-message {
-                margin-top: 2rem;
-                animation: slideUp 1s ease 0.5s both;
-            }
-            
-            @keyframes slideUp {
-                from { transform: translateY(50px); opacity: 0; }
-                to { transform: translateY(0); opacity: 1; }
-            }
-            
-            .stats-grid {
-                display: grid;
-                grid-template-columns: repeat(2, 1fr);
-                gap: 1rem;
-                margin-top: 2rem;
-                animation: slideUp 1s ease 1s both;
-            }
-            
-            .stat-box {
-                background: rgba(255, 255, 255, 0.05);
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                border-radius: 12px;
-                padding: 1.5rem;
-            }
-            
-            .stat-value {
-                font-size: 2.5rem;
-                font-weight: 800;
-                color: #10b981;
-            }
-            
-            .stat-label {
-                color: #888;
-                font-size: 0.9rem;
-                margin-top: 0.5rem;
-            }
-        </style>
-        
-        <div class="rocket-overlay">
-            <div class="rocket-container">
-                <div class="rocket">🚀</div>
-                
-                <div class="success-message">
-                    <h2 style="font-size: 2.5rem; font-weight: 800; color: #fff; margin-bottom: 1rem;">
-                        Emergence Launched!
-                    </h2>
-                    <p style="color: #aaa; font-size: 1.2rem; line-height: 1.8;">
-                        Your application is now in the hands of potential investors
-                    </p>
-                </div>
-                
-                <div class="stats-grid">
-                    <div class="stat-box">
-                        <div class="stat-value">${investorCount}</div>
-                        <div class="stat-label">Investors Reached</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-value">100%</div>
-                        <div class="stat-label">Category Match</div>
-                    </div>
-                </div>
-                
-                <button 
-                    onclick="this.closest('.rocket-overlay').remove(); window.location.hash='founder_dashboard'" 
-                    style="
-                        margin-top: 3rem;
-                        padding: 1rem 3rem;
-                        background: linear-gradient(135deg, #ff006e, #8338ec);
-                        color: #fff;
-                        border: none;
-                        border-radius: 12px;
-                        font-weight: 700;
-                        font-size: 1rem;
-                        cursor: pointer;
-                        animation: slideUp 1s ease 1.5s both;
-                    ">
-                    Back to Dashboard
-                </button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(animation);
-    
-    // Auto-close after 5 seconds
-    setTimeout(() => {
-        animation.remove();
-        window.location.hash = 'founder_dashboard';
-    }, 5000);
-}
-
-window.addTokensToDB = async function(amount, bundleType, price) {
-    if (!currentUser) return;
-    
-    try {
-        // 1. Get current token count
-        const currentTokens = await getLiveTokens();
-        const newTotal = currentTokens + amount;
-        const timestamp = Date.now();
-        
-        // 2. Create unique IDs for global and user-specific history
-        const transactionId = push(ref(db, 'TokenTransactions')).key;
-        const purchaseId = push(ref(db, `founderProfile/${currentUser.uid}/tokenPurchaseHistory`)).key;
-        
-        // 3. Prepare atomic updates
-        const updates = {};
-        
-        // Update user's token count
-        updates[`founderProfile/${currentUser.uid}/scaleTokens`] = newTotal;
-        
-        // Add to user's purchase history
-        updates[`founderProfile/${currentUser.uid}/tokenPurchaseHistory/${purchaseId}`] = {
-            amount: amount,
-            bundleType: bundleType,
-            price: price,
-            timestamp: timestamp,
-            transactionId: transactionId,
-            status: "completed"
-        };
-        
-        // Add to global transactions log (Root level)
-        updates[`TokenTransactions/${transactionId}`] = {
-            userId: currentUser.uid,
-            bundleType: bundleType,
-            tokensAdded: amount,
-            price: price,
-            timestamp: timestamp,
-            paymentMethod: "razorpay", // Placeholder for payment integration
-            userEmail: currentUser.email || "unknown"
-        };
-        
-        // 4. Execute all updates atomically
-        await update(ref(db), updates);
-        
-        // 5. Update local cache for UI responsiveness
-        if (cachedFounderData) {
-            cachedFounderData.scaleTokens = newTotal;
-        }
-        
-        // 6. Show success and refresh shop
-        alert(`✅ Success! ${amount} tokens added.\nNew Balance: ${newTotal} tokens`);
-        showTokenShop(); 
-        
-    } catch (error) {
-        console.error("Transaction Error:", error);
-        alert("❌ Transaction failed. Please try again or contact support.");
     }
 };
 
@@ -11319,11 +10148,7 @@ onAuthStateChanged(auth, async (user) => {
                     title: '',
                     about: '',
                     createdAt: new Date().toISOString(),
-                    isVerified: false,
-                     scaleTokens: 0,              
-                    lastEmergenceDate: null,     
-                     emergenceCount: 0,            
-                     tokenPurchaseHistory: {} 
+                    isVerified: false 
                 };
                 
                 await update(ref(db, `founderProfile/${user.uid}`), cachedFounderData);
@@ -11337,18 +10162,18 @@ onAuthStateChanged(auth, async (user) => {
             } else {
                 cachedFounderData = founderSnapshot.val();
                 
-                // ⭐ 1. Ensure isVerified exists
+                // â­ 1. Ensure isVerified exists
                 if (cachedFounderData.isVerified === undefined) {
                     cachedFounderData.isVerified = false;
                     await update(ref(db, `founderProfile/${user.uid}`), { isVerified: false });
                 }
                 
-                // ⭐ 2. Handle Verification UI Logic
+                // â­ 2. Handle Verification UI Logic
                 if (cachedFounderData.isVerified === false) {
                     // Show the top banner immediately
                     showVerificationBanner();
                     
-                    console.log("⚠️ Unverified: Blocking popup will trigger in 10 seconds.");
+                    console.log("âš ï¸ Unverified: Blocking popup will trigger in 10 seconds.");
                     setTimeout(() => {
                         checkAndBlockUnverifiedUser(user.uid);
                     }, 1000); 
@@ -11452,7 +10277,7 @@ function createEditModal(title, val, ph, isArea, callback) {
         <div class="edit-modal-content">
             <div class="edit-modal-header">
                 <h3>${title}</h3>
-                <button class="modal-close" onclick="closeEditModal()">×</button>
+                <button class="modal-close" onclick="closeEditModal()">Ã—</button>
             </div>
             <div class="edit-modal-body">
                 ${isArea 
@@ -11484,7 +10309,7 @@ window.saveEditModal = function() {
     if (currentEditAction) {
         currentEditAction(value); // Execute the stored function
     } else {
-        console.error("❌ Critical Error: No save action defined.");
+        console.error("âŒ Critical Error: No save action defined.");
     }
     
     closeEditModal();
@@ -11519,11 +10344,11 @@ window.editUsername = function() {
             // Update Local Cache
             cachedFounderData = { ...cachedFounderData, ...updates };
             
-            alert('✅ Username updated successfully!');
+            alert('âœ… Username updated successfully!');
             showEditProfile(); // Refresh the profile view
         } catch (error) {
             console.error('Error updating username:', error);
-            alert('❌ Failed to update username');
+            alert('âŒ Failed to update username');
         }
     };
     
@@ -11540,11 +10365,11 @@ window.editTitle = function() {
             await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
             cachedFounderData = { ...cachedFounderData, ...updates };
             
-            alert('✅ Title updated successfully!');
+            alert('âœ… Title updated successfully!');
             showEditProfile();
         } catch (error) {
             console.error('Error updating title:', error);
-            alert('❌ Failed to update title');
+            alert('âŒ Failed to update title');
         }
     };
     
@@ -11560,11 +10385,11 @@ window.editAbout = function() {
             await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
             cachedFounderData = { ...cachedFounderData, ...updates };
             
-            alert('✅ About section updated successfully!');
+            alert('âœ… About section updated successfully!');
             showEditProfile();
         } catch (error) {
             console.error('Error updating about:', error);
-            alert('❌ Failed to update about section');
+            alert('âŒ Failed to update about section');
         }
     };
     
@@ -11584,7 +10409,7 @@ window.addCoFounder = function() {
         <div class="edit-modal-content">
             <div class="edit-modal-header">
                 <h3>Add Co-Founder</h3>
-                <button class="modal-close" onclick="closeEditModal()">×</button>
+                <button class="modal-close" onclick="closeEditModal()">Ã—</button>
             </div>
             <div class="edit-modal-body">
                 <div style="margin-bottom: 1.5rem;">
@@ -11611,7 +10436,7 @@ window.saveCoFounder = async function() {
     const description = document.getElementById('cofounderDesc').value.trim();
     
     if (!name) {
-        alert('❌ Name is required');
+        alert('âŒ Name is required');
         return;
     }
     
@@ -11625,11 +10450,11 @@ window.saveCoFounder = async function() {
         cachedFounderData = { ...cachedFounderData, ...updates };
         
         closeEditModal();
-        alert('✅ Co-Founder added successfully!');
+        alert('âœ… Co-Founder added successfully!');
         showEditProfile();
     } catch (error) {
         console.error('Error adding co-founder:', error);
-        alert('❌ Failed to add co-founder');
+        alert('âŒ Failed to add co-founder');
     }
 };
 
@@ -11645,7 +10470,7 @@ window.editStartup = function() {
         <div class="edit-modal-content">
             <div class="edit-modal-header">
                 <h3>Edit Startup Details</h3>
-                <button class="modal-close" onclick="closeEditModal()">×</button>
+                <button class="modal-close" onclick="closeEditModal()">Ã—</button>
             </div>
             <div class="edit-modal-body">
                 <div style="margin-bottom: 1.5rem;">
@@ -11672,7 +10497,7 @@ window.saveStartupEdit = async function() {
     const newDesc = document.getElementById('startupDescInput').value;
     
     if (!newName) {
-        alert('❌ Startup name is required');
+        alert('âŒ Startup name is required');
         return;
     }
     
@@ -11686,11 +10511,11 @@ window.saveStartupEdit = async function() {
         cachedStartupData = { ...cachedStartupData, ...updates };
         
         closeEditModal();
-        alert('✅ Startup info updated successfully!');
+        alert('âœ… Startup info updated successfully!');
         showEditProfile();
     } catch (error) {
         console.error('Error updating startup:', error);
-        alert('❌ Failed to update startup');
+        alert('âŒ Failed to update startup');
     }
 };
 
@@ -11709,7 +10534,7 @@ window.editProfilePhoto = async function() {
         if (!file) return;
         
         if (file.size > 10 * 1024 * 1024) {
-            alert('❌ Image must be under 10MB');
+            alert('âŒ Image must be under 10MB');
             return;
         }
         
@@ -11790,7 +10615,7 @@ window.uploadVideo = async function() {
         if (!file) return;
         
         if (file.size > 50 * 1024 * 1024) {
-            alert('❌ Video must be under 50MB');
+            alert('âŒ Video must be under 50MB');
             return;
         }
         
@@ -11872,7 +10697,7 @@ window.editLocation = function() {
         <div class="edit-modal-content">
             <div class="edit-modal-header">
                 <h3>Edit Location</h3>
-                <button class="modal-close" onclick="closeEditModal()">×</button>
+                <button class="modal-close" onclick="closeEditModal()">Ã—</button>
             </div>
             <div class="edit-modal-body">
                 <div style="margin-bottom: 1.5rem;">
@@ -11912,11 +10737,11 @@ window.saveLocation = async function() {
         cachedStartupData = { ...cachedStartupData, ...updates };
         
         closeEditModal();
-        alert('✅ Location updated!');
+        alert('âœ… Location updated!');
         showEditProfile();
     } catch (error) {
         console.error('Error updating location:', error);
-        alert('❌ Failed to update location');
+        alert('âŒ Failed to update location');
     }
 };
 
@@ -11927,7 +10752,7 @@ window.addLanguage = function() {
         <div class="edit-modal-content">
             <div class="edit-modal-header">
                 <h3>Add Language</h3>
-                <button class="modal-close" onclick="closeEditModal()">×</button>
+                <button class="modal-close" onclick="closeEditModal()">Ã—</button>
             </div>
             <div class="edit-modal-body">
                 <div style="margin-bottom: 1.5rem;">
@@ -11959,7 +10784,7 @@ window.saveLanguage = async function() {
     const level = document.getElementById('languageLevel').value;
     
     if (!name) {
-        alert('❌ Language name is required');
+        alert('âŒ Language name is required');
         return;
     }
     
@@ -11967,7 +10792,7 @@ window.saveLanguage = async function() {
         const languages = cachedFounderData?.languages || [];
         
         if (languages.some(lang => lang.name.toLowerCase() === name.toLowerCase())) {
-            alert('❌ Language already added');
+            alert('âŒ Language already added');
             return;
         }
         
@@ -11978,11 +10803,11 @@ window.saveLanguage = async function() {
         cachedFounderData = { ...cachedFounderData, ...updates };
         
         closeEditModal();
-        alert('✅ Language added!');
+        alert('âœ… Language added!');
         showEditProfile();
     } catch (error) {
         console.error('Error adding language:', error);
-        alert('❌ Failed to add language');
+        alert('âŒ Failed to add language');
     }
 };
 
@@ -11996,11 +10821,11 @@ window.removeLanguage = async function(languageName) {
         await update(ref(db, `founderProfile/${currentUser.uid}`), updates);
         cachedFounderData = { ...cachedFounderData, ...updates };
         
-        alert('✅ Language removed!');
+        alert('âœ… Language removed!');
         showEditProfile();
     } catch (error) {
         console.error('Error removing language:', error);
-        alert('❌ Failed to remove language');
+        alert('âŒ Failed to remove language');
     }
 };
 
@@ -12016,7 +10841,7 @@ window.addEducation = function() {
         <div class="edit-modal-content">
             <div class="edit-modal-header">
                 <h3>Add Education</h3>
-                <button class="modal-close" onclick="closeEditModal()">×</button>
+                <button class="modal-close" onclick="closeEditModal()">Ã—</button>
             </div>
             <div class="edit-modal-body">
                 <div style="margin-bottom: 1.5rem;">
@@ -12048,7 +10873,7 @@ window.saveEducation = async function() {
     const year = document.getElementById('eduYear').value.trim();
     
     if (!school || !degree) {
-        alert('❌ School and degree are required');
+        alert('âŒ School and degree are required');
         return;
     }
     
@@ -12061,11 +10886,11 @@ window.saveEducation = async function() {
         cachedFounderData = { ...cachedFounderData, ...updates };
         
         closeEditModal();
-        alert('✅ Education added successfully!');
+        alert('âœ… Education added successfully!');
         showEditProfile();
     } catch (error) {
         console.error('Error adding education:', error);
-        alert('❌ Failed to add education');
+        alert('âŒ Failed to add education');
     }
 };
 
@@ -12076,7 +10901,7 @@ window.addWorkExperience = function() {
         <div class="edit-modal-content">
             <div class="edit-modal-header">
                 <h3>Add Work Experience</h3>
-                <button class="modal-close" onclick="closeEditModal()">×</button>
+                <button class="modal-close" onclick="closeEditModal()">Ã—</button>
             </div>
             <div class="edit-modal-body">
                 <div style="margin-bottom: 1.5rem;">
@@ -12108,7 +10933,7 @@ window.saveWorkExperience = async function() {
     const duration = document.getElementById('workDuration').value.trim();
     
     if (!company || !position) {
-        alert('❌ Company and position are required');
+        alert('âŒ Company and position are required');
         return;
     }
     
@@ -12121,11 +10946,11 @@ window.saveWorkExperience = async function() {
         cachedFounderData = { ...cachedFounderData, ...updates };
         
         closeEditModal();
-        alert('✅ Work experience added successfully!');
+        alert('âœ… Work experience added successfully!');
         showEditProfile();
     } catch (error) {
         console.error('Error adding work experience:', error);
-        alert('❌ Failed to add work experience');
+        alert('âŒ Failed to add work experience');
     }
 };
 
@@ -12330,19 +11155,19 @@ function showVerificationAlert() {
             
             .verification-alert-box {
                 background: #0a0a0a;
-                border: 2px solid #ef4444; /* ⭐ RED BORDER */
+                border: 2px solid #ef4444; /* â­ RED BORDER */
                 border-radius: 20px;
                 padding: 3rem;
                 max-width: 500px;
                 text-align: center;
-                box-shadow: 0 0 50px rgba(239, 68, 68, 0.5); /* ⭐ RED GLOW */
+                box-shadow: 0 0 50px rgba(239, 68, 68, 0.5); /* â­ RED GLOW */
             }
             
             .verification-alert-icon {
                 width: 80px;
                 height: 80px;
                 margin: 0 auto 2rem;
-                background: rgba(239, 68, 68, 0.15); /* ⭐ RED BACKGROUND */
+                background: rgba(239, 68, 68, 0.15); /* â­ RED BACKGROUND */
                 border-radius: 50%;
                 display: flex;
                 align-items: center;
@@ -12352,7 +11177,7 @@ function showVerificationAlert() {
             .verification-alert-title {
                 font-size: 2rem;
                 font-weight: 800;
-                color: #ef4444; /* ⭐ RED TITLE */
+                color: #ef4444; /* â­ RED TITLE */
                 margin-bottom: 1rem;
             }
             
@@ -12378,13 +11203,13 @@ function showVerificationAlert() {
             }
             
             .btn-verify-now {
-                background: linear-gradient(135deg, #ef4444, #dc2626); /* ⭐ RED GRADIENT */
+                background: linear-gradient(135deg, #ef4444, #dc2626); /* â­ RED GRADIENT */
                 color: #fff;
             }
             
             .btn-verify-now:hover {
                 transform: translateY(-2px);
-                box-shadow: 0 10px 30px rgba(239, 68, 68, 0.4); /* ⭐ RED SHADOW */
+                box-shadow: 0 10px 30px rgba(239, 68, 68, 0.4); /* â­ RED SHADOW */
             }
             
             .btn-cancel {
@@ -12447,7 +11272,7 @@ function showVerificationBanner() {
             width: 100%;
             background: #ef4444;
             z-index: 10000;
-            padding: 18px 32px;           /* ✅ MUCH WIDER */
+            padding: 18px 32px;           /* âœ… MUCH WIDER */
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -12473,7 +11298,7 @@ function showVerificationBanner() {
         }
 
         .verify-text {
-            color: #000;                 /* ✅ BLACK TEXT */
+            color: #000;                 /* âœ… BLACK TEXT */
             font-size: 1rem;
             font-weight: 700;
             line-height: 1.2;
@@ -12484,11 +11309,11 @@ function showVerificationBanner() {
             margin-top: 4px;
             font-size: 0.85rem;
             font-weight: 500;
-            color: #111;                 /* ✅ BLACK / DARK */
+            color: #111;                 /* âœ… BLACK / DARK */
             opacity: 0.9;
         }
 
-        /* ✅ FORCE SMALL BUTTON (NO STRETCH) */
+        /* âœ… FORCE SMALL BUTTON (NO STRETCH) */
         .banner-verify-btn {
             background: #ffffff;
             color: #ef4444;
@@ -12502,8 +11327,8 @@ function showVerificationBanner() {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            flex: 0 0 auto;              /* 🔥 KEY FIX */
-            width: auto;                 /* 🔥 KEY FIX */
+            flex: 0 0 auto;              /* ðŸ”¥ KEY FIX */
+            width: auto;                 /* ðŸ”¥ KEY FIX */
             white-space: nowrap;
         }
 
@@ -12539,7 +11364,7 @@ function showVerificationBanner() {
     `;
 
     document.body.prepend(banner);
-    document.body.style.paddingTop = '72px';   /* ✅ matches height */
+    document.body.style.paddingTop = '72px';   /* âœ… matches height */
 }
 
 // Block unverified users from browsing vests
@@ -12620,7 +11445,7 @@ function showVerificationBlockPopup(feature) {
     document.body.appendChild(popup);
 }
 
-// ✅ Added: Navigation Handler
+// âœ… Added: Navigation Handler
 window.handleCancelVerification = function(element) {
     element.closest('.verify-modal-overlay').remove();
     // Redirects user back to the founder dashboard hash
@@ -12635,13 +11460,13 @@ window.saveCustomUserId = async function() {
     const rawId = input.value.trim();
     
     // VALIDATION
-    if (!rawId) return alert("❌ Please type a User ID.");
-    if (rawId.length < 4) return alert("❌ Too short (min 4 chars).");
-    if (/\s/.test(rawId)) return alert("❌ No spaces allowed.");
+    if (!rawId) return alert("âŒ Please type a User ID.");
+    if (rawId.length < 4) return alert("âŒ Too short (min 4 chars).");
+    if (/\s/.test(rawId)) return alert("âŒ No spaces allowed.");
     
     // Prevent them from saving the Firebase UID again
     if (rawId === currentUser.uid) {
-        return alert("❌ You cannot use your system ID. Please choose a custom name.");
+        return alert("âŒ You cannot use your system ID. Please choose a custom name.");
     }
 
     saveBtn.innerHTML = "Saving...";
@@ -13988,7 +12813,7 @@ max-width: 1100px;
 
         <div class="dropdown">
             <span class="nav-link" onclick="toggleDropdown('scaleDropdown'); event.stopPropagation();">
-                Scale and Elevate ▾
+                Scale and Elevate â–¾
             </span>
             <div class="dropdown-content" id="scaleDropdown">
                 <a href="#founder_emergence" class="dropdown-item">Founder Emergence</a>
@@ -14001,7 +12826,6 @@ max-width: 1100px;
 <button class="btn-browse-angels" onclick="handleBrowseAngels()">
     Browse Angel Profiles
 </button>
-
     </div>
 <div id="navStatusPill" class="status-pill-nav ${founderData?.availabilityStatus === 'busy' ? 'busy' : 'active'}">
             <span class="dot-indicator"></span>
@@ -14021,7 +12845,7 @@ max-width: 1100px;
         </div>
 
         <div class="profile-dropdown">
-<div class="icon-btn" onclick="toggleDashProfileDropdown(event)">
+<div class="icon-btn" onclick="toggleDashProfileDropdown()">
     ${founderData?.photoURL 
         ? `<img src="${founderData.photoURL}" alt="Profile" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` 
         : `<div style="font-size:1.2rem;font-weight:600;">${founderData.founderImage || 'U'}</div>`}
@@ -14239,15 +13063,15 @@ max-width: 1100px;
 
 </div> 
 </div> <footer class="footer">
-<div class="footer-content">
-    <div>
-        <div class="footer-logo-text">ScaleVest</div>
-        <div class="footer-company">UnioraX Private Limited</div>
+    <div class="footer-content">
+        <div>
+            <div class="footer-logo-text">ScaleVest</div>
+            <div class="footer-company">UnioraX Private Limited</div>
+        </div>
+        <div class="footer-links">
+
+        </div>
     </div>
-    <div class="footer-links">
-        <button id="sign-out-btn" class="btn-browse-angels">Sign Out</button>
-    </div>
-</div>
 </footer>
 
     `;
@@ -14272,7 +13096,7 @@ max-width: 1100px;
         text: "No New Messages Yet.", 
         timeAgo: "",
         isUnread: false,
-        hasAttachment: false // ⭐ NEW
+        hasAttachment: false // â­ NEW
     };
 
     if (snapshot.exists()) {
@@ -14309,16 +13133,16 @@ max-width: 1100px;
                     if(founderSnap.exists()) senderName = founderSnap.val().founderUsername || "User";
                 }
 
-                // ⭐ CHECK FOR ATTACHMENT
+                // â­ CHECK FOR ATTACHMENT
                 const hasAttachment = !newestUnreadMsg.text && (newestUnreadMsg.fileUrl || newestUnreadMsg.videoUrl || newestUnreadMsg.imageUrl);
-                const messageText = newestUnreadMsg.text || (hasAttachment ? "📎 Sent an attachment" : "Sent a message");
+                const messageText = newestUnreadMsg.text || (hasAttachment ? "ðŸ“Ž Sent an attachment" : "Sent a message");
 
                 displayData = {
                     title: `${senderName} sent a message:`,
                     text: messageText,
                     timeAgo: timeSince(newestUnreadMsg.timestamp),
                     isUnread: true,
-                    hasAttachment: hasAttachment // ⭐ NEW
+                    hasAttachment: hasAttachment // â­ NEW
                 };
             } catch (e) {
                 console.error("Error fetching name:", e);
@@ -14332,7 +13156,7 @@ max-width: 1100px;
         const opacity = displayData.isUnread ? "1" : "0.5";
         const border = displayData.isUnread ? "3px solid #ff006e" : "3px solid #333";
         
-        // ⭐ ATTACHMENT ICON (if exists)
+        // â­ ATTACHMENT ICON (if exists)
         const attachmentIcon = displayData.hasAttachment 
             ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ff006e" stroke-width="2" style="display:inline-block; vertical-align:middle; margin-right:4px;">
                 <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
@@ -14415,38 +13239,6 @@ document.addEventListener('click', (e) => {
         });
     }
 });
-// ⭐ ADD THIS AFTER createDashboard() function closes
-
-// Global Profile Dropdown Toggle
-window.toggleDashProfileDropdown = function(event) {
-    if (event) event.stopPropagation();
-    
-    const dropdown = document.getElementById('dashProfileDropdown');
-    if (!dropdown) {
-        console.error("Dropdown element not found!");
-        return;
-    }
-    
-    // Close all other dropdowns first
-    document.querySelectorAll('.dropdown-content').forEach(dd => {
-        if (dd.id !== 'dashProfileDropdown') {
-            dd.classList.remove('show');
-        }
-    });
-    
-    // Toggle this dropdown
-    dropdown.classList.toggle('show');
-};
-
-// Close dropdowns when clicking outside
-document.addEventListener('click', (e) => {
-    if (!e.target.closest('.profile-dropdown') && !e.target.closest('.icon-btn')) {
-        const dropdown = document.getElementById('dashProfileDropdown');
-        if (dropdown) {
-            dropdown.classList.remove('show');
-        }
-    }
-});
 function generateUserId(baseString) {
     // Generate PERMANENT userId that NEVER changes
     const timestamp = Date.now().toString().slice(-4);
@@ -14462,7 +13254,7 @@ async function showUserIdSetupModal() {
     modal.innerHTML = `
         <div class="edit-modal-content">
             <div class="edit-modal-header">
-                <h3>⚡ Set Your User ID</h3>
+                <h3>âš¡ Set Your User ID</h3>
             </div>
             <div class="edit-modal-body">
                 <p style="color: #aaa; margin-bottom: 1.5rem;">Choose a unique User ID that will identify you on ScaleVest</p>
@@ -14486,7 +13278,7 @@ window.saveUserId = async function() {
     const userId = input.value.trim();
     
     if (!userId || userId.length < 5) {
-        alert('❌ User ID must be at least 5 characters');
+        alert('âŒ User ID must be at least 5 characters');
         return;
     }
     
@@ -14525,7 +13317,7 @@ async function showEditProfile() {
     container.style.display = 'block';
 
     // -----------------------------------------------------
-    // 🛡️ SAFETY FETCH: Ensure data exists on Refresh
+    // ðŸ›¡ï¸ SAFETY FETCH: Ensure data exists on Refresh
     // -----------------------------------------------------
     if (!cachedFounderData || !cachedStartupData) {
         // Show a temporary loading spinner while we fetch
@@ -15651,7 +14443,7 @@ async function showEditProfile() {
                         <span class="language-tag">
                             ${lang.name}
                             <span class="language-level">${lang.level}</span>
-                            <button class="lang-remove-btn" onclick="removeLanguage('${lang.name}')">×</button>
+                            <button class="lang-remove-btn" onclick="removeLanguage('${lang.name}')">Ã—</button>
                         </span>
                     `).join('')
                     : '<span style="color: #666;">No languages added</span>'}
@@ -15925,7 +14717,7 @@ window.filterVests = function(type) {
     function addTagPill(keyword) {
         const pill = document.createElement('div');
         pill.className = 'tag-pill';
-        pill.innerHTML = `${keyword} <button class="tag-remove" onclick="removeTag('${keyword}')">×</button>`;
+        pill.innerHTML = `${keyword} <button class="tag-remove" onclick="removeTag('${keyword}')">Ã—</button>`;
         tagsContainer.appendChild(pill);
     }
 
@@ -15970,10 +14762,10 @@ window.addEventListener('load', () => {
 
     // UI File listeners
     document.getElementById('pitchDeck').addEventListener('change', (e) => {
-        if (e.target.files[0]) document.getElementById('pitchDeckName').textContent = '✓ ' + e.target.files[0].name;
+        if (e.target.files[0]) document.getElementById('pitchDeckName').textContent = 'âœ“ ' + e.target.files[0].name;
     });
     document.getElementById('transactionProof').addEventListener('change', (e) => {
-        if (e.target.files[0]) document.getElementById('transactionProofName').textContent = '✓ ' + e.target.files[0].name;
+        if (e.target.files[0]) document.getElementById('transactionProofName').textContent = 'âœ“ ' + e.target.files[0].name;
     });
 window.toggleDropdown = function(id) {
     event.stopPropagation();
@@ -17041,7 +15833,7 @@ window.addTeamMember = function() {
         <div class="edit-modal-content">
             <div class="edit-modal-header">
                 <h3>Add Team Member</h3>
-                <button class="modal-close" onclick="closeEditModal()">×</button>
+                <button class="modal-close" onclick="closeEditModal()">Ã—</button>
             </div>
             <div class="edit-modal-body">
                 <div>
@@ -17421,7 +16213,7 @@ window.closeFullScreenPDF = function() {
 <div id="dashboardContainer" style="display: none;"></div>
 <div id="autoReplyModal" class="edit-modal">
     <div class="edit-modal-content">
-        <button class="modal-close" onclick="closeAutoReplyModal()" style="filter: invert(1);">×</button>
+        <button class="modal-close" onclick="closeAutoReplyModal()" style="filter: invert(1);">Ã—</button>
         
         <div class="edit-modal-header">
             <h3>Auto-Response Settings</h3>
@@ -17455,11 +16247,7 @@ window.closeFullScreenPDF = function() {
         </div>
     </div>
 </div>
-<script>
-function startVerification() {
-    window.location.href = "https://upscalevest.site/vests.html#scalevest_verify";
-}
-</script>
+
 
 </body>
 </html>
