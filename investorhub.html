@@ -1553,125 +1553,1151 @@ function updateProgress(percent, status) {
     if (bar) bar.style.width = percent + "%";
     if (text) text.innerText = status;
 }
-/**
- * Checks verification status and blocks access if unverified.
- * Automatically initializes isVerified: false if not present.
- */
-async function checkInvestorVerification(featureName) {
-    if (!currentUser) return false;
+// ==========================================
+// VERIFICATION PAGE
+// ==========================================
 
-    const investorRef = ref(db, `investorProfiles/${currentUser.uid}`);
-    const snapshot = await get(investorRef);
-
-    if (snapshot.exists()) {
-        const data = snapshot.val();
-
-        // AUTO-CREATION LOGIC: If field is missing, create it as false
-        if (data.isVerified === undefined) {
-            await update(investorRef, { isVerified: false });
-            showVerificationBlockPopup(featureName);
-            return false;
-        }
-
-        // If explicitly unverified, block access
-        if (data.isVerified === false) {
-            showVerificationBlockPopup(featureName);
-            return false;
-        }
-    }
-    return true; // User is verified
+async function showVerificationPage() {
+    const container = document.getElementById('dashboardContainer');
+    document.querySelector('.vest-container').style.display = 'none';
+    container.style.display = 'block';
+    document.title = "Verify Your Account | ScaleVest";
+    
+    // ⭐ CHECK if verification line already exists
+    const founderRef = ref(db, `founderProfile/${currentUser.uid}`);
+    const snapshot = await get(founderRef);
+    const existingLine = snapshot.exists() ? snapshot.val().verificationLine : null;
+    
+    container.innerHTML = `
+        <style>
+            .verify-page {
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 3rem;
+                min-height: 100vh;
+            }
+            
+            .verify-header {
+                text-align: center;
+                margin-bottom: 3rem;
+            }
+            
+            .verify-title {
+                font-size: 2.5rem;
+                font-weight: 800;
+                color: #fff;
+                margin-bottom: 1rem;
+            }
+            
+            .verify-subtitle {
+                color: #888;
+                font-size: 1.1rem;
+                line-height: 1.6;
+            }
+            
+            .verify-card {
+                background: #0a0a0a;
+                border: 1px solid #222;
+                border-radius: 16px;
+                padding: 3rem;
+                margin-bottom: 2rem;
+            }
+            
+            .verify-option-btn {
+                background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+                border: 2px solid #333;
+                color: #fff;
+                padding: 2rem;
+                border-radius: 12px;
+                cursor: pointer;
+                transition: all 0.3s;
+                width: 100%;
+                text-align: left;
+                margin-bottom: 1.5rem;
+                display: flex;
+                align-items: center;
+                gap: 1.5rem;
+            }
+            
+            .verify-option-btn:hover {
+                border-color: #ff006e;
+                transform: translateX(10px);
+                box-shadow: 0 10px 30px rgba(255, 0, 110, 0.2);
+            }
+            
+            .verify-icon {
+                width: 60px;
+                height: 60px;
+                background: rgba(255, 0, 110, 0.1);
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+            }
+            
+            .verify-option-content h3 {
+                font-size: 1.3rem;
+                margin-bottom: 0.5rem;
+            }
+            
+            .verify-option-content p {
+                color: #888;
+                font-size: 0.95rem;
+                line-height: 1.5;
+            }
+            
+           .verify-step-content {
+    display: block !important;
+    color: #fff;
+    flex: 1;
 }
 
-window.submitInvestorVideoVerification = async function(videoUrl, verificationLine) {
+.verification-steps {
+    margin-top: 30px;
+    background: #0f0f0f;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 30px;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.4s ease;
+}
+
+.verification-steps.active {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.step-item {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 30px;
+    border-bottom: 1px solid #222;
+    padding-bottom: 30px;
+}
+
+.step-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.step-number {
+    width: 35px;
+    height: 35px;
+    background: #ff006e;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.verify-btn {
+    background: linear-gradient(135deg, #ff006e, #8338ec);
+    color: #fff;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 15px;
+}
+
+.verify-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Initially hidden elements */
+.verification-line-box, .upload-section {
+    display: none;
+    margin-top: 20px;
+}
+
+.verification-line-box.active, .upload-section.active {
+    display: block;
+    animation: fadeIn 0.5s ease;
+}
+
+.verification-line-text {
+    font-family: monospace;
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: #fff;
+    background: #1a1a1a;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px dashed #555;
+    margin: 10px 0;
+}
+
+.upload-box {
+    border: 2px dashed #444;
+    border-radius: 10px;
+    padding: 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #0a0a0a;
+    margin-bottom: 20px;
+}
+
+.upload-box:hover {
+    border-color: #ff006e;
+    background: #111;
+}
+
+.upload-box.has-file {
+    border-style: solid;
+    border-color: #10b981;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+            
+            .verify-btn {
+                background: linear-gradient(135deg, #ff006e, #8338ec);
+                color: #fff;
+                border: none;
+                padding: 1rem 2rem;
+                border-radius: 10px;
+                font-weight: 700;
+                cursor: pointer;
+                transition: all 0.3s;
+                margin-top: 1.5rem;
+                width: 100%;
+            }
+            
+            .verify-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 30px rgba(255, 0, 110, 0.3);
+            }
+            
+            .verify-btn:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+        </style>
+        
+ 
+        
+       <div class="verify-page">
+            <a href="#founder_dashboard" class="back-to-dash">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                Back to Dashboard
+            </a>
+            
+            <div class="verify-header">
+                <h1 class="verify-title">Founder Verification</h1>
+                <p class="verify-subtitle">
+                    Complete verification to unlock full access to ScaleVest features
+                </p>
+            </div>
+            
+            ${existingLine ? `
+    <div class="verification-steps active" style="display: block;">
+        <div class="step-item">
+            <div class="step-number">1</div>
+            <div class="verify-step-content">
+                <h4>Your Verification Line</h4>
+                <p>Speak this exact line in your video:</p>
+                <div class="verification-line-box active">
+                    <div class="verification-line-text">${existingLine}</div>
+                </div>
+                <div class="upload-section active">
+                    </div>
+            </div>
+        </div>
+    </div>
+` : `
+    <div class="verify-card">
+        <button class="verify-option-btn" onclick="startVideoVerification()">
+            <div class="verify-icon">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#ff006e" stroke-width="2">
+                    <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                </svg>
+            </div>
+            <div class="verify-option-content">
+                <h3>ScaleVest Video Script Verification</h3>
+                <p>Click to start the process</p>
+            </div>
+        </button>
+    </div>
+`}
+    
+    <div class="verification-steps" id="verificationSteps" style="display: none;">
+        <div class="step-item">
+            <div class="step-number">1</div>
+            
+            <div class="verify-step-content">
+                <h4>Generate Your Verification Line</h4>
+                <p>Click the button below to get your unique verification phrase. This is a one-time generated line that you'll need to speak in your video.</p>
+                
+                <button class="verify-btn" onclick="generateVerificationLine()" id="generateLineBtn">
+                    Generate Verification Line
+                </button>
+                
+                <div class="verification-line-box" id="verificationLineBox">
+                    <p style="color: #888; margin-bottom: 1rem;">Your Verification Line:</p>
+                    <div class="verification-line-text" id="verificationLineText">
+                        </div>
+                    <p style="color: #666; font-size: 0.85rem; margin-top: 1rem;">
+                        ⚠️ You must speak this exact line in your video
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="step-item">
+            <div class="step-number">2</div>
+            
+            <div class="verify-step-content">
+                <h4>Create Your Demo Video</h4>
+                <p>Record a 30-second video talking about your startup. <strong>Remember to speak the verification line shown above in your video.</strong></p>
+                
+                <div class="upload-section" id="uploadSection">
+                    <div class="upload-box" id="uploadBox" onclick="document.getElementById('videoUpload').click()">
+                        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" style="margin-bottom: 1rem;">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        <p style="color: #888; font-size: 1.1rem; margin-bottom: 0.5rem;" id="uploadText">Click to Upload Video</p>
+                        <small style="color: #555;">Max 100MB • MP4, MOV, AVI</small>
+                        <input type="file" id="videoUpload" accept="video/*" style="display: none;" onchange="handleVideoUpload(event)">
+                    </div>
+                    
+                    <button class="verify-btn" id="submitVerifyBtn" onclick="submitVideoVerification()" disabled>
+                        Submit for Verification
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+    `;
+}
+
+window.startVideoVerification = function() {
+const stepsSection = document.getElementById('verificationSteps');
+    if (stepsSection) {
+        // 1. Show the section
+        stepsSection.style.display = 'block';
+        
+        // 2. Add active class for animation (optional CSS)
+        // Small timeout ensures the browser registers display:block before adding opacity
+        setTimeout(() => {
+            stepsSection.classList.add('active');
+        }, 10);
+
+        // 3. Scroll to it smoothly
+        stepsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+        console.error("Error: verificationSteps element not found!");
+    }
+};
+// ==========================================
+// VERIFICATION LINE GENERATION (Updated for Gemini)
+// ==========================================
+
+window.generateVerificationLine = async function() {
+    const btn = document.getElementById('generateLineBtn');
+    if (!btn) return;
+    
+    btn.innerHTML = 'Generating...';
+    btn.disabled = true;
+    
     try {
+        // ✅ 1. FIXED URL: Using your specific Vercel domain
+        const response = await fetch('https://gemini-sigma-plum.vercel.app/api/videogemini', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'generateLine'
+            })
+        });
+        
+        // 2. Read the response
+        const result = await response.json();
+        console.log("API Response:", result); // Debugging log
+
+        if (!result.success) {
+            // This will tell us if the error is from the Vercel side
+            throw new Error(result.error || 'Failed to generate line');
+        }
+        
+        const verificationLine = result.verificationLine;
+        
+        // 3. Save to Firebase
+        if (currentUser) {
+            await update(ref(db, `founderProfile/${currentUser.uid}`), {
+                verificationLine: verificationLine,
+                verificationLineCreatedAt: Date.now()
+            });
+        }
+        
+        // 4. Update UI
+        document.getElementById('verificationLineText').textContent = verificationLine;
+        document.getElementById('verificationLineBox').classList.add('active');
+        document.getElementById('uploadSection').classList.add('active');
+        btn.style.display = 'none';
+        
+        alert('✅ Verification line generated! Please speak this line in your video.');
+        
+    } catch (error) {
+        console.error('Error generating line:', error);
+        // Show the ACTUAL error message to the user
+        alert(`Failed: ${error.message}`); 
+        btn.innerHTML = 'Generate Verification Line';
+        btn.disabled = false;
+    }
+};
+
+// ==========================================
+// VIDEO UPLOAD & VERIFICATION (Updated for Gemini)
+// ==========================================
+
+let uploadedVideoFile = null;
+
+window.handleVideoUpload = function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    // Check file size (100MB limit)
+    if (file.size > 100 * 1024 * 1024) {
+        alert('❌ Video file must be under 100MB');
+        return;
+    }
+    
+    // Check file type
+    const validTypes = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/webm'];
+    if (!validTypes.includes(file.type)) {
+        alert('❌ Please upload a valid video file (MP4, MOV, AVI, WEBM)');
+        return;
+    }
+    
+    uploadedVideoFile = file;
+    
+    // Update UI
+    const uploadBox = document.getElementById('uploadBox');
+    const uploadText = document.getElementById('uploadText');
+    
+    uploadBox.classList.add('has-file');
+    uploadText.innerHTML = `✓ ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+    
+    // Enable submit button
+    document.getElementById('submitVerifyBtn').disabled = false;
+};
+
+// ==========================================
+// VIDEO VERIFICATION PROCESSING (Updated for Gemini)
+// ==========================================
+
+window.submitVideoVerification = async function() {
+    if (!uploadedVideoFile) {
+        alert('❌ Please upload a video first');
+        return;
+    }
+    
+    const btn = document.getElementById('submitVerifyBtn');
+    btn.innerHTML = 'Processing...';
+    btn.disabled = true;
+    
+    showVerificationLoader();
+    
+    try {
+        // Step 1: Upload to Firebase Storage
+        // This handles large files easily (up to 50MB+)
+        updateVerificationLoader('Uploading to secure storage...', 30);
+        const videoUrl = await uploadFileToStorage(uploadedVideoFile, 'verification-videos');
+        
+        // Step 2: Get verification line
+        const founderRef = ref(db, `founderProfile/${currentUser.uid}`);
+        const snapshot = await get(founderRef);
+        const verificationLine = snapshot.val().verificationLine;
+        
+        // Step 3: Call Vercel API with the URL (NOT the base64 string)
+        updateVerificationLoader('AI is analyzing your video...', 60);
+        
         const response = await fetch('https://gemini-sigma-plum.vercel.app/api/videogemini', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                action: 'verifyVideo', 
-                data: { videoUrl: videoUrl, expectedLine: verificationLine } 
+            body: JSON.stringify({
+                action: 'verifyVideo',
+                data: {
+                    videoUrl: videoUrl, // Send URL here
+                    expectedLine: verificationLine
+                }
             })
         });
-
+        
         const result = await response.json();
         
-        // Check if the AI confirmed the video contains the spoken verification line
+        if (!result.success) throw new Error(result.error || 'Verification failed');
+        
+        // Step 4: Handle Result
         if (result.containsVerificationLine && result.matchPercentage >= 80) {
-            await update(ref(db, `investorProfiles/${currentUser.uid}`), { 
-                isVerified: true, 
-                verifiedAt: Date.now() 
+            await update(ref(db, `founderProfile/${currentUser.uid}`), {
+                isVerified: true,
+                verifiedAt: Date.now(),
+                verificationVideoUrl: videoUrl,
+                verificationTranscript: result.transcript
             });
-            alert("Verification Successful! Investor account activated.");
-            window.location.hash = 'investor_dashboard';
+            hideVerificationLoader();
+            showVerificationSuccess();
         } else {
-            alert("Verification failed. Please ensure the line is clearly spoken.");
+            hideVerificationLoader();
+            showVerificationFailed(verificationLine, result.transcript, result.matchPercentage);
         }
+        
     } catch (error) {
-        console.error("Verification Error:", error);
+        console.error('Verification error:', error);
+        hideVerificationLoader();
+        alert('❌ Error: ' + error.message);
+        btn.innerHTML = 'Submit for Verification';
+        btn.disabled = false;
     }
 };
-function showInvestorVerificationAlert() {
-    const alert = document.createElement('div');
-    alert.id = 'investorMegaAlert';
-    alert.innerHTML = `
-        <div class="verification-mega-alert">
-            <div class="verification-alert-box" style="border-color: #ef4444; box-shadow: 0 0 50px rgba(239, 68, 68, 0.5);">
-                <h2 style="color: #ef4444;">Investor Account Restricted!</h2>
-                <p>You must verify your identity to engage with startups or view pitch decks.</p>
-                <div class="verification-alert-buttons">
-                    <button class="verification-btn btn-verify-now" onclick="startInvestorVerification()">
-                        Verify Now
+// Helper: Convert file to base64
+async function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const video = document.createElement('video');
+        const reader = new FileReader();
+
+        reader.onload = (e) => {
+            video.src = e.target.result;
+            video.onloadedmetadata = () => {
+                // If file is already small (< 4MB), don't compress
+                if (file.size < 4 * 1024 * 1024) {
+                    resolve(e.target.result.split(',')[1]);
+                    return;
+                }
+                
+                // If it's large, we alert the user for now 
+                // because browser-side video transcoding is complex.
+                alert("Video is too large. Please record a shorter video (under 5 seconds) or use lower resolution.");
+                reject("File too large");
+            };
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+// ==========================================
+// VERIFICATION LOADER UI
+// ==========================================
+
+function showVerificationLoader() {
+    const loader = document.createElement('div');
+    loader.id = 'verificationLoader';
+    loader.innerHTML = `
+        <style>
+            .verification-loader-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background: rgba(0, 0, 0, 0.95);
+                backdrop-filter: blur(15px);
+                z-index: 999999;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .verification-loader-box {
+                background: #0a0a0a;
+                border: 1px solid #333;
+                border-radius: 20px;
+                padding: 3rem;
+                max-width: 500px;
+                text-align: center;
+            }
+            
+            .verification-spinner {
+                width: 100px;
+                height: 100px;
+                margin: 0 auto 2rem;
+                position: relative;
+            }
+            
+            .spinner-ring {
+                width: 100%;
+                height: 100%;
+                border: 8px solid #1a1a1a;
+                border-top: 8px solid #ff006e;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+            }
+            
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+            
+            .verification-loader-text {
+                font-size: 1.5rem;
+                font-weight: 700;
+                color: #fff;
+                margin-bottom: 1rem;
+            }
+            
+            .verification-loader-subtext {
+                color: #888;
+                font-size: 1rem;
+                margin-bottom: 2rem;
+            }
+            
+            .verification-progress-bar {
+                width: 100%;
+                height: 8px;
+                background: #1a1a1a;
+                border-radius: 10px;
+                overflow: hidden;
+            }
+            
+            .verification-progress-fill {
+                height: 100%;
+                background: linear-gradient(90deg, #ff006e, #8338ec);
+                width: 0%;
+                transition: width 0.5s ease;
+            }
+            
+            .verification-percentage {
+                color: #ff006e;
+                font-size: 1.2rem;
+                font-weight: 700;
+                margin-top: 1rem;
+            }
+        </style>
+        
+        <div class="verification-loader-overlay">
+            <div class="verification-loader-box">
+                <div class="verification-spinner">
+                    <div class="spinner-ring"></div>
+                </div>
+                
+                <div class="verification-loader-text" id="loaderText">Initializing...</div>
+                <div class="verification-loader-subtext" id="loaderSubtext">Please wait while we verify your video</div>
+                
+                <div class="verification-progress-bar">
+                    <div class="verification-progress-fill" id="progressFill"></div>
+                </div>
+                
+                <div class="verification-percentage" id="progressPercent">0%</div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(loader);
+}
+
+function updateVerificationLoader(text, percentage) {
+    const loaderText = document.getElementById('loaderText');
+    const progressFill = document.getElementById('progressFill');
+    const progressPercent = document.getElementById('progressPercent');
+    
+    if (loaderText) loaderText.textContent = text;
+    if (progressFill) progressFill.style.width = percentage + '%';
+    if (progressPercent) progressPercent.textContent = percentage + '%';
+}
+
+function hideVerificationLoader() {
+    const loader = document.getElementById('verificationLoader');
+    if (loader) {
+        loader.style.opacity = '0';
+        loader.style.transition = 'opacity 0.3s ease';
+        setTimeout(() => loader.remove(), 300);
+    }
+}
+
+// ==========================================
+// VERIFICATION SUCCESS SCREEN
+// ==========================================
+
+function showVerificationSuccess() {
+    const success = document.createElement('div');
+    success.id = 'verificationSuccess';
+    success.innerHTML = `
+        <style>
+            .verification-success-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background: rgba(0, 0, 0, 0.95);
+                backdrop-filter: blur(15px);
+                z-index: 999999;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                animation: fadeIn 0.5s ease;
+            }
+            
+            .verification-success-box {
+                background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+                border: 2px solid #10b981;
+                border-radius: 20px;
+                padding: 3rem;
+                max-width: 550px;
+                text-align: center;
+                box-shadow: 0 0 50px rgba(16, 185, 129, 0.3);
+                animation: slideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            }
+            
+            @keyframes slideUp {
+                from { transform: translateY(50px); opacity: 0; }
+                to { transform: translateY(0); opacity: 1; }
+            }
+            
+            .success-checkmark {
+                width: 120px;
+                height: 120px;
+                margin: 0 auto 2rem;
+                background: rgba(16, 185, 129, 0.15);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                position: relative;
+                animation: scaleIn 0.6s ease;
+            }
+            
+            @keyframes scaleIn {
+                0% { transform: scale(0); }
+                50% { transform: scale(1.1); }
+                100% { transform: scale(1); }
+            }
+            
+            .success-checkmark svg {
+                width: 60px;
+                height: 60px;
+                stroke: #10b981;
+                stroke-width: 3;
+                animation: drawCheck 0.8s ease 0.3s forwards;
+                stroke-dasharray: 100;
+                stroke-dashoffset: 100;
+            }
+            
+            @keyframes drawCheck {
+                to { stroke-dashoffset: 0; }
+            }
+            
+            .success-title {
+                font-size: 2.5rem;
+                font-weight: 800;
+                color: #fff;
+                margin-bottom: 1rem;
+                background: linear-gradient(135deg, #10b981, #34d399);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+            
+            .success-message {
+                color: #aaa;
+                font-size: 1.1rem;
+                line-height: 1.8;
+                margin-bottom: 2rem;
+            }
+            
+            .success-badge {
+                display: inline-block;
+                background: rgba(16, 185, 129, 0.15);
+                border: 1px solid #10b981;
+                color: #10b981;
+                padding: 0.75rem 1.5rem;
+                border-radius: 50px;
+                font-weight: 700;
+                margin-bottom: 2rem;
+                font-size: 0.9rem;
+                letter-spacing: 1px;
+            }
+            
+            .success-btn {
+                background: linear-gradient(135deg, #10b981, #34d399);
+                color: #fff;
+                border: none;
+                padding: 1rem 2.5rem;
+                border-radius: 10px;
+                font-weight: 700;
+                font-size: 1rem;
+                cursor: pointer;
+                transition: all 0.3s;
+                box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+            }
+            
+            .success-btn:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 15px 40px rgba(16, 185, 129, 0.5);
+            }
+            
+            .confetti {
+                position: absolute;
+                width: 10px;
+                height: 10px;
+                background: #10b981;
+                animation: confettiFall 3s linear infinite;
+            }
+            
+            @keyframes confettiFall {
+                0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+                100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+            }
+        </style>
+        
+        <div class="verification-success-overlay">
+            ${generateConfetti()}
+            
+            <div class="verification-success-box">
+                <div class="success-checkmark">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                
+                <h2 class="success-title">Successfully Verified!</h2>
+                
+                <div class="success-badge">✓ FOUNDER VERIFIED</div>
+                
+                <p class="success-message">
+                    Congratulations! Your founder account has been verified. 
+                    All your vests have been reactivated and you now have full access to ScaleVest.
+                </p>
+                
+                <button class="success-btn" onclick="closeSuccessAndRedirect()">
+                    Go to Dashboard
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(success);
+}
+
+function generateConfetti() {
+    let confetti = '';
+    const colors = ['#10b981', '#34d399', '#6ee7b7', '#a7f3d0'];
+    
+    for (let i = 0; i < 50; i++) {
+        const left = Math.random() * 100;
+        const delay = Math.random() * 3;
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        
+        confetti += `<div class="confetti" style="left: ${left}%; animation-delay: ${delay}s; background: ${color};"></div>`;
+    }
+    
+    return confetti;
+}
+
+window.closeSuccessAndRedirect = async function() {  
+    const success = document.getElementById('verificationSuccess');
+    if (success) success.remove();
+    
+    // Remove verification banner if exists
+    const banner = document.getElementById('verificationBanner');
+    if (banner) {
+        banner.remove();
+        document.body.style.paddingTop = '0';
+    }
+    
+    // ⭐ AUTO-ACTIVATE ALL VESTS
+    try {
+        const vestsRef = ref(db, `Vests/${currentUser.uid}`);
+        const vestsSnap = await get(vestsRef);
+        
+        if (vestsSnap.exists()) {
+            const vests = vestsSnap.val();
+            const updates = {};
+            let activeCount = 0;
+            
+            // Set all vests to active
+            Object.keys(vests).forEach(vestId => {
+                updates[`Vests/${currentUser.uid}/${vestId}/status`] = 'active';
+                activeCount++;
+            });
+            
+            // Update active vests count in profile
+            updates[`founderProfile/${currentUser.uid}/activeVestsCount`] = activeCount;
+            
+            // Execute bulk update
+            await update(ref(db), updates);
+            
+            console.log(`✅ Activated ${activeCount} vests automatically`);
+        }
+    } catch (error) {
+        console.error("Error auto-activating vests:", error);
+    }
+    
+    window.location.hash = 'founder_dashboard';
+    window.location.reload();
+};
+
+// ==========================================
+// VERIFICATION FAILED SCREEN
+// ==========================================
+
+function showVerificationFailed(expectedLine, transcript, matchPercentage) {
+    const failed = document.createElement('div');
+    failed.id = 'verificationFailed';
+    failed.innerHTML = `
+        <style>
+            .verification-failed-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background: rgba(0, 0, 0, 0.95);
+                backdrop-filter: blur(15px);
+                z-index: 999999;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                animation: fadeIn 0.5s ease;
+            }
+            
+            .verification-failed-box {
+                background: linear-gradient(135deg, #0a0a0a 0%, #1a0a0a 100%);
+                border: 2px solid #ef4444;
+                border-radius: 20px;
+                padding: 3rem;
+                max-width: 600px;
+                text-align: center;
+                box-shadow: 0 0 50px rgba(239, 68, 68, 0.3);
+                animation: shake 0.5s ease;
+            }
+            
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-10px); }
+                75% { transform: translateX(10px); }
+            }
+            
+            .failed-icon {
+                width: 120px;
+                height: 120px;
+                margin: 0 auto 2rem;
+                background: rgba(239, 68, 68, 0.15);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .failed-icon svg {
+                width: 60px;
+                height: 60px;
+                stroke: #ef4444;
+                stroke-width: 3;
+            }
+            
+            .failed-title {
+                font-size: 2.5rem;
+                font-weight: 800;
+                color: #ef4444;
+                margin-bottom: 1rem;
+            }
+            
+            .failed-message {
+                color: #aaa;
+                font-size: 1.1rem;
+                line-height: 1.8;
+                margin-bottom: 2rem;
+            }
+            
+            .failed-details {
+                background: #000;
+                border: 1px solid #333;
+                border-radius: 12px;
+                padding: 1.5rem;
+                margin-bottom: 2rem;
+                text-align: left;
+            }
+            
+            .detail-row {
+                margin-bottom: 1rem;
+                padding-bottom: 1rem;
+                border-bottom: 1px solid #222;
+            }
+            
+            .detail-row:last-child {
+                margin-bottom: 0;
+                padding-bottom: 0;
+                border-bottom: none;
+            }
+            
+            .detail-label {
+                color: #666;
+                font-size: 0.85rem;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                margin-bottom: 0.5rem;
+            }
+            
+            .detail-value {
+                color: #fff;
+                font-family: monospace;
+                font-size: 0.95rem;
+                line-height: 1.6;
+            }
+            
+            .match-percentage {
+                display: inline-block;
+                background: rgba(239, 68, 68, 0.15);
+                border: 1px solid #ef4444;
+                color: #ef4444;
+                padding: 0.5rem 1rem;
+                border-radius: 20px;
+                font-weight: 700;
+                font-size: 1.2rem;
+            }
+            
+            .failed-buttons {
+                display: flex;
+                gap: 1rem;
+            }
+            
+            .failed-btn {
+                flex: 1;
+                padding: 1rem 2rem;
+                border-radius: 10px;
+                font-weight: 700;
+                font-size: 1rem;
+                cursor: pointer;
+                transition: all 0.3s;
+                border: none;
+            }
+            
+            .btn-retry {
+                background: linear-gradient(135deg, #ff006e, #8338ec);
+                color: #fff;
+            }
+            
+            .btn-retry:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 30px rgba(255, 0, 110, 0.3);
+            }
+            
+            .btn-cancel-verify {
+                background: #222;
+                color: #888;
+            }
+            
+            .btn-cancel-verify:hover {
+                background: #333;
+                color: #fff;
+            }
+        </style>
+        
+        <div class="verification-failed-overlay">
+            <div class="verification-failed-box">
+                <div class="failed-icon">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="10" stroke-linecap="round"/>
+                        <line x1="15" y1="9" x2="9" y2="15" stroke-linecap="round"/>
+                        <line x1="9" y1="9" x2="15" y2="15" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                
+                <h2 class="failed-title">Verification Failed</h2>
+                
+                <p class="failed-message">
+                    We couldn't detect the verification line in your video. 
+                    Please make sure you speak the exact verification phrase clearly.
+                </p>
+                
+                <div class="failed-details">
+                    <div class="detail-row">
+                        <div class="detail-label">Expected Line</div>
+                        <div class="detail-value">${expectedLine}</div>
+                    </div>
+                    
+                    ${transcript ? `
+                        <div class="detail-row">
+                            <div class="detail-label">What We Heard</div>
+                            <div class="detail-value">${transcript || 'No speech detected'}</div>
+                        </div>
+                    ` : ''}
+                    
+                    <div class="detail-row">
+                        <div class="detail-label">Match Score</div>
+                        <div class="match-percentage">${matchPercentage || 0}%</div>
+                        <div style="color: #666; font-size: 0.85rem; margin-top: 0.5rem;">
+                           
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="failed-buttons">
+                    <button class="failed-btn btn-cancel-verify" onclick="closeFailedScreen()">
+                        Cancel
+                    </button>
+                    <button class="failed-btn btn-retry" onclick="retryVerification()">
+                        Try Again
                     </button>
                 </div>
             </div>
         </div>
     `;
-    document.body.appendChild(alert);
+    
+    document.body.appendChild(failed);
 }
-window.generateInvestorVerificationLine = async function() {
-    const response = await fetch('https://gemini-sigma-plum.vercel.app/api/videogemini', {
-        method: 'POST',
-        body: JSON.stringify({ action: 'generateLine' })
-    });
-    const result = await response.json();
-    
-    // Save generated line to the investor's profile
-    await update(ref(db, `investorProfiles/${currentUser.uid}`), {
-        activeVerificationLine: result.verificationLine
-    });
-    
-    return result.verificationLine;
-};
-window.showVerificationPage = function() {
-    const container = document.getElementById('dashboardContainer');
-    container.innerHTML = `
-        <div class="verify-page" style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
-            <h1 class="verify-title" style="font-size: 2.5rem; font-weight: 800; margin-bottom: 10px;">Verify Identity</h1>
-            <p style="color: #888; margin-bottom: 30px;">Record a short video of yourself speaking the line below.</p>
-            
-            <div class="verify-card" style="background: #0a0a0a; border: 1px solid #222; padding: 30px; border-radius: 16px;">
-                <div id="lineDisplay" class="verification-line-text" style="font-family: monospace; font-size: 1.2rem; padding: 20px; border: 1px dashed #555; text-align: center; margin-bottom: 20px;">
-                    Click "Generate" to get your code...
-                </div>
-                
-                <button class="buy-btn-premium" onclick="generateVerificationLine()" style="margin-bottom: 20px;">
-                    Generate Verification Line
-                </button>
 
-                <div class="file-upload" onclick="document.getElementById('videoUpload').click()" style="border-style: dashed; padding: 40px; text-align: center; cursor: pointer;">
-                    <p style="color: #aaa;">Click to Upload Verification Video</p>
-                    <input type="file" id="videoUpload" accept="video/*" hidden>
-                </div>
-                <div id="videoFileName" style="color: #10b981; margin-top: 10px; text-align: center;"></div>
-                
-                <button id="submitVerifyBtn" class="buy-btn-premium" style="margin-top: 30px; background: #fff; color: #000;" onclick="submitVerification()" disabled>
-                    Submit for Review
-                </button>
-            </div>
-        </div>
-    `;
+window.closeFailedScreen = function() {
+    const failed = document.getElementById('verificationFailed');
+    if (failed) failed.remove();
+    
+    window.location.hash = 'founder_dashboard';
 };
 
+window.retryVerification = function() {
+    const failed = document.getElementById('verificationFailed');
+    if (failed) failed.remove();
+    
+    // Reset upload
+    uploadedVideoFile = null;
+    document.getElementById('uploadBox').classList.remove('has-file');
+    document.getElementById('uploadText').innerHTML = 'Click to Upload Video';
+    document.getElementById('submitVerifyBtn').disabled = true;
+    document.getElementById('submitVerifyBtn').innerHTML = 'Submit for Verification';
+    
+    // Scroll to upload section
+    document.getElementById('uploadSection').scrollIntoView({ behavior: 'smooth' });
+};
+window.handleBrowseAngels = async function() {
+    if (!currentUser) {
+        window.location.href = 'login2.html';
+        return;
+    }
+    
+    // Check verification status
+    const founderRef = ref(db, `founderProfile/${currentUser.uid}`);
+    const snapshot = await get(founderRef);
+    
+    if (snapshot.exists()) {
+        const data = snapshot.val();
+        
+        if (data.isVerified === false) {
+            showVerificationBlockPopup('browse angel profiles');
+            return;
+        }
+    }
+    
+    // If verified, allow access
+    window.location.href = 'angelbrowse.html';
+};
 
 onAuthStateChanged(auth, async (user) => {
     updateProgress(20, "Authenticating...");
@@ -1680,70 +2706,63 @@ onAuthStateChanged(auth, async (user) => {
         currentUser = user;
         currentUserUID = user.uid;
         setUserPresence(user);
-        checkAngelStatus();
+         checkAngelStatus()
         startNotificationListener(); 
         startDashboardInboxListener();
-        startApplicationInboxListener();
+         startApplicationInboxListener();
 
-        // --- NEW: VERIFICATION & PROFILE INITIALIZATION ---
-        try {
-            updateProgress(50, "Checking Account Status...");
-            
-            // Check if user is an Investor and handle isVerified auto-creation
-            const investorRef = ref(db, `investorProfiles/${user.uid}`);
-            const snapshot = await get(investorRef);
-            
-            if (snapshot.exists()) {
-                const data = snapshot.val();
+// Show Banner immediately for new user
+                showVerificationBanner();
+
+                document.getElementById('loadingScreen').classList.add('hidden');
+                showUserIdSetupModal();
+                return;
+            } else {
+                cachedFounderData = founderSnapshot.val();
                 
-                // Auto-create isVerified: false if it doesn't exist
-                if (data.isVerified === undefined) {
-                    await update(investorRef, { isVerified: false });
+                // ⭐ 1. Ensure isVerified exists
+                if (cachedFounderData.isVerified === undefined) {
+                    cachedFounderData.isVerified = false;
+                    await update(ref(db, `founderProfile/${user.uid}`), { isVerified: false });
                 }
-
-                // If unverified, trigger the Blocked UI after a short delay
-                if (data.isVerified === false || data.isVerified === undefined) {
+                
+                // ⭐ 2. Handle Verification UI Logic
+                if (cachedFounderData.isVerified === false) {
+                    // Show the top banner immediately
+                    showVerificationBanner();
+                    
+                    console.log("⚠️ Unverified: Blocking popup will trigger in 10 seconds.");
                     setTimeout(() => {
-                        // showInvestorVerificationAlert() defined in previous response
-                        if (typeof showInvestorVerificationAlert === 'function') {
-                            showInvestorVerificationAlert();
-                        }
-                    }, 2000); 
+                        checkAndBlockUnverifiedUser(user.uid);
+                    }, 1000); 
+                } else {
+                    // Remove banner if they are already verified
+                    const banner = document.getElementById('verificationBanner');
+                    if (banner) {
+                        banner.remove();
+                        document.body.style.paddingTop = '0';
+                    }
                 }
-            }
-        } catch (err) {
-            console.error("Verification check failed:", err);
-        }
 
-        // --- HASH CHANGE ROUTING ---
-        const handleRouting = () => {
-            const hash = window.location.hash;
-
-            if (hash === '#founder_chatlist') {
+        window.addEventListener('hashchange', () => {
+            if (window.location.hash === '#founder_chatlist') {
                 window.showInvestorChatList();
-            } 
-            else if (hash === '#investor_verify') {
-                // Function to render the verification UI
-                if (typeof showVerificationPage === 'function') {
-                    showVerificationPage();
-                }
+            } else if (window.location.hash === '#dashboard' || window.location.hash === '') {
+                location.reload(); 
             }
-            else if (hash === '#dashboard' || hash === '') {
-                // Instead of reload, consider re-rendering the main view 
-                // location.reload(); 
-            }
-        };
+        });
 
-        window.addEventListener('hashchange', handleRouting);
-        
-        // Handle initial load routing
-        if (window.location.hash === '#founder_chatlist' || window.location.hash === '#investor_verify') {
-            handleRouting();
+        if (window.location.hash === '#founder_chatlist') {
+            window.showInvestorChatList();
             const loader = document.getElementById("loadingScreen");
             if(loader) loader.style.display = 'none';
+        else if (hash === 'scalevest_verify') {
+    document.body.style.background = "#000";
+    showVerificationPage();
+}
         } else {
             try {
-                updateProgress(70, "Fetching Profile...");
+                updateProgress(50, "Fetching Profile...");
                 await loadUserProfile(user.uid);
                 updateProgress(100, "Ready");
                 setTimeout(() => {
@@ -1761,6 +2780,7 @@ onAuthStateChanged(auth, async (user) => {
         window.location.href = "login3.html";
     }
 });
+
 window.toggleDropdown = (id) => document.getElementById(id)?.classList.toggle('show');
 window.toggleProfileDropdown = () => document.getElementById('profileDropdown')?.classList.toggle('show');
 window.openEditIdentity = () => document.getElementById('editIdentityModal').style.display = 'flex';
@@ -2213,6 +3233,13 @@ window.saveUserID = async () => {
     await update(ref(db, `investorProfiles/${currentUserUID}`), { userID: newId });
     location.reload();
 };
+
+<script>
+
+function startVerification() {
+    window.location.href = "https://upscalevest.site/investorhub.html#scalevest_verify";
+}
+
 </script>
 
 
