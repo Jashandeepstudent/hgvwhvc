@@ -11958,6 +11958,148 @@ onValue(appRef, (snapshot) => {
     transition: all 0.2s;
     border: none;
 }
+/* ===============================
+   EMERGENCE MODAL BACKDROP
+================================ */
+.emergence-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.82);
+    backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100000;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* ===============================
+   EMERGENCE MODAL CARD
+================================ */
+.emergence-modal-content {
+    width: 100%;
+    max-width: 440px;
+    background: linear-gradient(180deg, #0a0a0a, #111);
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 30px 90px rgba(0,0,0,0.85);
+    color: #ffffff;
+    overflow: hidden;
+    animation: emergencePop 0.35s ease;
+}
+
+/* ===============================
+   HEADER
+================================ */
+.emergence-modal-header {
+    position: relative;
+    padding: 1.6rem 1.6rem 1.2rem;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.emergence-modal-header h3 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+
+/* ===============================
+   CLOSE BUTTON (TOP RIGHT)
+================================ */
+.emergence-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    background: rgba(255,255,255,0.06);
+    border: none;
+    color: #fff;
+    font-size: 1.2rem;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.25s ease;
+}
+
+.emergence-close:hover {
+    background: rgba(255,255,255,0.14);
+    transform: rotate(90deg);
+}
+
+/* ===============================
+   BODY
+================================ */
+.emergence-modal-body {
+    padding: 2rem 1.8rem;
+    text-align: center;
+}
+
+.emergence-icon {
+    font-size: 3.5rem;
+    margin-bottom: 1rem;
+}
+
+.emergence-text {
+    color: #d1d5db;
+    font-size: 1.05rem;
+    line-height: 1.8;
+}
+
+/* ===============================
+   TIMER
+================================ */
+.emergence-timer {
+    margin: 1.6rem 0;
+    font-size: 2.2rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    background: linear-gradient(90deg, #ff006e, #ff4d9d);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* ===============================
+   FOOTER
+================================ */
+.emergence-modal-footer {
+    padding: 1.4rem 1.8rem 1.8rem;
+}
+
+.emergence-btn {
+    width: 100%;
+    padding: 0.9rem;
+    background: linear-gradient(90deg, #ff006e, #ff4d9d);
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.emergence-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 30px rgba(255,0,110,0.35);
+}
+
+/* ===============================
+   ANIMATION
+================================ */
+@keyframes emergencePop {
+    from {
+        opacity: 0;
+        transform: scale(0.94) translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
 
 .btn-view-app {
     background: #fff;
