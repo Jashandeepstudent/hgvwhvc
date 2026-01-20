@@ -853,6 +853,42 @@
     </style>
 </head>
 <body>
+
+<!-- Pitch Preferences Modal -->
+<div id="pitchPreferencesModal" class="modal-overlay">
+    <div class="modal-box">
+        <h2>📊 Pitch Preferences</h2>
+        <p style="color: #94a3b8; margin-bottom: 30px;">Configure how you want to receive funding requests</p>
+        
+        <div style="margin-bottom: 25px;">
+            <label class="progress-label" style="display: block; margin-bottom: 10px;">Daily Pitch Limit</label>
+            <input type="number" id="dailyPitchInput" placeholder="e.g., 5" min="1" max="50" 
+                   style="width: 100%; padding: 15px; border-radius: 12px; background: rgba(255,255,255,0.05); 
+                          border: 1px solid #334155; color: #fff; font-size: 1.1rem; text-align: center;">
+            <small style="color: #64748b; font-size: 0.85rem;">How many pitches per day? (1-50)</small>
+        </div>
+
+        <div style="margin-bottom: 25px;">
+            <label class="progress-label" style="display: block; margin-bottom: 10px;">Pitch Cooldown Period</label>
+            <div style="display: flex; gap: 10px;">
+                <input type="number" id="cooldownValueInput" placeholder="e.g., 7" min="1" 
+                       style="flex: 2; padding: 15px; border-radius: 12px; background: rgba(255,255,255,0.05); 
+                              border: 1px solid #334155; color: #fff; font-size: 1.1rem; text-align: center;">
+                
+                <select id="cooldownUnitSelect" 
+                        style="flex: 1; padding: 15px; border-radius: 12px; background: rgba(255,255,255,0.05); 
+                               border: 1px solid #334155; color: #fff; font-size: 1rem; cursor: pointer;">
+                    <option value="days">Days</option>
+                    <option value="months">Months</option>
+                </select>
+            </div>
+            <small style="color: #64748b; font-size: 0.85rem;">Time before same founder can pitch again</small>
+        </div>
+
+        <button class="modal-btn" onclick="savePitchPreferences()">LAUNCH PROFILE</button>
+        <button class="modal-btn" style="background:transparent; margin-top:10px;" onclick="closeModal('pitchPreferencesModal')">CANCEL</button>
+    </div>
+</div>
 <div id="editIdentityModal" class="modal-overlay">
     <div class="modal-box">
         <h2>Identity Settings</h2>
@@ -3384,8 +3420,6 @@ function convertToViewButton(btn) {
     };
 }
 
-// 3. Your existing launch function (kept mostly the same)
-// ⭐ UPDATED: Block unverified users from launching angel profile
 window.launchAngelProfile = async () => {
     const launchBtn = document.getElementById('launchBtn');
     
@@ -3402,10 +3436,29 @@ window.launchAngelProfile = async () => {
         }
     }
     
-    // If verified, proceed with launch
+    // Show pitch preferences modal instead of launching immediately
+    document.getElementById('pitchPreferencesModal').style.display = 'flex';
+};
+window.savePitchPreferences = async () => {
+    const dailyPitch = parseInt(document.getElementById('dailyPitchInput').value);
+    const cooldownValue = parseInt(document.getElementById('cooldownValueInput').value);
+    const cooldownUnit = document.getElementById('cooldownUnitSelect').value;
+    
+    // Validation
+    if (!dailyPitch || dailyPitch < 1 || dailyPitch > 50) {
+        alert('❌ Please enter a valid daily pitch limit (1-50)');
+        return;
+    }
+    
+    if (!cooldownValue || cooldownValue < 1) {
+        alert('❌ Please enter a valid cooldown period');
+        return;
+    }
+    
+    const launchBtn = document.getElementById('launchBtn');
     launchBtn.disabled = true;
     launchBtn.innerText = "Launching...";
-
+    
     try {
         const snap = await get(ref(db, `investorProfiles/${currentUserUID}`));
         
@@ -3413,18 +3466,27 @@ window.launchAngelProfile = async () => {
             const angelData = { 
                 ...snap.val(), 
                 status: "Live", 
-                launchedAt: new Date().toISOString() 
+                launchedAt: new Date().toISOString(),
+                dailyPitchReceive: dailyPitch,
+                pitchCooldown: {
+                    value: cooldownValue,
+                    unit: cooldownUnit
+                }
             };
             
             await update(ref(db, `angelProfiles/${currentUserUID}`), angelData);
             
-            alert("Your Angel Profile is LIVE!");
+            // Close modal
+            document.getElementById('pitchPreferencesModal').style.display = 'none';
+            
+            alert("✅ Your Angel Profile is LIVE!");
             convertToViewButton(launchBtn);
         }
     } catch (e) { 
         console.error(e); 
         launchBtn.disabled = false;
         launchBtn.innerText = "Launch Angel Profile";
+        alert('❌ Error: ' + e.message);
     }
 };
 // 4. IMPORTANT: Call the check function on load
