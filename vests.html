@@ -4312,7 +4312,6 @@ window.showFounderEmergence = async function() {
     document.querySelector('.vest-container').style.display = 'none';
 
     container.innerHTML = `
-      
         <div class="emergence-page shop-bw">
             ${getShopHeaderHTML(tokens, 'emergence')}
             
@@ -4334,7 +4333,7 @@ window.showFounderEmergence = async function() {
                         <div class="price-row"><span class="old-price">₹300</span><span class="discount-pill">Launch OFF</span></div>
                         <span class="new-price">₹150</span>
                     </div>
-                    <button class="buy-btn-premium">Choose Alpha</button>
+                    <button class="buy-btn-premium" onclick="selectEmergencePlan('alpha', 7, 'cash')">Choose Alpha</button>
                 </div>
 
                 <div class="emergence-card bundle-card featured">
@@ -4351,7 +4350,7 @@ window.showFounderEmergence = async function() {
                         <div class="price-row"><span class="old-price">₹400</span><span class="discount-pill">Launch OFF</span></div>
                         <span class="new-price">₹200</span>
                     </div>
-                    <button class="buy-btn-premium">Choose Steady</button>
+                    <button class="buy-btn-premium" onclick="selectEmergencePlan('steady', 12, 'cash')">Choose Steady</button>
                 </div>
 
                 <div class="emergence-card bundle-card">
@@ -4365,13 +4364,128 @@ window.showFounderEmergence = async function() {
                         <div class="price-row"><span class="old-price">₹699</span><span class="discount-pill">Launch OFF</span></div>
                         <span class="new-price">₹350</span>
                     </div>
-                    <button class="buy-btn-premium">Go Super Critical</button>
+                    <button class="buy-btn-premium" onclick="selectEmergencePlan('critical', 18, 'cash')">Go Super Critical</button>
                 </div>
             </div>
         </div>
     `;
 };
+// ==========================================
+// APPLICATION SELECTION FOR EMERGENCE
+// ==========================================
 
+window.selectEmergencePlan = async function(planType, investorCount, paymentMethod) {
+    // Check cooldown first
+    const cooldownCheck = await checkEmergenceCooldown();
+    if (!cooldownCheck.allowed) {
+        showCooldownModal(cooldownCheck.timeLeft);
+        return;
+    }
+    
+    // Check tokens if payment method is tokens
+    if (paymentMethod === 'tokens') {
+        const tokenCost = {
+            'tiny': 100,
+            'small': 200,
+            'medium': 320
+        }[planType];
+        
+        const currentTokens = await getLiveTokens();
+        if (currentTokens < tokenCost) {
+            alert(`❌ Insufficient tokens! You need ${tokenCost} tokens but have ${currentTokens}.`);
+            return;
+        }
+    }
+    
+    // Fetch completed applications
+    const appsRef = ref(db, `Applications/${currentUser.uid}`);
+    const snapshot = await get(appsRef);
+    
+    if (!snapshot.exists()) {
+        alert("❌ No applications found. Please create one first!");
+        return;
+    }
+    
+    const apps = snapshot.val();
+    const completedApps = Object.entries(apps).filter(([id, app]) => app.status === 'completed');
+    
+    if (completedApps.length === 0) {
+        alert("❌ No completed applications found. Please complete an application first!");
+        return;
+    }
+    
+    // Show selection modal
+    const modal = document.createElement('div');
+    modal.className = 'edit-modal show';
+    modal.innerHTML = `
+        <style>
+            .app-selection-card {
+                background: #0a0a0a;
+                border: 2px solid #222;
+                border-radius: 12px;
+                padding: 1.5rem;
+                margin-bottom: 1rem;
+                cursor: pointer;
+                transition: all 0.3s;
+            }
+            .app-selection-card:hover {
+                border-color: #ff006e;
+                transform: translateX(10px);
+                background: #111;
+            }
+            .app-selection-card.selected {
+                border-color: #10b981;
+                background: rgba(16, 185, 129, 0.1);
+            }
+        </style>
+        
+        <div class="edit-modal-content" style="max-width: 600px;">
+            <div class="edit-modal-header">
+                <h3>Select Application to Launch</h3>
+                <button class="modal-close" onclick="this.closest('.edit-modal').remove()">×</button>
+            </div>
+            <div class="edit-modal-body" style="max-height: 400px; overflow-y: auto;">
+                <p style="color: #888; margin-bottom: 1.5rem;">
+                    Choose which application you want to send to <strong>${investorCount} investors</strong>
+                </p>
+                
+                ${completedApps.map(([appId, app]) => `
+                    <div class="app-selection-card" onclick="selectApplication('${appId}', this)">
+                        <h4 style="font-size: 1.1rem; margin-bottom: 0.5rem;">${app.appName || 'Untitled Application'}</h4>
+                        <p style="color: #888; font-size: 0.9rem;">${app.appHook || 'No hook available'}</p>
+                        <p style="color: #666; font-size: 0.8rem; margin-top: 0.5rem;">
+                            Created: ${new Date(app.updatedAt).toLocaleDateString()}
+                        </p>
+                    </div>
+                `).join('')}
+            </div>
+            <div class="edit-modal-footer">
+                <button class="modal-btn-cancel" onclick="this.closest('.edit-modal').remove()">Cancel</button>
+                <button class="modal-btn-save" id="launchEmergenceBtn" disabled onclick="launchEmergence('${planType}', ${investorCount}, '${paymentMethod}')">
+                    Launch Emergence 🚀
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    // Store selected app globally
+    window.selectedApplicationId = null;
+};
+
+window.selectApplication = function(appId, element) {
+    // Remove previous selections
+    document.querySelectorAll('.app-selection-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    
+    // Select this one
+    element.classList.add('selected');
+    window.selectedApplicationId = appId;
+    
+    // Enable launch button
+    document.getElementById('launchEmergenceBtn').disabled = false;
+};
 window.showScaleShop = async function() {
     const tokens = await getLiveTokens();
     const container = document.getElementById('dashboardContainer');
@@ -4394,7 +4508,7 @@ window.showScaleShop = async function() {
                     <h2 class="plan-title">Emergence: Tiny</h2>
                     <p class="plan-desc">The FREE entry point. Send your application to <strong>3 interested investors</strong>.</p>
                     <div class="token-cost">100 Tokens</div>
-                    <button class="buy-btn-premium" onclick="window.handleTokenRedeem(100, 'Tiny')">Redeem Tiny</button>
+<button class="buy-btn-premium" onclick="selectEmergencePlan('small', 6, 'tokens')">Redeem Small</button>
                 </div>
 
                 <div class="emergence-card bundle-card featured">
@@ -4404,7 +4518,7 @@ window.showScaleShop = async function() {
                     <h2 class="plan-title">Emergence: Small</h2>
                     <p class="plan-desc">Our most helpful free plan. Take your funding application to <strong>6 interested investors</strong>.</p>
                     <div class="token-cost">200 Tokens</div>
-                    <button class="buy-btn-premium" onclick="window.handleTokenRedeem(200, 'Small')">Redeem Small</button>
+<button class="buy-btn-premium" onclick="selectEmergencePlan('small', 6, 'tokens')">Redeem Small</button>
                 </div>
 
                 <div class="emergence-card bundle-card">
@@ -4414,7 +4528,7 @@ window.showScaleShop = async function() {
                     <h2 class="plan-title">Emergence: Medium</h2>
                     <p class="plan-desc">Strategic boost. Take your funding application to <strong>10 interested investors</strong>.</p>
                     <div class="token-cost">320 Tokens</div>
-                    <button class="buy-btn-premium" onclick="window.handleTokenRedeem(320, 'Medium')">Redeem Medium</button>
+<button class="buy-btn-premium" onclick="selectEmergencePlan('medium', 10, 'tokens')">Redeem Medium</button>
                 </div>
             </div>
         </div>
@@ -4427,7 +4541,6 @@ window.showTokenShop = async function() {
     document.title = "Buy Scale Tokens | ScaleVest";
 
     container.innerHTML = `
-      
         <div class="emergence-page shop-bw">
             ${getShopHeaderHTML(tokens, 'tokens')}
             
@@ -4437,6 +4550,7 @@ window.showTokenShop = async function() {
             </div>
 
             <div class="emergence-grid">
+                <!-- Small Bundle -->
                 <div class="emergence-card bundle-card">
                     <div class="bundle-image-wrapper">
                         <img src="chest1.svg" alt="Small Chest" class="chest-img">
@@ -4444,9 +4558,12 @@ window.showTokenShop = async function() {
                     <h2 class="plan-title">Small Bundle</h2>
                     <div class="token-amount">80 Scale Tokens</div>
                     <div class="price-section"><span class="new-price">₹50</span></div>
-                    <button class="buy-btn-premium" onclick="window.addTokensToDB(80)">Buy Now</button>
+                    <button class="buy-btn-premium" onclick="window.addTokensToDB(80, 'small', 50)">
+                        Buy Now
+                    </button>
                 </div>
 
+                <!-- Medium Bundle -->
                 <div class="emergence-card bundle-card featured">
                     <div class="bundle-image-wrapper">
                         <img src="chest2.svg" alt="Medium Chest" class="chest-img">
@@ -4454,9 +4571,12 @@ window.showTokenShop = async function() {
                     <h2 class="plan-title">Medium Bundle</h2>
                     <div class="token-amount">180 Scale Tokens</div>
                     <div class="price-section"><span class="new-price">₹150</span></div>
-                    <button class="buy-btn-premium" onclick="window.addTokensToDB(180)">Buy Now</button>
+                    <button class="buy-btn-premium" onclick="window.addTokensToDB(180, 'medium', 150)">
+                        Buy Now
+                    </button>
                 </div>
 
+                <!-- Large Bundle -->
                 <div class="emergence-card bundle-card">
                     <div class="bundle-image-wrapper">
                         <img src="chest3.svg" alt="Large Chest" class="chest-img">
@@ -4464,7 +4584,9 @@ window.showTokenShop = async function() {
                     <h2 class="plan-title">Large Bundle</h2>
                     <div class="token-amount">500 Scale Tokens</div>
                     <div class="price-section"><span class="new-price">₹400</span></div>
-                    <button class="buy-btn-premium" onclick="window.addTokensToDB(500)">Buy Now</button>
+                    <button class="buy-btn-premium" onclick="window.addTokensToDB(500, 'large', 400)">
+                        Buy Now
+                    </button>
                 </div>
             </div>
         </div>
@@ -4815,7 +4937,74 @@ async function getLiveTokens() {
         return 0;
     }
 }
+// ==========================================
+// COOLDOWN & ELIGIBILITY CHECKS
+// ==========================================
 
+async function checkEmergenceCooldown() {
+    if (!currentUser) return { allowed: false, reason: "Not logged in" };
+    
+    const profileRef = ref(db, `founderProfile/${currentUser.uid}`);
+    const snapshot = await get(profileRef);
+    
+    if (!snapshot.exists()) return { allowed: true };
+    
+    const data = snapshot.val();
+    const lastLaunch = data.lastEmergenceDate;
+    
+    if (!lastLaunch) return { allowed: true };
+    
+    const now = Date.now();
+    const timeSinceLastLaunch = now - lastLaunch;
+    const cooldownPeriod = 24 * 60 * 60 * 1000; // 24 hours
+    
+    if (timeSinceLastLaunch < cooldownPeriod) {
+        const timeLeft = cooldownPeriod - timeSinceLastLaunch;
+        const hoursLeft = Math.floor(timeLeft / (60 * 60 * 1000));
+        const minutesLeft = Math.floor((timeLeft % (60 * 60 * 1000)) / (60 * 1000));
+        
+        return {
+            allowed: false,
+            reason: "cooldown",
+            timeLeft: `${hoursLeft}h ${minutesLeft}m`
+        };
+    }
+    
+    return { allowed: true };
+}
+
+// Show cooldown modal
+function showCooldownModal(timeLeft) {
+    const modal = document.createElement('div');
+    modal.className = 'edit-modal show';
+    modal.innerHTML = `
+        <div class="edit-modal-content">
+            <div class="edit-modal-header">
+                <h3>⏰ Emergence Cooldown Active</h3>
+                <button class="modal-close" onclick="this.closest('.edit-modal').remove()">×</button>
+            </div>
+            <div class="edit-modal-body" style="text-align: center; padding: 2rem;">
+                <div style="font-size: 4rem; margin-bottom: 1rem;">⏳</div>
+                <p style="color: #aaa; font-size: 1.1rem; line-height: 1.8;">
+                    You've already launched an Emergence today. 
+                    <br>You can launch again in:
+                </p>
+                <div style="font-size: 2rem; font-weight: 800; color: #ff006e; margin: 1.5rem 0;">
+                    ${timeLeft}
+                </div>
+                <p style="color: #666; font-size: 0.9rem;">
+                    Pro tip: Use this time to refine your application or engage with investors who received your last emergence!
+                </p>
+            </div>
+            <div class="edit-modal-footer">
+                <button class="modal-btn-save" onclick="this.closest('.edit-modal').remove()" style="width: 100%;">
+                    Got It
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
 // --- UI HEADER HELPER ---
 function getShopHeaderHTML(tokenCount, activeTab) {
     let navButtons = '';
@@ -9635,6 +9824,337 @@ document.addEventListener('click', (event) => {
         });
     }
 });
+
+// ==========================================
+// INVESTOR MATCHING ENGINE
+// ==========================================
+
+async function findMatchingInvestors(userCategory, targetCount) {
+    const investorsRef = ref(db, 'investorProfiles');
+    const snapshot = await get(investorsRef);
+    
+    if (!snapshot.exists()) return [];
+    
+    const allInvestors = snapshot.val();
+    const matched = [];
+    const secondary = [];
+    const fallback = [];
+    
+    // Phase 1: Exact category match
+    Object.entries(allInvestors).forEach(([id, investor]) => {
+        if (!investor.preferredCategories) return;
+        
+        const categories = Object.values(investor.preferredCategories);
+        
+        if (categories.includes(userCategory)) {
+            matched.push(id);
+        } else if (categories.some(cat => isRelatedCategory(userCategory, cat))) {
+            secondary.push(id);
+        } else {
+            fallback.push(id);
+        }
+    });
+    
+    // Build final list
+    const finalList = [
+        ...matched.slice(0, targetCount),
+        ...secondary.slice(0, Math.max(0, targetCount - matched.length)),
+        ...fallback.slice(0, Math.max(0, targetCount - matched.length - secondary.length))
+    ];
+    
+    return finalList.slice(0, targetCount);
+}
+
+function isRelatedCategory(cat1, cat2) {
+    const categoryGroups = {
+        'tech': ['AI/ML', 'SaaS', 'B2B SaaS', 'Web3', 'Blockchain'],
+        'health': ['HealthTech', 'MedTech', 'BioTech'],
+        'finance': ['FinTech', 'InsurTech'],
+        'consumer': ['E-commerce', 'FoodTech', 'TravelTech']
+    };
+    
+    for (const [group, cats] of Object.entries(categoryGroups)) {
+        if (cats.includes(cat1) && cats.includes(cat2)) {
+            return true;
+        }
+    }
+    return false;
+}
+// ==========================================
+// LAUNCH EMERGENCE - MAIN FUNCTION
+// ==========================================
+
+window.launchEmergence = async function(planType, investorCount, paymentMethod) {
+    if (!window.selectedApplicationId) {
+        alert("❌ Please select an application first!");
+        return;
+    }
+    
+    const launchBtn = document.getElementById('launchEmergenceBtn');
+    launchBtn.innerHTML = 'Launching... 🚀';
+    launchBtn.disabled = true;
+    
+    try {
+        // 1. Get user's startup category
+        const startupRef = ref(db, `startupProfile/${currentUser.uid}`);
+        const startupSnap = await get(startupRef);
+        const userCategory = startupSnap.val()?.category || 'Other';
+        
+        // 2. Find matching investors
+        const matchedInvestors = await findMatchingInvestors(userCategory, investorCount);
+        
+        if (matchedInvestors.length === 0) {
+            alert("❌ No investors found. Please try again later.");
+            return;
+        }
+        
+        // 3. Get application data
+        const appRef = ref(db, `Applications/${currentUser.uid}/${window.selectedApplicationId}`);
+        const appSnap = await get(appRef);
+        const appData = appSnap.val();
+        
+        // 4. Send to each investor's inbox
+        const timestamp = Date.now();
+        const updates = {};
+        
+        matchedInvestors.forEach(investorId => {
+            const messageId = push(ref(db, `InvestorInbox/${investorId}`)).key;
+            updates[`InvestorInbox/${investorId}/${messageId}`] = {
+                applicationId: window.selectedApplicationId,
+                founderId: currentUser.uid,
+                appName: appData.appName,
+                appHook: appData.appHook,
+                vestId: appData.vestId,
+                timestamp: timestamp,
+                read: false,
+                emergenceType: planType
+            };
+        });
+        
+        // 5. Deduct tokens if token payment
+        if (paymentMethod === 'tokens') {
+            const tokenCost = {
+                'tiny': 100,
+                'small': 200,
+                'medium': 320
+            }[planType];
+            
+            const currentTokens = await getLiveTokens();
+            updates[`founderProfile/${currentUser.uid}/scaleTokens`] = currentTokens - tokenCost;
+        }
+        
+        // 6. Update cooldown
+        updates[`founderProfile/${currentUser.uid}/lastEmergenceDate`] = timestamp;
+        updates[`founderProfile/${currentUser.uid}/emergenceCount`] = (cachedFounderData?.emergenceCount || 0) + 1;
+        
+        // 7. Track launch
+        const launchId = push(ref(db, `EmergenceLaunches/${currentUser.uid}`)).key;
+        updates[`EmergenceLaunches/${currentUser.uid}/${launchId}`] = {
+            applicationId: window.selectedApplicationId,
+            planType,
+            investorsSent: matchedInvestors,
+            timestamp,
+            paymentMethod
+        };
+        
+        // 8. Execute all updates
+        await update(ref(db), updates);
+        
+        // 9. Show success animation
+        document.querySelector('.edit-modal').remove();
+        showRocketLaunchAnimation(matchedInvestors.length);
+        
+    } catch (error) {
+        console.error("Launch error:", error);
+        alert("❌ Launch failed. Please try again.");
+        launchBtn.innerHTML = 'Launch Emergence 🚀';
+        launchBtn.disabled = false;
+    }
+};
+// ==========================================
+// ROCKET LAUNCH SUCCESS ANIMATION
+// ==========================================
+
+function showRocketLaunchAnimation(investorCount) {
+    const animation = document.createElement('div');
+    animation.innerHTML = `
+        <style>
+            .rocket-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background: rgba(0, 0, 0, 0.95);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 999999;
+                animation: fadeIn 0.5s;
+            }
+            
+            .rocket-container {
+                text-align: center;
+            }
+            
+            .rocket {
+                font-size: 8rem;
+                animation: rocketLaunch 2s ease-out;
+            }
+            
+            @keyframes rocketLaunch {
+                0% { transform: translateY(100vh) rotate(-45deg); opacity: 0; }
+                50% { transform: translateY(-20vh) rotate(0deg); opacity: 1; }
+                100% { transform: translateY(-120vh) rotate(0deg); opacity: 0; }
+            }
+            
+            .success-message {
+                margin-top: 2rem;
+                animation: slideUp 1s ease 0.5s both;
+            }
+            
+            @keyframes slideUp {
+                from { transform: translateY(50px); opacity: 0; }
+                to { transform: translateY(0); opacity: 1; }
+            }
+            
+            .stats-grid {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+                margin-top: 2rem;
+                animation: slideUp 1s ease 1s both;
+            }
+            
+            .stat-box {
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 12px;
+                padding: 1.5rem;
+            }
+            
+            .stat-value {
+                font-size: 2.5rem;
+                font-weight: 800;
+                color: #10b981;
+            }
+            
+            .stat-label {
+                color: #888;
+                font-size: 0.9rem;
+                margin-top: 0.5rem;
+            }
+        </style>
+        
+        <div class="rocket-overlay">
+            <div class="rocket-container">
+                <div class="rocket">🚀</div>
+                
+                <div class="success-message">
+                    <h2 style="font-size: 2.5rem; font-weight: 800; color: #fff; margin-bottom: 1rem;">
+                        Emergence Launched!
+                    </h2>
+                    <p style="color: #aaa; font-size: 1.2rem; line-height: 1.8;">
+                        Your application is now in the hands of potential investors
+                    </p>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="stat-value">${investorCount}</div>
+                        <div class="stat-label">Investors Reached</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value">100%</div>
+                        <div class="stat-label">Category Match</div>
+                    </div>
+                </div>
+                
+                <button 
+                    onclick="this.closest('.rocket-overlay').remove(); window.location.hash='founder_dashboard'" 
+                    style="
+                        margin-top: 3rem;
+                        padding: 1rem 3rem;
+                        background: linear-gradient(135deg, #ff006e, #8338ec);
+                        color: #fff;
+                        border: none;
+                        border-radius: 12px;
+                        font-weight: 700;
+                        font-size: 1rem;
+                        cursor: pointer;
+                        animation: slideUp 1s ease 1.5s both;
+                    ">
+                    Back to Dashboard
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(animation);
+    
+    // Auto-close after 5 seconds
+    setTimeout(() => {
+        animation.remove();
+        window.location.hash = 'founder_dashboard';
+    }, 5000);
+}
+
+window.addTokensToDB = async function(amount, bundleType, price) {
+    if (!currentUser) return;
+    
+    try {
+        // 1. Get current token count
+        const currentTokens = await getLiveTokens();
+        const newTotal = currentTokens + amount;
+        const timestamp = Date.now();
+        
+        // 2. Create unique IDs for global and user-specific history
+        const transactionId = push(ref(db, 'TokenTransactions')).key;
+        const purchaseId = push(ref(db, `founderProfile/${currentUser.uid}/tokenPurchaseHistory`)).key;
+        
+        // 3. Prepare atomic updates
+        const updates = {};
+        
+        // Update user's token count
+        updates[`founderProfile/${currentUser.uid}/scaleTokens`] = newTotal;
+        
+        // Add to user's purchase history
+        updates[`founderProfile/${currentUser.uid}/tokenPurchaseHistory/${purchaseId}`] = {
+            amount: amount,
+            bundleType: bundleType,
+            price: price,
+            timestamp: timestamp,
+            transactionId: transactionId,
+            status: "completed"
+        };
+        
+        // Add to global transactions log (Root level)
+        updates[`TokenTransactions/${transactionId}`] = {
+            userId: currentUser.uid,
+            bundleType: bundleType,
+            tokensAdded: amount,
+            price: price,
+            timestamp: timestamp,
+            paymentMethod: "razorpay", // Placeholder for payment integration
+            userEmail: currentUser.email || "unknown"
+        };
+        
+        // 4. Execute all updates atomically
+        await update(ref(db), updates);
+        
+        // 5. Update local cache for UI responsiveness
+        if (cachedFounderData) {
+            cachedFounderData.scaleTokens = newTotal;
+        }
+        
+        // 6. Show success and refresh shop
+        alert(`✅ Success! ${amount} tokens added.\nNew Balance: ${newTotal} tokens`);
+        showTokenShop(); 
+        
+    } catch (error) {
+        console.error("Transaction Error:", error);
+        alert("❌ Transaction failed. Please try again or contact support.");
+    }
+};
 window.showVestAnalytics = showVestAnalytics;
 
 
@@ -9667,7 +10187,11 @@ onAuthStateChanged(auth, async (user) => {
                     title: '',
                     about: '',
                     createdAt: new Date().toISOString(),
-                    isVerified: false 
+                    isVerified: false,
+                     scaleTokens: 0,              
+                    lastEmergenceDate: null,     
+                     emergenceCount: 0,            
+                     tokenPurchaseHistory: {} 
                 };
                 
                 await update(ref(db, `founderProfile/${user.uid}`), cachedFounderData);
