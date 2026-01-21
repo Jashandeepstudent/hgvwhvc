@@ -206,6 +206,61 @@
             background: #00CED1;
             border-radius: 10px;
         }
+@media (max-width: 768px) {
+    .angel-card {
+        height: 380px;
+        min-width: 240px;
+        max-width: 240px;
+    }
+    
+    .card-header {
+        height: 120px;
+    }
+    
+    .profile-photo {
+        width: 70px;
+        height: 70px;
+    }
+    
+    .profile-photo-container {
+        top: 70px;
+    }
+    
+    .investor-name {
+        font-size: 1.1rem;
+    }
+    
+    .stat-count {
+        font-size: 1.3rem;
+    }
+}
+@media (max-width: 768px) {
+    .category-pill {
+        padding: 8px 16px;
+        font-size: 0.85rem;
+    }
+    
+    .category-pills {
+        gap: 8px;
+    }
+}
+@media (max-width: 768px) {
+    body {
+        padding: 80px 10px 20px; /* Add top padding */
+    }
+    
+    .back-dashboard-btn {
+        top: 15px;
+        left: 15px;
+        padding: 8px 16px;
+        font-size: 0.9rem;
+    }
+    
+    h1 {
+        font-size: 1.8rem;
+        margin-top: 10px; /* Add space below back button */
+    }
+}
 
         .cards-row {
             display: flex;
@@ -1440,6 +1495,69 @@ searchBox.addEventListener('input', (e) => {
     
     displayRows();
 });
+
+// Add these variables at the top with other globals
+let trackedImpressions = new Set(); // Track which investors we've recorded impressions for
+let trackedClicks = new Set(); // Track which investors we've recorded clicks for
+
+// Add Intersection Observer for impression tracking
+const impressionObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+            const investorId = entry.target.dataset.investorId;
+            
+            // Only track once per user per investor
+            if (!trackedImpressions.has(investorId)) {
+                trackedImpressions.add(investorId);
+                recordImpression(investorId);
+            }
+        }
+    });
+}, {
+    threshold: 0.5 // Card must be 50% visible
+});
+
+// Record impression to Firebase
+async function recordImpression(investorId) {
+    try {
+        const impressionRef = ref(database, `angelProfiles/${investorId}/impressions/${currentUser.uid}`);
+        await set(impressionRef, {
+            timestamp: serverTimestamp(),
+            viewed: true
+        });
+        
+        // Increment total impression count
+        const profileRef = ref(database, `angelProfiles/${investorId}`);
+        await update(profileRef, {
+            totalImpressions: increment(1)
+        });
+        
+        console.log(`📊 Impression recorded for ${investorId}`);
+    } catch (error) {
+        console.error('Error recording impression:', error);
+    }
+}
+
+// Record click to Firebase
+async function recordClick(investorId) {
+    try {
+        const clickRef = ref(database, `angelProfiles/${investorId}/clicks/${currentUser.uid}`);
+        await set(clickRef, {
+            timestamp: serverTimestamp(),
+            clicked: true
+        });
+        
+        // Increment total click count
+        const profileRef = ref(database, `angelProfiles/${investorId}`);
+        await update(profileRef, {
+            totalClicks: increment(1)
+        });
+        
+        console.log(`🖱️ Click recorded for ${investorId}`);
+    } catch (error) {
+        console.error('Error recording click:', error);
+    }
+}
        onAuthStateChanged(auth, async (user) => {
     if (!user) {
         window.location.href = 'login2.html';
@@ -1516,24 +1634,25 @@ async function loadUserCategory() {
         console.error('Error loading user category:', error);
     }
 }
-        async function loadAngelProfiles() {
-            try {
-                const angelProfilesRef = ref(database, 'angelProfiles');
-                const snapshot = await get(angelProfilesRef);
+async function loadAngelProfiles() {
+    try {
+        const angelProfilesRef = ref(database, 'angelProfiles');
+        const snapshot = await get(angelProfilesRef);
 
-                loadingMessage.style.display = 'none';
-
-                if (snapshot.exists()) {
-                    allProfiles = snapshot.val();
-                    displayRows();
-                } else {
-                    rowsContainer.innerHTML = '<div class="loading">No angel profiles found.</div>';
-                }
-            } catch (error) {
-                console.error('Error loading angel profiles:', error);
-                loadingMessage.textContent = 'Error loading profiles. Please try again.';
-            }
+        if (snapshot.exists()) {
+            allProfiles = snapshot.val();
+            displayRows();
+            
+            // ✅ Hide loading AFTER rows are displayed
+            loadingMessage.style.display = 'none';
+        } else {
+            loadingMessage.textContent = 'No angel profiles found.';
         }
+    } catch (error) {
+        console.error('Error loading angel profiles:', error);
+        loadingMessage.textContent = 'Error loading profiles. Please try again.';
+    }
+}
 
 
 async function loadOnlineStatus() {
@@ -2087,7 +2206,7 @@ function createRow(profiles, title, badge, badgeClass) {
              trackCardView(userId, profile); 
             const card = document.createElement('div');
             card.className = 'angel-card';
-
+            card.dataset.investorId = userId; 
             const photoURL = profile.photoURL || 'https://via.placeholder.com/90';
             const fullName = profile.fullName || 'Anonymous Investor';
             const replyReputation = profile.replyReputation || 0;
@@ -2129,7 +2248,7 @@ function createRow(profiles, title, badge, badgeClass) {
                     </div>
                 </div>
             `;
-
+ impressionObserver.observe(card);
             return card;
         }
 
@@ -2287,7 +2406,13 @@ function createRow(profiles, title, badge, badgeClass) {
 
 window.handleViewProfile = async function(userId) {
     profileViewStartTime = Date.now();
-    selectedInvestor = userId; // 🔥 TRACK WHO WE'RE VIEWING
+    selectedInvestor = userId;
+    
+    // Track click (once per user per investor)
+    if (!trackedClicks.has(userId)) {
+        trackedClicks.add(userId);
+        await recordClick(userId);
+    }
     
     try {
         const profileRef = ref(database, `angelProfiles/${userId}`);
