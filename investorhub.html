@@ -2947,18 +2947,18 @@ async function showAnalyticsPage() {
         
         let stats = {
             replyReputation: 0,
-            impressions: 0,
+            totalImpressions: 0,
             totalClicks: 0,
-            pitchedCount: 0
+            PitchedCount: 0
         };
         
         if (snapshot.exists()) {
             const data = snapshot.val();
             stats = {
                 replyReputation: data.replyReputation || 0,
-                impressions: data.impressions || 0,
+                impressions: data.totalImpressions || 0,
                 totalClicks: data.totalClicks || 0,
-                pitchedCount: data.pitchedCount || 0
+                pitchedCount: data.PitchedCount || 0
             };
         }
 
@@ -3148,7 +3148,7 @@ async function showAnalyticsPage() {
                             </svg>
                         </div>
                         <div class="stat-label">Impressions</div>
-                        <div class="stat-value">${stats.impressions.toLocaleString()}</div>
+                        <div class="stat-value">${stats.totalImpressions.toLocaleString()}</div>
                         <div class="stat-change">
                             Profile Views
                         </div>
@@ -3786,9 +3786,9 @@ try {
                 unit: cooldownUnit
             },
             replyReputation: 0,
-            impressions: 0,
+            totalImpressions: 0,
             totalClicks: 0,
-            pitchedCount: 0
+            PitchedCount: 0
         };
         
         await update(ref(db, `angelProfiles/${currentUserUID}`), angelData);
