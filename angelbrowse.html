@@ -206,6 +206,61 @@
             background: #00CED1;
             border-radius: 10px;
         }
+@media (max-width: 768px) {
+    .angel-card {
+        height: 380px;
+        min-width: 240px;
+        max-width: 240px;
+    }
+    
+    .card-header {
+        height: 120px;
+    }
+    
+    .profile-photo {
+        width: 70px;
+        height: 70px;
+    }
+    
+    .profile-photo-container {
+        top: 70px;
+    }
+    
+    .investor-name {
+        font-size: 1.1rem;
+    }
+    
+    .stat-count {
+        font-size: 1.3rem;
+    }
+}
+@media (max-width: 768px) {
+    .category-pill {
+        padding: 8px 16px;
+        font-size: 0.85rem;
+    }
+    
+    .category-pills {
+        gap: 8px;
+    }
+}
+@media (max-width: 768px) {
+    body {
+        padding: 80px 10px 20px; /* Add top padding */
+    }
+    
+    .back-dashboard-btn {
+        top: 15px;
+        left: 15px;
+        padding: 8px 16px;
+        font-size: 0.9rem;
+    }
+    
+    h1 {
+        font-size: 1.8rem;
+        margin-top: 10px; /* Add space below back button */
+    }
+}
 
         .cards-row {
             display: flex;
@@ -214,34 +269,34 @@
             min-width: min-content;
         }
 
-      .angel-card {
-    background: #00CED1;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    transition: all 0.3s ease;
-    cursor: pointer;
-    height: 380px; /* ✅ REDUCED from 460px */
-    min-width: 280px; /* ✅ REDUCED from 320px */
-    max-width: 280px; /* ✅ REDUCED from 320px */
-    position: relative;
-    flex-shrink: 0;
-}
+        .angel-card {
+            background: #00CED1;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            height: 460px;
+            min-width: 320px;
+            max-width: 320px;
+            position: relative;
+            flex-shrink: 0;
+        }
 
-.angel-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-}
+        .angel-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
 
-.card-header {
-    background: #006400;
-    height: 120px; /* ✅ REDUCED from 150px */
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 12px 12px 0 0;
-}
+        .card-header {
+            background: #006400;
+            height: 150px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px 12px 0 0;
+        }
 
         .crown-icon {
             position: absolute;
@@ -300,74 +355,85 @@
         }
 
         .profile-photo-container {
-    position: absolute;
-    top: 70px; /* ✅ ADJUSTED from 90px */
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 10;
-}
+            position: absolute;
+            top: 90px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
 
-.profile-photo {
-    width: 70px; /* ✅ REDUCED from 90px */
-    height: 70px; /* ✅ REDUCED from 90px */
-    border-radius: 50%;
-    border: 4px solid white;
-    object-fit: cover;
-    background: white;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-    display: block;
-}
+        .profile-photo {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            border: 4px solid white;
+            object-fit: cover;
+            background: white;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            display: block;
+        }
 
-       .card-body {
-    padding: 45px 15px 15px; /* ✅ REDUCED padding */
-    text-align: center;
-    color: white;
-}
+        .card-body {
+            padding: 55px 20px 20px;
+            text-align: center;
+            color: white;
+        }
 
-.investor-name {
-    font-size: 1.1rem; /* ✅ REDUCED from 1.3rem */
-    font-weight: 600;
-    margin-bottom: 6px;
-    color: #1a1a1a;
-}
+        .investor-name {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1a1a1a;
+        }
 
-.investor-type {
-    font-size: 0.8rem; /* ✅ REDUCED from 0.85rem */
-    color: #333;
-    margin-bottom: 12px;
-    font-weight: 500;
-}
+        .investor-type {
+            font-size: 0.85rem;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
 
-.stats-container {
-    display: flex;
-    justify-content: center;
-    gap: 20px; /* ✅ REDUCED from 25px */
-    margin: 8px 0 15px; /* ✅ REDUCED margins */
-}
+        .stats-container {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin: 10px 0 20px;
+        }
 
-.stat-count {
-    font-size: 1.4rem; /* ✅ REDUCED from 1.6rem */
-    font-weight: 700;
-    color: #1a1a1a;
-    display: block;
-}
+        .stat-item {
+            text-align: center;
+        }
 
-.stat-label {
-    font-size: 0.7rem; /* ✅ REDUCED from 0.75rem */
-    color: #444;
-    margin-top: 2px;
-    display: block;
-}
+        .stat-count {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            display: block;
+        }
 
-.pill-button {
-    padding: 8px 16px; /* ✅ REDUCED from 10px 20px */
-    border-radius: 25px;
-    border: none;
-    font-size: 0.85rem; /* ✅ REDUCED from 0.9rem */
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
+        .stat-label {
+            font-size: 0.75rem;
+            color: #444;
+            margin-top: 3px;
+            display: block;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 8px;
+        }
+
+        .pill-button {
+            padding: 10px 20px;
+            border-radius: 25px;
+            border: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
 
         .pitch-button {
             background: #00008B;
@@ -495,96 +561,7 @@
             border-radius: 15px;
             font-size: 0.85rem;
         }
-/* ============================================
-   MOBILE OPTIMIZATIONS
-   ============================================ */
 
-@media (max-width: 768px) {
-    /* Fix category pills */
-    .category-pills {
-        overflow-x: auto;
-        overflow-y: hidden;
-        flex-wrap: nowrap; /* ✅ Force horizontal scroll */
-        justify-content: flex-start;
-        padding: 10px 0;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none; /* Hide scrollbar Firefox */
-    }
-    
-    .category-pills::-webkit-scrollbar {
-        display: none; /* Hide scrollbar Chrome/Safari */
-    }
-    
-    .category-pill {
-        flex-shrink: 0; /* ✅ Prevent pills from shrinking */
-        white-space: nowrap;
-        padding: 10px 20px;
-        font-size: 0.9rem;
-    }
-    
-    /* Smaller cards for mobile */
-    .angel-card {
-        min-width: 240px;
-        max-width: 240px;
-        height: 360px;
-    }
-    
-    .card-header {
-        height: 100px;
-    }
-    
-    .profile-photo-container {
-        top: 60px;
-    }
-    
-    .profile-photo {
-        width: 60px;
-        height: 60px;
-    }
-    
-    .card-body {
-        padding: 40px 12px 12px;
-    }
-    
-    .investor-name {
-        font-size: 1rem;
-    }
-    
-    .stats-container {
-        gap: 15px;
-    }
-    
-    .stat-count {
-        font-size: 1.2rem;
-    }
-    
-    h1 {
-        font-size: 2rem;
-    }
-    
-    .search-box {
-        padding: 12px 18px;
-        font-size: 0.95rem;
-    }
-}
-
-/* Extra small phones */
-@media (max-width: 480px) {
-    .angel-card {
-        min-width: 220px;
-        max-width: 220px;
-        height: 340px;
-    }
-    
-    .category-pill {
-        padding: 8px 16px;
-        font-size: 0.85rem;
-    }
-    
-    h1 {
-        font-size: 1.6rem;
-    }
-}
 .app-option {
     background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
     padding: 20px;
@@ -612,32 +589,7 @@
 .app-option:hover::before {
     left: 100%;
 }
-.category-filter-container {
-    max-width: 1200px;
-    margin: 0 auto 30px;
-    padding: 0 20px;
-    position: relative;
-}
 
-/* ✅ ADD SCROLL HINT for mobile */
-.category-filter-container::after {
-    content: '→';
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: linear-gradient(90deg, transparent, #f8f9fa 30%);
-    padding-left: 40px;
-    font-size: 1.5rem;
-    color: #00CED1;
-    pointer-events: none;
-}
-
-@media (min-width: 769px) {
-    .category-filter-container::after {
-        display: none; /* Hide on desktop */
-    }
-}
 .app-option:hover {
     border-color: #00CED1;
     background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%);
@@ -1543,63 +1495,67 @@ searchBox.addEventListener('input', (e) => {
     
     displayRows();
 });
-// ============================================
-// IMPRESSION & CLICK TRACKING
-// ============================================
 
-// Track impression when card appears in viewport
-const observedCards = new Set();
-let impressionObserver = null;
+// Add these variables at the top with other globals
+let trackedImpressions = new Set(); // Track which investors we've recorded impressions for
+let trackedClicks = new Set(); // Track which investors we've recorded clicks for
 
-function setupImpressionTracking() {
-    if (!('IntersectionObserver' in window)) return;
-    
-    impressionObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
-                const card = entry.target;
-                const investorId = card.dataset.investorId;
-                
-                // Only track once per session
-                if (!observedCards.has(investorId)) {
-                    observedCards.add(investorId);
-                    incrementImpression(investorId);
-                }
+// Add Intersection Observer for impression tracking
+const impressionObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+            const investorId = entry.target.dataset.investorId;
+            
+            // Only track once per user per investor
+            if (!trackedImpressions.has(investorId)) {
+                trackedImpressions.add(investorId);
+                recordImpression(investorId);
             }
-        });
-    }, {
-        threshold: 0.5 // Trigger when 50% of card is visible
+        }
     });
-}
+}, {
+    threshold: 0.5 // Card must be 50% visible
+});
 
-
-
-async function incrementImpression(investorId) {
+// Record impression to Firebase
+async function recordImpression(investorId) {
     try {
-        // Point to the specific field, not the whole profile
-        const profileRef = ref(database, `angelProfiles/${investorId}`);
-        
-        await update(profileRef, {
-            impressions: increment(1)
+        const impressionRef = ref(database, `angelProfiles/${investorId}/impressions/${currentUser.uid}`);
+        await set(impressionRef, {
+            timestamp: serverTimestamp(),
+            viewed: true
         });
-
-        console.log(`📊 Impression counted for ${investorId}`);
+        
+        // Increment total impression count
+        const profileRef = ref(database, `angelProfiles/${investorId}`);
+        await update(profileRef, {
+            totalImpressions: increment(1)
+        });
+        
+        console.log(`📊 Impression recorded for ${investorId}`);
     } catch (error) {
-        // If it still fails, check if investorId is undefined or null
-        console.error('Error tracking impression:', error);
+        console.error('Error recording impression:', error);
     }
 }
 
-// Increment click when profile is viewed
-async function incrementProfileClick(investorId) {
+// Record click to Firebase
+async function recordClick(investorId) {
     try {
-        const clickRef = ref(database, `angelProfiles/${investorId}/totalClicks`);
-        await runTransaction(clickRef, (current) => {
-            return (current || 0) + 1;
+        const clickRef = ref(database, `angelProfiles/${investorId}/clicks/${currentUser.uid}`);
+        await set(clickRef, {
+            timestamp: serverTimestamp(),
+            clicked: true
         });
-        console.log(`👆 Click counted for ${investorId}`);
+        
+        // Increment total click count
+        const profileRef = ref(database, `angelProfiles/${investorId}`);
+        await update(profileRef, {
+            totalClicks: increment(1)
+        });
+        
+        console.log(`🖱️ Click recorded for ${investorId}`);
     } catch (error) {
-        console.error('Error tracking click:', error);
+        console.error('Error recording click:', error);
     }
 }
        onAuthStateChanged(auth, async (user) => {
@@ -1655,7 +1611,6 @@ async function incrementProfileClick(investorId) {
         setUserPresence(user);
         startBrowseTimeTracking();
         autoOpenProfile();
-        setupImpressionTracking();
 
     } catch (error) {
         console.error("Critical Security Check Error:", error);
@@ -1679,24 +1634,25 @@ async function loadUserCategory() {
         console.error('Error loading user category:', error);
     }
 }
-        async function loadAngelProfiles() {
-            try {
-                const angelProfilesRef = ref(database, 'angelProfiles');
-                const snapshot = await get(angelProfilesRef);
+async function loadAngelProfiles() {
+    try {
+        const angelProfilesRef = ref(database, 'angelProfiles');
+        const snapshot = await get(angelProfilesRef);
 
-                loadingMessage.style.display = 'none';
-
-                if (snapshot.exists()) {
-                    allProfiles = snapshot.val();
-                    displayRows();
-                } else {
-                    rowsContainer.innerHTML = '<div class="loading">No angel profiles found.</div>';
-                }
-            } catch (error) {
-                console.error('Error loading angel profiles:', error);
-                loadingMessage.textContent = 'Error loading profiles. Please try again.';
-            }
+        if (snapshot.exists()) {
+            allProfiles = snapshot.val();
+            displayRows();
+            
+            // ✅ Hide loading AFTER rows are displayed
+            loadingMessage.style.display = 'none';
+        } else {
+            loadingMessage.textContent = 'No angel profiles found.';
         }
+    } catch (error) {
+        console.error('Error loading angel profiles:', error);
+        loadingMessage.textContent = 'Error loading profiles. Please try again.';
+    }
+}
 
 
 async function loadOnlineStatus() {
@@ -2246,60 +2202,55 @@ function createRow(profiles, title, badge, badgeClass) {
     });
 }
 
-       function createCard(userId, profile) {
-    trackCardView(userId, profile); 
-    const card = document.createElement('div');
-    card.className = 'angel-card';
-    card.dataset.investorId = userId; 
+        function createCard(userId, profile) {
+             trackCardView(userId, profile); 
+            const card = document.createElement('div');
+            card.className = 'angel-card';
+            card.dataset.investorId = userId; 
+            const photoURL = profile.photoURL || 'https://via.placeholder.com/90';
+            const fullName = profile.fullName || 'Anonymous Investor';
+            const replyReputation = profile.replyReputation || 0;
+            const pitchedCount = profile.PitchedCount || 0;
+            const investorType = profile.investorType || 'Investor';
 
-    const photoURL = profile.photoURL || 'https://upscalevest.site/ScaleVestLogo.png';
-    const fullName = profile.fullName || 'Anonymous Investor';
-    const replyReputation = profile.replyReputation || 0;
-    const pitchedCount = profile.PitchedCount || 0;
-    const investorType = profile.investorType || 'Investor';
+            // Use max of reputation or pitched count for tier
+            const maxMetric = Math.max(replyReputation, pitchedCount);
+            const tier = getTierInfo(maxMetric);
 
-    const maxMetric = Math.max(replyReputation, pitchedCount);
-    const tier = getTierInfo(maxMetric);
+            if (maxMetric >= 500) {
+                card.style.background = tier.cardBackground;
+                card.style.animation = tier.animation;
+            }
 
-    if (maxMetric >= 500) {
-        card.style.background = tier.cardBackground;
-        card.style.animation = tier.animation;
-    }
-
-    card.innerHTML = `
-        <div class="card-header" ${maxMetric >= 500 ? `style="background: ${tier.headerColor};"` : `style="background: ${tier.headerColor};"`}>
-            ${tier.decorations}
-        </div>
-        <div class="profile-photo-container">
-            <img src="${photoURL}" alt="${fullName}" class="profile-photo" onerror="this.src='https://via.placeholder.com/90'" loading="eager">
-        </div>
-        <div class="card-body">
-            <div class="investor-name">${fullName}</div>
-            <div class="investor-type">${investorType}</div>
-            <div class="stats-container">
-                <div class="stat-item">
-                    <span class="stat-count">${formatNumber(replyReputation)}</span>
-                    <span class="stat-label">Reply Reputation</span>
+            card.innerHTML = `
+                <div class="card-header" ${maxMetric >= 500 ? `style="background: ${tier.headerColor};"` : `style="background: ${tier.headerColor};"`}>
+                    ${tier.decorations}
                 </div>
-                <div class="stat-item">
-                    <span class="stat-count">${formatNumber(pitchedCount)}</span>
-                    <span class="stat-label">Pitched Count</span>
+                <div class="profile-photo-container">
+                    <img src="${photoURL}" alt="${fullName}" class="profile-photo" onerror="this.src='https://via.placeholder.com/90'" loading="eager">
                 </div>
-            </div>
-            <div class="button-group">
-                <button class="pill-button pitch-button" onclick="event.stopPropagation(); handlePitchPage('${userId}')">Pitch</button>
-                <button class="pill-button view-profile-button" onclick="event.stopPropagation(); handleViewProfilePage('${userId}')">View Profile</button>
-            </div>
-        </div>
-    `;
-
-    // ✅ START OBSERVING THIS CARD for impressions
-    if (impressionObserver) {
-        impressionObserver.observe(card);
-    }
-
-    return card;
-}
+                <div class="card-body">
+                    <div class="investor-name">${fullName}</div>
+                    <div class="investor-type">${investorType}</div>
+                    <div class="stats-container">
+                        <div class="stat-item">
+                            <span class="stat-count">${formatNumber(replyReputation)}</span>
+                            <span class="stat-label">Reply Reputation</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-count">${formatNumber(pitchedCount)}</span>
+                            <span class="stat-label">Pitched Count</span>
+                        </div>
+                    </div>
+                    <div class="button-group">
+                        <button class="pill-button pitch-button" onclick="event.stopPropagation(); handlePitchPage('${userId}')">Pitch</button>
+                        <button class="pill-button view-profile-button" onclick="event.stopPropagation(); handleViewProfilePage('${userId}')">View Profile</button>
+                    </div>
+                </div>
+            `;
+ impressionObserver.observe(card);
+            return card;
+        }
 
         function getTierInfo(metric) {
             if (metric >= 500) {
@@ -2457,8 +2408,11 @@ window.handleViewProfile = async function(userId) {
     profileViewStartTime = Date.now();
     selectedInvestor = userId;
     
-    // ✅ TRACK CLICK
-    await incrementProfileClick(userId);
+    // Track click (once per user per investor)
+    if (!trackedClicks.has(userId)) {
+        trackedClicks.add(userId);
+        await recordClick(userId);
+    }
     
     try {
         const profileRef = ref(database, `angelProfiles/${userId}`);
