@@ -5,7 +5,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>ScaleVest – Business & Investment Intelligence</title>
+  <title>ScaleVest – The Infrastructure of Scale</title>
   <script>
     (function() {
       // Check for different user types
@@ -36,7 +36,12 @@
       background: #0e1117;
       color: #ffffff;
     }
-
+:root { 
+    --accent: #2563eb; 
+    --bg-dark: #0e1117; 
+    --footer-bg: #05070a;
+    --text-muted: #94a3b8;
+  }
    /* HEADER / NAVBAR */
 header {
   position: relative;
@@ -53,7 +58,90 @@ header .left {
   display: flex;
   align-items: center;
 }
+.enterprise-footer {
+    background: var(--footer-bg);
+    padding: 60px 40px 30px;
+    border-top: 1px solid #1f2933;
+    margin-top: 80px;
+  }
 
+  .footer-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 40px;
+  }
+
+  .footer-brand {
+    flex: 1;
+    min-width: 250px;
+  }
+
+  .footer-brand h2 {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0;
+    color: #ffffff;
+    letter-spacing: -0.5px;
+  }
+
+  .company-info {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .company-info p {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin: 0;
+  }
+
+  .company-logo-img {
+    height: 24px;
+    opacity: 0.8;
+  }
+
+  .footer-links {
+    display: flex;
+    gap: 30px;
+  }
+
+  .footer-link-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .footer-link-group a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.2s ease;
+  }
+
+  .footer-link-group a:hover {
+    color: var(--accent);
+  }
+
+  .footer-bottom {
+    max-width: 1100px;
+    margin: 40px auto 0;
+    padding-top: 20px;
+    border-top: 1px solid #1f2933;
+    text-align: center;
+    font-size: 12px;
+    color: #475569;
+  }
+
+  @media (max-width: 768px) {
+    .footer-container { flex-direction: column; text-align: center; align-items: center; }
+    .company-info { justify-content: center; }
+  }
 header img {
   height: 34px;
 }
@@ -950,8 +1038,31 @@ if (localStorage.getItem("businessProfileCreated") === "true") {
 </section>
 
 
-<footer>
-  © 2025 ScaleVest. Building clarity between business and capital.
+<footer class="enterprise-footer">
+  <div class="footer-container">
+    <div class="footer-brand">
+      <h2>ScaleVest</h2>
+      <div class="company-info">
+        <p>UnioraX Private Limited</p>
+        <img src="uniorax.png" alt="UnioraX Logo" class="company-logo-img" onerror="this.style.display='none'">
+      </div>
+    </div>
+
+    <div class="footer-links">
+      <div class="footer-link-group">
+        <a href="privacyandpolicy.html">Privacy Policy</a>
+        <a href="termsandservices.html">Terms & Services</a>
+      </div>
+      <div class="footer-link-group">
+        <a href="Scalevest-documentation.html">Documentation</a>
+        <a href="mailto:scalevestoffcial@gmail.com">Contact Support</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    © 2026 ScaleVest. All rights reserved. Registered in India.
+  </div>
 </footer>
 <script>
   const modal = document.getElementById("joinModal");
@@ -1108,3 +1219,4 @@ if (localStorage.getItem("businessProfileCreated") === "true") {
 </script>
 </body>
 </html>
+
