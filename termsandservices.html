@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Terms of Service | ScaleVest Enterprise</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --bg-pure: #000000;
+            --bg-card: #0a0a0a;
+            --border: #1a1a1a;
+            --text-dim: #94a3b8;
+            --glass: rgba(255, 255, 255, 0.02);
+            --accent-glow: rgba(59, 130, 246, 0.15);
+            --danger: #ef4444;
+        }
+
+        * { box-sizing: border-box; scroll-behavior: smooth; }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-pure);
+            color: #f8fafc;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* HEADER */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: 20px 60px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand { font-weight: 800; font-size: 22px; letter-spacing: -1px; }
+        .brand span { color: var(--primary); }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+            background: rgba(59, 130, 246, 0.05);
+            color: var(--primary);
+            padding: 6px 16px;
+            border-radius: 100px;
+            border: 1px solid rgba(59, 130, 246, 0.15);
+        }
+
+        /* HERO AREA */
+        .hero {
+            padding: 120px 20px 60px;
+            text-align: center;
+            background: radial-gradient(circle at top, var(--accent-glow) 0%, transparent 60%);
+        }
+
+        .hero h1 {
+            font-size: clamp(36px, 7vw, 72px);
+            font-weight: 800;
+            letter-spacing: -3px;
+            margin: 0 0 20px;
+            background: linear-gradient(to bottom, #ffffff 40%, #555555 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p { color: var(--text-dim); font-size: 18px; max-width: 600px; margin: auto; }
+
+        /* BENTO GRID */
+        .bento-grid {
+            display: grid;
+            max-width: 1200px;
+            margin: 40px auto;
+            gap: 15px;
+            grid-template-columns: repeat(4, 1fr);
+            padding: 0 40px;
+        }
+
+        .bento-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 30px;
+            transition: all 0.3s ease;
+        }
+
+        .bento-item:hover { border-color: var(--primary); background: #0f172a; }
+        .bento-item h4 { margin: 0 0 10px; font-size: 18px; color: #fff; }
+        .bento-item p { margin: 0; font-size: 13px; color: var(--text-dim); line-height: 1.4; }
+
+        /* CONTENT SECTION */
+        .doc-section { max-width: 900px; margin: 60px auto; padding: 0 40px; }
+
+        .legal-block {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 32px;
+            padding: 60px;
+            margin-bottom: 40px;
+        }
+
+        .legal-block h2 {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 25px;
+        }
+
+        .legal-block h3 { font-size: 28px; margin-bottom: 20px; color: #fff; font-weight: 700; }
+        .legal-block p { color: #cbd5e1; margin-bottom: 20px; }
+
+        .clause-box {
+            background: #000;
+            border-left: 3px solid var(--primary);
+            padding: 20px 30px;
+            margin: 30px 0;
+            border-radius: 0 16px 16px 0;
+        }
+
+        .clause-box strong { display: block; color: var(--primary); margin-bottom: 5px; text-transform: uppercase; font-size: 12px; }
+
+        .danger-zone {
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            background: rgba(239, 68, 68, 0.02);
+            padding: 40px;
+            border-radius: 24px;
+        }
+
+        .danger-zone h3 { color: var(--danger); }
+
+        footer { padding: 80px 40px; border-top: 1px solid var(--border); text-align: center; }
+
+        @media (max-width: 1000px) {
+            .bento-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 600px) {
+            .bento-grid { grid-template-columns: 1fr; }
+            .legal-block { padding: 30px; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="brand">Scale<span>Vest</span></div>
+    <div class="status-badge">Effective Date: Jan 2026</div>
+</header>
+
+<main>
+    <section class="hero">
+        <h1>Terms of Service</h1>
+        <p>By accessing the ScaleVest infrastructure, you agree to the binding protocols of the UnioraX legal framework.</p>
+    </section>
+
+    <div class="bento-grid">
+        <div class="bento-item">
+            <h4>Integrity</h4>
+            <p>Users must provide verified credentials for startup participation.</p>
+        </div>
+        <div class="bento-item">
+            <h4>Ownership</h4>
+            <p>You retain 100% IP rights to your internal warehouse data.</p>
+        </div>
+        <div class="bento-item">
+            <h4>Security</h4>
+            <p>Zero-tolerance for bot-assisted data scraping or hacking.</p>
+        </div>
+        <div class="bento-item">
+            <h4>Support</h4>
+            <p>Enterprise resolution within 48 hours for verified partners.</p>
+        </div>
+    </div>
+
+    <div class="doc-section">
+        <div class="legal-block">
+            <h2>Section 01</h2>
+            <h3>Eligibility & Compliance</h3>
+            <p>ScaleVest is a professional industrial infrastructure. Use of the platform is strictly prohibited for individuals <span style="color:#fff; font-weight:700;">under the age of 13</span>. Full ecosystem features require users to be <span style="color:#fff; font-weight:700;">18+</span>.</p>
+            
+            <div class="clause-box">
+                <strong>Independent Governance</strong>
+                ScaleVest operates as a sovereign data silo. We do not transfer, sell, or disclose user metrics to government entities or third-party corporations without explicit cryptographical consent from the user.
+            </div>
+        </div>
+
+        <div class="legal-block">
+            <h2>Section 02</h2>
+            <h3>User Conduct & Communication</h3>
+            <p>The ScaleVest community chat is a high-trust environment. Any misuse will result in immediate termination.</p>
+            <ul>
+                <li style="margin-bottom: 15px;"><strong>Suspicious Links:</strong> Users are strictly advised not to open links from unverified sources. ScaleVest is not liable for data loss occurring via external phishing links.</li>
+                <li><strong>No solicitations:</strong> Requesting private credentials or wallet keys is grounds for immediate ecosystem removal.</li>
+            </ul>
+        </div>
+
+        <div class="legal-block danger-zone">
+            <h2>Section 03</h2>
+            <h3>Security Enforcement</h3>
+            <h3>Prohibited Actions & Legal Recourse</h3>
+            <p>Any attempt to compromise the integrity of ScaleVest systems will be met with the full force of legal intervention.</p>
+            
+            <div class="clause-box" style="border-left-color: var(--danger);">
+                <strong>Permanent Termination</strong>
+                Any user found attempting to hack, scrape, or perform unauthorized scaling of platform data will face a <strong>Permanent and Irrevocable Ban</strong> from the ScaleVest network.
+            </div>
+
+            <p>Unauthorized attempts to access private user data without permission constitutes a criminal breach of the UnioraX framework. ScaleVest, through its parent entity <strong>UnioraX</strong>, will pursue active legal cases against violators.</p>
+        </div>
+
+        <div class="legal-block">
+            <h2>Section 04</h2>
+            <h3>System Performance</h3>
+            <h3>Business Mode & AI Accuracy</h3>
+            <p>Scaling metrics for supermarkets and warehouse owners are calculated via proprietary AI. These are strategic projections and do not constitute a legal financial guarantee.</p>
+        </div>
+    </div>
+</main>
+
+<footer>
+    <p style="color:#fff; font-weight: 800; font-family: 'JetBrains Mono'; letter-spacing: 2px; margin-bottom: 10px;">SCALEVEST </p>
+    <p style="color: var(--text-dim); font-size: 13px;">UnioraX Private Limited. © 2026. All Rights Reserved.</p>
+</footer>
+
+</body>
+</html>
