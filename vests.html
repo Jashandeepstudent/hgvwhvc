@@ -20,10 +20,91 @@
             padding: 20px;
         }
 
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-        }
+/* --- GLOBAL RESPONSIVE FIXES --- */
+:root {
+    --primary-gradient: linear-gradient(135deg, #ff006e, #8338ec, #3a86ff);
+}
+
+/* Fix Container stretching */
+.container {
+    padding: 20px;
+    display: flex;
+    flex-direction: row; /* Desktop default */
+    gap: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Responsive Grid for Vests and Cards */
+.vest-cards-grid, .emergence-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+/* Mobile Breakpoint (768px) */
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column; /* Stack left and right sections */
+        padding: 10px;
+    }
+
+    .left-section, .right-section {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    /* Top Nav Mobile Fix */
+    .top-nav {
+        padding: 10px 15px !important;
+    }
+
+    .nav-links {
+        display: none !important; /* Hide links on tiny screens to prevent overlap */
+    }
+
+    /* Dashboard Titles */
+    .welcome-text {
+        font-size: 1.8rem !important;
+    }
+
+    /* Cards adjustments */
+    .card, .banner {
+        padding: 1.5rem !important;
+    }
+
+    .banner {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .banner-icon {
+        margin: 15px 0 0 0 !important;
+        width: 60px !important;
+        height: 60px !important;
+    }
+
+    /* Fix buttons that are too big */
+    .buy-btn-premium, .card-btn {
+        padding: 12px !important;
+        font-size: 0.8rem !important;
+    }
+}
+
+/* Extra Small Devices (480px) */
+@media (max-width: 480px) {
+    .vest-cards-grid {
+        grid-template-columns: 1fr; /* Force 1 column */
+    }
+    
+    .status-pill-nav {
+        display: none; /* Hide status on very small phones to save space */
+    }
+    
+    .logo span {
+        font-size: 1.2rem;
+    }
+}
 
         .header {
             text-align: center;
